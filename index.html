@@ -2083,9 +2083,33 @@
         if (dailyGachaStorage.count <= 0) { alert("本日のガチャ回数がなくなりました。コードを入力するか明日まで待ってね！"); return; }
         triggerGachaCore();
     }
+    /* ---- タブ解禁ロジック ----
+     * Tab 0 = cards 1〜100, Tab 1 = 101〜200 …
+     * 現在のタブのカードがすべて揃ったら次のタブが解禁される。
+     * ガチャは「現在解禁中の最も若いタブ」からのみ引く。
+     */
+    function getCurrentGachaTabIndex() {
+        const totalTabs = Math.ceil(cardsData.length / COLLECTION_PAGE_SIZE);
+        for (let t = 0; t < totalTabs; t++) {
+            const start = t * COLLECTION_PAGE_SIZE;
+            const end   = Math.min((t + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
+            const tabCards = cardsData.slice(start, end);
+            const allCollected = tabCards.every(c => unlockedCards.includes(c.id));
+            if (!allCollected) return t;   // このタブが未完 → ここから引く
+        }
+        return totalTabs - 1;             // 全タブ完了 → 最終タブ
+    }
+
     function triggerGachaCore() {
         if (cardsData.length === 0) { alert("カードデータがありません。"); return; }
-        const randomCard = cardsData[Math.floor(Math.random() * cardsData.length)];
+
+        // 現在解禁中のタブのカードプールからランダム選択
+        const tabIdx  = getCurrentGachaTabIndex();
+        const start   = tabIdx * COLLECTION_PAGE_SIZE;
+        const end     = Math.min((tabIdx + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
+        const tabPool = cardsData.slice(start, end);
+        const randomCard = tabPool[Math.floor(Math.random() * tabPool.length)];
+
         gachaSession.isGachaMode = true;
         gachaSession.selectedCard = randomCard;
         // ガチャ回数を消費してすぐカード付与（クイズなし）
@@ -2240,9 +2264,22 @@
                     <div class="gacha-info">No.${card.no}${isNew ? '' : '　<span style="font-size:11px;opacity:0.75;">✔ 取得済み</span>'}</div>
                 </div>
             `;
-            document.getElementById('gachaResultTitle').innerText = isNew
-                ? `${rc.emoji} ${rc.resultTitle}`
-                : `${rc.emoji} おかわり！（取得済みカード）`;
+            // タブ解禁チェック：カード取得後に次タブが解禁されたか確認
+            const tabBefore = getCurrentGachaTabIndex();
+            if (isNew) {
+                const tabAfter = getCurrentGachaTabIndex();
+                if (tabAfter > tabBefore) {
+                    // 次タブ解禁！
+                    const nextStart = tabAfter * COLLECTION_PAGE_SIZE + 1;
+                    const nextEnd   = Math.min((tabAfter + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
+                    document.getElementById('gachaResultTitle').innerText =
+                        `🎉 タブ${tabAfter + 1}解禁！ No.${nextStart}〜${nextEnd} のカードが登場！`;
+                } else {
+                    document.getElementById('gachaResultTitle').innerText = `${rc.emoji} ${rc.resultTitle}`;
+                }
+            } else {
+                document.getElementById('gachaResultTitle').innerText = `${rc.emoji} おかわり！（取得済みカード）`;
+            }
             jumpToCardTab(card.no);
         } else {
             const primaryAns = card.quiz.meaning.split("/")[0];
