@@ -342,6 +342,42 @@
         }
 
         /* ===== COLLECTION GRID ===== */
+        /* ===== Collection page tabs ===== */
+        .collection-page-tabs {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 6px 2px 10px;
+            width: 100%; max-width: 750px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(200,170,80,0.25) transparent;
+            position: relative; z-index: 2;
+        }
+        .collection-page-tabs::-webkit-scrollbar { height: 4px; }
+        .collection-page-tabs::-webkit-scrollbar-track { background: transparent; }
+        .collection-page-tabs::-webkit-scrollbar-thumb { background: rgba(200,170,80,0.25); border-radius: 4px; }
+        .cpt-btn {
+            flex: 0 0 auto;
+            padding: 5px 11px;
+            background: rgba(20,14,44,0.75);
+            border: 1px solid #3a2c60;
+            border-radius: 20px;
+            color: #8a7ab0;
+            font-size: 11px;
+            font-family: 'Noto Serif JP', serif;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+        .cpt-btn:hover { background: rgba(60,40,100,0.8); border-color: #6a5a90; color: #c0b0e0; }
+        .cpt-btn.active {
+            background: rgba(100,72,12,0.85);
+            border-color: #c8a030;
+            color: #ffd870;
+            font-weight: bold;
+            box-shadow: 0 0 8px rgba(200,160,40,0.35);
+        }
+
         .collection-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -1227,6 +1263,7 @@
     </div>
 </div>
 
+<div class="collection-page-tabs" id="collectionPageTabs"></div>
 <div class="collection-grid" id="collectionGrid"></div>
 
 <script>
@@ -1234,6 +1271,8 @@
     const TOTAL_CARDS = 50;
     const CARDS_PER_PAGE = 50;
     let currentTabId = 0;
+    const COLLECTION_PAGE_SIZE = 100;   // コレクション表示: 1ページあたりのカード枚数
+    let currentCollectionPage = 0;      // 現在表示中のページ（0始まり）
 
     const VALID_COUPONS = { "MAGIC5": 5, "BONUS3": 3, "SUPER10": 10 };
 
@@ -1937,13 +1976,44 @@
     }
 
     /* ========== COLLECTION RENDER ========== */
+    function renderCollectionTabs() {
+        const totalCards = cardsData.length;
+        const totalPages = Math.ceil(totalCards / COLLECTION_PAGE_SIZE);
+        const tabsEl = document.getElementById('collectionPageTabs');
+        if (!tabsEl) return;
+
+        // 1ページしかなければタブ非表示
+        if (totalPages <= 1) { tabsEl.innerHTML = ''; return; }
+
+        tabsEl.innerHTML = '';
+        for (let i = 0; i < totalPages; i++) {
+            const start = i * COLLECTION_PAGE_SIZE + 1;
+            const end   = Math.min((i + 1) * COLLECTION_PAGE_SIZE, totalCards);
+            const btn = document.createElement('button');
+            btn.className = 'cpt-btn' + (i === currentCollectionPage ? ' active' : '');
+            btn.textContent = `${start}〜${end}`;
+            btn.onclick = () => {
+                currentCollectionPage = i;
+                renderCollection();
+                // アクティブボタンを視野内にスクロール
+                btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            };
+            tabsEl.appendChild(btn);
+        }
+    }
+
     function renderCollection() {
         checkAndResetDailyGacha();
         document.getElementById('collectionCounter').innerText = `${unlockedCards.length} / ${TOTAL_CARDS}`;
         const grid = document.getElementById('collectionGrid');
         grid.innerHTML = '';
 
-        const displayCards = cardsData;
+        // ページタブ描画
+        renderCollectionTabs();
+
+        // 現在ページのカードだけ表示
+        const pageStart = currentCollectionPage * COLLECTION_PAGE_SIZE;
+        const displayCards = cardsData.slice(pageStart, pageStart + COLLECTION_PAGE_SIZE);
 
         displayCards.forEach(card => {
             const isUnlocked = unlockedCards.includes(card.id);
