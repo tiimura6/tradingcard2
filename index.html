@@ -298,30 +298,6 @@
             font-family: 'Noto Serif JP', serif;
             margin: 0 0 12px;
         }
-        /* シリーズインジケーター */
-        .series-indicator {
-            display: flex; justify-content: center; align-items: center;
-            gap: 10px; margin: 0 0 14px;
-        }
-        .series-dot {
-            width: 30px; height: 30px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 11px; font-weight: bold;
-            font-family: 'Noto Serif JP', serif;
-            transition: all 0.2s;
-        }
-        .series-dot.inactive {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.15);
-            color: rgba(255,255,255,0.28);
-        }
-        .series-dot.active-gold {
-            background: linear-gradient(135deg, #7a5808, #c89018, #e8c030, #a06c10);
-            border: 1px solid rgba(240,210,80,0.7);
-            color: #fff8d0;
-            box-shadow: 0 0 14px rgba(210,165,35,0.6), 0 0 28px rgba(180,130,20,0.25);
-            font-size: 13px;
-        }
         .counter { font-size: 18px; color: #c8a060; margin: 0 0 10px 0; font-weight: bold; }
 
         .header-info-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
@@ -1006,47 +982,112 @@
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   -->
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 380" preserveAspectRatio="xMidYMax slice">
+    <defs>
+      <!-- 最遠景グラデーション：霞んだ琥珀色 -->
+      <linearGradient id="g-far" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="rgba(235,160,60,0.38)"/>
+        <stop offset="100%" stop-color="rgba(165,88,18,0.14)"/>
+      </linearGradient>
+      <!-- 遠景グラデーション：大気散乱で橙褐色 -->
+      <linearGradient id="g-mid-far" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="rgba(148,72,20,0.68)"/>
+        <stop offset="100%" stop-color="rgba(75,32,6,0.48)"/>
+      </linearGradient>
+      <!-- 中景グラデーション：暗褐色シルエット -->
+      <linearGradient id="g-mid" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="rgba(48,22,5,0.93)"/>
+        <stop offset="100%" stop-color="rgba(14,5,1,0.99)"/>
+      </linearGradient>
+      <!-- 太陽ディスク -->
+      <radialGradient id="g-sun" cx="50%" cy="50%" r="50%">
+        <stop offset="0%"   stop-color="#ffffe0"/>
+        <stop offset="28%"  stop-color="#ffe650"/>
+        <stop offset="62%"  stop-color="#ffaa0a"/>
+        <stop offset="100%" stop-color="rgba(255,90,0,0.35)"/>
+      </radialGradient>
+      <!-- 太陽コロナ blur -->
+      <filter id="f-corona" x="-80%" y="-80%" width="260%" height="260%">
+        <feGaussianBlur stdDeviation="16"/>
+      </filter>
+      <!-- 山頂リムライト（山の稜線を縁取る光） -->
+      <filter id="f-rim" x="-5%" y="-5%" width="110%" height="110%">
+        <feGaussianBlur stdDeviation="2.5" result="blur"/>
+        <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+      </filter>
+    </defs>
 
-    <!-- Layer 4: 最遠景の幽霊山脈（霞んで薄く見える最高峰群） -->
-    <path fill="rgba(210,140,55,0.18)"
-      d="M0,380 L0,95
-         L28,82 L55,90 L82,68 L106,55 L122,65 L140,42 L158,56 L174,38
-         L192,22 L210,40 L228,26 L248,12 L265,24 L282,8 L300,20 L318,4
-         L336,16 L354,6 L372,22 L390,10 L408,24 L428,12 L448,28 L468,14
-         L488,30 L510,16 L532,32 L556,18 L578,32 L600,18 L622,34 L644,20
-         L668,8 L690,22 L712,10 L735,28 L758,16 L782,32 L805,16 L828,30
-         L852,12 L875,24 L898,8 L922,22 L946,12 L970,28 L1000,18
+    <!-- 太陽コロナ (大気散乱ハロー) -->
+    <ellipse cx="500" cy="58" rx="130" ry="95"
+      fill="rgba(255,170,22,0.30)" filter="url(#f-corona)"/>
+
+    <!-- 太陽ディスク本体 -->
+    <circle cx="500" cy="58" r="26" fill="url(#g-sun)"/>
+
+    <!-- Layer 4: 最遠景の幽霊山脈 ── ベジェ曲線、霞んだ半透明 -->
+    <path fill="url(#g-far)"
+      d="M0,380 L0,110
+         C 35,100  60,92  90,72
+         C115,55  130,60  155,42
+         C178,26  198,36  225,18
+         C252,2   278,14  308,6
+         C332,-2  358,8   388,16
+         C415,24  440,8   470,18
+         C498,28  524,10  554,20
+         C582,30  608,14  638,24
+         C665,34  688,12  715,6
+         C740,-2  766,14  795,22
+         C822,30  848,10  875,18
+         C900,26  928,8   960,16
+         C978,20  992,14  1000,18
          L1000,380 Z"/>
 
-    <!-- Layer 3: 遠景の連山（地平線に連なる山並み） -->
-    <path fill="rgba(120,65,18,0.44)"
-      d="M0,380 L0,158
-         L38,140 L75,154 L112,124 L145,110 L172,125 L200,100 L228,114
-         L255,100 L280,118 L308,96 L335,110 L362,92 L390,108 L418,90
-         L445,108 L472,90 L500,104 L528,90 L555,108 L582,120 L610,100
-         L638,114 L665,96 L692,112 L720,94 L748,110 L775,94 L803,110
-         L830,94 L858,110 L885,92 L912,110 L940,94 L968,110 L1000,96
+    <!-- Layer 3: 遠景の連山 ── 変化に富む稜線 -->
+    <path fill="url(#g-mid-far)"
+      d="M0,380 L0,170
+         C 38,155  72,148  105,135
+         C135,122  158,130  185,112
+         C210,96   232,105  260,88
+         C288,70   312,82   340,72
+         C365,62   388,78   415,88
+         C440,98   460,75   488,58
+         C514,42   540,56   568,68
+         C594,80   618,62   648,72
+         C676,82   700,60   728,50
+         C754,40   780,58   808,68
+         C835,78   860,56   888,66
+         C915,76   942,58   970,70
+         C984,76  1000,68  1000,72
          L1000,380 Z"/>
 
-    <!-- Layer 2: 中景の山脈（夕陽を遮るシルエット） -->
-    <path fill="rgba(38,18,5,0.82)"
-      d="M0,380 L0,242
-         L40,220 L78,236 L115,212 L148,200 L175,215 L205,194 L235,210
-         L265,194 L292,212 L322,190 L352,208 L382,190 L412,208 L442,190
-         L472,208 L502,190 L532,208 L562,190 L592,208 L622,192 L652,210
-         L682,192 L712,210 L742,192 L772,210 L802,190 L832,208 L862,190
-         L892,208 L922,190 L952,208 L1000,194
+    <!-- Layer 2: 中景の山脈 ── 夕陽に浮かぶ暗シルエット -->
+    <path fill="url(#g-mid)"
+      d="M0,380 L0,265
+         C 42,248  82,258  122,238
+         C160,220  188,232  220,212
+         C252,192  278,206  310,188
+         C342,170  368,185  398,192
+         C426,199  452,178  482,158
+         C510,138  540,155  570,165
+         C600,175  628,152  658,162
+         C688,172  715,148  745,158
+         C775,168  803,142  835,152
+         C865,162  892,140  922,152
+         C948,162  976,145  1000,155
          L1000,380 Z"/>
 
-    <!-- Layer 1: 近景の稜線（最暗、最低、手前の山） -->
-    <path fill="#050300"
-      d="M0,380 L0,298
-         L45,278 L88,292 L128,270 L162,258 L188,274 L222,256 L258,272
-         L292,256 L325,272 L360,252 L395,270 L430,252 L466,270 L502,252
-         L538,270 L574,252 L610,270 L648,252 L684,270 L720,252 L758,270
-         L795,252 L832,270 L870,252 L908,270 L946,252 L1000,260
+    <!-- Layer 1: 近景の稜線 ── 最暗・最手前 -->
+    <path fill="#030201"
+      d="M0,380 L0,315
+         C 48,298  90,308  135,288
+         C178,268  215,280  255,260
+         C295,240  330,255  368,265
+         C406,275  440,250  478,235
+         C515,220  552,238  590,248
+         C628,258  665,232  705,218
+         C742,204  778,222  818,235
+         C858,248  895,222  935,235
+         C960,242  982,228  1000,235
          L1000,380 Z"/>
-
   </svg>
 </div>
 
@@ -1069,11 +1110,6 @@
     <div class="series-divider"><span>✦</span></div>
     <h1>金の手帖</h1>
     <div class="book-subtitle">世界をひもとく　難関の英単語</div>
-    <div class="series-indicator">
-        <div class="series-dot inactive" title="青の手帖：日常を彩る 魔法の英単語">青</div>
-        <div class="series-dot inactive" title="銀の手帖：知性を磨く 上級の英単語">銀</div>
-        <div class="series-dot active-gold" title="金の手帖：世界をひもとく 難関の英単語">★</div>
-    </div>
     <div class="counter" id="collectionCounter">0 / 50</div>
     <div class="header-info-row">
         <div class="gacha-limit-info" id="gachaLimitInfo">本日のガチャ残り: 1回</div>
