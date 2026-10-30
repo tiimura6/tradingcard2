@@ -1,0 +1,2052 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>言の葉堂のひみつ手帖 ｜ 金の手帖</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        /* ===== KOTONOHA-DO SERIES DESIGN SYSTEM =====
+         *  言の葉堂のひみつ手帖 — CSS変数でシリーズ統一
+         *  青の手帖: --s-primary:#3060c0  --s-accent:#7090e8  --s-glow:rgba(60,100,200,0.4)
+         *  銀の手帖: --s-primary:#8898b0  --s-accent:#c0d0e0  --s-glow:rgba(140,160,180,0.35)
+         *  金の手帖: --s-primary:#b88a18  --s-accent:#e8d070  --s-glow:rgba(200,160,40,0.45)
+         * ===================================================== */
+        :root {
+            /* 金の手帖カラー */
+            --s-primary:   #b88a18;
+            --s-accent:    #e8d070;
+            --s-bright:    #f5e080;
+            --s-glow:      rgba(200,160,40,0.45);
+            --s-glow-dim:  rgba(160,120,20,0.18);
+            --s-panel-bg:  rgba(10,7,30,0.93);
+            --s-border:    rgba(200,165,50,0.58);
+        }
+
+        /* ===== MAGICAL NIGHT ATMOSPHERE (Ghibli × Harry Potter) ===== */
+        * { box-sizing: border-box; }
+
+        /*
+         * 空グラデーション（シリーズ別 — 各シリーズで差し替える7色）
+         * ─────────────────────────────────────────────────────
+         * 青の手帖（夜明けの湖山）:
+         *   #04060e #080f1c #0d1a38 #0c2040 #0a2238 #081d2a #061418 #04100e #030c08 #020806
+         * 銀の手帖（月夜の雪嶺）:
+         *   #060810 #0c1020 #141830 #181e3a #141830 #101520 #0c1018 #080c12 #06080e #04060a
+         * 金の手帖（黄金の山脈 — 夕暮れ）:
+         *   #040408 #0c0a1e #18102e #28102a #3e1a08 #6a3208 #482008 #1a0e04 #0e0802 #080602
+         * ─────────────────────────────────────────────────────
+         */
+        body {
+            font-family: 'Noto Serif JP', serif;
+            background: linear-gradient(180deg,
+                #040408  0%,
+                #0c0a1e 10%,
+                #18102e 22%,
+                #28102a 36%,
+                #3e1a08 50%,
+                #6a3208 62%,
+                #482008 72%,
+                #1a0e04 83%,
+                #0e0802 92%,
+                #080602 100%);
+            background-attachment: fixed;
+            margin: 0;
+            padding: 20px 20px 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* ===== SUN GLOW / 地平線の太陽 ===== */
+        /*
+         * シリーズ別差し替えガイド:
+         *   青の手帖: 位置 bottom:310px, 色 rgba(120,190,255,...) 夜明けの青白い太陽
+         *   銀の手帖: 位置 bottom:330px, 色 rgba(220,235,255,...) 月光（大きな銀月）
+         *   金の手帖: 位置 bottom:295px, 色 rgba(255,180,40,...) 夕暮れの黄金太陽
+         */
+        .moon-glow {
+            position: fixed;
+            bottom: 295px; left: 50%;
+            transform: translateX(-50%);
+            width: 520px; height: 260px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse at 50% 85%,
+                rgba(255,240,140,0.72) 0%,
+                rgba(255,190,50,0.45) 15%,
+                rgba(220,130,25,0.22) 38%,
+                rgba(170,80,10,0.09) 62%,
+                transparent 80%);
+            pointer-events: none; z-index: 0;
+        }
+        /* 太陽のコロナ（広がる黄金の光） */
+        .moon-glow::after {
+            content: '';
+            position: absolute;
+            bottom: -40px; left: -30%; right: -30%;
+            height: 120%;
+            border-radius: 50%;
+            background: radial-gradient(ellipse at 50% 100%,
+                rgba(220,140,20,0.12) 0%,
+                rgba(180,100,10,0.06) 40%,
+                transparent 70%);
+            filter: blur(15px);
+        }
+
+        /* ===== HORIZON ATMOSPHERE / 地平線の大気散乱 ===== */
+        /*
+         * 青の手帖: rgba(20,100,200,...) 朝の青い光, rgba(10,60,160,...) 紺碧
+         * 銀の手帖: rgba(140,165,200,...) 月光散乱, rgba(80,100,140,...) 霞
+         * 金の手帖: rgba(210,120,20,...) 夕焼け, rgba(160,70,10,...) 残照, rgba(240,170,30,...) 光芒
+         */
+        .aurora-mist {
+            position: fixed;
+            bottom: 220px; left: 0; right: 0;
+            height: 360px;
+            pointer-events: none; z-index: 0;
+            background:
+                radial-gradient(ellipse 130% 55% at 50% 100%,
+                    rgba(210,120,20,0.22) 0%, transparent 65%),
+                radial-gradient(ellipse 90% 40% at 28% 85%,
+                    rgba(160,70,10,0.14) 0%, transparent 60%),
+                radial-gradient(ellipse 80% 35% at 74% 80%,
+                    rgba(180,90,12,0.12) 0%, transparent 62%),
+                radial-gradient(ellipse 60% 28% at 50% 55%,
+                    rgba(240,170,30,0.08) 0%, transparent 70%);
+            filter: blur(32px);
+        }
+
+        /* ===== STARS ===== */
+        .stars-layer {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 65%;
+            pointer-events: none; z-index: 0;
+            overflow: hidden;
+        }
+        @keyframes star-twinkle {
+            0%, 100% { opacity: 1; }
+            45% { opacity: 0.15; }
+        }
+        @keyframes star-pulse {
+            0%, 100% { opacity: 0.85; r: 1.8; }
+            50% { opacity: 0.4; r: 1.2; }
+        }
+
+        /* ===== MOUNTAIN SCENE / 山岳シルエット ===== */
+        /*
+         * height差し替えガイド:
+         *   青の手帖: 380px（湖面のため少し低め）
+         *   銀の手帖: 400px（雪嶺を高く）
+         *   金の手帖: 380px（黄金山脈）
+         */
+        .forest-silhouette {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: 380px;
+            pointer-events: none; z-index: 1;
+            overflow: hidden;
+        }
+        .forest-silhouette svg {
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+
+        /* ===== VALLEY MIST / 山間の霧 ===== */
+        /*
+         * 青の手帖: rgba(80,140,200,...) 夜明けの青い霧, height:120px, bottom:200px
+         * 銀の手帖: rgba(160,175,200,...) 月光の銀霧, height:100px, bottom:210px
+         * 金の手帖: rgba(200,110,15,...) 黄昏の琥珀霧, height:130px, bottom:160px
+         */
+        .forest-mist {
+            position: fixed;
+            bottom: 160px; left: 0; right: 0;
+            height: 130px;
+            pointer-events: none; z-index: 2;
+            background: linear-gradient(to top,
+                rgba(200,110,15,0.12) 0%,
+                rgba(180,90,10,0.07) 40%,
+                rgba(160,80,8,0.03) 75%,
+                transparent 100%);
+            filter: blur(14px);
+        }
+
+        /* ===== MAGICAL SPARKS (金・青・紫の魔法粒子) ===== */
+        .particles {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none; z-index: 0; overflow: hidden;
+        }
+        .particle {
+            position: absolute; border-radius: 50%;
+            animation: particle-float linear infinite;
+        }
+        /* Gold sparks */
+        .particle:nth-child(1), .particle:nth-child(4), .particle:nth-child(7) {
+            background: rgba(255, 215, 80, 0.85);
+            box-shadow: 0 0 8px rgba(255,200,50,0.7), 0 0 16px rgba(255,180,30,0.3);
+        }
+        /* Blue sparks */
+        .particle:nth-child(2), .particle:nth-child(5), .particle:nth-child(8) {
+            background: rgba(140, 210, 255, 0.82);
+            box-shadow: 0 0 7px rgba(100,180,255,0.65), 0 0 14px rgba(80,150,255,0.3);
+        }
+        /* Purple sparks */
+        .particle:nth-child(3), .particle:nth-child(6) {
+            background: rgba(210, 150, 255, 0.78);
+            box-shadow: 0 0 8px rgba(180,110,255,0.6), 0 0 16px rgba(160,90,255,0.25);
+        }
+        /* White sparks */
+        .particle:nth-child(9), .particle:nth-child(10) {
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 10px rgba(255,255,255,0.7), 0 0 20px rgba(220,240,255,0.4);
+        }
+        .particle:nth-child(1)  { width:8px;  height:8px;  left:9%;  animation-duration:18s; animation-delay:0s;   --drift:40px;  }
+        .particle:nth-child(2)  { width:5px;  height:5px;  left:24%; animation-duration:22s; animation-delay:3s;   --drift:-30px; }
+        .particle:nth-child(3)  { width:10px; height:10px; left:40%; animation-duration:20s; animation-delay:6s;   --drift:50px;  }
+        .particle:nth-child(4)  { width:6px;  height:6px;  left:55%; animation-duration:15s; animation-delay:1s;   --drift:-20px; }
+        .particle:nth-child(5)  { width:8px;  height:8px;  left:70%; animation-duration:25s; animation-delay:8s;   --drift:35px;  }
+        .particle:nth-child(6)  { width:4px;  height:4px;  left:84%; animation-duration:19s; animation-delay:4s;   --drift:-45px; }
+        .particle:nth-child(7)  { width:7px;  height:7px;  left:14%; animation-duration:28s; animation-delay:10s;  --drift:25px;  }
+        .particle:nth-child(8)  { width:9px;  height:9px;  left:60%; animation-duration:16s; animation-delay:12s;  --drift:-30px; }
+        .particle:nth-child(9)  { width:5px;  height:5px;  left:32%; animation-duration:23s; animation-delay:7s;   --drift:60px;  }
+        .particle:nth-child(10) { width:6px;  height:6px;  left:78%; animation-duration:21s; animation-delay:15s;  --drift:-40px; }
+        @keyframes particle-float {
+            0%   { transform: translateY(100vh) translateX(0);             opacity: 0;    }
+            5%   {                                                           opacity: 0.75; }
+            95%  {                                                           opacity: 0.38; }
+            100% { transform: translateY(-80px) translateX(var(--drift));  opacity: 0;    }
+        }
+
+        /* ===== HEADER ===== */
+        /* ===== HEADER: 言の葉堂 ===== */
+        .header-plate {
+            background: linear-gradient(160deg,
+                rgba(10,7,28,0.96) 0%,
+                rgba(16,10,40,0.97) 50%,
+                rgba(10,12,26,0.96) 100%);
+            border: 1px solid var(--s-border);
+            border-radius: 20px;
+            padding: 18px 28px 20px;
+            text-align: center;
+            box-shadow:
+                0 10px 40px rgba(0,0,0,0.65),
+                0 0 0 1px rgba(80,60,10,0.25),
+                0 0 60px var(--s-glow-dim),
+                inset 0 1px 0 rgba(230,200,70,0.22),
+                inset 0 -1px 0 rgba(120,80,10,0.18);
+            backdrop-filter: blur(12px);
+            margin-bottom: 25px;
+            width: 90%; max-width: 450px;
+            position: relative; z-index: 2;
+        }
+        /* 角の装飾 */
+        .header-plate::before,
+        .header-plate::after {
+            content: '❧';
+            position: absolute; top: 12px;
+            font-size: 13px; color: rgba(210,170,50,0.45);
+            line-height: 1;
+        }
+        .header-plate::before { left: 16px; }
+        .header-plate::after  { right: 16px; transform: scaleX(-1); }
+
+        /* シリーズ名 */
+        .series-name {
+            font-size: 10px; letter-spacing: 0.22em;
+            color: rgba(220,185,80,0.6);
+            font-family: 'Noto Serif JP', serif;
+            margin: 0 0 6px; text-transform: uppercase;
+        }
+        /* 区切り線 */
+        .series-divider {
+            display: flex; align-items: center; gap: 8px;
+            margin: 0 0 10px;
+        }
+        .series-divider::before,
+        .series-divider::after {
+            content: '';
+            flex: 1; height: 1px;
+            background: linear-gradient(to right, transparent, rgba(200,165,40,0.4), transparent);
+        }
+        .series-divider span { color: rgba(210,175,60,0.55); font-size: 10px; }
+
+        /* 手帖タイトル（金グラデーション） */
+        h1 {
+            margin: 0 0 4px;
+            font-size: 34px;
+            font-family: 'Noto Serif JP', serif;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            background: linear-gradient(180deg,
+                #f5e285 0%, #d4980c 35%, #e8c030 55%, #f0d860 80%, #c8900a 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 12px rgba(220,175,40,0.65))
+                    drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+        /* サブタイトル */
+        .book-subtitle {
+            font-size: 11px; color: rgba(220,185,80,0.72);
+            letter-spacing: 0.14em;
+            font-family: 'Noto Serif JP', serif;
+            margin: 0 0 12px;
+        }
+        /* シリーズインジケーター */
+        .series-indicator {
+            display: flex; justify-content: center; align-items: center;
+            gap: 10px; margin: 0 0 14px;
+        }
+        .series-dot {
+            width: 30px; height: 30px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: bold;
+            font-family: 'Noto Serif JP', serif;
+            transition: all 0.2s;
+        }
+        .series-dot.inactive {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: rgba(255,255,255,0.28);
+        }
+        .series-dot.active-gold {
+            background: linear-gradient(135deg, #7a5808, #c89018, #e8c030, #a06c10);
+            border: 1px solid rgba(240,210,80,0.7);
+            color: #fff8d0;
+            box-shadow: 0 0 14px rgba(210,165,35,0.6), 0 0 28px rgba(180,130,20,0.25);
+            font-size: 13px;
+        }
+        .counter { font-size: 18px; color: #c8a060; margin: 0 0 10px 0; font-weight: bold; }
+
+        .header-info-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+        .gacha-limit-info {
+            font-size: 13px; color: #ffe8a0; font-weight: bold; display: inline-block;
+            background: linear-gradient(#3a2860, #220e40);
+            padding: 5px 14px; border-radius: 20px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3); border: 1px solid #6a3a90;
+        }
+        .streak-info {
+            font-size: 13px; color: #fefaf0; font-weight: bold; display: inline-block;
+            background: linear-gradient(#b05020, #803010);
+            padding: 5px 14px; border-radius: 20px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2); border: 1px solid #602010;
+        }
+        .combo-display {
+            background: linear-gradient(90deg, #b04010, #803010);
+            color: #fff3e0; font-size: 13px; font-weight: bold;
+            padding: 5px 18px; border-radius: 20px; margin-top: 8px;
+            box-shadow: 0 2px 8px rgba(160,60,16,0.35); border: 1px solid #602010;
+            display: none;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn-group {
+            display: flex; gap: 12px; margin-bottom: 20px;
+            flex-wrap: wrap; justify-content: center;
+            position: relative; z-index: 2;
+        }
+        .scan-btn {
+            padding: 13px 22px; font-size: 15px; font-weight: bold;
+            background: linear-gradient(#5a7a44, #3a5828);
+            color: #f0f8e8; border: 1px solid #284018; border-radius: 25px;
+            cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            transition: all 0.2s; font-family: 'Noto Serif JP', serif;
+        }
+        .scan-btn:hover { background: linear-gradient(#3a5828, #284018); }
+        .gacha-btn {
+            padding: 13px 22px; font-size: 15px; font-weight: bold;
+            background: linear-gradient(#5c4888, #3c2860);
+            color: #f0e8ff; border: 1px solid #281848; border-radius: 25px;
+            cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            transition: all 0.2s; font-family: 'Noto Serif JP', serif;
+        }
+        .gacha-btn:hover { background: linear-gradient(#3c2860, #281848); }
+        .gacha-btn:disabled {
+            background: linear-gradient(#7a7568, #5a5550);
+            border-color: #4a4840; color: #b0a898;
+            cursor: not-allowed; box-shadow: none;
+        }
+        .coupon-open-btn {
+            padding: 13px 22px; font-size: 15px; font-weight: bold;
+            background: linear-gradient(#3a6850, #285038);
+            color: #e8f8f0; border: 1px solid #183828; border-radius: 25px;
+            cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            transition: all 0.2s; font-family: 'Noto Serif JP', serif;
+        }
+        .coupon-open-btn:hover { background: linear-gradient(#285038, #183828); }
+
+        /* ===== TABS ===== */
+        .tabs-container {
+            display: flex; gap: 10px; width: 100%; max-width: 750px;
+            margin-bottom: 10px; overflow-x: auto; padding-bottom: 5px;
+            position: relative; z-index: 2;
+        }
+        .tab-button {
+            padding: 10px 20px; font-size: 14px; font-weight: bold;
+            background: rgba(12, 8, 40, 0.55); color: #c8a060;
+            border: 2px solid rgba(160,120,40,0.4); border-radius: 10px;
+            cursor: pointer; transition: all 0.2s;
+            backdrop-filter: blur(4px); font-family: 'Noto Serif JP', serif;
+        }
+        .tab-button:hover { background: rgba(20,12,55,0.75); color: #e0c070; }
+        .tab-button.active {
+            background: rgba(40, 20, 80, 0.85); color: #e8c870;
+            border-color: #c8a030; box-shadow: 0 3px 12px rgba(180,130,30,0.3),
+            0 0 16px rgba(140,100,20,0.15);
+        }
+
+        /* ===== COLLECTION GRID ===== */
+        .collection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(min(120px, 100%), 1fr));
+            gap: 15px; width: 100%; max-width: 750px;
+            position: relative; z-index: 2;
+        }
+        @media (min-width: 600px) { .collection-grid { grid-template-columns: repeat(5, 1fr); } }
+
+        .card-container {
+            background: linear-gradient(160deg, #1e1838 0%, #150f28 100%);
+            border: 2px solid #4a3870;
+            border-radius: 12px; padding: 8px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+            text-align: center; cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+        }
+        .card-container:active { transform: scale(0.95); }
+        .card-img { width: 100%; height: auto; border-radius: 8px; display: block; }
+        .locked-placeholder {
+            width: 100%; aspect-ratio: 2 / 3;
+            background: linear-gradient(160deg, #3a3028 0%, #221c14 100%);
+            border-radius: 8px; display: flex; justify-content: center; align-items: center;
+            color: #a09070; font-size: 32px; font-weight: bold;
+            box-shadow: inset 0 0 12px rgba(0,0,0,0.5);
+        }
+        .card-info { margin-top: 8px; font-size: 13px; font-weight: bold; color: #c8b080; font-family: 'Noto Serif JP', serif; }
+
+        /* ===== MODALS ===== */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(8,6,20,0.82); z-index: 15;
+            justify-content: center; align-items: center;
+            backdrop-filter: blur(3px);
+        }
+        .custom-box {
+            background: linear-gradient(160deg, #f4f0fa 0%, #ede8f8 100%);
+            padding: 25px; border-radius: 16px;
+            width: 85%; max-width: 400px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(100,60,180,0.15);
+            border: 2px solid #9a7a3a; box-sizing: border-box;
+        }
+        .modal-input {
+            width: 100%; padding: 12px; font-size: 18px;
+            border: 2px solid #c0a870; border-radius: 8px;
+            margin-bottom: 15px; text-align: center; outline: none;
+            background: #fffdf5; font-family: 'Noto Serif JP', serif;
+            box-sizing: border-box;
+        }
+        .modal-input:focus { border-color: #8a6a2a; }
+        .modal-btn {
+            width: 100%; padding: 12px; font-size: 16px; font-weight: bold;
+            background: #7a5a1a; color: #fdf0d0; border: none;
+            border-radius: 8px; cursor: pointer; font-family: 'Noto Serif JP', serif;
+        }
+        .modal-btn:hover { background: #5a4010; }
+        .modal-cancel-btn {
+            margin-top: 12px; background: none; border: none;
+            color: #7a6a50; cursor: pointer; text-decoration: underline;
+            font-size: 14px; font-family: 'Noto Serif JP', serif;
+        }
+        .quiz-english {
+            font-size: 22px; font-weight: bold; color: #2a1a50;
+            padding: 10px; margin: 10px 0 15px 0;
+            background: #f0ecff; border-radius: 8px; border: 1px solid #d0c8f0;
+            font-family: 'EB Garamond', serif; font-style: italic; letter-spacing: 0.04em;
+        }
+        .quiz-sentence {
+            font-size: 18px; color: #2a1a50; padding: 14px 16px;
+            margin: 10px 0 16px 0; background: #f0ecff;
+            border-radius: 10px; border: 1px solid #d0c8f0;
+            font-family: 'EB Garamond', serif; line-height: 1.7; text-align: left;
+        }
+        .quiz-blank { font-size: 22px; font-weight: bold; color: #8a4010; letter-spacing: 0.1em; }
+        .quiz-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+        .quiz-choice-btn {
+            padding: 12px 8px; font-size: 15px; font-weight: bold;
+            background: #fffdf5; color: #3a2a10;
+            border: 2px solid #c0a870; border-radius: 10px;
+            cursor: pointer; font-family: 'EB Garamond', serif;
+            transition: all 0.15s; line-height: 1.3;
+        }
+        .quiz-choice-btn:hover { background: #f0dcaa; border-color: #8a6a2a; transform: translateY(-1px); }
+        .quiz-choice-btn.correct { background: #d4edda; border-color: #2a8a50; color: #1a5a30; }
+        .quiz-choice-btn.wrong   { background: #f8d7da; border-color: #8a2a2a; color: #5a1010; }
+
+        #camera-modal { background: rgba(10,8,4,0.88); z-index: 10; flex-direction: column; }
+        #reader { width: 300px; background: white; border-radius: 8px; overflow: hidden; }
+        .camera-close {
+            margin-top: 15px; padding: 8px 16px;
+            background: #fdf8ea; border: none; border-radius: 4px;
+            cursor: pointer; font-family: 'Noto Serif JP', serif;
+        }
+
+        /* ===== GACHA OVERLAY ===== */
+        #gacha-overlay {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(ellipse at 50% 55%, #1a1060 0%, #0e0840 50%, #070520 100%);
+            z-index: 20; flex-direction: column;
+            justify-content: center; align-items: center;
+        }
+        .gacha-container {
+            display: flex; justify-content: center; gap: 15px;
+            flex-wrap: wrap; max-width: 90%; perspective: 1000px; margin-bottom: 30px;
+        }
+        .gacha-card {
+            width: 140px; height: 240px; transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .gacha-card.do-flip { transform: rotateY(180deg); }
+        .gacha-face {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+            border-radius: 10px; display: flex; flex-direction: column;
+            justify-content: flex-start; align-items: center;
+            background: linear-gradient(160deg, #1e1838 0%, #130e28 100%); box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+        }
+        .gacha-back {
+            background: linear-gradient(135deg, #3a2070, #1e0848);
+            color: #c8a0e0; font-size: 36px; font-weight: bold;
+            border: 3px solid #7040a0; justify-content: center;
+        }
+        .gacha-back.is-missed {
+            background: linear-gradient(135deg, #3a3228, #181410);
+            color: #706858; border-color: #4a4038; font-size: 28px;
+        }
+        .gacha-front { transform: rotateY(180deg); padding: 5px; border: 3px solid #9a7a2a; border-radius: 10px; }
+        .gacha-front img { width: 100%; max-height: 65%; object-fit: contain; border-radius: 5px; }
+        .gacha-info { margin-top: 4px; font-size: 13px; font-weight: bold; text-align: center; color: #c8b080; font-family: 'Noto Serif JP', serif; }
+        .gacha-close-btn {
+            display: none; padding: 12px 40px; font-size: 18px; font-weight: bold;
+            background: #7a5a1a; color: #fdf0d0; border: none; border-radius: 25px;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            font-family: 'Noto Serif JP', serif;
+        }
+
+        /* ===== ZOOM OVERLAY ===== */
+        #zoom-overlay {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(8,6,20,0.88);
+            z-index: 30; justify-content: center; align-items: center;
+        }
+        .zoom-box {
+            position: relative; background: linear-gradient(160deg, #f4f0fa 0%, #ede8f8 100%); padding: 15px;
+            border-radius: 20px; width: 85%; max-width: 320px;
+            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.6), 0 0 20px rgba(100,60,180,0.2);
+            animation: zoomIn 0.25s ease-out; border: 3px solid #9a7a3a;
+        }
+        .zoom-box img { width: 100%; height: auto; border-radius: 12px; }
+        .zoom-info { margin-top: 12px; font-size: 18px; font-weight: bold; color: #2a1a50; font-family: 'Noto Serif JP', serif; }
+        .zoom-close-btn {
+            position: absolute; top: -15px; right: -15px;
+            width: 36px; height: 36px; background: #8a4040;
+            color: #fdf0e0; border: 2px solid #fdf8ea; border-radius: 50%;
+            font-size: 18px; font-weight: bold; cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        @keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* ==================== RARITY SYSTEM ==================== */
+
+        /* --- Badges (collection grid) --- */
+        .rarity-badge {
+            position: absolute; top: 3px; right: 3px;
+            font-size: 9px; font-weight: bold; padding: 2px 5px;
+            border-radius: 3px; color: #fff; line-height: 1;
+            pointer-events: none; font-family: 'EB Garamond', serif;
+        }
+        .rarity-badge-N  { background: #6a5a48; }
+        .rarity-badge-R  { background: #2a5890; }
+        .rarity-badge-SR { background: #5a3888; box-shadow: 0 0 4px rgba(160,120,200,0.5); }
+        .rarity-badge-UR { background: #8a6010; border: 1px solid #d0a030; color: #fff8d8; }
+
+        /* --- Collection card rarity backgrounds --- */
+        .card-rarity-R {
+            background: linear-gradient(160deg, #1a2a4a 0%, #0e1c38 100%);
+            border-color: #3870b8;
+            box-shadow: 0 4px 14px rgba(56,112,184,0.35), 0 2px 6px rgba(0,0,0,0.3);
+        }
+        .card-rarity-SR {
+            background: linear-gradient(160deg, #281850 0%, #180840 100%);
+            border-color: #7040b0;
+            box-shadow: 0 4px 16px rgba(112,64,176,0.4), 0 2px 6px rgba(0,0,0,0.3);
+        }
+        @keyframes golden-shimmer {
+            0%,100% { border-color: #b08828; box-shadow: 0 4px 14px rgba(160,136,40,0.32), 0 2px 6px rgba(0,0,0,0.12); }
+            50%      { border-color: #d0b040; box-shadow: 0 4px 20px rgba(200,168,40,0.48), 0 2px 6px rgba(0,0,0,0.12); }
+        }
+        .card-rarity-UR {
+            background: linear-gradient(160deg, #2a1c0a 0%, #1c1004 100%);
+            animation: golden-shimmer 3s ease-in-out infinite;
+        }
+
+        /* --- Badge shimmer for UR --- */
+        @keyframes ur-shimmer { 0%,100% { background: #8a6010; } 50% { background: #b08020; } }
+        .rarity-badge-UR { animation: ur-shimmer 2s ease-in-out infinite; }
+
+        /* ======= SVG BOTANICAL CARD FRAMES (improvement 3) ======= */
+        /* N: 4-pointed sparkle stars at bottom corners */
+        .card-container:not(.locked)::before {
+            content: '';
+            position: absolute; inset: 3px; border-radius: 10px;
+            pointer-events: none; z-index: 1;
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cpath d='M11,2 L12.5,9.5 L20,11 L12.5,12.5 L11,20 L9.5,12.5 L2,11 L9.5,9.5 Z' fill='%23a09060' opacity='0.7'/%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cpath d='M11,2 L12.5,9.5 L20,11 L12.5,12.5 L11,20 L9.5,12.5 L2,11 L9.5,9.5 Z' fill='%23a09060' opacity='0.7'/%3E%3C/svg%3E");
+            background-position: bottom left, bottom right;
+            background-repeat: no-repeat;
+            background-size: 22px 22px;
+        }
+
+        /* R: crescent moon + 5-pointed star at 4 corners */
+        .card-rarity-R::before {
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Cpath d='M8,22 A10,10 0 1,1 22,8 A6,6 0 1,0 8,22Z' fill='%234878b0' opacity='0.65'/%3E%3Cpath d='M21,5 L22,8 L25,9 L22,10 L21,13 L20,10 L17,9 L20,8 Z' fill='%234878b0' opacity='0.7'/%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28' transform='scale(-1,1) translate(-28,0)'%3E%3Cpath d='M8,22 A10,10 0 1,1 22,8 A6,6 0 1,0 8,22Z' fill='%234878b0' opacity='0.65'/%3E%3Cpath d='M21,5 L22,8 L25,9 L22,10 L21,13 L20,10 L17,9 L20,8 Z' fill='%234878b0' opacity='0.7'/%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28' transform='scale(1,-1) translate(0,-28)'%3E%3Cpath d='M8,22 A10,10 0 1,1 22,8 A6,6 0 1,0 8,22Z' fill='%234878b0' opacity='0.5'/%3E%3Cpath d='M21,5 L22,8 L25,9 L22,10 L21,13 L20,10 L17,9 L20,8 Z' fill='%234878b0' opacity='0.55'/%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28' transform='scale(-1,-1) translate(-28,-28)'%3E%3Cpath d='M8,22 A10,10 0 1,1 22,8 A6,6 0 1,0 8,22Z' fill='%234878b0' opacity='0.5'/%3E%3Cpath d='M21,5 L22,8 L25,9 L22,10 L21,13 L20,10 L17,9 L20,8 Z' fill='%234878b0' opacity='0.55'/%3E%3C/svg%3E");
+            background-position: bottom left, bottom right, top left, top right;
+            background-repeat: no-repeat;
+            background-size: 28px 28px;
+        }
+
+        /* SR: crystal shards + 5-pointed star at 4 corners */
+        .card-rarity-SR::before {
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpolygon points='4,28 10,14 18,20' fill='%238855bb' opacity='0.55'/%3E%3Cpolygon points='4,28 14,18 8,8' fill='%23c090e0' opacity='0.4'/%3E%3Cpath d='M22,4 L23.5,8.5 L28,10 L23.5,11.5 L22,16 L20.5,11.5 L16,10 L20.5,8.5 Z' fill='%23c090e0' opacity='0.7'/%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpolygon points='28,28 22,14 14,20' fill='%238855bb' opacity='0.55'/%3E%3Cpolygon points='28,28 18,18 24,8' fill='%23c090e0' opacity='0.4'/%3E%3Cpath d='M10,4 L11.5,8.5 L16,10 L11.5,11.5 L10,16 L8.5,11.5 L4,10 L8.5,8.5 Z' fill='%23c090e0' opacity='0.7'/%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpolygon points='4,4 10,18 18,12' fill='%238855bb' opacity='0.5'/%3E%3Cpolygon points='4,4 14,14 8,24' fill='%23c090e0' opacity='0.35'/%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpolygon points='28,4 22,18 14,12' fill='%238855bb' opacity='0.5'/%3E%3Cpolygon points='28,4 18,14 24,24' fill='%23c090e0' opacity='0.35'/%3E%3C/svg%3E");
+            background-position: bottom left, bottom right, top left, top right;
+            background-repeat: no-repeat;
+            background-size: 32px 32px;
+        }
+
+        /* UR: arcane golden geometry + rays + star at 4 corners */
+        @keyframes gold-arcane-pulse {
+            0%,100% { opacity: 0.6; }
+            50%      { opacity: 1.0; }
+        }
+        .card-rarity-UR::before {
+            animation: gold-arcane-pulse 2.5s ease-in-out infinite;
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Ccircle cx='8' cy='28' r='5' fill='none' stroke='%23b08828' stroke-width='1.2' opacity='0.6'/%3E%3Cline x1='8' y1='23' x2='8' y2='18' stroke='%23c8a030' stroke-width='1' opacity='0.7'/%3E%3Cline x1='3' y1='28' x2='1' y2='28' stroke='%23c8a030' stroke-width='1' opacity='0.7'/%3E%3Cline x1='10.5' y1='25.5' x2='13' y2='23' stroke='%23c8a030' stroke-width='1' opacity='0.6'/%3E%3Cpath d='M28,4 L29.5,8 L34,9.5 L29.5,11 L28,15 L26.5,11 L22,9.5 L26.5,8 Z' fill='%23e8c848' opacity='0.8'/%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Ccircle cx='28' cy='28' r='5' fill='none' stroke='%23b08828' stroke-width='1.2' opacity='0.6'/%3E%3Cline x1='28' y1='23' x2='28' y2='18' stroke='%23c8a030' stroke-width='1' opacity='0.7'/%3E%3Cline x1='33' y1='28' x2='35' y2='28' stroke='%23c8a030' stroke-width='1' opacity='0.7'/%3E%3Cline x1='25.5' y1='25.5' x2='23' y2='23' stroke='%23c8a030' stroke-width='1' opacity='0.6'/%3E%3Cpath d='M8,4 L9.5,8 L14,9.5 L9.5,11 L8,15 L6.5,11 L2,9.5 L6.5,8 Z' fill='%23e8c848' opacity='0.8'/%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Ccircle cx='8' cy='8' r='5' fill='none' stroke='%23b08828' stroke-width='1.2' opacity='0.55'/%3E%3Cline x1='8' y1='13' x2='8' y2='18' stroke='%23c8a030' stroke-width='1' opacity='0.65'/%3E%3Cline x1='3' y1='8' x2='1' y2='8' stroke='%23c8a030' stroke-width='1' opacity='0.65'/%3E%3Cline x1='10.5' y1='10.5' x2='13' y2='13' stroke='%23c8a030' stroke-width='1' opacity='0.55'/%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Ccircle cx='28' cy='8' r='5' fill='none' stroke='%23b08828' stroke-width='1.2' opacity='0.55'/%3E%3Cline x1='28' y1='13' x2='28' y2='18' stroke='%23c8a030' stroke-width='1' opacity='0.65'/%3E%3Cline x1='33' y1='8' x2='35' y2='8' stroke='%23c8a030' stroke-width='1' opacity='0.65'/%3E%3Cline x1='25.5' y1='10.5' x2='23' y2='13' stroke='%23c8a030' stroke-width='1' opacity='0.55'/%3E%3C/svg%3E");
+            background-position: bottom left, bottom right, top left, top right;
+            background-repeat: no-repeat;
+            background-size: 36px 36px;
+        }
+
+        /* --- Gacha card backs (rarity) --- */
+        .gacha-back.rarity-N  { background: linear-gradient(135deg, #3a2070, #1e0848); color: #c8a0e0; border-color: #7040a0; }
+        .gacha-back.rarity-R  { background: linear-gradient(135deg, #0e3870, #082050); color: #a0c8f0; border-color: #2860c0; box-shadow: 0 0 16px rgba(40,96,192,0.3); }
+        .gacha-back.rarity-SR { background: linear-gradient(135deg, #3a1868, #200840); color: #d0b0f0; border-color: #8050c8; box-shadow: 0 0 20px rgba(128,80,200,0.35); }
+        @keyframes golden-border {
+            0%,100% { border-color: #c09030; box-shadow: 0 0 20px rgba(192,144,48,0.5); }
+            50%      { border-color: #e0c050; box-shadow: 0 0 28px rgba(224,192,80,0.6); }
+        }
+        .gacha-back.rarity-UR { background: linear-gradient(135deg, #7a4e00, #3a2400); color: #ffe090; border-color: #d0a030; animation: golden-border 2s ease-in-out infinite; }
+
+        /* --- Gacha card fronts --- */
+        .gacha-front.rarity-front-N  { border-color: #9a7a2a; }
+        .gacha-front.rarity-front-R  { border-color: #2860c0; box-shadow: 0 0 10px rgba(40,96,192,0.4); }
+        .gacha-front.rarity-front-SR { border-color: #8050c8; box-shadow: 0 0 14px rgba(128,80,200,0.45), 0 0 30px rgba(180,130,230,0.2); }
+        .gacha-front.rarity-front-UR { animation: golden-border 2s ease-in-out infinite; border-width: 4px; }
+
+        /* --- Gacha rarity badges --- */
+        .gacha-rarity-badge {
+            font-size: 11px; font-weight: bold; padding: 3px 12px;
+            border-radius: 8px; color: #fff; margin: 5px 0 2px 0;
+            display: inline-block; font-family: 'EB Garamond', serif;
+        }
+        .gacha-rarity-badge-N  { background: #5a4a38; }
+        .gacha-rarity-badge-R  { background: #1a4888; }
+        .gacha-rarity-badge-SR { background: #5a2888; box-shadow: 0 0 6px rgba(128,80,200,0.5); }
+        .gacha-rarity-badge-UR { background: #8a6010; border: 1px solid #d0a030; color: #fff8d8; animation: ur-shimmer 1.5s ease-in-out infinite; }
+
+        /* ===== COMBO SYSTEM ===== */
+        @keyframes comboPulse { 0% { transform: scale(1); } 50% { transform: scale(1.07); } 100% { transform: scale(1); } }
+        .combo-pulse { animation: comboPulse 0.35s ease-out; }
+        @keyframes slideUp {
+            from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+            to   { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+        .combo-bonus-notice {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #8a4010, #c06020);
+            color: #fff8e0; padding: 13px 30px; border-radius: 14px;
+            font-size: 15px; font-weight: bold; text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4); z-index: 50;
+            display: none; border: 1px solid #e09040; white-space: nowrap;
+            font-family: 'Noto Serif JP', serif;
+        }
+
+        /* ===== STREAK BONUS MODAL ===== */
+        .streak-bonus-icon { font-size: 52px; margin: 5px 0 8px; display: block; }
+        .streak-day-label { font-size: 32px; font-weight: bold; color: #8a4010; margin: 0 0 6px 0; font-family: 'Noto Serif JP', serif; }
+        .streak-bonus-msg { font-size: 19px; font-weight: bold; color: #3a2a14; margin: 0 0 5px 0; }
+        .streak-bonus-sub { font-size: 13px; color: #7a6a50; margin: 0 0 18px 0; }
+
+        /* ===== XP / LEVEL BADGE ===== */
+        .xp-level-row {
+            display: flex; align-items: center; gap: 10px;
+            justify-content: center; margin-top: 8px;
+        }
+        .level-badge {
+            font-size: 13px; font-weight: bold; color: #1a0a30;
+            background: linear-gradient(135deg, #f0c840, #c89820);
+            padding: 4px 12px; border-radius: 20px;
+            border: 1px solid #a07010;
+            box-shadow: 0 2px 8px rgba(200,160,30,0.4);
+            font-family: 'EB Garamond', serif;
+            white-space: nowrap;
+        }
+        .xp-bar-wrap {
+            flex: 1; max-width: 160px; height: 10px;
+            background: rgba(255,255,255,0.1); border-radius: 5px;
+            border: 1px solid rgba(200,160,30,0.3); overflow: hidden;
+        }
+        .xp-bar-fill {
+            height: 100%; background: linear-gradient(90deg, #c89820, #f0e050);
+            border-radius: 5px; transition: width 0.4s ease;
+        }
+        .xp-label {
+            font-size: 11px; color: #c8a060; white-space: nowrap;
+        }
+
+        /* ===== DAILY GOAL BAR ===== */
+        .daily-goal-wrap {
+            margin-top: 10px; padding: 0 4px;
+        }
+        .daily-goal-label {
+            font-size: 12px; color: #c8d0e8; margin-bottom: 4px;
+            display: flex; justify-content: space-between;
+        }
+        .daily-goal-bar-bg {
+            height: 8px; background: rgba(255,255,255,0.1);
+            border-radius: 4px; border: 1px solid rgba(140,180,255,0.2); overflow: hidden;
+        }
+        .daily-goal-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3060a0, #60a0ff);
+            border-radius: 4px; transition: width 0.5s ease;
+        }
+        .daily-goal-bar-fill.complete {
+            background: linear-gradient(90deg, #208050, #40d090);
+        }
+
+        /* ===== STUDY MODE (TikTok 式) ===== */
+        #study-overlay {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(ellipse at 50% 40%, #12083a 0%, #080520 60%, #030310 100%);
+            z-index: 40; flex-direction: column;
+            justify-content: flex-start; align-items: center;
+            overflow: hidden;
+        }
+        .study-header {
+            width: 100%; padding: 14px 18px 10px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(0,0,0,0.3);
+        }
+        .study-mode-title {
+            color: #c8a060; font-size: 15px; font-weight: bold;
+            font-family: 'Noto Serif JP', serif;
+        }
+        .study-progress-text {
+            color: #a090c0; font-size: 13px; font-family: 'Noto Serif JP', serif;
+        }
+        .study-close-btn {
+            background: none; border: none; color: #c0b0d0;
+            font-size: 22px; cursor: pointer; line-height: 1;
+        }
+        .study-card-area {
+            flex: 1; width: 100%; display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
+            padding: 10px 20px; perspective: 1000px;
+        }
+        .study-flip-card {
+            width: 100%; max-width: 340px;
+            height: 420px; transform-style: preserve-3d;
+            transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer; position: relative;
+        }
+        .study-flip-card.flipped { transform: rotateY(180deg); }
+        .study-face {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+            border-radius: 20px; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
+        }
+        .study-face-front {
+            background: linear-gradient(160deg, #1e1638 0%, #100c28 100%);
+            border: 2px solid #5a4890;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 30px rgba(80,60,160,0.15);
+        }
+        .study-card-img-wrap {
+            width: 100%; max-height: 220px; overflow: hidden;
+            border-radius: 12px; margin-bottom: 18px;
+        }
+        .study-card-img { width: 100%; height: auto; display: block; border-radius: 12px; }
+        .study-english-word {
+            font-size: 26px; font-weight: bold; color: #e8d8ff;
+            font-family: 'EB Garamond', serif; font-style: italic;
+            letter-spacing: 0.04em; text-align: center;
+            text-shadow: 0 0 20px rgba(160,120,255,0.4);
+        }
+        .study-tap-hint {
+            font-size: 12px; color: #7060a0; margin-top: 12px;
+            font-family: 'Noto Serif JP', serif;
+        }
+        .study-face-back {
+            background: linear-gradient(160deg, #f4f0fa 0%, #ede8f8 100%);
+            border: 2px solid #9a7a3a;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            transform: rotateY(180deg);
+        }
+        .study-meaning {
+            font-size: 18px; color: #2a1a50; font-weight: bold;
+            text-align: center; font-family: 'Noto Serif JP', serif;
+            line-height: 1.6; margin-bottom: 14px;
+        }
+        .study-example {
+            font-size: 13px; color: #4a3a70; text-align: center;
+            font-family: 'Noto Serif JP', serif; line-height: 1.5;
+            background: rgba(100,80,180,0.08); border-radius: 8px;
+            padding: 8px 12px;
+        }
+        .study-face-back .study-english-word {
+            color: #3a2a70; font-size: 20px; margin-bottom: 10px;
+        }
+        .study-assessment {
+            display: flex; gap: 16px; margin-top: 6px; padding: 14px 20px;
+            width: 100%; max-width: 340px; justify-content: center;
+        }
+        .study-btn-know {
+            flex: 1; padding: 16px; font-size: 18px; font-weight: bold;
+            background: linear-gradient(#1a7a40, #0f5028); color: #e0ffe8;
+            border: 2px solid #0a4020; border-radius: 14px; cursor: pointer;
+            font-family: 'Noto Serif JP', serif;
+            box-shadow: 0 4px 16px rgba(20,100,50,0.4);
+            transition: transform 0.15s;
+        }
+        .study-btn-know:active { transform: scale(0.95); }
+        .study-btn-again {
+            flex: 1; padding: 16px; font-size: 18px; font-weight: bold;
+            background: linear-gradient(#8a1a1a, #5a0f0f); color: #ffe0e0;
+            border: 2px solid #400a0a; border-radius: 14px; cursor: pointer;
+            font-family: 'Noto Serif JP', serif;
+            box-shadow: 0 4px 16px rgba(120,20,20,0.4);
+            transition: transform 0.15s;
+        }
+        .study-btn-again:active { transform: scale(0.95); }
+        .study-assessment.hidden { opacity: 0; pointer-events: none; }
+        .study-nav-row {
+            display: flex; gap: 20px; padding: 8px 20px 20px;
+            justify-content: center; align-items: center;
+        }
+        .study-nav-btn {
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+            color: #a090c0; font-size: 22px; padding: 8px 22px;
+            border-radius: 10px; cursor: pointer; font-family: 'Noto Serif JP', serif;
+        }
+        .study-card-counter {
+            color: #7060a0; font-size: 13px; font-family: 'Noto Serif JP', serif;
+        }
+        /* Level up toast */
+        .levelup-toast {
+            position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #c89820, #f0c840);
+            color: #1a0a20; padding: 12px 28px; border-radius: 30px;
+            font-size: 16px; font-weight: bold; font-family: 'Noto Serif JP', serif;
+            box-shadow: 0 6px 24px rgba(200,160,30,0.5);
+            z-index: 100; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .levelup-toast.show { opacity: 1; }
+        /* XP flash */
+        @keyframes xpFloat {
+            0%   { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-40px); opacity: 0; }
+        }
+        .xp-float {
+            position: fixed; pointer-events: none; z-index: 100;
+            font-size: 15px; font-weight: bold; color: #f0c840;
+            font-family: 'EB Garamond', serif;
+            animation: xpFloat 1.2s ease-out forwards;
+        }
+        /* Study complete screen */
+        .study-complete {
+            display: none; flex-direction: column; align-items: center;
+            justify-content: center; height: 100%; padding: 30px;
+            text-align: center;
+        }
+        .study-complete-icon { font-size: 64px; margin-bottom: 16px; }
+        .study-complete-title {
+            font-size: 22px; font-weight: bold; color: #e8d070;
+            font-family: 'Noto Serif JP', serif; margin-bottom: 8px;
+        }
+        .study-complete-sub {
+            font-size: 14px; color: #a090c0; font-family: 'Noto Serif JP', serif;
+            margin-bottom: 24px;
+        }
+        .study-complete-btn {
+            padding: 14px 32px; font-size: 16px; font-weight: bold;
+            background: linear-gradient(#5c4888, #3c2860); color: #f0e8ff;
+            border: 1px solid #281848; border-radius: 25px; cursor: pointer;
+            font-family: 'Noto Serif JP', serif; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== ATMOSPHERIC BACKGROUND LAYERS ===== -->
+<!-- Moon -->
+<div class="moon-glow" aria-hidden="true"></div>
+<!-- Aurora mist -->
+<div class="aurora-mist" aria-hidden="true"></div>
+<!-- Star field -->
+<svg class="stars-layer" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 580" preserveAspectRatio="xMidYMid slice">
+  <!-- Large bright stars (金の手帖: warm white + amber glow) -->
+  <!-- 青の手帖では fill="white", 金では一部を amber/gold に -->
+  <circle cx="112" cy="35" r="1.9" fill="#fff8e8" opacity="1" style="animation:star-twinkle 4.2s ease-in-out infinite 0.5s"/>
+  <circle cx="338" cy="68" r="2.2" fill="#ffd060" opacity="0.98" style="animation:star-twinkle 5.8s ease-in-out infinite 1.2s; filter:drop-shadow(0 0 4px rgba(255,200,60,0.8))"/>
+  <circle cx="572" cy="28" r="2" fill="#fff4d0" opacity="1" style="animation:star-twinkle 3.5s ease-in-out infinite 0s"/>
+  <circle cx="712" cy="52" r="2.1" fill="#ffcc40" opacity="0.95" style="filter:drop-shadow(0 0 5px rgba(255,190,40,0.75))"/>
+  <circle cx="208" cy="125" r="1.8" fill="#fff0c8" opacity="0.9" style="animation:star-twinkle 6.1s ease-in-out infinite 2s"/>
+  <circle cx="615" cy="108" r="1.8" fill="#ffeaa0" opacity="0.88"/>
+  <circle cx="448" cy="45" r="2.1" fill="#ffd848" opacity="0.98" style="animation:star-twinkle 4.8s ease-in-out infinite 3.5s; filter:drop-shadow(0 0 5px rgba(255,200,50,0.8))"/>
+  <circle cx="768" cy="135" r="1.7" fill="#fff2d0" opacity="0.85"/>
+  <circle cx="890" cy="75" r="1.8" fill="#ffe890" opacity="0.9" style="animation:star-twinkle 5.2s ease-in-out infinite 1.8s"/>
+  <!-- Gold-accent stars (金の手帖メイン) -->
+  <circle cx="258" cy="55" r="1.8" fill="#ffca20" opacity="0.95" style="animation:star-twinkle 7s ease-in-out infinite 0.8s; filter:drop-shadow(0 0 6px rgba(255,185,20,0.85))"/>
+  <circle cx="672" cy="82" r="1.7" fill="#ffc030" opacity="0.92" style="filter:drop-shadow(0 0 5px rgba(255,175,30,0.75))"/>
+  <circle cx="510" cy="142" r="1.6" fill="#ffd870" opacity="0.88" style="animation:star-twinkle 6.5s ease-in-out infinite 4s"/>
+  <circle cx="155" cy="185" r="1.5" fill="#ffe8a0" opacity="0.82"/>
+  <circle cx="830" cy="48" r="1.9" fill="#ffb818" opacity="0.9" style="animation:star-twinkle 5s ease-in-out infinite 2.2s; filter:drop-shadow(0 0 6px rgba(255,170,20,0.8))"/>
+  <!-- Medium stars (やや暖色) -->
+  <circle cx="52"  cy="98"  r="1.1" fill="#fff0d8" opacity="0.75"/>
+  <circle cx="162" cy="192" r="1.1" fill="#ffe8c0" opacity="0.7"/>
+  <circle cx="282" cy="148" r="1.1" fill="#fff4d8" opacity="0.78" style="animation:star-twinkle 8s ease-in-out infinite 2.5s"/>
+  <circle cx="392" cy="182" r="1.1" fill="#ffeac0" opacity="0.65"/>
+  <circle cx="502" cy="78"  r="1.1" fill="#fff0d0" opacity="0.8"/>
+  <circle cx="642" cy="168" r="1.1" fill="#ffe8b8" opacity="0.72"/>
+  <circle cx="752" cy="92"  r="1.1" fill="#fff2d8" opacity="0.68"/>
+  <circle cx="858" cy="152" r="1.1" fill="#ffecc0" opacity="0.7" style="animation:star-twinkle 5.5s ease-in-out infinite 3s"/>
+  <circle cx="968" cy="88"  r="1.1" fill="#fff0d0" opacity="0.72"/>
+  <circle cx="42"  cy="228" r="1.1" fill="white" opacity="0.6"/>
+  <circle cx="148" cy="282" r="1.1" fill="white" opacity="0.58"/>
+  <circle cx="352" cy="262" r="1.1" fill="white" opacity="0.62"/>
+  <circle cx="468" cy="318" r="1.1" fill="white" opacity="0.5"/>
+  <circle cx="568" cy="238" r="1.1" fill="white" opacity="0.6" style="animation:star-twinkle 9s ease-in-out infinite 1s"/>
+  <circle cx="688" cy="292" r="1.1" fill="white" opacity="0.55"/>
+  <circle cx="808" cy="255" r="1.1" fill="white" opacity="0.52"/>
+  <circle cx="925" cy="228" r="1.1" fill="white" opacity="0.58"/>
+  <!-- Small faint stars -->
+  <circle cx="30"  cy="60"  r="0.7" fill="white" opacity="0.5"/>
+  <circle cx="85"  cy="140" r="0.7" fill="white" opacity="0.48"/>
+  <circle cx="135" cy="85"  r="0.7" fill="white" opacity="0.55"/>
+  <circle cx="222" cy="42"  r="0.7" fill="white" opacity="0.5"/>
+  <circle cx="298" cy="125" r="0.7" fill="white" opacity="0.45"/>
+  <circle cx="358" cy="210" r="0.7" fill="white" opacity="0.42"/>
+  <circle cx="425" cy="112" r="0.7" fill="white" opacity="0.5"/>
+  <circle cx="485" cy="175" r="0.7" fill="white" opacity="0.46"/>
+  <circle cx="535" cy="240" r="0.7" fill="white" opacity="0.44"/>
+  <circle cx="605" cy="135" r="0.7" fill="white" opacity="0.5"/>
+  <circle cx="658" cy="195" r="0.7" fill="white" opacity="0.45"/>
+  <circle cx="705" cy="65"  r="0.7" fill="white" opacity="0.52"/>
+  <circle cx="775" cy="182" r="0.7" fill="white" opacity="0.46"/>
+  <circle cx="835" cy="115" r="0.7" fill="white" opacity="0.48"/>
+  <circle cx="895" cy="175" r="0.7" fill="white" opacity="0.44"/>
+  <circle cx="955" cy="135" r="0.7" fill="white" opacity="0.5"/>
+  <circle cx="18"  cy="288" r="0.7" fill="white" opacity="0.38"/>
+  <circle cx="108" cy="348" r="0.7" fill="white" opacity="0.36"/>
+  <circle cx="192" cy="318" r="0.7" fill="white" opacity="0.4"/>
+  <circle cx="322" cy="372" r="0.7" fill="white" opacity="0.35"/>
+  <circle cx="412" cy="432" r="0.7" fill="white" opacity="0.32"/>
+  <circle cx="495" cy="325" r="0.7" fill="white" opacity="0.38"/>
+  <circle cx="568" cy="458" r="0.7" fill="white" opacity="0.3"/>
+  <circle cx="678" cy="405" r="0.7" fill="white" opacity="0.34"/>
+  <circle cx="762" cy="365" r="0.7" fill="white" opacity="0.38"/>
+  <circle cx="845" cy="435" r="0.7" fill="white" opacity="0.32"/>
+  <circle cx="925" cy="338" r="0.7" fill="white" opacity="0.36"/>
+  <circle cx="982" cy="465" r="0.7" fill="white" opacity="0.28"/>
+</svg>
+<!-- Forest base mist -->
+<div class="forest-mist" aria-hidden="true"></div>
+<!-- Forest silhouette -->
+<div class="forest-silhouette" aria-hidden="true">
+  <!--
+    山岳シルエット 4層構造（viewBox 0 0 1000 380）
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    各シリーズの色差し替えガイド:
+      Layer4(最遠/霞): 金 rgba(210,140,55,0.18) | 青 rgba(60,110,180,0.18) | 銀 rgba(140,155,175,0.18)
+      Layer3(遠景):    金 rgba(120,65,18,0.44)   | 青 rgba(30,70,140,0.44)  | 銀 rgba(80,100,130,0.44)
+      Layer2(中景):    金 rgba(38,18,5,0.82)      | 青 rgba(12,38,80,0.82)   | 銀 rgba(28,45,70,0.82)
+      Layer1(近景):    金 #050300                 | 青 #020508               | 銀 #040608
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  -->
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 380" preserveAspectRatio="xMidYMax slice">
+
+    <!-- Layer 4: 最遠景の幽霊山脈（霞んで薄く見える最高峰群） -->
+    <path fill="rgba(210,140,55,0.18)"
+      d="M0,380 L0,95
+         L28,82 L55,90 L82,68 L106,55 L122,65 L140,42 L158,56 L174,38
+         L192,22 L210,40 L228,26 L248,12 L265,24 L282,8 L300,20 L318,4
+         L336,16 L354,6 L372,22 L390,10 L408,24 L428,12 L448,28 L468,14
+         L488,30 L510,16 L532,32 L556,18 L578,32 L600,18 L622,34 L644,20
+         L668,8 L690,22 L712,10 L735,28 L758,16 L782,32 L805,16 L828,30
+         L852,12 L875,24 L898,8 L922,22 L946,12 L970,28 L1000,18
+         L1000,380 Z"/>
+
+    <!-- Layer 3: 遠景の連山（地平線に連なる山並み） -->
+    <path fill="rgba(120,65,18,0.44)"
+      d="M0,380 L0,158
+         L38,140 L75,154 L112,124 L145,110 L172,125 L200,100 L228,114
+         L255,100 L280,118 L308,96 L335,110 L362,92 L390,108 L418,90
+         L445,108 L472,90 L500,104 L528,90 L555,108 L582,120 L610,100
+         L638,114 L665,96 L692,112 L720,94 L748,110 L775,94 L803,110
+         L830,94 L858,110 L885,92 L912,110 L940,94 L968,110 L1000,96
+         L1000,380 Z"/>
+
+    <!-- Layer 2: 中景の山脈（夕陽を遮るシルエット） -->
+    <path fill="rgba(38,18,5,0.82)"
+      d="M0,380 L0,242
+         L40,220 L78,236 L115,212 L148,200 L175,215 L205,194 L235,210
+         L265,194 L292,212 L322,190 L352,208 L382,190 L412,208 L442,190
+         L472,208 L502,190 L532,208 L562,190 L592,208 L622,192 L652,210
+         L682,192 L712,210 L742,192 L772,210 L802,190 L832,208 L862,190
+         L892,208 L922,190 L952,208 L1000,194
+         L1000,380 Z"/>
+
+    <!-- Layer 1: 近景の稜線（最暗、最低、手前の山） -->
+    <path fill="#050300"
+      d="M0,380 L0,298
+         L45,278 L88,292 L128,270 L162,258 L188,274 L222,256 L258,272
+         L292,256 L325,272 L360,252 L395,270 L430,252 L466,270 L502,252
+         L538,270 L574,252 L610,270 L648,252 L684,270 L720,252 L758,270
+         L795,252 L832,270 L870,252 L908,270 L946,252 L1000,260
+         L1000,380 Z"/>
+
+  </svg>
+</div>
+
+<div class="particles" aria-hidden="true">
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+</div>
+
+<div class="header-plate">
+    <!-- 言の葉堂のひみつ手帖 シリーズヘッダー -->
+    <div class="series-name">言の葉堂のひみつ手帖</div>
+    <div class="series-divider"><span>✦</span></div>
+    <h1>金の手帖</h1>
+    <div class="book-subtitle">世界をひもとく　難関の英単語</div>
+    <div class="series-indicator">
+        <div class="series-dot inactive" title="青の手帖：日常を彩る 魔法の英単語">青</div>
+        <div class="series-dot inactive" title="銀の手帖：知性を磨く 上級の英単語">銀</div>
+        <div class="series-dot active-gold" title="金の手帖：世界をひもとく 難関の英単語">★</div>
+    </div>
+    <div class="counter" id="collectionCounter">0 / 50</div>
+    <div class="header-info-row">
+        <div class="gacha-limit-info" id="gachaLimitInfo">本日のガチャ残り: 1回</div>
+        <div class="streak-info" id="streakInfo">🔥 0日連続</div>
+    </div>
+    <div class="combo-display" id="comboDisplay">
+        🔥 <span id="comboCount">0</span>連続正解中！
+    </div>
+    <!-- XP / Level -->
+    <div class="xp-level-row" id="xpLevelRow">
+        <div class="level-badge" id="levelBadge">Lv.1 見習い魔法使い</div>
+        <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xpBarFill" style="width:0%"></div></div>
+        <div class="xp-label" id="xpLabel">0 XP</div>
+    </div>
+    <!-- Daily Goal -->
+    <div class="daily-goal-wrap">
+        <div class="daily-goal-label">
+            <span>📚 今日の学習</span>
+            <span id="dailyGoalText">0 / 10枚</span>
+        </div>
+        <div class="daily-goal-bar-bg">
+            <div class="daily-goal-bar-fill" id="dailyGoalFill" style="width:0%"></div>
+        </div>
+    </div>
+</div>
+
+<div class="btn-group">
+    <button class="scan-btn" onclick="openCamera()">QRコードをスキャン</button>
+    <button class="gacha-btn" id="directGachaBtn" onclick="startGachaViaButton()">デイリーガチャを引く</button>
+    <button class="coupon-open-btn" onclick="openCouponModal()">クーポン入力</button>
+    <button class="scan-btn" style="background:linear-gradient(#4a3068,#2a1848);border-color:#1a0838;color:#d8c8ff;" onclick="openStudyMode('all')">📖 学習モード</button>
+</div>
+
+<div class="tabs-container" id="tabsContainer"></div>
+
+<div id="camera-modal" class="modal-overlay">
+    <div id="reader"></div>
+    <button class="camera-close" onclick="closeCamera()">閉じる</button>
+</div>
+
+<div id="coupon-overlay" class="modal-overlay">
+    <div class="custom-box">
+        <h3>🎫 クーポンコード入力</h3>
+        <p style="font-size:13px;color:#555;margin:0 0 15px 0;">コードを入力すると、ガチャを引ける回数が増えます！</p>
+        <input type="text" id="couponInput" class="modal-input" placeholder="コードを入力" autocomplete="off">
+        <button class="modal-btn" style="background:#3a6850;" onclick="submitCoupon()">コードを適用する</button><br>
+        <button class="modal-cancel-btn" onclick="closeCouponModal()">閉じる</button>
+    </div>
+</div>
+
+<div id="quiz-overlay" class="modal-overlay">
+    <div class="custom-box">
+        <h3 style="margin:0 0 10px;color:#524130;" id="quizTitle">🔍 穴埋め問題</h3>
+        <div class="quiz-sentence" id="quizSentence"></div>
+        <div class="quiz-choices" id="quizChoices"></div>
+        <button class="modal-cancel-btn" onclick="closeQuiz()">やめる</button>
+    </div>
+</div>
+
+<div id="streak-bonus-overlay" class="modal-overlay">
+    <div class="custom-box">
+        <span class="streak-bonus-icon">🔥</span>
+        <p class="streak-day-label" id="streakDayLabel"></p>
+        <p class="streak-bonus-msg" id="streakBonusMsg"></p>
+        <p class="streak-bonus-sub">ガチャ残り回数に追加されました！</p>
+        <button class="modal-btn" style="background:linear-gradient(#8a4010, #5a2808);" onclick="closeStreakBonusModal()">やった！</button>
+    </div>
+</div>
+
+<div id="gacha-overlay">
+    <h2 id="gachaResultTitle" style="color:#e8d070;margin-bottom:30px;font-family:'Noto Serif JP',serif;text-shadow:0 0 18px rgba(220,180,50,0.6), 0 0 35px rgba(180,140,30,0.3);">結果発表！</h2>
+    <div class="gacha-container" id="gachaContainer"></div>
+    <button class="gacha-close-btn" id="gachaCloseBtn" onclick="closeGacha()">結果を確認して戻る</button>
+</div>
+
+<div id="zoom-overlay" onclick="closeZoom()">
+    <div class="zoom-box" onclick="event.stopPropagation()">
+        <button class="zoom-close-btn" onclick="closeZoom()">✕</button>
+        <div id="zoomContent"></div>
+    </div>
+</div>
+
+<div class="combo-bonus-notice" id="comboBonusNotice"></div>
+<div class="levelup-toast" id="levelupToast">✨ レベルアップ！</div>
+
+<!-- ===== STUDY MODE OVERLAY (TikTok式) ===== -->
+<div id="study-overlay">
+    <div class="study-header">
+        <div class="study-mode-title" id="studyModeTitle">📖 学習モード</div>
+        <div class="study-progress-text" id="studyProgressText">0 / 0</div>
+        <button class="study-close-btn" onclick="closeStudyMode()">✕</button>
+    </div>
+
+    <!-- Main card area -->
+    <div class="study-card-area" id="studyCardArea">
+        <div class="study-flip-card" id="studyFlipCard" onclick="onStudyCardTap()">
+            <!-- Front: image + English word -->
+            <div class="study-face study-face-front" id="studyFaceFront">
+                <div class="study-card-img-wrap" id="studyImgWrap">
+                    <img class="study-card-img" id="studyCardImg" src="" alt="">
+                </div>
+                <div class="study-english-word" id="studyEnglishWord"></div>
+                <div class="study-tap-hint">タップして意味を確認 →</div>
+            </div>
+            <!-- Back: meaning -->
+            <div class="study-face study-face-back" id="studyFaceBack">
+                <div class="study-english-word" id="studyEnglishWordBack"></div>
+                <div class="study-meaning" id="studyMeaning"></div>
+            </div>
+        </div>
+
+        <!-- Complete screen -->
+        <div class="study-complete" id="studyComplete">
+            <div class="study-complete-icon">🎓</div>
+            <div class="study-complete-title" id="studyCompleteTitle">学習完了！</div>
+            <div class="study-complete-sub" id="studyCompleteSub"></div>
+            <button class="study-complete-btn" onclick="closeStudyMode()">コレクションに戻る</button>
+        </div>
+    </div>
+
+    <!-- ◯/✗ Assessment (shown after flip) -->
+    <div class="study-assessment hidden" id="studyAssessment">
+        <button class="study-btn-again" onclick="assessCard(false)">✗ もう一度</button>
+        <button class="study-btn-know" onclick="assessCard(true)">◯ わかった</button>
+    </div>
+
+    <!-- Prev / Next nav -->
+    <div class="study-nav-row" id="studyNavRow">
+        <button class="study-nav-btn" onclick="studyNavPrev()">← 前</button>
+        <div class="study-card-counter" id="studyCardCounter"></div>
+        <button class="study-nav-btn" onclick="studyNavNext()">次 →</button>
+    </div>
+</div>
+
+<div class="collection-grid" id="collectionGrid"></div>
+
+<script>
+    /* ========== CONSTANTS ========== */
+    const TOTAL_CARDS = 50;
+    const CARDS_PER_PAGE = 50;
+    let currentTabId = 0;
+
+    const VALID_COUPONS = { "MAGIC5": 5, "BONUS3": 3, "SUPER10": 10 };
+
+    /* ========== RARITY SYSTEM ========== */
+    const UR_CARDS = [10, 25, 40];
+    const SR_CARDS = [5, 15, 20, 30, 35, 45, 50];
+    const R_CARDS  = [2, 6, 8, 12, 16, 18, 22, 26, 28, 32, 36, 38, 42, 46, 48];
+
+    function getRarity(no) {
+        if (UR_CARDS.includes(no)) return 'UR';
+        if (SR_CARDS.includes(no)) return 'SR';
+        if (R_CARDS.includes(no))  return 'R';
+        return 'N';
+    }
+
+    const RARITY_CONFIG = {
+        'N':  { label: 'N',  backClass: 'rarity-N',  frontClass: 'rarity-front-N',  emoji: '',    resultTitle: 'カード獲得！' },
+        'R':  { label: 'R',  backClass: 'rarity-R',  frontClass: 'rarity-front-R',  emoji: '💠',  resultTitle: 'Rカード獲得！' },
+        'SR': { label: 'SR', backClass: 'rarity-SR', frontClass: 'rarity-front-SR', emoji: '✨',  resultTitle: 'SRカード獲得！！' },
+        'UR': { label: 'UR', backClass: 'rarity-UR', frontClass: 'rarity-front-UR', emoji: '🌟', resultTitle: '⚡ URカード獲得！！！' }
+    };
+
+    /* ========== QUIZ DATA ========== */
+    const quizList = {
+        1:  { meaning: "二重線/複線",                                                                                    answer: "a double line",         example: "The teacher drew ___ on the board to mark the end of the section." },
+        2:  { meaning: "〜からはほど遠い/まったく違うもの/月とすっぽん",                                               answer: "a far cry from",        example: "The final result was ___ what we had originally planned." },
+        3:  { meaning: "職業/身分/社会階層/あらゆる歩み/人生の道のり",                                                  answer: "a walk of life",        example: "People from every ___ gathered at the community festival." },
+        4:  { meaning: "〜を捨てる/あきらめる/見捨てる/〜を置き去りにする/（計画などを）中止する",                     answer: "abandon",               example: "The captain had no choice but to ___ the sinking ship." },
+        5:  { meaning: "異常/異常性/変形/異常現象",                                                                      answer: "abnormality",           example: "The test results revealed a slight ___ in her blood pressure." },
+        6:  { meaning: "〜を廃止する/（法律などを）なくす/撤廃する",                                                    answer: "abolish",               example: "The government decided to ___ the outdated law." },
+        7:  { meaning: "絶対的な/完全な/無条件の/決定的な",                                                              answer: "absolute",              example: "The judge's decision was ___, leaving no room for appeal." },
+        8:  { meaning: "〜を吸収する/夢中にさせる/（衝撃などを）和らげる/（知識を）吸い上げる",                        answer: "absorb",                example: "Plants ___ carbon dioxide from the air during photosynthesis." },
+        9:  { meaning: "豊富な/大量の/富んだ/満ちあふれた",                                                              answer: "abundant",              example: "The river was ___ with fish after the long rainy season." },
+        10: { meaning: "近づきやすい/利用しやすい/理解しやすい/（人柄が）気さくな/交通の便が良い",                     answer: "accessible",            example: "The museum was made ___ to visitors in wheelchairs." },
+        11: { meaning: "達成/実績/才能/成果/教養/芸事",                                                                  answer: "accomplishment",        example: "Graduating from university was her greatest ___." },
+        12: { meaning: "〜を説明する/〜の割合を占める/〜の原因となる/〜の責任を負う/（行方などを）確認する",           answer: "account for",           example: "Can you ___ the missing funds in the budget?" },
+        13: { meaning: "〜を達成する/成し遂げる/（目的を）果たす/得る",                                                  answer: "achieve",               example: "She worked hard to ___ her dream of becoming a doctor." },
+        14: { meaning: "達成/成就/業績/偉業/成果",                                                                       answer: "achievement",           example: "Winning the championship was a remarkable ___ for the young team." },
+        15: { meaning: "酸/酸性の/酸味のある/（言葉などが）痛烈な/辛辣な",                                             answer: "acid",                  example: "The scientist tested whether the liquid was an ___ or a base." },
+        16: { meaning: "〜を獲得する/身につける/（会社などを）買収する/手に入れる",                                     answer: "acquire",               example: "The company plans to ___ a smaller competitor next year." },
+        17: { meaning: "〜を適応させる/合わせる/慣れる/（小説などを）改変する/脚色する",                               answer: "adapt",                 example: "It took weeks for him to ___ to the new environment." },
+        18: { meaning: "適応/順応/改作/脚色/翻案",                                                                       answer: "adaptation",            example: "The film is an ___ of a bestselling novel from the 1990s." },
+        19: { meaning: "〜を増やす/加える/〜を増大させる",                                                               answer: "add to",                example: "The unexpected storm only served to ___ their troubles." },
+        20: { meaning: "これに加えて/さらに言えば/おまけに",                                                             answer: "add to this",           example: "___ the fact that the train was late, and you can see why we missed the meeting." },
+        21: { meaning: "〜に話しかける/（問題に）取り組む/住所/演説/〜に宛名を書く",                                   answer: "address",               example: "The president will ___ the nation on television tonight." },
+        22: { meaning: "〜を調整する/合わせる/慣れる/（姿勢などを）正す/（保険金を）査定する",                        answer: "adjust",                example: "She had to ___ her schedule to fit the new meeting time." },
+        23: { meaning: "行政/管理/政府/経営/運営/政権/（薬の）投与",                                                    answer: "administration",        example: "The school's ___ announced new policies for the upcoming year." },
+        24: { meaning: "感嘆/賞賛/憧れ/賛美",                                                                            answer: "admiration",            example: "He looked at the ancient painting with deep ___." },
+        25: { meaning: "明らかに/誰もが認めるように/言いにくいが/確かに",                                               answer: "admittedly",            example: "___, the plan is risky, but the potential reward is worth it." },
+        26: { meaning: "〜を採用する/（養子に）迎える/（方針などを）選ぶ/（法案を）可決する",                         answer: "adopt",                 example: "The couple decided to ___ a child from overseas." },
+        27: { meaning: "採用/養子縁組/選定/可決",                                                                        answer: "adoption",              example: "The ___ of the new policy was approved by the board of directors." },
+        28: { meaning: "〜を主張する/支持する/擁護者/代弁者/弁護士/〜を勧める",                                        answer: "advocate",              example: "She became a strong ___ for environmental protection in her community." },
+        29: { meaning: "〜に影響を与える/作用する/（病気が人・体を）冒す/〜の心を動かす/〜の振りをする",               answer: "affect",                example: "Lack of sleep can seriously ___ your ability to concentrate." },
+        30: { meaning: "手頃な/購入しやすい/安価な/無理のない",                                                          answer: "affordable",            example: "They were looking for an ___ apartment in the city center." },
+        31: { meaning: "動揺した/興奮した/動転した/波立った",                                                            answer: "agitated",              example: "The speaker became visibly ___ when asked about the scandal." },
+        32: { meaning: "農業の/農作の/農学の/土地の",                                                                    answer: "agricultural",          example: "This region is well known for its ___ products, especially high-quality rice." },
+        33: { meaning: "警戒/用心深さ/機敏さ/覚醒（状態）",                                                             answer: "alertness",             example: "The security guard's ___ prevented a break-in at the warehouse." },
+        34: { meaning: "同盟を結んだ/関連した/連合した/同類の",                                                          answer: "allied",                example: "The ___ forces worked together to defeat their common enemy." },
+        35: { meaning: "〜と並んで/〜と一緒に/〜のそばに/〜と同時に",                                                   answer: "alongside",             example: "She worked ___ her mentor for three years before leading her own team." },
+        36: { meaning: "代わりの/選択肢/二者択一の/オルタナティブな/既存のものに代わる",                               answer: "alternative",           example: "If the main road is blocked, we will need to find an ___ route." },
+        37: { meaning: "アルミニウムの/アルミ製の",                                                                      answer: "aluminum",              example: "The bicycle frame was made of a lightweight ___ alloy." },
+        38: { meaning: "素人くさい/下手な/未熟な/アマチュアらしい",                                                     answer: "amateurish",            example: "The performance was criticized for looking ___ and poorly rehearsed." },
+        39: { meaning: "アミノ酸",                                                                                       answer: "amino acid",            example: "Proteins are made up of long chains of ___." },
+        40: { meaning: "〜を楽しませる/面白がらせる/（時間を）つぶさせる",                                              answer: "amuse",                 example: "The magician's clever tricks never failed to ___ the audience." },
+        41: { meaning: "釣り人/（特に）竿釣り師",                                                                        answer: "angler",                example: "The ___ waited patiently for hours at the edge of the quiet river." },
+        42: { meaning: "苦痛/苦悩/悲痛/激痛/悶え",                                                                      answer: "anguish",               example: "She cried out in ___ when she received the terrible news." },
+        43: { meaning: "動物行動学者/動物行動主義者",                                                                    answer: "animal behaviorist",    example: "The ___ spent years studying the social habits of wild chimpanzees." },
+        44: { meaning: "抗菌の/防腐の/抗菌剤/抗菌ペプチド",                                                             answer: "antibacterial",         example: "The soap contained ___ agents that help prevent infection." },
+        45: { meaning: "期待/予想/先取り/楽しみにして待つこと/予期",                                                    answer: "anticipation",          example: "The children waited in ___ for the presents to be unwrapped." },
+        46: { meaning: "明白な/一見〜らしい/見かけ上の/表面的な",                                                       answer: "apparent",              example: "It was ___ from his expression that he was not happy with the decision." },
+        47: { meaning: "〜を求める/〜に訴えかける/〜を懇願する/〜を要請する",                                           answer: "appeal for",            example: "The charity decided to ___ donations following the devastating disaster." },
+        48: { meaning: "応募者/志願者/申請者/受験生",                                                                    answer: "applicant",             example: "Each ___ was required to submit a written essay along with their application form." },
+        49: { meaning: "〜に適用される/〜に当てはまる/〜に申し込む/〜に宛てる/〜に塗る",                              answer: "apply to",              example: "The same rules ___ all students, regardless of their grade level." },
+        50: { meaning: "適切な/ふさわしい/固有の/〜に特有の/〜を私物化する/〜を予算に計上する",                       answer: "appropriate",           example: "Please wear ___ clothing for the formal ceremony this evening." }
+    };
+
+    /* ========== CARD DATA ========== */
+    const cardsData = [];
+    for (let i = 1; i <= TOTAL_CARDS; i++) {
+        const quiz = quizList[i] || { meaning: `意味 ${i}`, answer: `Word ${i}` };
+        cardsData.push({ id: `card-${i}`, img: `photo/${i}.png`, no: i, quiz: quiz });
+    }
+
+    /* ========== STATE ========== */
+    let unlockedCards = JSON.parse(localStorage.getItem('unlockedCards')) || [];
+    let html5QrcodeScanner = null;
+    let currentSingleCard = null;
+
+    let gachaSession = { isGachaMode: false, selectedCard: null, userAnswer: "" };
+
+    let dailyGachaStorage = JSON.parse(localStorage.getItem('dailyGachaStorage')) || {
+        lastDate: "", count: 1, usedCoupons: []
+    };
+    if (!dailyGachaStorage.usedCoupons) dailyGachaStorage.usedCoupons = [];
+
+    /* ========== LOGIN STREAK STATE ========== */
+    let loginStreak = JSON.parse(localStorage.getItem('loginStreak')) || {
+        lastDate: "", streak: 0, bonusClaimed: false
+    };
+
+    /* ========== COMBO STATE ========== */
+    let comboCount = 0;
+
+    /* ========== XP / LEVEL STATE ========== */
+    const LEVEL_TITLES = [
+        "見習い魔法使い","魔法使いの卵","呪文詠唱者","魔法探求者","秘術の使い手",
+        "魔法騎士","賢者の弟子","星読みの者","月の守護者","大魔法使い",
+        "伝説の魔法使い","魔法界の英雄","世界樹の守者","時空の探求者","不死の賢者"
+    ];
+    const XP_PER_LEVEL = 100;
+
+    let xpData = JSON.parse(localStorage.getItem('xpData')) || { xp: 0, level: 1 };
+
+    function addXP(amount, originEl) {
+        const prevLevel = xpData.level;
+        xpData.xp += amount;
+        while (xpData.xp >= XP_PER_LEVEL) {
+            xpData.xp -= XP_PER_LEVEL;
+            xpData.level++;
+        }
+        localStorage.setItem('xpData', JSON.stringify(xpData));
+        updateXPDisplay();
+        if (xpData.level > prevLevel) showLevelUpToast(xpData.level);
+        if (originEl) spawnXPFloat(`+${amount} XP`, originEl);
+    }
+
+    function updateXPDisplay() {
+        const lv = Math.min(xpData.level, LEVEL_TITLES.length);
+        const title = LEVEL_TITLES[lv - 1] || LEVEL_TITLES[LEVEL_TITLES.length - 1];
+        const el = document.getElementById('levelBadge');
+        const bar = document.getElementById('xpBarFill');
+        const label = document.getElementById('xpLabel');
+        if (el) el.textContent = `Lv.${xpData.level} ${title}`;
+        if (bar) bar.style.width = Math.round((xpData.xp / XP_PER_LEVEL) * 100) + '%';
+        if (label) label.textContent = `${xpData.xp}/${XP_PER_LEVEL} XP`;
+    }
+
+    function showLevelUpToast(lv) {
+        const t = document.getElementById('levelupToast');
+        if (!t) return;
+        const title = LEVEL_TITLES[Math.min(lv, LEVEL_TITLES.length) - 1];
+        t.textContent = `✨ Lv.${lv} ${title} にレベルアップ！`;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2600);
+        confetti({ particleCount: 60, spread: 50, origin: { y: 0.4 } });
+    }
+
+    function spawnXPFloat(text, originEl) {
+        const rect = originEl.getBoundingClientRect();
+        const el = document.createElement('div');
+        el.className = 'xp-float';
+        el.textContent = text;
+        el.style.left = (rect.left + rect.width / 2 - 20) + 'px';
+        el.style.top = (rect.top - 10) + 'px';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1300);
+    }
+
+    /* ========== DAILY GOAL STATE ========== */
+    const DAILY_GOAL = 10;
+    let dailyStudyData = JSON.parse(localStorage.getItem('dailyStudyData')) || { date: "", count: 0 };
+
+    function checkDailyStudyReset() {
+        const today = new Date().toLocaleDateString();
+        if (dailyStudyData.date !== today) {
+            dailyStudyData = { date: today, count: 0 };
+            localStorage.setItem('dailyStudyData', JSON.stringify(dailyStudyData));
+        }
+    }
+
+    function incrementDailyStudy() {
+        checkDailyStudyReset();
+        dailyStudyData.count++;
+        localStorage.setItem('dailyStudyData', JSON.stringify(dailyStudyData));
+        updateDailyGoalDisplay();
+        if (dailyStudyData.count === DAILY_GOAL) {
+            setTimeout(() => {
+                confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
+                const n = document.getElementById('comboBonusNotice');
+                if (n) { n.textContent = '🎉 本日の目標達成！素晴らしい！'; n.style.display='block'; setTimeout(()=>n.style.display='none', 2800); }
+            }, 300);
+        }
+    }
+
+    function updateDailyGoalDisplay() {
+        checkDailyStudyReset();
+        const count = dailyStudyData.count;
+        const pct = Math.min(100, Math.round((count / DAILY_GOAL) * 100));
+        const fill = document.getElementById('dailyGoalFill');
+        const txt = document.getElementById('dailyGoalText');
+        if (fill) { fill.style.width = pct + '%'; fill.className = 'daily-goal-bar-fill' + (count >= DAILY_GOAL ? ' complete' : ''); }
+        if (txt) txt.textContent = `${count} / ${DAILY_GOAL}枚`;
+    }
+
+    /* ========== WEAK CARDS (苦手カード) STATE ========== */
+    let weakCards = JSON.parse(localStorage.getItem('weakCards')) || [];
+
+    function markWeak(cardNo) {
+        if (!weakCards.includes(cardNo)) { weakCards.push(cardNo); localStorage.setItem('weakCards', JSON.stringify(weakCards)); }
+    }
+    function unmarkWeak(cardNo) {
+        weakCards = weakCards.filter(n => n !== cardNo);
+        localStorage.setItem('weakCards', JSON.stringify(weakCards));
+    }
+
+    /* ========== STUDY MODE STATE ========== */
+    let studyState = { cards: [], index: 0, flipped: false, mode: 'all' };
+
+    function openStudyMode(mode) {
+        studyState.mode = mode || 'all';
+        let pool;
+        if (mode === 'weak') {
+            pool = cardsData.filter(c => weakCards.includes(c.no) && unlockedCards.includes(c.no));
+            document.getElementById('studyModeTitle').textContent = '⚠️ 苦手カード復習';
+        } else {
+            pool = cardsData.filter(c => unlockedCards.includes(c.no));
+            document.getElementById('studyModeTitle').textContent = '📖 学習モード';
+        }
+        if (pool.length === 0) {
+            alert(mode === 'weak' ? '苦手カードがありません！' : 'まずカードをアンロックしてください！');
+            return;
+        }
+        studyState.cards = pool;
+        studyState.index = 0;
+        studyState.flipped = false;
+        document.getElementById('study-overlay').style.display = 'flex';
+        document.getElementById('studyComplete').style.display = 'none';
+        document.getElementById('studyFlipCard').style.display = '';
+        document.getElementById('studyAssessment').style.display = 'flex';
+        document.getElementById('studyNavRow').style.display = 'flex';
+        renderStudyCard();
+    }
+
+    function closeStudyMode() {
+        document.getElementById('study-overlay').style.display = 'none';
+        renderTabs();
+    }
+
+    function renderStudyCard() {
+        const card = studyState.cards[studyState.index];
+        if (!card) return;
+        studyState.flipped = false;
+        const flipEl = document.getElementById('studyFlipCard');
+        flipEl.classList.remove('flipped');
+
+        // Image
+        document.getElementById('studyCardImg').src = card.img;
+        // English word
+        const eng = card.quiz.answer;
+        document.getElementById('studyEnglishWord').textContent = eng;
+        document.getElementById('studyEnglishWordBack').textContent = eng;
+        // Meaning
+        document.getElementById('studyMeaning').textContent = card.quiz.meaning;
+        // Progress
+        const total = studyState.cards.length;
+        const cur = studyState.index + 1;
+        document.getElementById('studyProgressText').textContent = `${cur} / ${total}`;
+        document.getElementById('studyCardCounter').textContent = `${cur} / ${total}`;
+        // Assessment hidden until flip
+        document.getElementById('studyAssessment').classList.add('hidden');
+        // Weak indicator on front
+        const weakNote = flipEl.querySelector('.weak-note');
+        if (weakNote) weakNote.remove();
+        if (weakCards.includes(card.no)) {
+            const badge = document.createElement('div');
+            badge.className = 'weak-note';
+            badge.style.cssText = 'position:absolute;top:10px;right:10px;background:#8a1a1a;color:#ffe0e0;font-size:11px;padding:3px 8px;border-radius:8px;font-family:Noto Serif JP,serif;';
+            badge.textContent = '⚠️ 苦手';
+            document.getElementById('studyFaceFront').appendChild(badge);
+        }
+    }
+
+    function onStudyCardTap() {
+        if (studyState.flipped) return;
+        studyState.flipped = true;
+        document.getElementById('studyFlipCard').classList.add('flipped');
+        document.getElementById('studyAssessment').classList.remove('hidden');
+    }
+
+    function assessCard(knew) {
+        const card = studyState.cards[studyState.index];
+        if (knew) {
+            unmarkWeak(card.no);
+            addXP(10, document.getElementById('studyAssessment'));
+        } else {
+            markWeak(card.no);
+            addXP(2, document.getElementById('studyAssessment'));
+        }
+        incrementDailyStudy();
+        const next = studyState.index + 1;
+        if (next >= studyState.cards.length) {
+            showStudyComplete();
+        } else {
+            studyState.index = next;
+            renderStudyCard();
+        }
+    }
+
+    function showStudyComplete() {
+        document.getElementById('studyFlipCard').style.display = 'none';
+        document.getElementById('studyAssessment').style.display = 'none';
+        document.getElementById('studyNavRow').style.display = 'none';
+        const weakCount = studyState.cards.filter(c => weakCards.includes(c.no)).length;
+        document.getElementById('studyCompleteTitle').textContent = '学習完了！🎓';
+        document.getElementById('studyCompleteSub').textContent =
+            `全${studyState.cards.length}枚を復習しました。苦手カード: ${weakCount}枚`;
+        document.getElementById('studyComplete').style.display = 'flex';
+        confetti({ particleCount: 100, spread: 60, origin: { y: 0.5 } });
+    }
+
+    function studyNavPrev() {
+        if (studyState.index > 0) { studyState.index--; renderStudyCard(); }
+    }
+    function studyNavNext() {
+        if (studyState.index < studyState.cards.length - 1) { studyState.index++; renderStudyCard(); }
+    }
+
+    /* ========== DAILY GACHA RESET ========== */
+    function checkAndResetDailyGacha() {
+        const todayStr = new Date().toLocaleDateString();
+        if (dailyGachaStorage.lastDate !== todayStr) {
+            dailyGachaStorage.lastDate = todayStr;
+            dailyGachaStorage.count = 1;
+            localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
+        }
+        const remaining = dailyGachaStorage.count;
+        document.getElementById('gachaLimitInfo').innerText = remaining > 0
+            ? `本日のガチャ残り: ${remaining}回`
+            : `本日のガチャ残り: 0回 (次回は明日)`;
+        document.getElementById('directGachaBtn').disabled = (remaining <= 0);
+    }
+
+    /* ========== LOGIN STREAK LOGIC ========== */
+    function checkLoginStreak() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = today.toLocaleDateString('ja-JP');
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toLocaleDateString('ja-JP');
+
+        if (loginStreak.lastDate === todayStr) {
+            updateStreakDisplay();
+            return;
+        }
+
+        if (loginStreak.lastDate === yesterdayStr) {
+            loginStreak.streak++;
+        } else {
+            loginStreak.streak = 1;
+        }
+        loginStreak.lastDate = todayStr;
+        loginStreak.bonusClaimed = false;
+        localStorage.setItem('loginStreak', JSON.stringify(loginStreak));
+
+        const bonus = getStreakBonus(loginStreak.streak);
+        if (bonus > 0) {
+            dailyGachaStorage.count += bonus;
+            loginStreak.bonusClaimed = true;
+            localStorage.setItem('loginStreak', JSON.stringify(loginStreak));
+            localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
+        }
+
+        updateStreakDisplay();
+        checkAndResetDailyGacha();
+
+        if (bonus > 0) {
+            setTimeout(() => showStreakBonusModal(loginStreak.streak, bonus), 900);
+        }
+    }
+
+    function getStreakBonus(streak) {
+        if (streak % 7 === 0) return 3;
+        if (streak % 3 === 0) return 1;
+        return 0;
+    }
+
+    function updateStreakDisplay() {
+        const el = document.getElementById('streakInfo');
+        if (el) el.innerText = `🔥 ${loginStreak.streak}日連続`;
+    }
+
+    function showStreakBonusModal(streak, bonus) {
+        let dayLabel = `${streak}日連続ログイン！`;
+        if (streak % 30 === 0) dayLabel = `🏆 ${streak}日連続達成！`;
+        else if (streak % 14 === 0) dayLabel = `✨ 2週間連続達成！`;
+        else if (streak % 7  === 0) dayLabel = `🌟 1週間連続達成！`;
+
+        document.getElementById('streakDayLabel').innerText = dayLabel;
+        document.getElementById('streakBonusMsg').innerText = `ガチャ ＋${bonus}回 ゲット！`;
+        document.getElementById('streak-bonus-overlay').style.display = 'flex';
+        confetti({ particleCount: 70, spread: 55, origin: { y: 0.7 } });
+    }
+
+    function closeStreakBonusModal() {
+        document.getElementById('streak-bonus-overlay').style.display = 'none';
+    }
+
+    /* ========== COMBO LOGIC ========== */
+    function updateCombo(isCorrect) {
+        if (isCorrect) {
+            comboCount++;
+            updateComboDisplay();
+            const milestone = checkComboMilestone(comboCount);
+            if (milestone) {
+                dailyGachaStorage.count += milestone.count;
+                localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
+                checkAndResetDailyGacha();
+                setTimeout(() => showComboBonusNotice(milestone.msg, milestone.count), 1300);
+            }
+        } else {
+            comboCount = 0;
+            updateComboDisplay();
+        }
+    }
+
+    function checkComboMilestone(combo) {
+        if (combo === 3)  return { count: 1, msg: `🔥 3連続正解！ ガチャ+1回！` };
+        if (combo === 5)  return { count: 1, msg: `⚡ 5連続正解！ ガチャ+1回！` };
+        if (combo === 10) return { count: 3, msg: `🌟 10連続正解！ ガチャ+3回！` };
+        if (combo > 10 && combo % 10 === 0) return { count: 3, msg: `✨ ${combo}連続正解！ ガチャ+3回！` };
+        return null;
+    }
+
+    function updateComboDisplay() {
+        const el = document.getElementById('comboDisplay');
+        const countEl = document.getElementById('comboCount');
+        if (!el || !countEl) return;
+        if (comboCount >= 2) {
+            countEl.innerText = comboCount;
+            el.style.display = 'block';
+            el.classList.remove('combo-pulse');
+            void el.offsetWidth;
+            el.classList.add('combo-pulse');
+        } else {
+            el.style.display = 'none';
+        }
+    }
+
+    function showComboBonusNotice(msg, bonusCount) {
+        const el = document.getElementById('comboBonusNotice');
+        if (!el) return;
+        el.innerText = msg;
+        el.style.display = 'block';
+        el.style.animation = 'none';
+        void el.offsetWidth;
+        el.style.animation = 'slideUp 0.4s ease-out';
+        confetti({ particleCount: 60, spread: 50, origin: { y: 0.85 } });
+        setTimeout(() => { el.style.display = 'none'; }, 2800);
+    }
+
+    /* ========== RARITY CONFETTI ========== */
+    function fireRarityConfetti(rarity) {
+        if (rarity === 'UR') {
+            confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 }, colors: ['#FFD700','#FFA500','#FF8C00','#FFECB3','#fff'] });
+            setTimeout(() => confetti({ particleCount: 80, angle: 120, spread: 60, origin: { x: 0, y: 0.6 }, colors: ['#FFD700','#FFA500'] }), 350);
+            setTimeout(() => confetti({ particleCount: 80, angle: 60,  spread: 60, origin: { x: 1, y: 0.6 }, colors: ['#FFD700','#FFA500'] }), 650);
+        } else if (rarity === 'SR') {
+            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#E1BEE7','#CE93D8','#AB47BC','#7B1FA2','#fff'] });
+        } else if (rarity === 'R') {
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#BBDEFB','#64B5F6','#1E88E5','#1565C0','#fff'] });
+        } else {
+            confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+        }
+    }
+
+    /* ========== COUPON ========== */
+    function openCouponModal() {
+        document.getElementById('couponInput').value = '';
+        document.getElementById('coupon-overlay').style.display = 'flex';
+        setTimeout(() => document.getElementById('couponInput').focus(), 100);
+    }
+    function closeCouponModal() {
+        document.getElementById('coupon-overlay').style.display = 'none';
+    }
+    function submitCoupon() {
+        const inputCode = document.getElementById('couponInput').value.trim().toUpperCase();
+        if (inputCode === "") { alert("コードを入力してください。"); return; }
+        if (!(inputCode in VALID_COUPONS)) { alert("無効なクーポンコードです。"); return; }
+        if (dailyGachaStorage.usedCoupons.includes(inputCode)) { alert("このコードはすでに使用されています。"); return; }
+        const rewardCount = VALID_COUPONS[inputCode];
+        dailyGachaStorage.count += rewardCount;
+        dailyGachaStorage.usedCoupons.push(inputCode);
+        localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
+        closeCouponModal();
+        checkAndResetDailyGacha();
+        confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
+        alert("クーポン適用成功！🎉");
+    }
+
+    /* ========== TABS ========== */
+    let activeTab = 'all'; // 'all' | 'weak'
+    function renderTabs() {
+        const tabsContainer = document.getElementById('tabsContainer');
+        tabsContainer.innerHTML = '';
+        // "すべて" tab
+        const allBtn = document.createElement('button');
+        allBtn.className = `tab-button ${activeTab === 'all' ? 'active' : ''}`;
+        allBtn.innerText = `📚 すべて (${unlockedCards.length})`;
+        allBtn.onclick = () => { activeTab = 'all'; renderTabs(); renderCollection(); };
+        tabsContainer.appendChild(allBtn);
+        // "苦手カード" tab
+        const weakCount = weakCards.filter(no => unlockedCards.some(id => id === `card-${no}`)).length;
+        const weakBtn = document.createElement('button');
+        weakBtn.className = `tab-button ${activeTab === 'weak' ? 'active' : ''}`;
+        weakBtn.style.borderColor = activeTab === 'weak' ? '#c04030' : 'rgba(180,80,60,0.4)';
+        weakBtn.innerText = `⚠️ 苦手 (${weakCount})`;
+        weakBtn.onclick = () => { activeTab = 'weak'; renderTabs(); renderCollection(); };
+        tabsContainer.appendChild(weakBtn);
+        // "学習モードで復習" quick-action (weak only)
+        if (activeTab === 'weak' && weakCount > 0) {
+            const studyWeakBtn = document.createElement('button');
+            studyWeakBtn.className = 'tab-button';
+            studyWeakBtn.style.background = 'rgba(60,20,100,0.8)';
+            studyWeakBtn.innerText = '▶ 苦手を学習';
+            studyWeakBtn.onclick = () => openStudyMode('weak');
+            tabsContainer.appendChild(studyWeakBtn);
+        }
+    }
+
+    /* ========== COLLECTION RENDER ========== */
+    function renderCollection() {
+        checkAndResetDailyGacha();
+        document.getElementById('collectionCounter').innerText = `${unlockedCards.length} / ${TOTAL_CARDS}`;
+        const grid = document.getElementById('collectionGrid');
+        grid.innerHTML = '';
+
+        let displayCards;
+        if (activeTab === 'weak') {
+            displayCards = cardsData.filter(c => weakCards.includes(c.no) && unlockedCards.includes(c.id));
+            if (displayCards.length === 0) {
+                grid.innerHTML = '<div style="color:#a090c0;text-align:center;padding:30px;font-size:14px;font-family:Noto Serif JP,serif;grid-column:1/-1;">苦手カードはありません！<br>学習モードで✗をつけたカードがここに表示されます。</div>';
+                return;
+            }
+        } else {
+            displayCards = cardsData;
+        }
+
+        displayCards.forEach(card => {
+            const isUnlocked = unlockedCards.includes(card.id);
+            const rarity = getRarity(card.no);
+            const isWeak = weakCards.includes(card.no);
+            const cardEl = document.createElement('div');
+            cardEl.className = `card-container ${isUnlocked ? `card-rarity-${rarity}` : 'locked'}`;
+            cardEl.onclick = () => tapCard(card, isUnlocked);
+
+            let cardVisualHTML = isUnlocked
+                ? `<div style="position:relative">
+                       <img src="${card.img}" alt="No.${card.no}" class="card-img" loading="lazy">
+                       <div class="rarity-badge rarity-badge-${rarity}">${rarity}</div>
+                       ${isWeak ? '<div style="position:absolute;bottom:2px;left:2px;background:#8a1a1a;color:#ffe0e0;font-size:9px;padding:2px 5px;border-radius:3px;font-family:Noto Serif JP,serif;">⚠️苦手</div>' : ''}
+                   </div>`
+                : `<div class="locked-placeholder">？</div>`;
+
+            cardEl.innerHTML = `${cardVisualHTML}<div class="card-info"><div>No.${card.no}</div></div>`;
+            grid.appendChild(cardEl);
+        });
+    }
+
+    /* ========== CARD TAP / ZOOM ========== */
+    function tapCard(card, isUnlocked) {
+        if (!isUnlocked) return;
+        const rarity = getRarity(card.no);
+        const zoomContent = document.getElementById('zoomContent');
+        zoomContent.innerHTML = `
+            <img src="${card.img}" alt="No.${card.no}">
+            <div class="zoom-info">
+                <div class="rarity-badge rarity-badge-${rarity}" style="position:static;display:inline-block;font-size:11px;padding:3px 8px;border-radius:6px;margin-bottom:6px;">${rarity}</div>
+                <div>No.${card.no}</div>
+            </div>
+        `;
+        document.getElementById('zoom-overlay').style.display = 'flex';
+    }
+    function closeZoom() { document.getElementById('zoom-overlay').style.display = 'none'; }
+
+    /* ========== CAMERA / QR ========== */
+    function openCamera() {
+        document.getElementById('camera-modal').style.display = 'flex';
+        html5QrcodeScanner = new Html5Qrcode("reader");
+        html5QrcodeScanner.start(
+            { facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess
+        ).catch(() => {
+            alert("カメラの起動に失敗しました。");
+            document.getElementById('camera-modal').style.display = 'none';
+        });
+    }
+    function closeCamera() {
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.stop().then(() => { document.getElementById('camera-modal').style.display = 'none'; });
+        } else {
+            document.getElementById('camera-modal').style.display = 'none';
+        }
+    }
+    function onScanSuccess(decodedText) {
+        closeCamera();
+        const cleanedText = decodedText.trim();
+        if (cleanedText === 'gacha-3') {
+            checkAndResetDailyGacha();
+            if (dailyGachaStorage.count <= 0) { alert("本日のガチャ回数がなくなりました。コードを入力するか明日まで待ってね！"); return; }
+            triggerGachaCore();
+            return;
+        }
+        const foundCard = cardsData.find(card => cleanedText === card.id);
+        if (foundCard) {
+            if (unlockedCards.includes(foundCard.id)) { alert(`No.${foundCard.no} のカードはすでに持っています！`); return; }
+            gachaSession.isGachaMode = false;
+            currentSingleCard = foundCard;
+            document.getElementById('quizTitle').innerText = "🔍 穴埋め問題";
+            showQuiz(foundCard);
+        } else {
+            alert("これは有効なトレカのQRコードではありません。");
+        }
+    }
+
+    /* ========== GACHA TRIGGER ========== */
+    function startGachaViaButton() {
+        checkAndResetDailyGacha();
+        if (dailyGachaStorage.count <= 0) { alert("本日のガチャ回数がなくなりました。コードを入力するか明日まで待ってね！"); return; }
+        triggerGachaCore();
+    }
+    function triggerGachaCore() {
+        const lockedCards = cardsData.filter(card => !unlockedCards.includes(card.id));
+        if (lockedCards.length === 0) { alert("すべてのカードをコンプリートしています！"); return; }
+        const randomCard = lockedCards[Math.floor(Math.random() * lockedCards.length)];
+        gachaSession.isGachaMode = true;
+        gachaSession.selectedCard = randomCard;
+        gachaSession.userAnswer = "";
+        document.getElementById('quizTitle').innerText = "🔥 ガチャクイズチャレンジ";
+        showQuiz(randomCard);
+    }
+
+    function jumpToCardTab(cardNo) {
+        currentTabId = Math.floor((cardNo - 1) / CARDS_PER_PAGE);
+        renderTabs();
+    }
+
+    /* ========== QUIZ DISPLAY ========== */
+    function showQuiz(card) {
+        // 例文の（　　）をマークアップしてセット
+        const sentence = (card.quiz.example || "___").replace(/___/g,
+            '<span class="quiz-blank">（　　）</span>');
+        document.getElementById('quizSentence').innerHTML = sentence;
+
+        // 選択肢を生成（正解1 + 不正解3 = 計4択）
+        const correctAnswer = card.quiz.answer;
+        const allAnswers = Object.values(quizList)
+            .map(q => q.answer)
+            .filter(a => a !== correctAnswer);
+        // シャッフルして3つ抽出
+        for (let i = allAnswers.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [allAnswers[i], allAnswers[j]] = [allAnswers[j], allAnswers[i]];
+        }
+        const choices = [correctAnswer, ...allAnswers.slice(0, 3)];
+        // 選択肢をシャッフル
+        for (let i = choices.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [choices[i], choices[j]] = [choices[j], choices[i]];
+        }
+
+        const choicesEl = document.getElementById('quizChoices');
+        choicesEl.innerHTML = '';
+        choices.forEach(ans => {
+            const btn = document.createElement('button');
+            btn.className = 'quiz-choice-btn';
+            btn.textContent = ans;
+            btn.onclick = () => submitChoice(ans === correctAnswer, card, ans, btn);
+            choicesEl.appendChild(btn);
+        });
+
+        document.getElementById('quiz-overlay').style.display = 'flex';
+    }
+    function closeQuiz() {
+        document.getElementById('quiz-overlay').style.display = 'none';
+        gachaSession.isGachaMode = false;
+    }
+
+    /* ========== ANSWER VALIDATION ========== */
+    function cleanText(str) {
+        if (!str) return "";
+        let text = str.toLowerCase().trim();
+        text = text.replace(/[!.,?|、。！＿_-]/g, "");
+        text = text.replace(/[\u30a1-\u30f6]/g, match => String.fromCharCode(match.charCodeAt(0) - 0x60));
+        return text;
+    }
+    function validateAnswer(userInput, allowedAnswersString) {
+        const user = cleanText(userInput);
+        if (user === "") return false;
+        return allowedAnswersString.split("/").some(ans => {
+            const model = cleanText(ans);
+            if (model === "") return false;
+            return user.includes(model) || model.includes(user);
+        });
+    }
+
+    /* ========== SUBMIT CHOICE (4択穴埋め) ========== */
+    function submitChoice(isCorrect, card, selectedAnswer, btnEl) {
+        // ボタン全体を無効化（二重タップ防止）
+        document.querySelectorAll('.quiz-choice-btn').forEach(b => b.disabled = true);
+        btnEl.classList.add(isCorrect ? 'correct' : 'wrong');
+
+        // 不正解時は正解ボタンを緑に
+        if (!isCorrect) {
+            document.querySelectorAll('.quiz-choice-btn').forEach(b => {
+                if (b.textContent === card.quiz.answer) b.classList.add('correct');
+            });
+        }
+
+        setTimeout(() => {
+            document.getElementById('quiz-overlay').style.display = 'none';
+
+            if (gachaSession.isGachaMode) {
+                dailyGachaStorage.count = Math.max(0, dailyGachaStorage.count - 1);
+                localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
+                checkAndResetDailyGacha();
+                evaluateAndShowGachaResult(isCorrect);
+            } else {
+                updateCombo(isCorrect);
+                if (isCorrect) {
+                    alert("正解！カードをゲットしたよ！");
+                    jumpToCardTab(currentSingleCard.no);
+                    startSingleGet(currentSingleCard);
+                } else {
+                    alert(`残念！正解は「${card.quiz.answer}」でした。また挑戦してね！`);
+                }
+                currentSingleCard = null;
+            }
+        }, 700);
+    }
+
+    /* ========== GACHA RESULT (with rarity) ========== */
+    function evaluateAndShowGachaResult(isCorrect) {
+        const container = document.getElementById('gachaContainer');
+        container.innerHTML = '';
+        document.getElementById('gachaCloseBtn').style.display = 'none';
+        document.getElementById('gacha-overlay').style.display = 'flex';
+
+        const card = gachaSession.selectedCard;
+
+        updateCombo(isCorrect);
+
+        const rarity = getRarity(card.no);
+        const rc = RARITY_CONFIG[rarity];
+
+        const gachaCardEl = document.createElement('div');
+        gachaCardEl.className = 'gacha-card';
+        gachaCardEl.id = 'gachaCard-0';
+
+        if (isCorrect) {
+            if (!unlockedCards.includes(card.id)) unlockedCards.push(card.id);
+            gachaCardEl.innerHTML = `
+                <div class="gacha-face gacha-back ${rc.backClass}">？</div>
+                <div class="gacha-face gacha-front ${rc.frontClass}">
+                    <div class="gacha-rarity-badge gacha-rarity-badge-${rarity}">${rc.label}</div>
+                    <img src="${card.img}">
+                    <div class="gacha-info">No.${card.no}</div>
+                </div>
+            `;
+            document.getElementById('gachaResultTitle').innerText = `判定：正解！${rc.emoji} ${rc.resultTitle}`;
+            jumpToCardTab(card.no);
+        } else {
+            const primaryAns = card.quiz.meaning.split("/")[0];
+            gachaCardEl.innerHTML = `
+                <div class="gacha-face gacha-back is-missed">✕<br><span style="font-size:14px;margin-top:10px;display:block;">ハズレ</span></div>
+            `;
+            document.getElementById('gachaResultTitle').innerText = `判定：不正解（正しい意味は: ${primaryAns}）`;
+        }
+        container.appendChild(gachaCardEl);
+        localStorage.setItem('unlockedCards', JSON.stringify(unlockedCards));
+
+        if (isCorrect) {
+            setTimeout(() => {
+                document.getElementById('gachaCard-0').classList.add('do-flip');
+                fireRarityConfetti(rarity);
+            }, 500);
+        }
+        setTimeout(() => { document.getElementById('gachaCloseBtn').style.display = 'block'; }, 1200);
+    }
+
+    /* ========== SINGLE CARD GET (QR scan, with rarity) ========== */
+    function startSingleGet(card) {
+        const container = document.getElementById('gachaContainer');
+        container.innerHTML = '';
+        document.getElementById('gachaCloseBtn').style.display = 'none';
+        document.getElementById('gacha-overlay').style.display = 'flex';
+
+        const rarity = getRarity(card.no);
+        const rc = RARITY_CONFIG[rarity];
+        document.getElementById('gachaResultTitle').innerText = `${rc.emoji} ${rc.resultTitle}`;
+
+        if (!unlockedCards.includes(card.id)) {
+            unlockedCards.push(card.id);
+            localStorage.setItem('unlockedCards', JSON.stringify(unlockedCards));
+        }
+
+        const gachaCardEl = document.createElement('div');
+        gachaCardEl.className = 'gacha-card';
+        gachaCardEl.id = 'gachaCard-0';
+        gachaCardEl.innerHTML = `
+            <div class="gacha-face gacha-back ${rc.backClass}">？</div>
+            <div class="gacha-face gacha-front ${rc.frontClass}">
+                <div class="gacha-rarity-badge gacha-rarity-badge-${rarity}">${rc.label}</div>
+                <img src="${card.img}">
+                <div class="gacha-info">No.${card.no}</div>
+            </div>
+        `;
+        container.appendChild(gachaCardEl);
+
+        setTimeout(() => {
+            document.getElementById('gachaCard-0').classList.add('do-flip');
+            fireRarityConfetti(rarity);
+            document.getElementById('gachaCloseBtn').style.display = 'block';
+        }, 500);
+    }
+
+    /* ========== CLOSE GACHA ========== */
+    function closeGacha() {
+        document.getElementById('gacha-overlay').style.display = 'none';
+        gachaSession.isGachaMode = false;
+        renderCollection();
+    }
+
+    /* ========== KEYBOARD SHORTCUTS ========== */
+    // (answerInput removed — quiz now uses 4-choice buttons)
+    document.getElementById('couponInput').addEventListener('keypress', e => { if (e.key === 'Enter') submitCoupon(); });
+
+    /* ========== INIT ========== */
+    updateXPDisplay();
+    updateDailyGoalDisplay();
+    renderTabs();
+    renderCollection();
+    checkLoginStreak();
+</script>
+</body>
+</html>
