@@ -710,24 +710,33 @@
         }
 
         /* ===== DAILY GOAL BAR ===== */
-        .daily-goal-wrap {
-            margin-top: 10px; padding: 0 4px;
+        /* ===== Collection Progress Display ===== */
+        .collection-progress-wrap {
+            margin-top: 10px; padding: 4px 4px 0;
+            text-align: center;
         }
-        .daily-goal-label {
-            font-size: 12px; color: #c8d0e8; margin-bottom: 4px;
-            display: flex; justify-content: space-between;
+        .cp-count {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 36px; font-weight: bold; line-height: 1;
+            color: #ffd870;
+            text-shadow: 0 0 12px rgba(255,200,60,0.55), 0 2px 4px rgba(0,0,0,0.6);
+            letter-spacing: 0.03em;
         }
-        .daily-goal-bar-bg {
-            height: 8px; background: rgba(255,255,255,0.1);
-            border-radius: 4px; border: 1px solid rgba(140,180,255,0.2); overflow: hidden;
+        .cp-slash { font-size: 24px; color: #a090c0; margin: 0 2px; }
+        .cp-unit  { font-size: 16px; color: #c8b870; margin-left: 2px; vertical-align: bottom; line-height: 2.4; }
+        .cp-rate {
+            font-size: 13px; color: #a8d0f8;
+            margin: 4px 0 6px;
+            letter-spacing: 0.04em;
         }
-        .daily-goal-bar-fill {
+        .cp-bar-bg {
+            height: 6px; background: rgba(255,255,255,0.10);
+            border-radius: 4px; border: 1px solid rgba(140,180,255,0.18); overflow: hidden;
+        }
+        .cp-bar-fill {
             height: 100%;
-            background: linear-gradient(90deg, #3060a0, #60a0ff);
-            border-radius: 4px; transition: width 0.5s ease;
-        }
-        .daily-goal-bar-fill.complete {
-            background: linear-gradient(90deg, #208050, #40d090);
+            background: linear-gradient(90deg, #6040c0, #a060ff, #ffd060);
+            border-radius: 4px; transition: width 0.6s ease;
         }
 
         /* ===== STUDY MODE (TikTok 式) ===== */
@@ -1115,15 +1124,11 @@
         <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xpBarFill" style="width:0%"></div></div>
         <div class="xp-label" id="xpLabel">0 XP</div>
     </div>
-    <!-- Daily Goal -->
-    <div class="daily-goal-wrap">
-        <div class="daily-goal-label">
-            <span>📚 今日の学習</span>
-            <span id="dailyGoalText">0 / 10枚</span>
-        </div>
-        <div class="daily-goal-bar-bg">
-            <div class="daily-goal-bar-fill" id="dailyGoalFill" style="width:0%"></div>
-        </div>
+    <!-- Collection Progress -->
+    <div class="collection-progress-wrap" id="collectionProgressWrap">
+        <div class="cp-count"><span id="cpAcquired">0</span><span class="cp-slash"> / </span><span id="cpTotal">0</span><span class="cp-unit">枚</span></div>
+        <div class="cp-rate" id="cpRate">0% コンプリート</div>
+        <div class="cp-bar-bg"><div class="cp-bar-fill" id="cpBarFill" style="width:0%"></div></div>
     </div>
 </div>
 
@@ -1507,14 +1512,20 @@
         }
     }
 
-    function updateDailyGoalDisplay() {
-        checkDailyStudyReset();
-        const count = dailyStudyData.count;
-        const pct = Math.min(100, Math.round((count / DAILY_GOAL) * 100));
-        const fill = document.getElementById('dailyGoalFill');
-        const txt = document.getElementById('dailyGoalText');
-        if (fill) { fill.style.width = pct + '%'; fill.className = 'daily-goal-bar-fill' + (count >= DAILY_GOAL ? ' complete' : ''); }
-        if (txt) txt.textContent = `${count} / ${DAILY_GOAL}枚`;
+    function updateDailyGoalDisplay() { updateCollectionProgress(); } // 後方互換ラッパー
+
+    function updateCollectionProgress() {
+        const acquired = unlockedCards.length;
+        const total    = TOTAL_CARDS;
+        const pct      = total > 0 ? Math.min(100, Math.round((acquired / total) * 100)) : 0;
+        const acqEl  = document.getElementById('cpAcquired');
+        const totEl  = document.getElementById('cpTotal');
+        const rateEl = document.getElementById('cpRate');
+        const fillEl = document.getElementById('cpBarFill');
+        if (acqEl)  acqEl.textContent  = acquired;
+        if (totEl)  totEl.textContent  = total;
+        if (rateEl) rateEl.textContent = `${pct}% コンプリート`;
+        if (fillEl) fillEl.style.width = pct + '%';
     }
 
     /* ========== CHALLENGE / TRAINING STATE ========== */
@@ -1526,8 +1537,8 @@
 
     let dailyChallenges = JSON.parse(localStorage.getItem('dailyChallenges')) || {
         date: "",
-        completed: { login: false, train10: false, quiz5: false, weak3: false, combo3: false },
-        progress: { trainCount: 0, quizCorrect: 0, weakCount: 0, currentCombo: 0 }
+        completed: { login: false, train10: false, quiz5: false, combo3: false },
+        progress: { trainCount: 0, quizCorrect: 0, currentCombo: 0 }
     };
 
     let weeklyChallenges = JSON.parse(localStorage.getItem('weeklyChallenges')) || {
@@ -1544,32 +1555,16 @@
 
     let trainingSession = { active: false, cards: [], index: 0, levelFilter: 'all', masteredIds: new Set() };
 
-    /* ========== WEAK CARDS (苦手カード) STATE ========== */
-    let weakCards = JSON.parse(localStorage.getItem('weakCards')) || [];
-
-    function markWeak(cardNo) {
-        if (!weakCards.includes(cardNo)) { weakCards.push(cardNo); localStorage.setItem('weakCards', JSON.stringify(weakCards)); }
-    }
-    function unmarkWeak(cardNo) {
-        weakCards = weakCards.filter(n => n !== cardNo);
-        localStorage.setItem('weakCards', JSON.stringify(weakCards));
-    }
-
     /* ========== STUDY MODE STATE ========== */
     let studyState = { cards: [], index: 0, flipped: false, mode: 'all' };
 
     function openStudyMode(mode) {
         studyState.mode = mode || 'all';
         let pool;
-        if (mode === 'weak') {
-            pool = cardsData.filter(c => weakCards.includes(c.no) && unlockedCards.includes(c.no));
-            document.getElementById('studyModeTitle').textContent = '⚠️ 苦手カード復習';
-        } else {
-            pool = cardsData.filter(c => unlockedCards.includes(c.no));
-            document.getElementById('studyModeTitle').textContent = '📖 学習モード';
-        }
+        pool = cardsData.filter(c => unlockedCards.includes(c.id));
+        document.getElementById('studyModeTitle').textContent = '📖 学習モード';
         if (pool.length === 0) {
-            alert(mode === 'weak' ? '苦手カードがありません！' : 'まずカードをアンロックしてください！');
+            alert('まずカードをアンロックしてください！');
             return;
         }
         studyState.cards = pool;
@@ -1613,16 +1608,6 @@
         document.getElementById('studyCardCounter').textContent = `${cur} / ${total}`;
         // Assessment hidden until flip
         document.getElementById('studyAssessment').classList.add('hidden');
-        // Weak indicator on front
-        const weakNote = flipEl.querySelector('.weak-note');
-        if (weakNote) weakNote.remove();
-        if (weakCards.includes(card.no)) {
-            const badge = document.createElement('div');
-            badge.className = 'weak-note';
-            badge.style.cssText = 'position:absolute;top:10px;right:10px;background:#8a1a1a;color:#ffe0e0;font-size:11px;padding:3px 8px;border-radius:8px;font-family:Noto Serif JP,serif;';
-            badge.textContent = '⚠️ 苦手';
-            document.getElementById('studyFaceFront').appendChild(badge);
-        }
     }
 
     function onStudyCardTap() {
@@ -1634,15 +1619,12 @@
 
     function assessCard(knew) {
         const card = studyState.cards[studyState.index];
-        const isWeakCard = weakCards.includes(card.no);
         if (knew) {
-            unmarkWeak(card.no);
             addXP(10, document.getElementById('studyAssessment'));
-            trackChallengeAnswer(true, card.no, isWeakCard);
+            trackChallengeAnswer(true, card.no);
         } else {
-            markWeak(card.no);
             addXP(2, document.getElementById('studyAssessment'));
-            trackChallengeAnswer(false, card.no, false);
+            trackChallengeAnswer(false, card.no);
         }
         incrementDailyStudy();
         const next = studyState.index + 1;
@@ -1658,10 +1640,9 @@
         document.getElementById('studyFlipCard').style.display = 'none';
         document.getElementById('studyAssessment').style.display = 'none';
         document.getElementById('studyNavRow').style.display = 'none';
-        const weakCount = studyState.cards.filter(c => weakCards.includes(c.no)).length;
         document.getElementById('studyCompleteTitle').textContent = '学習完了！🎓';
         document.getElementById('studyCompleteSub').textContent =
-            `全${studyState.cards.length}枚を復習しました。苦手カード: ${weakCount}枚`;
+            `全${studyState.cards.length}枚を復習しました。お疲れ様でした！`;
         document.getElementById('studyComplete').style.display = 'flex';
         confetti({ particleCount: 100, spread: 60, origin: { y: 0.5 } });
     }
@@ -1942,7 +1923,7 @@
                 ${ciCheck(dc.completed.login,  'ログイン',          0, 0, '+1回')}
                 ${ciCheck(dc.completed.train10,'10枚トレーニング', dc.progress.trainCount, 10, '+1回')}
                 ${ciCheck(dc.completed.quiz5,  'クイズ5問正解',    dc.progress.quizCorrect, 5, '+1回')}
-                ${ciCheck(dc.completed.weak3,  '苦手3枚クリア',    dc.progress.weakCount, 3, '+1回')}
+
                 ${ciCheck(dc.completed.combo3, '3連続コンボ',      dc.progress.currentCombo, 3, '+1回')}
             </div>
             <div class="challenge-section">
@@ -2005,6 +1986,7 @@
     function renderCollection() {
         checkAndResetDailyGacha();
         document.getElementById('collectionCounter').innerText = `${unlockedCards.length} / ${TOTAL_CARDS}`;
+        updateCollectionProgress();
         const grid = document.getElementById('collectionGrid');
         grid.innerHTML = '';
 
@@ -2018,7 +2000,6 @@
         displayCards.forEach(card => {
             const isUnlocked = unlockedCards.includes(card.id);
             const rarity = getRarity(card.no);
-            const isWeak = weakCards.includes(card.no);
             const cardEl = document.createElement('div');
             cardEl.className = `card-container ${isUnlocked ? `card-rarity-${rarity}` : 'locked'}`;
             cardEl.onclick = () => tapCard(card, isUnlocked);
@@ -2027,7 +2008,6 @@
                 ? `<div style="position:relative">
                        <img src="${card.img}" alt="No.${card.no}" class="card-img" loading="lazy">
                        <div class="rarity-badge rarity-badge-${rarity}">${rarity}</div>
-                       ${isWeak ? '<div style="position:absolute;bottom:2px;left:2px;background:#8a1a1a;color:#ffe0e0;font-size:9px;padding:2px 5px;border-radius:3px;font-family:Noto Serif JP,serif;">⚠️苦手</div>' : ''}
                    </div>`
                 : `<div class="locked-placeholder">？</div>`;
 
@@ -2098,9 +2078,8 @@
         triggerGachaCore();
     }
     function triggerGachaCore() {
-        const lockedCards = cardsData.filter(card => !unlockedCards.includes(card.id));
-        if (lockedCards.length === 0) { alert("すべてのカードをコンプリートしています！"); return; }
-        const randomCard = lockedCards[Math.floor(Math.random() * lockedCards.length)];
+        if (cardsData.length === 0) { alert("カードデータがありません。"); return; }
+        const randomCard = cardsData[Math.floor(Math.random() * cardsData.length)];
         gachaSession.isGachaMode = true;
         gachaSession.selectedCard = randomCard;
         // ガチャ回数を消費してすぐカード付与（クイズなし）
@@ -2192,8 +2171,7 @@
 
             if (trainingSession.active) {
                 // Training mode: unlimited, no gacha cost
-                const isWeakCard = weakCards.includes(card.no);
-                trackChallengeAnswer(isCorrect, card.no, isWeakCard);
+                trackChallengeAnswer(isCorrect, card.no);
                 updateCombo(isCorrect);
                 if (isCorrect) {
                     addXP(10, btnEl);
@@ -2246,16 +2224,19 @@
         gachaCardEl.id = 'gachaCard-0';
 
         if (isCorrect) {
-            if (!unlockedCards.includes(card.id)) unlockedCards.push(card.id);
+            const isNew = !unlockedCards.includes(card.id);
+            if (isNew) unlockedCards.push(card.id);
             gachaCardEl.innerHTML = `
                 <div class="gacha-face gacha-back ${rc.backClass}">？</div>
                 <div class="gacha-face gacha-front ${rc.frontClass}">
                     <div class="gacha-rarity-badge gacha-rarity-badge-${rarity}">${rc.label}</div>
                     <img src="${card.img}">
-                    <div class="gacha-info">No.${card.no}</div>
+                    <div class="gacha-info">No.${card.no}${isNew ? '' : '　<span style="font-size:11px;opacity:0.75;">✔ 取得済み</span>'}</div>
                 </div>
             `;
-            document.getElementById('gachaResultTitle').innerText = `判定：正解！${rc.emoji} ${rc.resultTitle}`;
+            document.getElementById('gachaResultTitle').innerText = isNew
+                ? `${rc.emoji} ${rc.resultTitle}`
+                : `${rc.emoji} おかわり！（取得済みカード）`;
             jumpToCardTab(card.no);
         } else {
             const primaryAns = card.quiz.meaning.split("/")[0];
@@ -2334,8 +2315,8 @@
         if (dailyChallenges.date !== today) {
             dailyChallenges = {
                 date: today,
-                completed: { login: false, train10: false, quiz5: false, weak3: false, combo3: false },
-                progress: { trainCount: 0, quizCorrect: 0, weakCount: 0, currentCombo: 0 }
+                completed: { login: false, train10: false, quiz5: false, combo3: false },
+                progress: { trainCount: 0, quizCorrect: 0, currentCombo: 0 }
             };
             localStorage.setItem('dailyChallenges', JSON.stringify(dailyChallenges));
         }
@@ -2416,7 +2397,7 @@
     }
 
     /* Track answer for challenge progress (called from assessCard and submitChoice) */
-    function trackChallengeAnswer(isCorrect, cardNo, isWeakCard) {
+    function trackChallengeAnswer(isCorrect, cardNo) {
         checkDailyChallengeReset();
         checkWeeklyChallengeReset();
 
@@ -2441,11 +2422,6 @@
             if (!dailyChallenges.completed.combo3 && dailyChallenges.progress.currentCombo >= 3)
                 completeDailyChallenge('combo3', 1, '3連続コンボ');
 
-            if (isWeakCard) {
-                dailyChallenges.progress.weakCount++;
-                if (!dailyChallenges.completed.weak3 && dailyChallenges.progress.weakCount >= 3)
-                    completeDailyChallenge('weak3', 1, '苦手3枚クリア');
-            }
         } else {
             dailyChallenges.progress.currentCombo = 0;
         }
@@ -2538,7 +2514,7 @@
                 ${ciCheck(dc.completed.login,  'ログイン',          0, 0, '+1回')}
                 ${ciCheck(dc.completed.train10,'10枚トレーニング', dc.progress.trainCount, 10, '+1回')}
                 ${ciCheck(dc.completed.quiz5,  'クイズ5問正解',    dc.progress.quizCorrect, 5, '+1回')}
-                ${ciCheck(dc.completed.weak3,  '苦手3枚クリア',    dc.progress.weakCount, 3, '+1回')}
+
                 ${ciCheck(dc.completed.combo3, '3連続コンボ',      dc.progress.currentCombo, 3, '+1回')}
             </div>
             <div class="challenge-section">
