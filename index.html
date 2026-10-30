@@ -1392,9 +1392,10 @@
     }
 
     /* ========== RARITY SYSTEM ========== */
-    const UR_CARDS = [10, 25, 40];
-    const SR_CARDS = [5, 15, 20, 30, 35, 45, 50];
-    const R_CARDS  = [2, 6, 8, 12, 16, 18, 22, 26, 28, 32, 36, 38, 42, 46, 48];
+    // レアリティ分布: UR≈1.4%(12枚) / SR≈5.4%(47枚) / R≈21%(182枚) / N≈72%(622枚)
+    const UR_CARDS = [10,25,40,43,139,235,331,427,523,619,715,811];
+    const SR_CARDS = [5,15,20,30,35,45,50,70,90,110,130,150,170,190,210,230,250,270,290,310,330,350,370,390,410,430,450,470,490,510,530,550,570,590,610,630,650,670,690,710,730,750,770,790,810,830,850];
+    const R_CARDS  = [2,6,7,8,12,16,17,18,22,26,27,28,32,36,37,38,42,46,47,48,52,57,62,67,72,77,82,87,92,97,102,107,112,117,122,127,132,137,142,147,152,157,162,167,172,177,182,187,192,197,202,207,212,217,222,227,232,237,242,247,252,257,262,267,272,277,282,287,292,297,302,307,312,317,322,327,332,337,342,347,352,357,362,367,372,377,382,387,392,397,402,407,412,417,422,432,437,442,447,452,457,462,467,472,477,482,487,492,497,502,507,512,517,522,527,532,537,542,547,552,557,562,567,572,577,582,587,592,597,602,607,612,617,622,627,632,637,642,647,652,657,662,667,672,677,682,687,692,697,702,707,712,717,722,727,732,737,742,747,752,757,762,767,772,777,782,787,792,797,802,807,812,817,822,827,832,837,842,847,852,857,862];
 
     function getRarity(no) {
         if (UR_CARDS.includes(no)) return 'UR';
@@ -3081,12 +3082,12 @@
     function triggerGachaCore() {
         if (cardsData.length === 0) { alert("カードデータがありません。"); return; }
 
-        // 現在解禁中のタブのカードプールからランダム選択
+        // 現在解禁中のタブのカードプールから重み付き抽選
         const tabIdx  = getCurrentGachaTabIndex();
         const start   = tabIdx * COLLECTION_PAGE_SIZE;
         const end     = Math.min((tabIdx + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
         const tabPool = cardsData.slice(start, end);
-        const randomCard = tabPool[Math.floor(Math.random() * tabPool.length)];
+        const randomCard = weightedGachaPick(tabPool);
 
         gachaSession.isGachaMode = true;
         gachaSession.selectedCard = randomCard;
@@ -3095,6 +3096,29 @@
         localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
         checkAndResetDailyGacha();
         evaluateAndShowGachaResult(true);
+    }
+
+    /* ========== WEIGHTED GACHA PICK ========== */
+    // 出現率: UR 2% / SR 8% / R 20% / N 70%
+    // プール内にそのレアリティのカードがない場合は一段下へフォールバック
+    function weightedGachaPick(pool) {
+        const weights = { UR: 2, SR: 8, R: 20, N: 70 };
+        const byRarity = { UR: [], SR: [], R: [], N: [] };
+        pool.forEach(c => {
+            const r = getRarity(c.no);
+            byRarity[r].push(c);
+        });
+        // 重みを実際に存在するレアリティのみで再配分
+        const available = ['UR','SR','R','N'].filter(r => byRarity[r].length > 0);
+        const totalW = available.reduce((s, r) => s + weights[r], 0);
+        let rand = Math.random() * totalW;
+        let chosen = available[available.length - 1];
+        for (const r of available) {
+            rand -= weights[r];
+            if (rand <= 0) { chosen = r; break; }
+        }
+        const arr = byRarity[chosen];
+        return arr[Math.floor(Math.random() * arr.length)];
     }
 
     function jumpToCardTab(cardNo) {
