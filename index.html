@@ -51,18 +51,8 @@
            ================================================================ */
         body {
             font-family: 'Noto Serif JP', serif;
-            /* ── フォールバック：グラデーション背景（夜空） ── */
-            background: linear-gradient(180deg,
-                #040408  0%,
-                #0c0a1e 10%,
-                #18102e 22%,
-                #28102a 36%,
-                #3e1a08 50%,
-                #6a3208 62%,
-                #482008 72%,
-                #1a0e04 83%,
-                #0e0802 92%,
-                #080602 100%);
+            /* ── フォールバック：夜空ベース（グラデーションなし） ── */
+            background-color: #04060f;
             background-size: cover;
             background-position: center center;
             background-attachment: fixed;
@@ -103,38 +93,34 @@
          *   銀の手帖: 位置 bottom:330px, 色 rgba(220,235,255,...) 月光（大きな銀月）
          *   金の手帖: 位置 bottom:295px, 色 rgba(255,180,40,...) 夕暮れの黄金太陽
          */
-        /* ===== 写真的な太陽ブルーム ===== */
-        /* 実際の写真における地平線近くの太陽:
-         * ・大気散乱でより赤橙に（黄白くない）
-         * ・ブルームは大きく、エッジが滲む（レンズ特性）
-         * ・中心に向かって白→黄→橙→赤の順に変化 */
+        /* ===== 月光グロウ（銀の手帖） ===== */
         .moon-glow {
             position: fixed;
-            bottom: 285px; left: 50%;
+            bottom: 330px; left: 50%;
             transform: translateX(-50%);
-            width: 760px; height: 380px;   /* 写真的：大きな拡散ブルーム */
+            width: 480px; height: 240px;
             border-radius: 50%;
-            background: radial-gradient(ellipse at 50% 85%,
-                rgba(255,220,160,0.62) 0%,   /* 中心白熱光 */
-                rgba(255,140,40,0.50) 14%,   /* 内ブルーム：濃橙 */
-                rgba(235,88,18,0.26) 32%,    /* 外ブルーム：赤橙 */
-                rgba(190,58,8,0.10) 56%,     /* 大気散乱層 */
-                transparent 76%);
+            background: radial-gradient(ellipse at 50% 82%,
+                rgba(220,238,255,0.60) 0%,   /* 月光：白青 */
+                rgba(175,210,255,0.38) 18%,
+                rgba(120,170,240,0.15) 42%,
+                rgba(80,120,200,0.05) 65%,
+                transparent 80%);
             pointer-events: none; z-index: 0;
-            filter: blur(1px);   /* わずかなブレで写真の被写界深度感 */
+            filter: blur(1px);
         }
-        /* 太陽の広域コロナ（レンズフレア的な光の滲み） */
+        /* 月の広域銀輝コロナ */
         .moon-glow::after {
             content: '';
             position: absolute;
-            bottom: -70px; left: -60%; right: -60%;
-            height: 185%;
+            bottom: -40px; left: -35%; right: -35%;
+            height: 130%;
             border-radius: 50%;
             background: radial-gradient(ellipse at 50% 100%,
-                rgba(255,110,20,0.22) 0%,
-                rgba(210,68,8,0.11) 42%,
-                transparent 72%);
-            filter: blur(32px);
+                rgba(140,175,240,0.14) 0%,
+                rgba(80,120,200,0.07) 42%,
+                transparent 70%);
+            filter: blur(20px);
         }
 
         /* ===== HORIZON ATMOSPHERE / 地平線の大気散乱 ===== */
@@ -143,26 +129,22 @@
          * 銀の手帖: rgba(140,165,200,...) 月光散乱, rgba(80,100,140,...) 霞
          * 金の手帖: rgba(210,120,20,...) 夕焼け, rgba(160,70,10,...) 残照, rgba(240,170,30,...) 光芒
          */
-        /* ===== 写真的な地平線大気散乱 ===== */
-        /* 実際の夕焼け写真では地平線付近に:
-         * ・強い暖色（橙〜赤橙）の水平帯
-         * ・左右非対称の輝度ムラ
-         * ・上方にじわじわ薄れる光の層 */
+        /* ===== 夜空の大気光（月明かり散乱） ===== */
         .aurora-mist {
             position: fixed;
-            bottom: 190px; left: 0; right: 0;
-            height: 420px;
+            bottom: 200px; left: 0; right: 0;
+            height: 360px;
             pointer-events: none; z-index: 0;
             background:
-                radial-gradient(ellipse 145% 65% at 50% 100%,
-                    rgba(235,108,15,0.30) 0%, transparent 64%),
-                radial-gradient(ellipse 105% 48% at 30% 86%,
-                    rgba(185,65,8,0.20) 0%, transparent 58%),
-                radial-gradient(ellipse 95% 44% at 72% 82%,
-                    rgba(205,78,10,0.17) 0%, transparent 60%),
-                radial-gradient(ellipse 72% 32% at 50% 52%,
-                    rgba(255,148,25,0.11) 0%, transparent 68%);
-            filter: blur(28px);
+                radial-gradient(ellipse 130% 55% at 50% 100%,
+                    rgba(40,60,150,0.18) 0%, transparent 65%),
+                radial-gradient(ellipse 90% 40% at 28% 85%,
+                    rgba(30,50,130,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 80% 35% at 74% 80%,
+                    rgba(50,70,160,0.10) 0%, transparent 62%),
+                radial-gradient(ellipse 60% 28% at 50% 55%,
+                    rgba(80,100,200,0.07) 0%, transparent 70%);
+            filter: blur(32px);
         }
 
         /* ===== STARS ===== */
@@ -214,9 +196,9 @@
             height: 130px;
             pointer-events: none; z-index: 2;
             background: linear-gradient(to top,
-                rgba(200,110,15,0.12) 0%,
-                rgba(180,90,10,0.07) 40%,
-                rgba(160,80,8,0.03) 75%,
+                rgba(40,60,120,0.14) 0%,
+                rgba(30,50,100,0.08) 40%,
+                rgba(20,40,80,0.03) 75%,
                 transparent 100%);
             filter: blur(14px);
         }
@@ -231,23 +213,22 @@
             position: absolute; border-radius: 50%;
             animation: particle-float linear infinite;
         }
-        /* 写真的な空気中の塵（ちり・ほこり）
-         * 魔法的な発光スパークではなく、逆光で光る自然の微粒子 */
+        /* 夜空に舞う魔法的スパーク（金・青・紫・白） */
         .particle:nth-child(1), .particle:nth-child(4), .particle:nth-child(7) {
-            background: rgba(255, 195, 100, 0.30);
-            box-shadow: none;
+            background: rgba(255, 215, 80, 0.85);
+            box-shadow: 0 0 8px rgba(255,200,50,0.70), 0 0 16px rgba(255,180,30,0.30);
         }
         .particle:nth-child(2), .particle:nth-child(5), .particle:nth-child(8) {
-            background: rgba(255, 175, 80, 0.24);
-            box-shadow: none;
+            background: rgba(140, 210, 255, 0.82);
+            box-shadow: 0 0 7px rgba(100,180,255,0.65), 0 0 14px rgba(80,150,255,0.30);
         }
         .particle:nth-child(3), .particle:nth-child(6) {
-            background: rgba(245, 160, 65, 0.20);
-            box-shadow: none;
+            background: rgba(210, 150, 255, 0.78);
+            box-shadow: 0 0 8px rgba(180,110,255,0.60), 0 0 16px rgba(160,90,255,0.25);
         }
         .particle:nth-child(9), .particle:nth-child(10) {
-            background: rgba(255, 225, 150, 0.26);
-            box-shadow: none;
+            background: rgba(255, 255, 255, 0.90);
+            box-shadow: 0 0 10px rgba(255,255,255,0.70), 0 0 20px rgba(220,240,255,0.40);
         }
         .particle:nth-child(1)  { width:8px;  height:8px;  left:9%;  animation-duration:18s; animation-delay:0s;   --drift:40px;  }
         .particle:nth-child(2)  { width:5px;  height:5px;  left:24%; animation-duration:22s; animation-delay:3s;   --drift:-30px; }
@@ -1046,32 +1027,32 @@
            ・中景: 暗い褐赤色シルエット
            ============================================================ -->
 
-      <!-- 最遠景グラデーション：写真的大気遠近法（非常に薄く淡い） -->
+      <!-- 最遠景グラデーション：夜の大気遠近法（薄い青灰） -->
       <linearGradient id="g-far" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%"   stop-color="rgba(225,175,155,0.30)"/>  <!-- ペールピンクラベンダー -->
-        <stop offset="55%"  stop-color="rgba(195,145,115,0.16)"/>
-        <stop offset="100%" stop-color="rgba(155,100,70,0.07)"/>
+        <stop offset="0%"   stop-color="rgba(140,155,175,0.22)"/>  <!-- 夜の遠霞：青灰 -->
+        <stop offset="55%"  stop-color="rgba(100,120,148,0.12)"/>
+        <stop offset="100%" stop-color="rgba(80,100,130,0.04)"/>
       </linearGradient>
 
-      <!-- 遠景グラデーション：ダスティーローズ（大気散乱による赤方偏移） -->
+      <!-- 遠景グラデーション：夜の中間青灰（月光大気遠近） -->
       <linearGradient id="g-mid-far" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%"   stop-color="rgba(158,78,45,0.74)"/>   <!-- ダスティーローズ赤 -->
-        <stop offset="60%"  stop-color="rgba(105,45,18,0.60)"/>
-        <stop offset="100%" stop-color="rgba(68,28,8,0.50)"/>
+        <stop offset="0%"   stop-color="rgba(80,100,130,0.58)"/>   <!-- 中間青灰 -->
+        <stop offset="60%"  stop-color="rgba(55,72,100,0.52)"/>
+        <stop offset="100%" stop-color="rgba(28,40,65,0.46)"/>
       </linearGradient>
 
-      <!-- 中景グラデーション：暗褐赤シルエット -->
+      <!-- 中景グラデーション：夜の暗紺シルエット -->
       <linearGradient id="g-mid" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%"   stop-color="rgba(52,20,6,0.94)"/>
-        <stop offset="100%" stop-color="rgba(12,4,1,0.99)"/>
+        <stop offset="0%"   stop-color="rgba(18,28,50,0.96)"/>
+        <stop offset="100%" stop-color="rgba(4,6,12,0.99)"/>
       </linearGradient>
 
-      <!-- 写真的な太陽ディスク（地平線近くの太陽は赤橙色） -->
+      <!-- 月ディスク（銀白） -->
       <radialGradient id="g-sun" cx="50%" cy="50%" r="50%">
-        <stop offset="0%"   stop-color="#fff0d0"/>   <!-- 核心部：白熱白 -->
-        <stop offset="20%"  stop-color="#ffb840"/>   <!-- 内環：黄橙 -->
-        <stop offset="52%"  stop-color="#ff7010"/>   <!-- 外環：赤橙 -->
-        <stop offset="100%" stop-color="rgba(255,48,0,0.18)"/>  <!-- 縁：深赤 -->
+        <stop offset="0%"   stop-color="#f8f8ff"/>   <!-- 核心部：白 -->
+        <stop offset="38%"  stop-color="#d8e8ff"/>   <!-- 内環：薄青白 -->
+        <stop offset="78%"  stop-color="#a0b8e8"/>   <!-- 外環：銀青 -->
+        <stop offset="100%" stop-color="rgba(100,140,200,0.28)"/>  <!-- 縁：霞 -->
       </radialGradient>
 
       <!-- 太陽コロナ（写真的：大きく滲んだ大気散乱ハロー） -->
@@ -1096,31 +1077,15 @@
       </filter>
     </defs>
 
-    <!-- ===== 写真的な巻雲（夕焼けに染まる薄い雲の帯） ===== -->
-    <!-- 実際の写真では地平線上の雲が太陽光で橙〜赤に照らされる -->
-    <ellipse cx="160" cy="112" rx="230" ry="15"
-      fill="rgba(255,180,95,0.22)" filter="url(#f-cirrus)"/>
-    <ellipse cx="780" cy="90" rx="265" ry="12"
-      fill="rgba(255,195,115,0.18)" filter="url(#f-cirrus)"/>
-    <ellipse cx="440" cy="135" rx="195" ry="14"
-      fill="rgba(255,155,75,0.16)" filter="url(#f-cirrus)"/>
-    <ellipse cx="840" cy="148" rx="155" ry="10"
-      fill="rgba(240,135,55,0.14)" filter="url(#f-cirrus)"/>
-    <!-- 地平線近くの低い雲：最も橙色（太陽直射） -->
-    <ellipse cx="500" cy="165" rx="460" ry="20"
-      fill="rgba(245,125,38,0.20)" filter="url(#f-cirrus)"/>
-    <ellipse cx="310" cy="148" rx="210" ry="11"
-      fill="rgba(255,110,30,0.12)" filter="url(#f-cirrus)"/>
-
-    <!-- ===== 写真的な太陽（大気散乱ハロー＋ディスク） ===== -->
-    <!-- 外側コロナ（広域大気散乱） -->
-    <ellipse cx="500" cy="65" rx="200" ry="140"
-      fill="rgba(255,140,18,0.42)" filter="url(#f-corona)"/>
-    <!-- 内側コロナ（強いブルーム） -->
-    <ellipse cx="500" cy="65" rx="80" ry="55"
-      fill="rgba(255,200,80,0.55)" filter="url(#f-corona)"/>
-    <!-- 太陽ディスク本体（写真的な赤橙色） -->
-    <circle cx="500" cy="65" r="34" fill="url(#g-sun)"/>
+    <!-- ===== 月（銀白コロナ＋月ディスク） ===== -->
+    <!-- 外側コロナ（月光の大気散乱ハロー） -->
+    <ellipse cx="500" cy="55" rx="120" ry="90"
+      fill="rgba(180,210,255,0.22)" filter="url(#f-corona)"/>
+    <!-- 内側コロナ（月のブルーム） -->
+    <ellipse cx="500" cy="55" rx="50" ry="38"
+      fill="rgba(220,235,255,0.40)" filter="url(#f-corona)"/>
+    <!-- 月ディスク本体（銀白） -->
+    <circle cx="500" cy="55" r="22" fill="url(#g-sun)"/>
 
     <!-- Layer 4: 最遠景の幽霊山脈 ── 大気ハロー適用で霞んで溶ける -->
     <path fill="url(#g-far)" filter="url(#f-atmos-haze)"
