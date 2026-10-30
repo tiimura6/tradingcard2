@@ -41,29 +41,62 @@
          *   #040408 #0c0a1e #18102e #28102a #3e1a08 #6a3208 #482008 #1a0e04 #0e0802 #080602
          * ─────────────────────────────────────────────────────
          */
+        /* ================================================================
+           背景システム
+           ─────────────────────────────────────────────────────────────
+           【画像差し替え手順】
+             1. ./background/bg.jpg（または bg.png / bg.webp）を配置
+             2. リロードするだけで自動的に背景画像が適用される
+             3. 画像がない場合はグラデーションにフォールバック
+           ================================================================ */
         body {
             font-family: 'Noto Serif JP', serif;
+            /* ── フォールバック：グラデーション背景 ── */
             background: linear-gradient(180deg,
-                #07041a  0%,    /* 天頂：深藍色（写真的な夜明けの名残） */
+                #07041a  0%,
                 #0f0830 8%,
-                #1e0c44 18%,    /* 上空：深バイオレット */
+                #1e0c44 18%,
                 #360e56 28%,
-                #511258 38%,    /* 中空：鮮やかマゼンタパープル */
+                #511258 38%,
                 #771550 48%,
-                #922038 57%,    /* 夕焼け帯：深緋色 */
-                #aa3020 65%,    /* 赤橙グラデーション */
-                #c44c10 73%,    /* 黄金環：琥珀赤橙 */
-                #cc6508 80%,    /* 地平線直上：金琥珀（最明） */
-                #a84e08 88%,    /* 山稜帯：深琥珀 */
+                #922038 57%,
+                #aa3020 65%,
+                #c44c10 73%,
+                #cc6508 80%,
+                #a84e08 88%,
                 #5c2404 94%,
-                #180800 100%);  /* 山裾：ほぼ黒 */
+                #180800 100%);
+            background-size: cover;
+            background-position: center center;
             background-attachment: fixed;
+            background-repeat: no-repeat;
             margin: 0;
             padding: 20px 20px 400px;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+        }
+
+        /* ── 背景画像が読み込まれた場合のスタイル ── */
+        body.has-bg-image {
+            /* background-image は JS で動的に設定 */
+        }
+        /* aurora-mist: 写真自体の光源と干渉しないよう大幅に抑制 */
+        body.has-bg-image .aurora-mist {
+            opacity: 0.25;
+        }
+        /* particles: 写真背景では不自然なので非表示 */
+        body.has-bg-image .particles {
+            display: none;
+        }
+        /* stars: 写真によっては見えているので薄く残す */
+        body.has-bg-image .stars-layer {
+            opacity: 0.35;
+        }
+        /* forest-mist: 写真の光源に合わせ控えめに */
+        body.has-bg-image .forest-mist {
+            opacity: 0.55;
         }
 
         /* ===== SUN GLOW / 地平線の太陽 ===== */
@@ -2206,6 +2239,47 @@
     renderTabs();
     renderCollection();
     checkLoginStreak();
+</script>
+
+<!-- ================================================================
+     背景画像ローダー
+     ./background/ フォルダ内の画像を優先順位順に探し、
+     見つかればbody.has-bg-imageを付与して背景に設定する。
+     ================================================================ -->
+<script>
+(function () {
+    // 試行する候補ファイル（優先度順）
+    const BG_CANDIDATES = [
+        './background/bg.jpg',
+        './background/bg.png',
+        './background/bg.webp',
+        './background/bg.jpeg',
+    ];
+
+    function tryLoad(candidates, index) {
+        if (index >= candidates.length) return; // 全候補を試して見つからなかった
+        const src = candidates[index];
+        const img = new Image();
+        img.onload = function () {
+            // 画像が見つかった → background-image を適用してクラス付与
+            document.body.style.backgroundImage = 'url("' + src + '")';
+            document.body.classList.add('has-bg-image');
+            console.log('[背景] 画像を適用:', src);
+        };
+        img.onerror = function () {
+            // 見つからなければ次の候補を試す
+            tryLoad(candidates, index + 1);
+        };
+        img.src = src;
+    }
+
+    // DOM 構築後に実行
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () { tryLoad(BG_CANDIDATES, 0); });
+    } else {
+        tryLoad(BG_CANDIDATES, 0);
+    }
+})();
 </script>
 </body>
 </html>
