@@ -1172,6 +1172,10 @@
     <button class="action-btn btn-study" onclick="showTrainingModal()">
         <span class="btn-icon">🏋</span>トレーニング
     </button>
+    <button class="action-btn" id="spGachaBtn" onclick="triggerSpecialGacha()"
+        style="display:none;grid-column:1/-1;background:linear-gradient(150deg,#4a1060,#280840);color:#e8b0ff;border:1px solid rgba(200,120,255,0.5);">
+        <span class="btn-icon">✨</span><span id="spGachaLabel">SPガチャ（未取得優先）</span>
+    </button>
     <button class="action-btn" id="hofBtn" onclick="showHallOfFameModal()"
         style="grid-column:1/-1;background:linear-gradient(150deg,#4a3010,#2a1800);color:#f0d080;border:1px solid rgba(200,150,30,0.4);">
         <span class="btn-icon">🏆</span>殿堂入りへの道
@@ -2284,12 +2288,19 @@
         "伝説の魔法使い","魔法界の英雄","世界樹の守者","時空の探求者","不死の賢者"
     ];
     const XP_PER_LEVEL = 100;
+    const SP_TICKET_XP  = 500;   // 累積500XPごとにSPチケット1枚
 
-    let xpData = JSON.parse(localStorage.getItem('xpData')) || { xp: 0, level: 1 };
+    let xpData = JSON.parse(localStorage.getItem('xpData')) || { xp: 0, level: 1, totalXP: 0 };
+    if (!xpData.totalXP) xpData.totalXP = 0;  // 旧データ互換
+
+    // SPガチャチケット残枚数
+    let specialTickets = parseInt(localStorage.getItem('specialTickets') || '0', 10);
 
     function addXP(amount, originEl) {
-        const prevLevel = xpData.level;
-        xpData.xp += amount;
+        const prevLevel   = xpData.level;
+        const prevTotal   = xpData.totalXP;
+        xpData.xp        += amount;
+        xpData.totalXP   += amount;
         while (xpData.xp >= XP_PER_LEVEL) {
             xpData.xp -= XP_PER_LEVEL;
             xpData.level++;
@@ -2298,6 +2309,17 @@
         updateXPDisplay();
         if (xpData.level > prevLevel) showLevelUpToast(xpData.level);
         if (originEl) spawnXPFloat(`+${amount} XP`, originEl);
+
+        // 累積XPが SP_TICKET_XP の倍数を超えたらチケット付与
+        const prevMilestone = Math.floor(prevTotal / SP_TICKET_XP);
+        const newMilestone  = Math.floor(xpData.totalXP / SP_TICKET_XP);
+        if (newMilestone > prevMilestone) {
+            const gained = newMilestone - prevMilestone;
+            specialTickets += gained;
+            localStorage.setItem('specialTickets', specialTickets);
+            updateSpecialGachaBtn();
+            showSPTicketToast(gained);
+        }
     }
 
     function updateXPDisplay() {
@@ -2308,7 +2330,55 @@
         const label = document.getElementById('xpLabel');
         if (el) el.textContent = `Lv.${xpData.level} ${title}`;
         if (bar) bar.style.width = Math.round((xpData.xp / XP_PER_LEVEL) * 100) + '%';
-        if (label) label.textContent = `${xpData.xp}/${XP_PER_LEVEL} XP`;
+        // 次のSPチケットまでの残りXPを表示
+        const toNext = SP_TICKET_XP - (xpData.totalXP % SP_TICKET_XP);
+        if (label) label.textContent = `${xpData.xp}/${XP_PER_LEVEL} XP ｜ SP次回まで${toNext}`;
+    }
+
+    function updateSpecialGachaBtn() {
+        const btn   = document.getElementById('spGachaBtn');
+        const label = document.getElementById('spGachaLabel');
+        if (!btn) return;
+        if (specialTickets > 0) {
+            btn.style.display = '';
+            if (label) label.textContent = `SPガチャ（未取得優先）× ${specialTickets}`;
+        } else {
+            btn.style.display = 'none';
+        }
+    }
+
+    function showSPTicketToast(count) {
+        const t = document.getElementById('levelupToast');
+        if (!t) return;
+        t.textContent = `🎫 SPガチャチケット ×${count} 獲得！`;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+        confetti({ particleCount: 80, spread: 70, origin: { y: 0.4 } });
+    }
+
+    /* ========== SP GACHA（未取得カード優先） ========== */
+    function triggerSpecialGacha() {
+        if (specialTickets <= 0) return;
+
+        // 解禁タブ内の未取得カードを優先プール、なければ全解禁タブ内から
+        const tabIdx  = getCurrentGachaTabIndex();
+        const poolEnd = Math.min((tabIdx + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
+        const tabCards = cardsData.slice(0, poolEnd);
+
+        const uncollected = tabCards.filter(c => !unlockedCards.includes(c.id));
+        const pool = uncollected.length > 0 ? uncollected : tabCards;
+
+        const card = pool[Math.floor(Math.random() * pool.length)];
+
+        specialTickets--;
+        localStorage.setItem('specialTickets', specialTickets);
+        updateSpecialGachaBtn();
+
+        // 通常のガチャ演出を流用
+        gachaSession.isGachaMode = true;
+        gachaSession.selectedCard = card;
+        document.getElementById('quizTitle').innerText = '✨ SPガチャ — やめる ↓';
+        showQuiz(card);
     }
 
     function showLevelUpToast(lv) {
@@ -2703,28 +2773,14 @@
     /* ========== TRAINING MODAL ========== */
     function showTrainingModal() {
         const el = document.getElementById('trainingModalContent');
-        const total = unlockedCards.length;
-        const levels = ['2級', '準1級', '1級'];
-        const levelColors = {
-            '2級':  { bg: 'linear-gradient(#2a4818,#142808)', border: 'rgba(80,160,50,0.4)',  icon: '📗' },
-            '準1級': { bg: 'linear-gradient(#183848,#081820)', border: 'rgba(50,140,180,0.4)', icon: '📘' },
-            '1級':  { bg: 'linear-gradient(#481820,#280808)', border: 'rgba(180,60,50,0.4)',  icon: '📕' },
-        };
-        const levelBtns = levels.map(lv => {
-            const c = levelColors[lv];
-            const cnt = (LEVEL_GROUPS[lv] || []).filter(id => unlockedCards.includes(id)).length;
-            const total_lv = (LEVEL_GROUPS[lv] || []).length;
-            return `<button class="training-start-btn" onclick="openTrainingMode('${lv}')"
-                style="background:${c.bg};border-color:${c.border};">
-                ${c.icon} ${lv} (取得済 ${cnt}/${total_lv}枚)
-            </button>`;
-        }).join('');
+        const tabIdx = getCurrentGachaTabIndex();
+        const poolEnd = Math.min((tabIdx + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
+        const poolSize = poolEnd;
         el.innerHTML = `
             <div style="color:#e8d070;font-size:17px;font-weight:bold;margin-bottom:6px;font-family:'Noto Serif JP',serif;">🏋 トレーニング</div>
-            <div style="color:#a090c0;font-size:12px;margin-bottom:16px;">アンロック済み ${total}枚 ｜ 無制限で練習</div>
-            <button class="training-start-btn" onclick="openTrainingMode('all')">🎯 全カードで練習</button>
-            <div style="margin:14px 0 8px;color:#807090;font-size:11px;">── レベル別で練習 ──</div>
-            ${levelBtns}`;
+            <div style="color:#a090c0;font-size:12px;margin-bottom:4px;">解禁タブ内 <strong style="color:#f0c840;">${poolSize}</strong> 枚の単語からランダム出題</div>
+            <div style="color:#807090;font-size:11px;margin-bottom:16px;">例文中の（　　）に入る単語を選ぼう</div>
+            <button class="training-start-btn" onclick="openTrainingMode()">✏️ トレーニング開始</button>`;
         document.getElementById('training-modal').style.display = 'flex';
     }
     function closeTrainingModal() {
@@ -3025,13 +3081,25 @@
     /* ========== QUIZ DISPLAY ========== */
     function showQuiz(card) {
         markAnswerStart();  // 回答時間計測開始
-        // 例文の（　　）をマークアップしてセット
-        const sentence = (card.quiz.example || "___").replace(/___/g,
-            '<span class="quiz-blank">（　　）</span>');
+        // 例文中の答え単語を（　　）に動的置換
+        const correctAnswer = card.quiz.answer;
+        let sentence = card.quiz.example || '___';
+        // 答え単語（大文字小文字問わず）を空欄に差し替え
+        const escaped = correctAnswer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp('\\b' + escaped + '\\b', 'gi');
+        if (regex.test(sentence)) {
+            sentence = sentence.replace(new RegExp('\\b' + escaped + '\\b', 'gi'),
+                '<span class="quiz-blank">（　　）</span>');
+        } else {
+            // 単語境界マッチ失敗時（句動詞など）は単純置換
+            const regex2 = new RegExp(escaped, 'gi');
+            sentence = regex2.test(sentence)
+                ? sentence.replace(new RegExp(escaped, 'gi'), '<span class="quiz-blank">（　　）</span>')
+                : '<span class="quiz-blank">（　　）</span> &mdash; ' + sentence;
+        }
         document.getElementById('quizSentence').innerHTML = sentence;
 
         // 選択肢を生成（正解1 + 不正解3 = 計4択）
-        const correctAnswer = card.quiz.answer;
         const allAnswers = Object.values(quizList)
             .map(q => q.answer)
             .filter(a => a !== correctAnswer);
@@ -3382,17 +3450,14 @@
     }
 
     /* ========== TRAINING MODE ========== */
-    function openTrainingMode(levelFilter) {
+    function openTrainingMode() {
         closeTrainingModal();
-        let pool;
-        if (!levelFilter || levelFilter === 'all') {
-            pool = cardsData.filter(c => unlockedCards.includes(c.id));
-        } else {
-            const nos = LEVEL_GROUPS[levelFilter] || [];
-            pool = cardsData.filter(c => nos.includes(c.no) && unlockedCards.includes(c.id));
-        }
+        // 解禁済みタブ（0〜currentGachaTab）内の全カードをプールに
+        const tabIdx = getCurrentGachaTabIndex();
+        const poolEnd = Math.min((tabIdx + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
+        const pool = cardsData.slice(0, poolEnd).slice(); // shallow copy
         if (pool.length === 0) {
-            alert('このレベルのカードがまだアンロックされていません！');
+            alert('まだカードがありません！ガチャでカードを入手してください。');
             return;
         }
         // Shuffle
@@ -3400,7 +3465,7 @@
             const j = Math.floor(Math.random() * (i + 1));
             [pool[i], pool[j]] = [pool[j], pool[i]];
         }
-        trainingSession = { active: true, cards: pool, index: 0, levelFilter: levelFilter || 'all', masteredIds: new Set() };
+        trainingSession = { active: true, cards: pool, index: 0, levelFilter: 'all', masteredIds: new Set() };
         showTrainingQuiz();
     }
 
@@ -3409,8 +3474,7 @@
         if (trainingSession.index >= trainingSession.cards.length) trainingSession.index = 0;
         markAnswerStart();  // 回答時間計測開始
         const card = trainingSession.cards[trainingSession.index];
-        document.getElementById('quizTitle').innerText =
-            `🏋 トレーニング [${trainingSession.levelFilter}] — やめる ↓`;
+        document.getElementById('quizTitle').innerText = '🏋 トレーニング — やめる ↓';
         showQuiz(card);
     }
 
@@ -3543,6 +3607,7 @@
 
     /* ========== INIT ========== */
     updateXPDisplay();
+    updateSpecialGachaBtn();
     updateDailyGoalDisplay();
     renderCollection();
     checkLoginStreak();
