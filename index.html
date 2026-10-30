@@ -1542,7 +1542,7 @@
         '1級':  { achieved: false, currentStreak: 0, bestStreak: 0 }
     };
 
-    let trainingSession = { active: false, cards: [], index: 0, levelFilter: 'all' };
+    let trainingSession = { active: false, cards: [], index: 0, levelFilter: 'all', masteredIds: new Set() };
 
     /* ========== WEAK CARDS (苦手カード) STATE ========== */
     let weakCards = JSON.parse(localStorage.getItem('weakCards')) || [];
@@ -2103,9 +2103,11 @@
         const randomCard = lockedCards[Math.floor(Math.random() * lockedCards.length)];
         gachaSession.isGachaMode = true;
         gachaSession.selectedCard = randomCard;
-        gachaSession.userAnswer = "";
-        document.getElementById('quizTitle').innerText = "🔥 ガチャクイズチャレンジ";
-        showQuiz(randomCard);
+        // ガチャ回数を消費してすぐカード付与（クイズなし）
+        dailyGachaStorage.count = Math.max(0, dailyGachaStorage.count - 1);
+        localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
+        checkAndResetDailyGacha();
+        evaluateAndShowGachaResult(true);
     }
 
     function jumpToCardTab(cardNo) {
@@ -2193,23 +2195,24 @@
                 const isWeakCard = weakCards.includes(card.no);
                 trackChallengeAnswer(isCorrect, card.no, isWeakCard);
                 updateCombo(isCorrect);
-                if (isCorrect) addXP(10, btnEl);
-                // Advance to next card (loop with reshuffle)
-                trainingSession.index++;
-                if (trainingSession.index >= trainingSession.cards.length) {
-                    trainingSession.index = 0;
-                    const pool = trainingSession.cards;
-                    for (let i = pool.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [pool[i], pool[j]] = [pool[j], pool[i]];
-                    }
+                if (isCorrect) {
+                    addXP(10, btnEl);
+                    // 正解したカードをプールから除外（再出題しない）
+                    trainingSession.masteredIds.add(card.id);
+                    trainingSession.cards = trainingSession.cards.filter(c => c.id !== card.id);
+                    trainingSession.index = Math.min(trainingSession.index, trainingSession.cards.length);
+                } else {
+                    // 不正解は次の問題へ（プールには残る）
+                    trainingSession.index++;
+                    if (trainingSession.index >= trainingSession.cards.length) trainingSession.index = 0;
                 }
-                showTrainingQuiz();
-            } else if (gachaSession.isGachaMode) {
-                dailyGachaStorage.count = Math.max(0, dailyGachaStorage.count - 1);
-                localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
-                checkAndResetDailyGacha();
-                evaluateAndShowGachaResult(isCorrect);
+                if (trainingSession.cards.length === 0) {
+                    // 全問正解
+                    alert(`🎉 全問正解！\n${trainingSession.masteredIds.size}枚すべてクリアしました！`);
+                    closeQuiz();
+                } else {
+                    showTrainingQuiz();
+                }
             } else {
                 updateCombo(isCorrect);
                 if (isCorrect) {
@@ -2475,20 +2478,13 @@
             const j = Math.floor(Math.random() * (i + 1));
             [pool[i], pool[j]] = [pool[j], pool[i]];
         }
-        trainingSession = { active: true, cards: pool, index: 0, levelFilter: levelFilter || 'all' };
+        trainingSession = { active: true, cards: pool, index: 0, levelFilter: levelFilter || 'all', masteredIds: new Set() };
         showTrainingQuiz();
     }
 
     function showTrainingQuiz() {
-        if (!trainingSession.active) return;
-        if (trainingSession.index >= trainingSession.cards.length) {
-            trainingSession.index = 0;
-            const pool = trainingSession.cards;
-            for (let i = pool.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [pool[i], pool[j]] = [pool[j], pool[i]];
-            }
-        }
+        if (!trainingSession.active || trainingSession.cards.length === 0) return;
+        if (trainingSession.index >= trainingSession.cards.length) trainingSession.index = 0;
         const card = trainingSession.cards[trainingSession.index];
         document.getElementById('quizTitle').innerText =
             `🏋 トレーニング [${trainingSession.levelFilter}] — やめる ↓`;
