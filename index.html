@@ -1172,9 +1172,9 @@
     <button class="action-btn btn-study" onclick="showTrainingModal()">
         <span class="btn-icon">🏋</span>トレーニング
     </button>
-    <button class="action-btn" onclick="showChallengeModal()"
+    <button class="action-btn" id="hofBtn" onclick="showHallOfFameModal()"
         style="grid-column:1/-1;background:linear-gradient(150deg,#4a3010,#2a1800);color:#f0d080;border:1px solid rgba(200,150,30,0.4);">
-        <span class="btn-icon">🎯</span>チャレンジ &amp; 殿堂入り
+        <span class="btn-icon">🏆</span>殿堂入りへの道
     </button>
 </div>
 
@@ -2372,6 +2372,20 @@
         if (totEl)  totEl.textContent  = total;
         if (rateEl) rateEl.textContent = `${pct}% コンプリート`;
         if (fillEl) fillEl.style.width = pct + '%';
+        // 殿堂入りボタンのロック状態を更新
+        const hofBtn = document.getElementById('hofBtn');
+        if (hofBtn) {
+            const allComplete = acquired >= total;
+            if (allComplete) {
+                hofBtn.style.opacity = '1';
+                hofBtn.style.background = 'linear-gradient(150deg,#6a4010,#3a2000)';
+                hofBtn.innerHTML = '<span class="btn-icon">🏆</span>殿堂入りへの道';
+            } else {
+                hofBtn.style.opacity = '0.5';
+                hofBtn.style.background = 'linear-gradient(150deg,#2a2020,#1a1010)';
+                hofBtn.innerHTML = `<span class="btn-icon">🔒</span>殿堂入りへの道 (残り${total - acquired}枚)`;
+            }
+        }
     }
 
     /* ========== CHALLENGE / TRAINING STATE ========== */
@@ -2690,42 +2704,62 @@
     function showTrainingModal() {
         const el = document.getElementById('trainingModalContent');
         const total = unlockedCards.length;
+        const levels = ['2級', '準1級', '1級'];
+        const levelColors = {
+            '2級':  { bg: 'linear-gradient(#2a4818,#142808)', border: 'rgba(80,160,50,0.4)',  icon: '📗' },
+            '準1級': { bg: 'linear-gradient(#183848,#081820)', border: 'rgba(50,140,180,0.4)', icon: '📘' },
+            '1級':  { bg: 'linear-gradient(#481820,#280808)', border: 'rgba(180,60,50,0.4)',  icon: '📕' },
+        };
+        const levelBtns = levels.map(lv => {
+            const c = levelColors[lv];
+            const cnt = (LEVEL_GROUPS[lv] || []).filter(id => unlockedCards.includes(id)).length;
+            const total_lv = (LEVEL_GROUPS[lv] || []).length;
+            return `<button class="training-start-btn" onclick="openTrainingMode('${lv}')"
+                style="background:${c.bg};border-color:${c.border};">
+                ${c.icon} ${lv} (取得済 ${cnt}/${total_lv}枚)
+            </button>`;
+        }).join('');
         el.innerHTML = `
-            <div style="color:#e8d070;font-size:17px;font-weight:bold;margin-bottom:6px;font-family:'Noto Serif JP',serif;">🏋 トレーニングモード</div>
-            <div style="color:#a090c0;font-size:12px;margin-bottom:4px;">アンロック済み: ${total}枚 | 無制限で練習</div>
-            <div style="color:#807090;font-size:11px;margin-bottom:16px;">正解数がチャレンジ進捗に反映されます</div>
+            <div style="color:#e8d070;font-size:17px;font-weight:bold;margin-bottom:6px;font-family:'Noto Serif JP',serif;">🏋 トレーニング</div>
+            <div style="color:#a090c0;font-size:12px;margin-bottom:16px;">アンロック済み ${total}枚 ｜ 無制限で練習</div>
             <button class="training-start-btn" onclick="openTrainingMode('all')">🎯 全カードで練習</button>
-            <div style="margin:14px 0 8px;color:#807090;font-size:11px;">── 殿堂入り挑戦 (レベル別) ──</div>
-            <button class="training-start-btn" onclick="openTrainingMode('2級')"
-                style="background:linear-gradient(#2a4818,#142808);border-color:rgba(80,160,50,0.4);">
-                📗 2級 (No.1〜20)
-            </button>
-            <button class="training-start-btn" onclick="openTrainingMode('準1級')"
-                style="background:linear-gradient(#183848,#081820);border-color:rgba(50,140,180,0.4);">
-                📘 準1級 (No.21〜40)
-            </button>
-            <button class="training-start-btn" onclick="openTrainingMode('1級')"
-                style="background:linear-gradient(#481820,#280808);border-color:rgba(180,60,50,0.4);">
-                📕 1級 (No.41〜50)
-            </button>
-            <div style="margin-top:16px;padding:12px;background:rgba(20,10,40,0.65);border:1px solid rgba(180,150,80,0.2);border-radius:10px;text-align:left;">
-                <div style="color:#e8d070;font-size:12px;margin-bottom:6px;font-family:'Noto Serif JP',serif;">🏆 殿堂入り条件</div>
-                <div style="color:#a090c0;font-size:11px;line-height:1.8;">
-                    • レベル別で <strong style="color:#f0c840;">100問連続正解</strong> → 殿堂入り<br>
-                    • 1問でも不正解でカウンターリセット<br>
-                    • 2級 +10回 &nbsp;準1級 +20回 &nbsp;1級 +30回
-                </div>
-            </div>`;
+            <div style="margin:14px 0 8px;color:#807090;font-size:11px;">── レベル別で練習 ──</div>
+            ${levelBtns}`;
         document.getElementById('training-modal').style.display = 'flex';
     }
     function closeTrainingModal() {
         document.getElementById('training-modal').style.display = 'none';
     }
 
-    /* ========== CHALLENGE MODAL ========== */
-    function showChallengeModal() {
+    /* ========== 殿堂入りへの道 ========== */
+    function showHallOfFameModal() {
+        const allComplete = unlockedCards.length >= TOTAL_CARDS;
+        if (!allComplete) {
+            // 未コンプリートならロック画面を表示
+            const remaining = TOTAL_CARDS - unlockedCards.length;
+            const el = document.getElementById('challengeModalContent');
+            el.innerHTML = `
+                <div style="text-align:center;padding:24px 8px;">
+                    <div style="font-size:48px;margin-bottom:12px;">🔒</div>
+                    <div style="color:#e8d070;font-size:16px;font-weight:bold;font-family:'Noto Serif JP',serif;margin-bottom:10px;">殿堂入りへの道</div>
+                    <div style="color:#a090c0;font-size:13px;line-height:1.8;margin-bottom:16px;">
+                        全 <strong style="color:#f0c840;">${TOTAL_CARDS}</strong> 枚をコンプリートすると解禁されます。<br>
+                        残り <strong style="color:#ff8080;">${remaining}</strong> 枚
+                    </div>
+                    <div style="background:rgba(20,10,40,0.7);border-radius:10px;padding:12px;border:1px solid rgba(180,150,80,0.2);">
+                        <div style="color:#807090;font-size:11px;line-height:1.8;">
+                            ガチャでカードを集めて<br>コレクションを完成させよう！
+                        </div>
+                    </div>
+                </div>`;
+            document.getElementById('challenge-modal').style.display = 'flex';
+            return;
+        }
         renderChallengeModal();
         document.getElementById('challenge-modal').style.display = 'flex';
+    }
+    function showChallengeModal() {
+        showHallOfFameModal();
     }
     function closeChallengeModal() {
         document.getElementById('challenge-modal').style.display = 'none';
