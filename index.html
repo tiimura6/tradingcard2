@@ -350,37 +350,58 @@
         /* ===== Collection page tabs ===== */
         .collection-page-tabs {
             display: flex;
-            gap: 6px;
-            overflow-x: auto;
-            padding: 6px 2px 10px;
+            gap: 5px;
+            padding: 8px 4px 12px;
             width: 100%; max-width: 750px;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(200,170,80,0.25) transparent;
+            box-sizing: border-box;
             position: relative; z-index: 2;
+            /* 等間隔で左右いっぱいに並べる */
+            justify-content: space-between;
         }
-        .collection-page-tabs::-webkit-scrollbar { height: 4px; }
-        .collection-page-tabs::-webkit-scrollbar-track { background: transparent; }
-        .collection-page-tabs::-webkit-scrollbar-thumb { background: rgba(200,170,80,0.25); border-radius: 4px; }
         .cpt-btn {
-            flex: 0 0 auto;
-            padding: 5px 11px;
-            background: rgba(20,14,44,0.75);
+            flex: 1 1 0;
+            min-width: 0;
+            padding: 8px 2px;
+            background: rgba(20,14,44,0.80);
             border: 1px solid #3a2c60;
-            border-radius: 20px;
-            color: #8a7ab0;
-            font-size: 11px;
+            border-radius: 10px;
+            color: #6a5a90;
+            font-size: 10px;
             font-family: 'Noto Serif JP', serif;
             cursor: pointer;
             white-space: nowrap;
-            transition: background 0.15s, border-color 0.15s, color 0.15s;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: background 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s, box-shadow 0.2s;
+            text-align: center;
+            line-height: 1.4;
         }
-        .cpt-btn:hover { background: rgba(60,40,100,0.8); border-color: #6a5a90; color: #c0b0e0; }
+        /* 解禁済みタブ（デフォルト） */
+        .cpt-btn.unlocked {
+            background: rgba(30,20,60,0.85);
+            border-color: #5a4880;
+            color: #b0a0d8;
+        }
+        .cpt-btn.unlocked:hover {
+            background: rgba(60,40,110,0.9);
+            border-color: #8a70b8;
+            color: #d8ccf8;
+            box-shadow: 0 0 10px rgba(140,100,220,0.3);
+        }
+        /* ロック済みタブ */
+        .cpt-btn.locked {
+            opacity: 0.35;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        /* アクティブタブ */
         .cpt-btn.active {
-            background: rgba(100,72,12,0.85);
-            border-color: #c8a030;
-            color: #ffd870;
+            background: linear-gradient(135deg, rgba(120,85,10,0.95), rgba(80,55,5,0.95));
+            border-color: #e0b840;
+            border-width: 2px;
+            color: #ffe88a;
             font-weight: bold;
-            box-shadow: 0 0 8px rgba(200,160,40,0.35);
+            box-shadow: 0 0 14px rgba(220,180,50,0.55), inset 0 1px 0 rgba(255,235,120,0.2);
         }
 
         .collection-grid {
@@ -2726,28 +2747,53 @@
     }
 
     /* ========== COLLECTION RENDER ========== */
+    /* 前のタブのカードが全部揃っていれば解禁 */
+    function isTabUnlocked(tabIndex) {
+        if (tabIndex === 0) return true;  // Tab1は常に解禁
+        for (let t = 0; t < tabIndex; t++) {
+            const s = t * COLLECTION_PAGE_SIZE;
+            const e = Math.min((t + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
+            const allDone = cardsData.slice(s, e).every(c => unlockedCards.includes(c.id));
+            if (!allDone) return false;   // 前タブが未完 → ロック
+        }
+        return true;
+    }
+
     function renderCollectionTabs() {
         const totalCards = cardsData.length;
         const totalPages = Math.ceil(totalCards / COLLECTION_PAGE_SIZE);
         const tabsEl = document.getElementById('collectionPageTabs');
         if (!tabsEl) return;
-
-        // 1ページしかなければタブ非表示
         if (totalPages <= 1) { tabsEl.innerHTML = ''; return; }
 
         tabsEl.innerHTML = '';
         for (let i = 0; i < totalPages; i++) {
-            const start = i * COLLECTION_PAGE_SIZE + 1;
-            const end   = Math.min((i + 1) * COLLECTION_PAGE_SIZE, totalCards);
+            const start    = i * COLLECTION_PAGE_SIZE + 1;
+            const end      = Math.min((i + 1) * COLLECTION_PAGE_SIZE, totalCards);
+            const unlocked = isTabUnlocked(i);
+            const isActive = (i === currentCollectionPage);
+
             const btn = document.createElement('button');
-            btn.className = 'cpt-btn' + (i === currentCollectionPage ? ' active' : '');
-            btn.textContent = `${start}〜${end}`;
-            btn.onclick = () => {
-                currentCollectionPage = i;
-                renderCollection();
-                // アクティブボタンを視野内にスクロール
-                btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-            };
+            btn.title = unlocked ? `No.${start}〜${end}` : `🔒 前のタブをコンプリートすると解禁`;
+
+            // クラス設定
+            let cls = 'cpt-btn';
+            if (isActive)        cls += ' active';
+            else if (unlocked)   cls += ' unlocked';
+            else                 cls += ' locked';
+            btn.className = cls;
+
+            // ラベル：ロック中は🔒、解禁済みは番号
+            btn.innerHTML = unlocked
+                ? `<span style="font-size:9px;opacity:0.7;display:block;">${i + 1}</span>${start}〜${end}`
+                : `🔒<span style="font-size:9px;display:block;">Tab${i + 1}</span>`;
+
+            if (unlocked) {
+                btn.onclick = () => {
+                    currentCollectionPage = i;
+                    renderCollection();
+                };
+            }
             tabsEl.appendChild(btn);
         }
     }
