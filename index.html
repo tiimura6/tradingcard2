@@ -51,12 +51,7 @@
            ================================================================ */
         body {
             font-family: 'Noto Serif JP', serif;
-            /* ── フォールバック：夜空ベース（グラデーションなし） ── */
             background-color: #04060f;
-            background-size: cover;
-            background-position: center center;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
             margin: 0;
             padding: 20px 20px 400px;
             display: flex;
@@ -65,9 +60,19 @@
             min-height: 100vh;
         }
 
-        /* ── 背景画像が読み込まれた場合のスタイル ── */
-        body.has-bg-image {
-            /* background-image は JS で動的に設定 */
+        /* ── 背景画像レイヤー（iOS fixed互換） ── */
+        #bg-layer {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            z-index: -1;
+            /* iOSでのサブピクセルレンダリング最適化 */
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+            will-change: transform;
         }
 
         /* ===== STARS ===== */
@@ -965,6 +970,7 @@
     </style>
 </head>
 <body>
+<div id="bg-layer"></div>
 
 <!-- ===== ATMOSPHERIC BACKGROUND LAYERS ===== -->
 <!-- Star field -->
@@ -2625,7 +2631,8 @@
         const img = new Image();
         img.onload = function () {
             // 画像が見つかった → background-image を適用してクラス付与
-            document.body.style.backgroundImage = 'url("' + src + '")';
+            const bgLayer = document.getElementById('bg-layer');
+            if (bgLayer) bgLayer.style.backgroundImage = 'url("' + src + '")';
             document.body.classList.add('has-bg-image');
             console.log('[背景] 画像を適用:', src);
         };
