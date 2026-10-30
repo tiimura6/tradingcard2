@@ -300,6 +300,19 @@
         }
         .counter { font-size: 18px; color: #c8a060; margin: 0 0 10px 0; font-weight: bold; }
 
+        /* シーンキャプション（学習カード前面・画像の下） */
+        .study-scene-caption {
+            font-size: 11px;
+            color: rgba(195,160,255,0.60);
+            font-style: italic;
+            font-family: 'Noto Serif JP', serif;
+            text-align: center;
+            margin: 6px 0 4px;
+            line-height: 1.45;
+            padding: 0 10px;
+            letter-spacing: 0.02em;
+        }
+
         .header-info-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
         .gacha-limit-info {
             font-size: 13px; color: #ffe8a0; font-weight: bold; display: inline-block;
@@ -1211,6 +1224,7 @@
                 <div class="study-card-img-wrap" id="studyImgWrap">
                     <img class="study-card-img" id="studyCardImg" src="" alt="">
                 </div>
+                <div class="study-scene-caption" id="studySceneCaption"></div>
                 <div class="study-english-word" id="studyEnglishWord"></div>
                 <div class="study-tap-hint">タップして意味を確認 →</div>
             </div>
@@ -1275,56 +1289,106 @@
 
     /* ========== QUIZ DATA ========== */
     const quizList = {
-        1:  { meaning: "二重線/複線",                                                                                    answer: "a double line",         example: "The teacher drew ___ on the board to mark the end of the section." },
-        2:  { meaning: "〜からはほど遠い/まったく違うもの/月とすっぽん",                                               answer: "a far cry from",        example: "The final result was ___ what we had originally planned." },
-        3:  { meaning: "職業/身分/社会階層/あらゆる歩み/人生の道のり",                                                  answer: "a walk of life",        example: "People from every ___ gathered at the community festival." },
-        4:  { meaning: "〜を捨てる/あきらめる/見捨てる/〜を置き去りにする/（計画などを）中止する",                     answer: "abandon",               example: "The captain had no choice but to ___ the sinking ship." },
-        5:  { meaning: "異常/異常性/変形/異常現象",                                                                      answer: "abnormality",           example: "The test results revealed a slight ___ in her blood pressure." },
-        6:  { meaning: "〜を廃止する/（法律などを）なくす/撤廃する",                                                    answer: "abolish",               example: "The government decided to ___ the outdated law." },
-        7:  { meaning: "絶対的な/完全な/無条件の/決定的な",                                                              answer: "absolute",              example: "The judge's decision was ___, leaving no room for appeal." },
-        8:  { meaning: "〜を吸収する/夢中にさせる/（衝撃などを）和らげる/（知識を）吸い上げる",                        answer: "absorb",                example: "Plants ___ carbon dioxide from the air during photosynthesis." },
-        9:  { meaning: "豊富な/大量の/富んだ/満ちあふれた",                                                              answer: "abundant",              example: "The river was ___ with fish after the long rainy season." },
-        10: { meaning: "近づきやすい/利用しやすい/理解しやすい/（人柄が）気さくな/交通の便が良い",                     answer: "accessible",            example: "The museum was made ___ to visitors in wheelchairs." },
-        11: { meaning: "達成/実績/才能/成果/教養/芸事",                                                                  answer: "accomplishment",        example: "Graduating from university was her greatest ___." },
-        12: { meaning: "〜を説明する/〜の割合を占める/〜の原因となる/〜の責任を負う/（行方などを）確認する",           answer: "account for",           example: "Can you ___ the missing funds in the budget?" },
-        13: { meaning: "〜を達成する/成し遂げる/（目的を）果たす/得る",                                                  answer: "achieve",               example: "She worked hard to ___ her dream of becoming a doctor." },
-        14: { meaning: "達成/成就/業績/偉業/成果",                                                                       answer: "achievement",           example: "Winning the championship was a remarkable ___ for the young team." },
-        15: { meaning: "酸/酸性の/酸味のある/（言葉などが）痛烈な/辛辣な",                                             answer: "acid",                  example: "The scientist tested whether the liquid was an ___ or a base." },
-        16: { meaning: "〜を獲得する/身につける/（会社などを）買収する/手に入れる",                                     answer: "acquire",               example: "The company plans to ___ a smaller competitor next year." },
-        17: { meaning: "〜を適応させる/合わせる/慣れる/（小説などを）改変する/脚色する",                               answer: "adapt",                 example: "It took weeks for him to ___ to the new environment." },
-        18: { meaning: "適応/順応/改作/脚色/翻案",                                                                       answer: "adaptation",            example: "The film is an ___ of a bestselling novel from the 1990s." },
-        19: { meaning: "〜を増やす/加える/〜を増大させる",                                                               answer: "add to",                example: "The unexpected storm only served to ___ their troubles." },
-        20: { meaning: "これに加えて/さらに言えば/おまけに",                                                             answer: "add to this",           example: "___ the fact that the train was late, and you can see why we missed the meeting." },
-        21: { meaning: "〜に話しかける/（問題に）取り組む/住所/演説/〜に宛名を書く",                                   answer: "address",               example: "The president will ___ the nation on television tonight." },
-        22: { meaning: "〜を調整する/合わせる/慣れる/（姿勢などを）正す/（保険金を）査定する",                        answer: "adjust",                example: "She had to ___ her schedule to fit the new meeting time." },
-        23: { meaning: "行政/管理/政府/経営/運営/政権/（薬の）投与",                                                    answer: "administration",        example: "The school's ___ announced new policies for the upcoming year." },
-        24: { meaning: "感嘆/賞賛/憧れ/賛美",                                                                            answer: "admiration",            example: "He looked at the ancient painting with deep ___." },
-        25: { meaning: "明らかに/誰もが認めるように/言いにくいが/確かに",                                               answer: "admittedly",            example: "___, the plan is risky, but the potential reward is worth it." },
-        26: { meaning: "〜を採用する/（養子に）迎える/（方針などを）選ぶ/（法案を）可決する",                         answer: "adopt",                 example: "The couple decided to ___ a child from overseas." },
-        27: { meaning: "採用/養子縁組/選定/可決",                                                                        answer: "adoption",              example: "The ___ of the new policy was approved by the board of directors." },
-        28: { meaning: "〜を主張する/支持する/擁護者/代弁者/弁護士/〜を勧める",                                        answer: "advocate",              example: "She became a strong ___ for environmental protection in her community." },
-        29: { meaning: "〜に影響を与える/作用する/（病気が人・体を）冒す/〜の心を動かす/〜の振りをする",               answer: "affect",                example: "Lack of sleep can seriously ___ your ability to concentrate." },
-        30: { meaning: "手頃な/購入しやすい/安価な/無理のない",                                                          answer: "affordable",            example: "They were looking for an ___ apartment in the city center." },
-        31: { meaning: "動揺した/興奮した/動転した/波立った",                                                            answer: "agitated",              example: "The speaker became visibly ___ when asked about the scandal." },
-        32: { meaning: "農業の/農作の/農学の/土地の",                                                                    answer: "agricultural",          example: "This region is well known for its ___ products, especially high-quality rice." },
-        33: { meaning: "警戒/用心深さ/機敏さ/覚醒（状態）",                                                             answer: "alertness",             example: "The security guard's ___ prevented a break-in at the warehouse." },
-        34: { meaning: "同盟を結んだ/関連した/連合した/同類の",                                                          answer: "allied",                example: "The ___ forces worked together to defeat their common enemy." },
-        35: { meaning: "〜と並んで/〜と一緒に/〜のそばに/〜と同時に",                                                   answer: "alongside",             example: "She worked ___ her mentor for three years before leading her own team." },
-        36: { meaning: "代わりの/選択肢/二者択一の/オルタナティブな/既存のものに代わる",                               answer: "alternative",           example: "If the main road is blocked, we will need to find an ___ route." },
-        37: { meaning: "アルミニウムの/アルミ製の",                                                                      answer: "aluminum",              example: "The bicycle frame was made of a lightweight ___ alloy." },
-        38: { meaning: "素人くさい/下手な/未熟な/アマチュアらしい",                                                     answer: "amateurish",            example: "The performance was criticized for looking ___ and poorly rehearsed." },
-        39: { meaning: "アミノ酸",                                                                                       answer: "amino acid",            example: "Proteins are made up of long chains of ___." },
-        40: { meaning: "〜を楽しませる/面白がらせる/（時間を）つぶさせる",                                              answer: "amuse",                 example: "The magician's clever tricks never failed to ___ the audience." },
-        41: { meaning: "釣り人/（特に）竿釣り師",                                                                        answer: "angler",                example: "The ___ waited patiently for hours at the edge of the quiet river." },
-        42: { meaning: "苦痛/苦悩/悲痛/激痛/悶え",                                                                      answer: "anguish",               example: "She cried out in ___ when she received the terrible news." },
-        43: { meaning: "動物行動学者/動物行動主義者",                                                                    answer: "animal behaviorist",    example: "The ___ spent years studying the social habits of wild chimpanzees." },
-        44: { meaning: "抗菌の/防腐の/抗菌剤/抗菌ペプチド",                                                             answer: "antibacterial",         example: "The soap contained ___ agents that help prevent infection." },
-        45: { meaning: "期待/予想/先取り/楽しみにして待つこと/予期",                                                    answer: "anticipation",          example: "The children waited in ___ for the presents to be unwrapped." },
-        46: { meaning: "明白な/一見〜らしい/見かけ上の/表面的な",                                                       answer: "apparent",              example: "It was ___ from his expression that he was not happy with the decision." },
-        47: { meaning: "〜を求める/〜に訴えかける/〜を懇願する/〜を要請する",                                           answer: "appeal for",            example: "The charity decided to ___ donations following the devastating disaster." },
-        48: { meaning: "応募者/志願者/申請者/受験生",                                                                    answer: "applicant",             example: "Each ___ was required to submit a written essay along with their application form." },
-        49: { meaning: "〜に適用される/〜に当てはまる/〜に申し込む/〜に宛てる/〜に塗る",                              answer: "apply to",              example: "The same rules ___ all students, regardless of their grade level." },
-        50: { meaning: "適切な/ふさわしい/固有の/〜に特有の/〜を私物化する/〜を予算に計上する",                       answer: "appropriate",           example: "Please wear ___ clothing for the formal ceremony this evening." }
+        1:  { meaning: "二重線/複線",                                                                                    answer: "a double line",         example: "The teacher drew ___ on the board to mark the end of the section.",
+              scene: "Soft chalk dust drifts in afternoon light through an old wooden classroom, a teacher's careful hand drawing neat lines in an open ledger while students' pencils scratch in their notebooks." },
+        2:  { meaning: "〜からはほど遠い/まったく違うもの/月とすっぽん",                                               answer: "a far cry from",        example: "The final result was ___ what we had originally planned.",
+              scene: "A young woman stands at a grey city crossing, her gaze distant, remembering the winding mountain path of the village she grew up in — the hum of traffic replacing the sound of cicadas." },
+        3:  { meaning: "職業/身分/社会階層/あらゆる歩み/人生の道のり",                                                  answer: "a walk of life",        example: "People from every ___ gathered at the community festival.",
+              scene: "Paper lanterns glow above a narrow festival road at dusk as people of all ages — farmers, fishmongers, schoolchildren, grandmothers — walk together under the warm summer sky." },
+        4:  { meaning: "〜を捨てる/あきらめる/見捨てる/〜を置き去りにする/（計画などを）中止する",                     answer: "abandon",               example: "The captain had no choice but to ___ the sinking ship.",
+              scene: "A lone captain grips the tilting helm as dark ocean swells rise around the ship, the last lifeboat disappearing into the stormy distance." },
+        5:  { meaning: "異常/異常性/変形/異常現象",                                                                      answer: "abnormality",           example: "The test results revealed a slight ___ in her blood pressure.",
+              scene: "A doctor studies a long printout in a quiet clinic, afternoon light falling across the desk while a patient's worried hands rest folded in the corner of the frame." },
+        6:  { meaning: "〜を廃止する/（法律などを）なくす/撤廃する",                                                    answer: "abolish",               example: "The government decided to ___ the outdated law.",
+              scene: "A solemn crowd gathers before an old stone courthouse as officials remove a bronze inscription from the facade, quietly closing a chapter of history." },
+        7:  { meaning: "絶対的な/完全な/無条件の/決定的な",                                                              answer: "absolute",              example: "The judge's decision was ___, leaving no room for appeal.",
+              scene: "A judge in formal robes slowly closes a heavy leather ledger in a silent courtroom, the gallery holding its breath, shadows long across the wooden floor." },
+        8:  { meaning: "〜を吸収する/夢中にさせる/（衝撃などを）和らげる/（知識を）吸い上げる",                        answer: "absorb",                example: "Plants ___ carbon dioxide from the air during photosynthesis.",
+              scene: "A child crouches barefoot at the mossy edge of a summer stream, watching dappled light shimmer on the water, lost in a world of green and gold, time forgotten." },
+        9:  { meaning: "豊富な/大量の/富んだ/満ちあふれた",                                                              answer: "abundant",              example: "The river was ___ with fish after the long rainy season.",
+              scene: "Golden evening light falls across a winding river as an old fisherman lifts his net, the water alive with silver, the mountains fading to purple in the hazy distance." },
+        10: { meaning: "近づきやすい/利用しやすい/理解しやすい/（人柄が）気さくな/交通の便が良い",                     answer: "accessible",            example: "The museum was made ___ to visitors in wheelchairs.",
+              scene: "A smiling volunteer holds open the wide doors of a sunlit museum as a grandmother in a wheelchair enters, her granddaughter's hand in hers, both looking up at the bright hall ahead." },
+        11: { meaning: "達成/実績/才能/成果/教養/芸事",                                                                  answer: "accomplishment",        example: "Graduating from university was her greatest ___.",
+              scene: "An elderly woman holds a framed degree in her weathered hands in a small room lined with old photographs, her grandchildren gathered quietly around her, wide-eyed and proud." },
+        12: { meaning: "〜を説明する/〜の割合を占める/〜の原因となる/〜の責任を負う/（行方などを）確認する",           answer: "account for",           example: "Can you ___ the missing funds in the budget?",
+              scene: "A young accountant sits alone after hours under a single lamp, tracing every column in a yellowed ledger on a worn wooden desk, the office dark and quiet around her." },
+        13: { meaning: "〜を達成する/成し遂げる/（目的を）果たす/得る",                                                  answer: "achieve",               example: "She worked hard to ___ her dream of becoming a doctor.",
+              scene: "A woman stands at the misty summit of the mountain she first climbed as a small child with her father, breathing the same cold air, the valley far below lost in morning fog." },
+        14: { meaning: "達成/成就/業績/偉業/成果",                                                                       answer: "achievement",           example: "Winning the championship was a remarkable ___ for the young team.",
+              scene: "A muddy youth team lifts a dented trophy in the blazing late-summer heat while the old coach watches from the touchline, eyes shining, tears on his weathered face." },
+        15: { meaning: "酸/酸性の/酸味のある/（言葉などが）痛烈な/辛辣な",                                             answer: "acid",                  example: "The scientist tested whether the liquid was an ___ or a base.",
+              scene: "Two students in white lab coats hold glowing beakers under laboratory lamps, their faces intent, the old tiled walls and glass cabinets gleaming softly behind them." },
+        16: { meaning: "〜を獲得する/身につける/（会社などを）買収する/手に入れる",                                     answer: "acquire",               example: "The company plans to ___ a smaller competitor next year.",
+              scene: "Two executives exchange a firm handshake in front of a glass-walled boardroom, the city lights beginning to appear in the dusk beyond the windows." },
+        17: { meaning: "〜を適応させる/合わせる/慣れる/（小説などを）改変する/脚色する",                               answer: "adapt",                 example: "It took weeks for him to ___ to the new environment.",
+              scene: "A young man watches the city skyline slowly fill the train window as the last rice paddies disappear behind him, leaving his mountain village behind for the very first time." },
+        18: { meaning: "適応/順応/改作/脚色/翻案",                                                                       answer: "adaptation",            example: "The film is an ___ of a bestselling novel from the 1990s.",
+              scene: "A glowing cinema marquee reflects in a rain-wet street at dusk, announcing the film version of a story that many people have carried in their hearts since childhood." },
+        19: { meaning: "〜を増やす/加える/〜を増大させる",                                                               answer: "add to",                example: "The unexpected storm only served to ___ their troubles.",
+              scene: "Rain runs softly down the window pane of a dim tea house while an old radio hums in the corner, deepening the grey stillness of an afternoon that seems to stretch without end." },
+        20: { meaning: "これに加えて/さらに言えば/おまけに",                                                             answer: "add to this",           example: "___ the fact that the train was late, and you can see why we missed the meeting.",
+              scene: "An elderly woman sits alone on a wooden bench at a rural station platform, her shopping bag at her feet, the clock showing the last train is late, the platform lamp casting long shadows." },
+        21: { meaning: "〜に話しかける/（問題に）取り組む/住所/演説/〜に宛名を書く",                                   answer: "address",               example: "The president will ___ the nation on television tonight.",
+              scene: "A president steps up to a bright podium as camera flashes fill the great hall, the national flag hanging perfectly still behind her, the crowd silent and watching." },
+        22: { meaning: "〜を調整する/合わせる/慣れる/（姿勢などを）正す/（保険金を）査定する",                        answer: "adjust",                example: "She had to ___ her schedule to fit the new meeting time.",
+              scene: "A girl in a school uniform pushes her glasses up and bends back over her notebook in the fading afternoon light of the old school library, pencil marks covering every margin." },
+        23: { meaning: "行政/管理/政府/経営/運営/政権/（薬の）投与",                                                    answer: "administration",        example: "The school's ___ announced new policies for the upcoming year.",
+              scene: "The school principal pins a typed notice to the board in a quiet morning corridor, the glass display case behind her reflecting the empty hallway bathed in early light." },
+        24: { meaning: "感嘆/賞賛/憧れ/賛美",                                                                            answer: "admiration",            example: "He looked at the ancient painting with deep ___.",
+              scene: "An old man stands entirely alone before a single ink painting on a dim museum wall, his hands clasped behind his back, unhurried and lost in silent contemplation." },
+        25: { meaning: "明らかに/誰もが認めるように/言いにくいが/確かに",                                               answer: "admittedly",            example: "___, the plan is risky, but the potential reward is worth it.",
+              scene: "Two colleagues sit across a glass table late at night, the city lights glowing below them, one leaning forward with a proposal, the other leaning back with arms crossed, both knowing what is at stake." },
+        26: { meaning: "〜を採用する/（養子に）迎える/（方針などを）選ぶ/（法案を）可決する",                         answer: "adopt",                 example: "The couple decided to ___ a child from overseas.",
+              scene: "A couple kneels gently in their sunlit doorway, offering a hand to a small child standing in the entrance, the quiet afternoon stretching out behind them like a new beginning." },
+        27: { meaning: "採用/養子縁組/選定/可決",                                                                        answer: "adoption",              example: "The ___ of the new policy was approved by the board of directors.",
+              scene: "A lawyer slides a document across a warm, sunlit desk to a couple sitting close together, a tiny stuffed bear sitting forgotten in the corner, the room full of hopeful silence." },
+        28: { meaning: "〜を主張する/支持する/擁護者/代弁者/弁護士/〜を勧める",                                        answer: "advocate",              example: "She became a strong ___ for environmental protection in her community.",
+              scene: "A young woman holds a hand-lettered sign at the edge of an old-growth forest at dawn, morning light cutting through ancient cedar trunks behind her, the air cold and still." },
+        29: { meaning: "〜に影響を与える/作用する/（病気が人・体を）冒す/〜の心を動かす/〜の振りをする",               answer: "affect",                example: "Lack of sleep can seriously ___ your ability to concentrate.",
+              scene: "A student rubs her tired eyes at a dormitory desk deep in the night, a cold cup of tea beside the lamp, stacks of books around her, the world outside perfectly silent." },
+        30: { meaning: "手頃な/購入しやすい/安価な/無理のない",                                                          answer: "affordable",            example: "They were looking for an ___ apartment in the city center.",
+              scene: "A young couple peers through the window of a small real estate office on a cold winter evening, their reflections mingling with the listings taped inside the glass, their breath misting in the air." },
+        31: { meaning: "動揺した/興奮した/動転した/波立った",                                                            answer: "agitated",              example: "The speaker became visibly ___ when asked about the scandal.",
+              scene: "A speaker grips the podium with both hands under blazing stage lights, his face tight and pale, a journalist in the front row with her hand raised again, not letting the question go." },
+        32: { meaning: "農業の/農作の/農学の/土地の",                                                                    answer: "agricultural",          example: "This region is well known for its ___ products, especially high-quality rice.",
+              scene: "A farmer walks between golden rice stalks at dusk, the mountains turning purple in the fading light, the only sound the soft rush of the irrigation channel running beside the path." },
+        33: { meaning: "警戒/用心深さ/機敏さ/覚醒（状態）",                                                             answer: "alertness",             example: "The security guard's ___ prevented a break-in at the warehouse.",
+              scene: "A lone security guard stands at the entrance of a dark warehouse, his flashlight tracing a slow arc across the loading dock, river fog rolling in silently from beyond the fence." },
+        34: { meaning: "同盟を結んだ/関連した/連合した/同類の",                                                          answer: "allied",                example: "The ___ forces worked together to defeat their common enemy.",
+              scene: "A faded black-and-white photograph on a wooden shelf shows soldiers from different nations standing shoulder to shoulder, their faces young and serious, the image creased with age." },
+        35: { meaning: "〜と並んで/〜と一緒に/〜のそばに/〜と同時に",                                                   answer: "alongside",             example: "She worked ___ her mentor for three years before leading her own team.",
+              scene: "A young student and her white-haired professor walk side by side along an autumn campus path, leaves drifting around their feet, the old stone library building visible in the distance." },
+        36: { meaning: "代わりの/選択肢/二者択一の/オルタナティブな/既存のものに代わる",                               answer: "alternative",           example: "If the main road is blocked, we will need to find an ___ route.",
+              scene: "A lone traveler pauses at a forest crossroads, a weathered wooden signpost pointing two ways into the mist, the pine trees perfectly still, the silence waiting for a decision." },
+        37: { meaning: "アルミニウムの/アルミ製の",                                                                      answer: "aluminum",              example: "The bicycle frame was made of a lightweight ___ alloy.",
+              scene: "Afternoon sunlight gleams off a new bicycle frame in a small workshop, tools hanging neatly on the pegboard wall, the smell of oil and sawdust in the quiet, dust-specked air." },
+        38: { meaning: "素人くさい/下手な/未熟な/アマチュアらしい",                                                     answer: "amateurish",            example: "The performance was criticized for looking ___ and poorly rehearsed.",
+              scene: "Young actors in handmade costumes shift nervously on a creaking school stage, the single spotlight a little too bright, parents and siblings visible as dark silhouettes in the rows beyond." },
+        39: { meaning: "アミノ酸",                                                                                       answer: "amino acid",            example: "Proteins are made up of long chains of ___.",
+              scene: "A dog-eared biology textbook lies open on a wooden desk in a shaft of late afternoon sunlight, its diagrams covered in pencil notes left by a diligent student years before." },
+        40: { meaning: "〜を楽しませる/面白がらせる/（時間を）つぶさせる",                                              answer: "amuse",                 example: "The magician's clever tricks never failed to ___ the audience.",
+              scene: "A white-gloved magician produces a coin from behind a small girl's ear at the corner of a summer festival, lanterns swaying above the crowd of delighted faces, the warm evening scented with yakitori." },
+        41: { meaning: "釣り人/（特に）竿釣り師",                                                                        answer: "angler",                example: "The ___ waited patiently for hours at the edge of the quiet river.",
+              scene: "An old man sits on a mossy stone at the river's edge before sunrise, his bamboo rod perfectly still, morning mist rising from the water and curling softly around the drooping willows." },
+        42: { meaning: "苦痛/苦悩/悲痛/激痛/悶え",                                                                      answer: "anguish",               example: "She cried out in ___ when she received the terrible news.",
+              scene: "A woman sits alone on a deserted night platform, a telephone pressed to her ear, the last train long gone, the empty tracks gleaming under a single station lamp, the silence total." },
+        43: { meaning: "動物行動学者/動物行動主義者",                                                                    answer: "animal behaviorist",    example: "The ___ spent years studying the social habits of wild chimpanzees.",
+              scene: "A researcher sits perfectly motionless in dappled jungle light, her worn notebook balanced on her knee, watching the forest canopy above where something moves silently between the branches." },
+        44: { meaning: "抗菌の/防腐の/抗菌剤/抗菌ペプチド",                                                             answer: "antibacterial",         example: "The soap contained ___ agents that help prevent infection.",
+              scene: "A nurse carefully bandages a child's scraped knee in a bright village clinic, white tiles on the wall, afternoon light slanting gently across the simple wooden floor." },
+        45: { meaning: "期待/予想/先取り/楽しみにして待つこと/予期",                                                    answer: "anticipation",          example: "The children waited in ___ for the presents to be unwrapped.",
+              scene: "Children in warm pyjamas sit whispering at the top of a dark staircase on New Year's Eve, barely breathing, the soft glow of wrapped gifts visible below, the house smelling of pine and mochi." },
+        46: { meaning: "明白な/一見〜らしい/見かけ上の/表面的な",                                                       answer: "apparent",              example: "It was ___ from his expression that he was not happy with the decision.",
+              scene: "A detective leans over a desk scattered with photographs in a dim late-night office, a single lamp casting deep shadows, the answer almost forming in the silence." },
+        47: { meaning: "〜を求める/〜に訴えかける/〜を懇願する/〜を要請する",                                           answer: "appeal for",            example: "The charity decided to ___ donations following the devastating disaster.",
+              scene: "A kind-faced woman stands at the entrance of a small rural community center in autumn, a donation box in her hands, the last maple leaves settling on the path behind her." },
+        48: { meaning: "応募者/志願者/申請者/受験生",                                                                    answer: "applicant",             example: "Each ___ was required to submit a written essay along with their application form.",
+              scene: "A student in a school uniform sits alone on a long wooden bench in a quiet examination corridor, a neat folder of papers on her lap, the clock on the wall ticking steadily." },
+        49: { meaning: "〜に適用される/〜に当てはまる/〜に申し込む/〜に宛てる/〜に塗る",                              answer: "apply to",              example: "The same rules ___ all students, regardless of their grade level.",
+              scene: "A teacher reads the school rules aloud to a new class in an old wooden schoolroom, a rolled map hanging on the wall behind her, thirty young faces turned attentively toward the front." },
+        50: { meaning: "適切な/ふさわしい/固有の/〜に特有の/〜を私物化する/〜を予算に計上する",                       answer: "appropriate",           example: "Please wear ___ clothing for the formal ceremony this evening.",
+              scene: "A young woman in a formal kimono stands at the stone torii gate of a mountain shrine at dawn, the city still sleeping far below, cherry blossoms catching the very first light of morning." }
     };
 
     /* ========== CARD DATA ========== */
@@ -1498,6 +1562,9 @@
 
         // Image
         document.getElementById('studyCardImg').src = card.img;
+        // Scene caption (image generation prompt context)
+        const sceneEl = document.getElementById('studySceneCaption');
+        if (sceneEl) sceneEl.textContent = card.quiz.scene || '';
         // English word
         const eng = card.quiz.answer;
         document.getElementById('studyEnglishWord').textContent = eng;
