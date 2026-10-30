@@ -202,10 +202,10 @@
 
         /* シリーズ名 */
         .series-name {
-            font-size: 10px; letter-spacing: 0.22em;
-            color: rgba(220,185,80,0.6);
+            font-size: 15px; letter-spacing: 0.18em;
+            color: rgba(230,195,90,0.85);
             font-family: 'Noto Serif JP', serif;
-            margin: 0 0 6px; text-transform: uppercase;
+            margin: 0 0 6px;
         }
         /* 区切り線 */
         .series-divider {
@@ -1157,7 +1157,7 @@
     <div class="series-divider"><span>✦</span></div>
     <h1>金の手帖</h1>
     <div class="book-subtitle">世界をひもとく　難関の英単語</div>
-    <div class="counter" id="collectionCounter">0 / 50</div>
+    <div id="collectionCounter" style="display:none;">0 / 863</div>
     <div class="header-info-row">
         <div class="gacha-limit-info" id="gachaLimitInfo">本日のガチャ残り: 1回</div>
         <div class="streak-info" id="streakInfo">🔥 0日連続</div>
@@ -3248,7 +3248,7 @@
 
         const card = gachaSession.selectedCard;
 
-        updateCombo(isCorrect);
+        // ガチャはクイズなしのカード取得なのでコンボ・正解扱いしない
 
         const rarity = getRarity(card.no);
         const rc = RARITY_CONFIG[rarity];
