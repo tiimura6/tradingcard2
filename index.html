@@ -906,6 +906,69 @@
             font-family: 'EB Garamond', serif;
             animation: xpFloat 1.2s ease-out forwards;
         }
+        /* ========== CHALLENGE TAB ========== */
+        .challenge-container { padding: 16px; font-family: 'Noto Serif JP', serif; }
+        .challenge-section {
+            background: rgba(20,10,40,0.72); border: 1px solid rgba(180,150,80,0.28);
+            border-radius: 12px; padding: 14px; margin-bottom: 14px;
+        }
+        .challenge-section-title {
+            font-size: 14px; font-weight: bold; color: #e8d070;
+            margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .challenge-item {
+            display: flex; align-items: center; padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.06); gap: 8px;
+        }
+        .challenge-item:last-child { border-bottom: none; }
+        .challenge-check { font-size: 16px; width: 22px; flex-shrink: 0; }
+        .challenge-label { flex: 1; font-size: 13px; color: #c8b8e8; }
+        .challenge-label.done { color: #706080; text-decoration: line-through; }
+        .challenge-reward {
+            font-size: 12px; color: #f0c840; background: rgba(240,200,64,0.14);
+            border-radius: 6px; padding: 2px 8px; flex-shrink: 0;
+        }
+        .hof-item {
+            display: flex; align-items: center; padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.06); gap: 8px;
+        }
+        .hof-item:last-child { border-bottom: none; }
+        .hof-label { flex: 1; font-size: 13px; color: #c8b8e8; }
+        .hof-streak-bar { width: 80px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; flex-shrink:0; }
+        .hof-streak-fill { height: 100%; background: linear-gradient(90deg,#c84040,#f0c840); border-radius: 3px; transition: width 0.4s; }
+        .hof-challenge-btn {
+            font-size: 11px; padding: 4px 8px;
+            background: rgba(80,40,120,0.6); border: 1px solid rgba(180,120,255,0.3);
+            color: #d0b8ff; border-radius: 6px; cursor: pointer;
+            font-family: 'Noto Serif JP', serif; flex-shrink: 0;
+        }
+        /* Challenge Toast */
+        .challenge-toast {
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg,#3a2460,#1a0840);
+            border: 1px solid rgba(200,160,60,0.6); color: #f0e0a0;
+            font-family: 'Noto Serif JP', serif; font-size: 14px;
+            padding: 12px 22px; border-radius: 12px; z-index: 9999;
+            display: none; text-align: center; max-width: 90vw;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5); pointer-events: none;
+        }
+        .challenge-toast.show { display: block; animation: toastIn 0.35s ease-out; }
+        @keyframes toastIn {
+            from { opacity:0; transform: translateX(-50%) translateY(18px); }
+            to   { opacity:1; transform: translateX(-50%) translateY(0); }
+        }
+        /* Training Tab */
+        .training-container { padding: 16px; font-family: 'Noto Serif JP', serif; text-align: center; }
+        .training-start-btn {
+            padding: 13px 28px; font-size: 15px; font-weight: bold;
+            background: linear-gradient(#5c2888,#3c1060); color: #f0e8ff;
+            border: 1px solid rgba(180,120,255,0.4); border-radius: 22px; cursor: pointer;
+            font-family: 'Noto Serif JP', serif; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            margin: 8px auto; display: block; width: 90%; max-width: 320px;
+            transition: opacity 0.15s;
+        }
+        .training-start-btn:active { opacity: 0.75; }
+
         /* Study complete screen */
         .study-complete {
             display: none; flex-direction: column; align-items: center;
@@ -1258,6 +1321,7 @@
 
 <div class="combo-bonus-notice" id="comboBonusNotice"></div>
 <div class="levelup-toast" id="levelupToast">✨ レベルアップ！</div>
+<div class="challenge-toast" id="challengeToast"></div>
 
 <!-- ===== STUDY MODE OVERLAY (TikTok式) ===== -->
 <div id="study-overlay">
@@ -1560,6 +1624,33 @@
         if (txt) txt.textContent = `${count} / ${DAILY_GOAL}枚`;
     }
 
+    /* ========== CHALLENGE / TRAINING STATE ========== */
+    const LEVEL_GROUPS = {
+        '2級':  [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
+        '準1級': [21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40],
+        '1級':  [41,42,43,44,45,46,47,48,49,50]
+    };
+
+    let dailyChallenges = JSON.parse(localStorage.getItem('dailyChallenges')) || {
+        date: "",
+        completed: { login: false, train10: false, quiz5: false, weak3: false, combo3: false },
+        progress: { trainCount: 0, quizCorrect: 0, weakCount: 0, currentCombo: 0 }
+    };
+
+    let weeklyChallenges = JSON.parse(localStorage.getItem('weeklyChallenges')) || {
+        weekStart: "",
+        completed: { train50: false, quiz30: false, streak7: false },
+        progress: { trainCount: 0, quizCorrect: 0 }
+    };
+
+    let hallOfFame = JSON.parse(localStorage.getItem('hallOfFame')) || {
+        '2級':  { achieved: false, currentStreak: 0, bestStreak: 0 },
+        '準1級': { achieved: false, currentStreak: 0, bestStreak: 0 },
+        '1級':  { achieved: false, currentStreak: 0, bestStreak: 0 }
+    };
+
+    let trainingSession = { active: false, cards: [], index: 0, levelFilter: 'all' };
+
     /* ========== WEAK CARDS (苦手カード) STATE ========== */
     let weakCards = JSON.parse(localStorage.getItem('weakCards')) || [];
 
@@ -1650,12 +1741,15 @@
 
     function assessCard(knew) {
         const card = studyState.cards[studyState.index];
+        const isWeakCard = weakCards.includes(card.no);
         if (knew) {
             unmarkWeak(card.no);
             addXP(10, document.getElementById('studyAssessment'));
+            trackChallengeAnswer(true, card.no, isWeakCard);
         } else {
             markWeak(card.no);
             addXP(2, document.getElementById('studyAssessment'));
+            trackChallengeAnswer(false, card.no, false);
         }
         incrementDailyStudy();
         const next = studyState.index + 1;
@@ -1723,6 +1817,19 @@
         loginStreak.lastDate = todayStr;
         loginStreak.bonusClaimed = false;
         localStorage.setItem('loginStreak', JSON.stringify(loginStreak));
+
+        // Mark daily login challenge (delayed to not clash with page load)
+        setTimeout(() => {
+            checkDailyChallengeReset();
+            if (!dailyChallenges.completed.login) {
+                completeDailyChallenge('login', 1, 'ログイン');
+            }
+            // Weekly 7-day streak challenge
+            checkWeeklyChallengeReset();
+            if (loginStreak.streak >= 7 && !weeklyChallenges.completed.streak7) {
+                setTimeout(() => completeWeeklyChallenge('streak7', 5, '7日連続ログイン'), 1200);
+            }
+        }, 1600);
 
         const bonus = getStreakBonus(loginStreak.streak);
         if (bonus > 0) {
@@ -1860,7 +1967,7 @@
     }
 
     /* ========== TABS ========== */
-    let activeTab = 'all'; // 'all' | 'weak'
+    let activeTab = 'all'; // 'all' | 'weak' | 'challenge' | 'training'
     function renderTabs() {
         const tabsContainer = document.getElementById('tabsContainer');
         tabsContainer.innerHTML = '';
@@ -1887,6 +1994,20 @@
             studyWeakBtn.onclick = () => openStudyMode('weak');
             tabsContainer.appendChild(studyWeakBtn);
         }
+        // "チャレンジ" tab
+        const chalBtn = document.createElement('button');
+        chalBtn.className = `tab-button ${activeTab === 'challenge' ? 'active' : ''}`;
+        chalBtn.style.borderColor = activeTab === 'challenge' ? '#c8a020' : 'rgba(200,160,40,0.4)';
+        chalBtn.innerText = '🎯 チャレンジ';
+        chalBtn.onclick = () => { activeTab = 'challenge'; renderTabs(); renderCollection(); };
+        tabsContainer.appendChild(chalBtn);
+        // "トレーニング" tab
+        const trainBtn = document.createElement('button');
+        trainBtn.className = `tab-button ${activeTab === 'training' ? 'active' : ''}`;
+        trainBtn.style.borderColor = activeTab === 'training' ? '#8060c0' : 'rgba(120,80,180,0.4)';
+        trainBtn.innerText = '🏋 トレーニング';
+        trainBtn.onclick = () => { activeTab = 'training'; renderTabs(); renderCollection(); };
+        tabsContainer.appendChild(trainBtn);
     }
 
     /* ========== COLLECTION RENDER ========== */
@@ -1895,6 +2016,9 @@
         document.getElementById('collectionCounter').innerText = `${unlockedCards.length} / ${TOTAL_CARDS}`;
         const grid = document.getElementById('collectionGrid');
         grid.innerHTML = '';
+
+        if (activeTab === 'challenge') { renderChallengeTab(); return; }
+        if (activeTab === 'training')  { renderTrainingTab();  return; }
 
         let displayCards;
         if (activeTab === 'weak') {
@@ -2044,6 +2168,7 @@
     function closeQuiz() {
         document.getElementById('quiz-overlay').style.display = 'none';
         gachaSession.isGachaMode = false;
+        trainingSession.active = false; // exit training mode
     }
 
     /* ========== ANSWER VALIDATION ========== */
@@ -2080,7 +2205,24 @@
         setTimeout(() => {
             document.getElementById('quiz-overlay').style.display = 'none';
 
-            if (gachaSession.isGachaMode) {
+            if (trainingSession.active) {
+                // Training mode: unlimited, no gacha cost
+                const isWeakCard = weakCards.includes(card.no);
+                trackChallengeAnswer(isCorrect, card.no, isWeakCard);
+                updateCombo(isCorrect);
+                if (isCorrect) addXP(10, btnEl);
+                // Advance to next card (loop with reshuffle)
+                trainingSession.index++;
+                if (trainingSession.index >= trainingSession.cards.length) {
+                    trainingSession.index = 0;
+                    const pool = trainingSession.cards;
+                    for (let i = pool.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [pool[i], pool[j]] = [pool[j], pool[i]];
+                    }
+                }
+                showTrainingQuiz();
+            } else if (gachaSession.isGachaMode) {
                 dailyGachaStorage.count = Math.max(0, dailyGachaStorage.count - 1);
                 localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
                 checkAndResetDailyGacha();
@@ -2189,6 +2331,307 @@
         document.getElementById('gacha-overlay').style.display = 'none';
         gachaSession.isGachaMode = false;
         renderCollection();
+    }
+
+    /* ========== CHALLENGE SYSTEM FUNCTIONS ========== */
+
+    function getWeekStartStr() {
+        const d = new Date();
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+        const mon = new Date(new Date().setDate(diff));
+        return mon.toLocaleDateString('ja-JP');
+    }
+
+    function checkDailyChallengeReset() {
+        const today = new Date().toLocaleDateString('ja-JP');
+        if (dailyChallenges.date !== today) {
+            dailyChallenges = {
+                date: today,
+                completed: { login: false, train10: false, quiz5: false, weak3: false, combo3: false },
+                progress: { trainCount: 0, quizCorrect: 0, weakCount: 0, currentCombo: 0 }
+            };
+            localStorage.setItem('dailyChallenges', JSON.stringify(dailyChallenges));
+        }
+    }
+
+    function checkWeeklyChallengeReset() {
+        const weekStart = getWeekStartStr();
+        if (weeklyChallenges.weekStart !== weekStart) {
+            weeklyChallenges = {
+                weekStart: weekStart,
+                completed: { train50: false, quiz30: false, streak7: false },
+                progress: { trainCount: 0, quizCorrect: 0 }
+            };
+            localStorage.setItem('weeklyChallenges', JSON.stringify(weeklyChallenges));
+        }
+    }
+
+    function showChallengeToast(msg) {
+        const el = document.getElementById('challengeToast');
+        if (!el) return;
+        el.textContent = msg;
+        el.classList.add('show');
+        clearTimeout(el._timer);
+        el._timer = setTimeout(() => el.classList.remove('show'), 3200);
+    }
+
+    function addGachaFromChallenge(count, toastMsg) {
+        dailyGachaStorage.count += count;
+        localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
+        checkAndResetDailyGacha();
+        showChallengeToast(toastMsg);
+        confetti({ particleCount: 80, spread: 60, origin: { y: 0.5 } });
+        if (activeTab === 'challenge') renderChallengeTab();
+    }
+
+    function completeDailyChallenge(key, rewardCount, label) {
+        checkDailyChallengeReset();
+        if (dailyChallenges.completed[key]) return;
+        dailyChallenges.completed[key] = true;
+        localStorage.setItem('dailyChallenges', JSON.stringify(dailyChallenges));
+        addGachaFromChallenge(rewardCount, `🎯 ${label} 達成！ ガチャ+${rewardCount}回`);
+    }
+
+    function completeWeeklyChallenge(key, rewardCount, label) {
+        checkWeeklyChallengeReset();
+        if (weeklyChallenges.completed[key]) return;
+        weeklyChallenges.completed[key] = true;
+        localStorage.setItem('weeklyChallenges', JSON.stringify(weeklyChallenges));
+        addGachaFromChallenge(rewardCount, `📆 ${label} 達成！ ガチャ+${rewardCount}回`);
+    }
+
+    const HOF_REWARDS = {
+        '2級':  { gacha: 10, badge: '2級殿堂バッジ' },
+        '準1級': { gacha: 20, badge: '準1級殿堂バッジ' },
+        '1級':  { gacha: 30, badge: '1級殿堂バッジ＋称号' }
+    };
+
+    function checkHallOfFame(level, isCorrect) {
+        if (!hallOfFame[level] || hallOfFame[level].achieved) return;
+        if (isCorrect) {
+            hallOfFame[level].currentStreak++;
+            if (hallOfFame[level].currentStreak > hallOfFame[level].bestStreak) {
+                hallOfFame[level].bestStreak = hallOfFame[level].currentStreak;
+            }
+            if (hallOfFame[level].currentStreak >= 100) {
+                hallOfFame[level].achieved = true;
+                hallOfFame[level].currentStreak = 100;
+                localStorage.setItem('hallOfFame', JSON.stringify(hallOfFame));
+                const r = HOF_REWARDS[level];
+                addGachaFromChallenge(r.gacha, `🏆 ${level} 殿堂入り！ ${r.badge} ガチャ+${r.gacha}回！`);
+                return;
+            }
+        } else {
+            hallOfFame[level].currentStreak = 0; // reset on wrong
+        }
+        localStorage.setItem('hallOfFame', JSON.stringify(hallOfFame));
+        if (activeTab === 'challenge') renderChallengeTab();
+    }
+
+    /* Track answer for challenge progress (called from assessCard and submitChoice) */
+    function trackChallengeAnswer(isCorrect, cardNo, isWeakCard) {
+        checkDailyChallengeReset();
+        checkWeeklyChallengeReset();
+
+        // Always count as training
+        dailyChallenges.progress.trainCount++;
+        weeklyChallenges.progress.trainCount++;
+
+        if (!dailyChallenges.completed.train10 && dailyChallenges.progress.trainCount >= 10)
+            completeDailyChallenge('train10', 1, '10枚トレーニング');
+        if (!weeklyChallenges.completed.train50 && weeklyChallenges.progress.trainCount >= 50)
+            completeWeeklyChallenge('train50', 3, '50枚学習');
+
+        if (isCorrect) {
+            dailyChallenges.progress.quizCorrect++;
+            weeklyChallenges.progress.quizCorrect++;
+            dailyChallenges.progress.currentCombo++;
+
+            if (!dailyChallenges.completed.quiz5 && dailyChallenges.progress.quizCorrect >= 5)
+                completeDailyChallenge('quiz5', 1, 'クイズ5問正解');
+            if (!weeklyChallenges.completed.quiz30 && weeklyChallenges.progress.quizCorrect >= 30)
+                completeWeeklyChallenge('quiz30', 2, 'クイズ30問正解');
+            if (!dailyChallenges.completed.combo3 && dailyChallenges.progress.currentCombo >= 3)
+                completeDailyChallenge('combo3', 1, '3連続コンボ');
+
+            if (isWeakCard) {
+                dailyChallenges.progress.weakCount++;
+                if (!dailyChallenges.completed.weak3 && dailyChallenges.progress.weakCount >= 3)
+                    completeDailyChallenge('weak3', 1, '苦手3枚クリア');
+            }
+        } else {
+            dailyChallenges.progress.currentCombo = 0;
+        }
+
+        localStorage.setItem('dailyChallenges', JSON.stringify(dailyChallenges));
+        localStorage.setItem('weeklyChallenges', JSON.stringify(weeklyChallenges));
+
+        // Hall of Fame tracking (only during level-specific training)
+        if (trainingSession.active && trainingSession.levelFilter !== 'all') {
+            checkHallOfFame(trainingSession.levelFilter, isCorrect);
+        }
+    }
+
+    /* ========== TRAINING MODE ========== */
+    function openTrainingMode(levelFilter) {
+        let pool;
+        if (!levelFilter || levelFilter === 'all') {
+            pool = cardsData.filter(c => unlockedCards.includes(c.id));
+        } else {
+            const nos = LEVEL_GROUPS[levelFilter] || [];
+            pool = cardsData.filter(c => nos.includes(c.no) && unlockedCards.includes(c.id));
+        }
+        if (pool.length === 0) {
+            alert('このレベルのカードがまだアンロックされていません！');
+            return;
+        }
+        // Shuffle
+        for (let i = pool.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+        trainingSession = { active: true, cards: pool, index: 0, levelFilter: levelFilter || 'all' };
+        showTrainingQuiz();
+    }
+
+    function showTrainingQuiz() {
+        if (!trainingSession.active) return;
+        if (trainingSession.index >= trainingSession.cards.length) {
+            trainingSession.index = 0;
+            const pool = trainingSession.cards;
+            for (let i = pool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pool[i], pool[j]] = [pool[j], pool[i]];
+            }
+        }
+        const card = trainingSession.cards[trainingSession.index];
+        document.getElementById('quizTitle').innerText =
+            `🏋 トレーニング [${trainingSession.levelFilter}] — やめる ↓`;
+        showQuiz(card);
+    }
+
+    /* ========== RENDER CHALLENGE TAB ========== */
+    function renderChallengeTab() {
+        checkDailyChallengeReset();
+        checkWeeklyChallengeReset();
+        const grid = document.getElementById('collectionGrid');
+        const dc = dailyChallenges;
+        const wc = weeklyChallenges;
+        const hof = hallOfFame;
+        const dailyDone  = Object.values(dc.completed).filter(Boolean).length;
+        const weeklyDone = Object.values(wc.completed).filter(Boolean).length;
+
+        function ciCheck(done, label, cur, target, reward) {
+            const pText = (!done && target > 0) ? ` (${Math.min(cur, target)}/${target})` : '';
+            return `<div class="challenge-item">
+                <span class="challenge-check">${done ? '✅' : '☐'}</span>
+                <span class="challenge-label${done ? ' done' : ''}">${label}${pText}</span>
+                <span class="challenge-reward">${reward}</span>
+            </div>`;
+        }
+
+        function hofRow(level, data) {
+            const pct = Math.min(100, (data.currentStreak / 100) * 100);
+            const streakLabel = data.achieved
+                ? '<span style="color:#f0c840;font-size:11px;margin-left:4px;">殿堂入り！</span>'
+                : ` ${data.currentStreak}/100`;
+            return `<div class="hof-item">
+                <span class="challenge-check">${data.achieved ? '🏆' : '☐'}</span>
+                <span class="hof-label">${level}${streakLabel}</span>
+                <div class="hof-streak-bar"><div class="hof-streak-fill" style="width:${pct}%"></div></div>
+                <div style="font-size:10px;color:#907080;flex-shrink:0;">最高${data.bestStreak}</div>
+                ${!data.achieved ? `<button class="hof-challenge-btn" onclick="openTrainingMode('${level}')">挑戦</button>` : ''}
+            </div>`;
+        }
+
+        const weeklyStreak = loginStreak.streak;
+        const wkStreakDone = wc.completed.streak7;
+        const wkStreakPText = !wkStreakDone ? ` (${Math.min(weeklyStreak,7)}/7)` : '';
+
+        grid.innerHTML = `<div class="challenge-container" style="grid-column:1/-1;">
+            <div class="challenge-section">
+                <div class="challenge-section-title">
+                    <span>📅 デイリーチャレンジ</span>
+                    <span style="font-size:12px;color:#a090c0;">${dailyDone}/5 完了</span>
+                </div>
+                ${ciCheck(dc.completed.login,  'ログイン',          0, 0, '+1回')}
+                ${ciCheck(dc.completed.train10,'10枚トレーニング', dc.progress.trainCount, 10, '+1回')}
+                ${ciCheck(dc.completed.quiz5,  'クイズ5問正解',    dc.progress.quizCorrect, 5, '+1回')}
+                ${ciCheck(dc.completed.weak3,  '苦手3枚クリア',    dc.progress.weakCount, 3, '+1回')}
+                ${ciCheck(dc.completed.combo3, '3連続コンボ',      dc.progress.currentCombo, 3, '+1回')}
+            </div>
+            <div class="challenge-section">
+                <div class="challenge-section-title">
+                    <span>📆 ウィークリーチャレンジ</span>
+                    <span style="font-size:12px;color:#a090c0;">${weeklyDone}/3 完了</span>
+                </div>
+                ${ciCheck(wc.completed.train50, '50枚学習',        wc.progress.trainCount, 50, '+3回')}
+                ${ciCheck(wc.completed.quiz30,  'クイズ30問正解',  wc.progress.quizCorrect, 30, '+2回')}
+                <div class="challenge-item">
+                    <span class="challenge-check">${wkStreakDone ? '✅' : '☐'}</span>
+                    <span class="challenge-label${wkStreakDone ? ' done' : ''}">7日連続ログイン${wkStreakPText}</span>
+                    <span class="challenge-reward">+5回</span>
+                </div>
+            </div>
+            <div class="challenge-section">
+                <div class="challenge-section-title">
+                    <span>🏆 殿堂入りチャレンジ</span>
+                    <span style="font-size:11px;color:#a090c0;">100問連続正解</span>
+                </div>
+                <div style="font-size:11px;color:#807090;margin-bottom:8px;line-height:1.6;">
+                    レベル別トレーニングで100問連続正解すると殿堂入り<br>
+                    ※1問でも不正解でカウンターリセット
+                </div>
+                ${hofRow('2級',  hof['2級'])}
+                ${hofRow('準1級', hof['準1級'])}
+                ${hofRow('1級',  hof['1級'])}
+                <div style="font-size:11px;color:#706060;margin-top:8px;">
+                    報酬: 2級 ガチャ+10回 / 準1級 +20回 / 1級 +30回
+                </div>
+            </div>
+            <div style="text-align:center;color:#706080;font-size:11px;padding:8px 0 16px;">
+                チャレンジ達成でガチャ回数が付与されます
+            </div>
+        </div>`;
+    }
+
+    /* ========== RENDER TRAINING TAB ========== */
+    function renderTrainingTab() {
+        const grid = document.getElementById('collectionGrid');
+        const total = unlockedCards.length;
+        grid.innerHTML = `<div class="training-container" style="grid-column:1/-1;">
+            <div style="color:#e8d070;font-size:17px;font-weight:bold;margin-bottom:6px;font-family:'Noto Serif JP',serif;">🏋 トレーニングモード</div>
+            <div style="color:#a090c0;font-size:13px;margin-bottom:4px;">アンロック済み: ${total}枚 | 無制限で練習</div>
+            <div style="color:#807090;font-size:12px;margin-bottom:20px;">正解数がチャレンジ進捗に反映されます</div>
+
+            <button class="training-start-btn" onclick="openTrainingMode('all')">🎯 全カードで練習</button>
+
+            <div style="margin:16px 0 8px;color:#807090;font-size:12px;">── 殿堂入り挑戦 (レベル別) ──</div>
+
+            <button class="training-start-btn" onclick="openTrainingMode('2級')"
+                style="background:linear-gradient(#2a4818,#142808);border-color:rgba(80,160,50,0.4);">
+                📗 2級 (No.1〜20)
+            </button>
+            <button class="training-start-btn" onclick="openTrainingMode('準1級')"
+                style="background:linear-gradient(#183848,#081820);border-color:rgba(50,140,180,0.4);">
+                📘 準1級 (No.21〜40)
+            </button>
+            <button class="training-start-btn" onclick="openTrainingMode('1級')"
+                style="background:linear-gradient(#481820,#280808);border-color:rgba(180,60,50,0.4);">
+                📕 1級 (No.41〜50)
+            </button>
+
+            <div style="margin-top:22px;padding:14px;background:rgba(20,10,40,0.65);border:1px solid rgba(180,150,80,0.2);border-radius:10px;text-align:left;">
+                <div style="color:#e8d070;font-size:13px;margin-bottom:8px;font-family:'Noto Serif JP',serif;">🏆 殿堂入り条件</div>
+                <div style="color:#a090c0;font-size:12px;line-height:1.9;">
+                    • レベル別トレーニングで <strong style="color:#f0c840;">100問連続正解</strong> → 殿堂入り<br>
+                    • 1問でも不正解でカウンターリセット<br>
+                    • 2級: ガチャ+10回 &nbsp;準1級: +20回 &nbsp;1級: +30回<br>
+                    • 進捗は「チャレンジ」タブで確認
+                </div>
+            </div>
+        </div>`;
     }
 
     /* ========== KEYBOARD SHORTCUTS ========== */
