@@ -1308,6 +1308,62 @@
 
     const VALID_COUPONS = { "MAGIC5": 5, "BONUS3": 3, "SUPER10": 10 };
 
+    /* ========== 研究データ収集設定 ==========
+     * GASをデプロイ後、下記URLを書き換えてください。
+     * 空文字のままだとデータ送信はスキップされます（アプリは通常動作）。
+     */
+    const GAS_URL = '';  // ← デプロイ後のWebアプリURLをここに貼る
+
+    // デバイス固有ID（localStorage で永続化）
+    let researchUserId = localStorage.getItem('researchUserId');
+    if (!researchUserId) {
+        researchUserId = 'u-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
+        localStorage.setItem('researchUserId', researchUserId);
+    }
+
+    // セッションID（ページ読み込みごとに更新）
+    const researchSessionId = 's-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+
+    // 回答開始時刻（responseTime 計算用）
+    let _answerStartTime = null;
+    function markAnswerStart() { _answerStartTime = Date.now(); }
+    function getResponseTime() {
+        if (!_answerStartTime) return null;
+        return Math.round((Date.now() - _answerStartTime) / 100) / 10; // 秒（小数1桁）
+    }
+
+    /**
+     * 学習イベントをGASへ送信する
+     * @param {string} eventType  'gacha'|'training'|'challenge'|'tab_unlock'
+     * @param {object} card       cardsData の要素
+     * @param {boolean|null} isCorrect
+     */
+    function logEvent(eventType, card, isCorrect) {
+        if (!GAS_URL) return;  // URL未設定時はスキップ
+        const tabIndex = card ? Math.floor((card.no - 1) / COLLECTION_PAGE_SIZE) : null;
+        const payload = {
+            timestamp:      Date.now(),
+            userId:         researchUserId,
+            sessionId:      researchSessionId,
+            eventType:      eventType,
+            cardNo:         card ? card.no : null,
+            word:           card ? card.quiz.answer : null,
+            meaning:        card ? card.quiz.meaning : null,
+            level:          card ? (card.quiz.level || '') : null,
+            isCorrect:      isCorrect,
+            responseTime:   getResponseTime(),
+            tabIndex:       tabIndex,
+            totalUnlocked:  unlockedCards.length,
+            combo:          comboCount,
+        };
+        fetch(GAS_URL, {
+            method: 'POST',
+            mode:   'no-cors',   // GASはCORSヘッダーを返さないためno-cors
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        }).catch(() => {});  // ネットワークエラーはサイレントに無視
+    }
+
     /* ========== RARITY SYSTEM ========== */
     const UR_CARDS = [10, 25, 40];
     const SR_CARDS = [5, 15, 20, 30, 35, 45, 50];
@@ -2934,6 +2990,7 @@
 
     /* ========== QUIZ DISPLAY ========== */
     function showQuiz(card) {
+        markAnswerStart();  // 回答時間計測開始
         // 例文の（　　）をマークアップしてセット
         const sentence = (card.quiz.example || "___").replace(/___/g,
             '<span class="quiz-blank">（　　）</span>');
@@ -3010,6 +3067,7 @@
 
             if (trainingSession.active) {
                 // Training mode: unlimited, no gacha cost
+                logEvent('training', card, isCorrect);
                 trackChallengeAnswer(isCorrect, card.no);
                 updateCombo(isCorrect);
                 if (isCorrect) {
@@ -3031,6 +3089,7 @@
                     showTrainingQuiz();
                 }
             } else {
+                logEvent('challenge', card, isCorrect);
                 updateCombo(isCorrect);
                 if (isCorrect) {
                     alert("正解！カードをゲットしたよ！");
@@ -3065,6 +3124,7 @@
         if (isCorrect) {
             const isNew = !unlockedCards.includes(card.id);
             if (isNew) unlockedCards.push(card.id);
+            logEvent('gacha', card, true);
             gachaCardEl.innerHTML = `
                 <div class="gacha-face gacha-back ${rc.backClass}">？</div>
                 <div class="gacha-face gacha-front ${rc.frontClass}">
@@ -3313,6 +3373,7 @@
     function showTrainingQuiz() {
         if (!trainingSession.active || trainingSession.cards.length === 0) return;
         if (trainingSession.index >= trainingSession.cards.length) trainingSession.index = 0;
+        markAnswerStart();  // 回答時間計測開始
         const card = trainingSession.cards[trainingSession.index];
         document.getElementById('quizTitle').innerText =
             `🏋 トレーニング [${trainingSession.levelFilter}] — やめる ↓`;
