@@ -949,10 +949,10 @@
             background: linear-gradient(135deg, #3a3228, #181410);
             color: #706858; border-color: #4a4038; font-size: 28px;
         }
-        .gacha-front { transform: rotateY(180deg); padding: 5px; border: 3px solid #9a7a2a; border-radius: 10px; }
-        .gacha-front img { width: 100%; max-height: 60%; object-fit: contain; border-radius: 5px; }
-        .gacha-info { margin-top: 4px; font-size: 12px; font-weight: bold; text-align: center; color: #c8b080; font-family: 'Noto Serif JP', serif; line-height: 1.5; }
-        .gacha-stats { font-size: 11px; color: #e8d090; margin-top: 3px; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+        .gacha-front { transform: rotateY(180deg); padding: 5px; border: 3px solid #9a7a2a; border-radius: 10px; justify-content: space-between; }
+        .gacha-front img { width: 100%; flex: 1 1 auto; min-height: 0; object-fit: cover; border-radius: 5px; }
+        .gacha-info { flex-shrink: 0; margin-top: 4px; font-size: 12px; font-weight: bold; text-align: center; color: #c8b080; font-family: 'Noto Serif JP', serif; line-height: 1.5; }
+        .gacha-stats { flex-shrink: 0; font-size: 11px; color: #e8d090; margin-top: 3px; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
         .gacha-close-btn {
             display: none; padding: 12px 40px; font-size: 18px; font-weight: bold;
             background: #7a5a1a; color: #fdf0d0; border: none; border-radius: 25px;
@@ -3284,7 +3284,7 @@
     // 旧データ互換: 金の手帖エントリが無ければ追加
     if (!hallOfFame['金の手帖']) hallOfFame['金の手帖'] = { achieved: false, currentStreak: 0, bestStreak: 0 };
 
-    let trainingSession = { active: false, cards: [], index: 0, levelFilter: 'all', masteredIds: new Set(), correct: 0, incorrect: 0 };
+    let trainingSession = { active: false, cards: [], index: 0, levelFilter: 'all', masteredIds: new Set(), correct: 0, incorrect: 0, totalXP: 0 };
 
     /* ========== BATTLE STATE & CONFIG ========== */
     let battleSession = {
@@ -5242,19 +5242,32 @@
                     <div><span style="color:#cc3333;font-size:22px;font-weight:bold;">❌ ${trainingSession.incorrect}</span><br><span style="color:#707060;font-size:11px;">不正解</span></div>
                     <div><span style="color:#4488cc;font-size:22px;font-weight:bold;">📚 ${total}</span><br><span style="color:#707060;font-size:11px;">合計</span></div>
                 </div>
-                ${trainingSession.masteredIds.size > 0 ? `<div style="margin-top:12px;font-size:12px;color:#5080a0;">🌟 マスター済み: ${trainingSession.masteredIds.size}枚</div>` : ''}
+                <div style="margin-top:16px;background:rgba(220,180,40,0.13);border-radius:10px;padding:10px 0;">
+                    <div style="font-size:22px;font-weight:bold;color:#d0a820;">+${trainingSession.totalXP} XP</div>
+                    <div style="font-size:11px;color:#907040;margin-top:2px;">獲得経験値</div>
+                </div>
+                ${trainingSession.masteredIds.size > 0 ? `<div style="margin-top:10px;font-size:12px;color:#5080a0;">🌟 マスター済み: ${trainingSession.masteredIds.size}枚</div>` : ''}
             </div>`;
         choicesEl.innerHTML = '';
         const closeBtn = document.createElement('button');
         closeBtn.className = 'action-btn';
         closeBtn.style.cssText = 'width:100%;padding:12px;font-size:15px;font-weight:bold;margin-top:8px;';
         closeBtn.textContent = '閉じる';
-        closeBtn.onclick = () => closeQuiz();
+        closeBtn.onclick = () => {
+            document.getElementById('quiz-overlay').style.display = 'none';
+            trainingSession.active = false;
+            stopTrainingTimer();
+        };
         choicesEl.appendChild(closeBtn);
         if (rate === 100) confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
     }
 
     function closeQuiz() {
+        // トレーニング中かつ問題を1問以上解いていたら結果画面を表示
+        if (trainingSession.active && (trainingSession.correct + trainingSession.incorrect) > 0) {
+            showTrainingResult();
+            return;
+        }
         document.getElementById('quiz-overlay').style.display = 'none';
         gachaSession.isGachaMode = false;
         trainingSession.active = false; // exit training mode
@@ -5318,6 +5331,7 @@
                 updateSRS(card.id, isCorrect);
                 if (isCorrect) {
                     addXP(10, btnEl);
+                    trainingSession.totalXP += 10;
                     trainingSession.correct++;
                     trainingSession.masteredIds.add(card.id);
                     trainingSession.cards = trainingSession.cards.filter(c => c.id !== card.id);
@@ -5333,13 +5347,17 @@
                 // 選択肢ボタンはそのまま残す（正解/不正解の色表示を維持）
                 // 例文訳ブロックを選択肢の上に挿入
                 const meaningEl = document.createElement('div');
-                meaningEl.style.cssText = 'margin:12px 0 10px;text-align:center;';
-                // 例文訳 or 意味
+                meaningEl.style.cssText = 'margin:10px 0 8px;';
                 const exMeaning = card.quiz.exMeaning || card.quiz.meaning || '';
+                const resultColor = isCorrect ? '#1a6630' : '#882020';
+                const resultBg    = isCorrect ? 'rgba(30,120,60,0.13)' : 'rgba(160,30,30,0.10)';
+                const resultIcon  = isCorrect ? '✅ 正解！' : '❌ 不正解';
                 meaningEl.innerHTML = `
-                    <div style="font-size:12px;color:#907060;margin-bottom:4px;">📖 例文の意味</div>
-                    <div style="font-size:13px;color:#3a2010;line-height:1.6;background:rgba(200,160,80,0.12);border-radius:8px;padding:8px 10px;">${exMeaning || '（訳なし）'}</div>
-                    <div style="font-size:11px;color:#a08050;margin-top:6px;">💡 <b>${card.quiz.answer}</b>：${card.quiz.meaning}</div>
+                    <div style="text-align:center;font-size:15px;font-weight:bold;color:${resultColor};margin-bottom:8px;">${resultIcon}</div>
+                    <div style="background:${resultBg};border-radius:10px;padding:10px 12px;">
+                        <div style="font-size:13px;font-weight:bold;color:#3a2010;margin-bottom:4px;">💡 ${card.quiz.answer}　<span style="font-size:12px;font-weight:normal;color:#706050;">${card.quiz.meaning}</span></div>
+                        ${exMeaning ? `<div style="font-size:12px;color:#5a4030;line-height:1.6;border-top:1px solid rgba(150,120,80,0.2);padding-top:6px;margin-top:4px;">📖 ${exMeaning}</div>` : ''}
+                    </div>
                 `;
                 choicesEl.insertBefore(meaningEl, choicesEl.firstChild);
 
@@ -5662,7 +5680,7 @@
             const j = Math.floor(Math.random() * (i + 1));
             [pool[i], pool[j]] = [pool[j], pool[i]];
         }
-        trainingSession = { active: true, cards: pool, index: 0, levelFilter: 'all', masteredIds: new Set(), correct: 0, incorrect: 0 };
+        trainingSession = { active: true, cards: pool, index: 0, levelFilter: 'all', masteredIds: new Set(), correct: 0, incorrect: 0, totalXP: 0 };
         showTrainingQuiz();
     }
 
@@ -5674,7 +5692,7 @@
         markAnswerStart();  // 回答時間計測開始
         const card = trainingSession.cards[trainingSession.index];
         const srsLabel = SRS_LABELS[getSRSEntry(card.id).level] || 'New';
-        document.getElementById('quizTitle').innerText = `🏋 トレーニング [${srsLabel}] — やめる ↓`;
+        document.getElementById('quizTitle').innerText = `🏋 トレーニング`;
         showQuiz(card);
     }
 
