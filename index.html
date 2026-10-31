@@ -3088,9 +3088,14 @@
         // 英検レベル別ボーナス（カード番号で判定）
         // No.1〜287: 2級レベル +0 / No.288〜575: 準1級レベル +25 / No.576〜: 1級レベル +50
         const levelBonus = card.no <= 287 ? 0 : card.no <= 575 ? 25 : 50;
+        // プレイヤーレベルボーナス（レアリティに応じた成長率）
+        // N: 0.5/Lv, R: 1.0/Lv, SR: 1.5/Lv, UR: 2.5/Lv
+        const rarityGrowth = { N: 0.5, R: 1.0, SR: 1.5, UR: 2.5 };
+        const rarity = getRarity(card.no);
+        const playerBonus = Math.floor((xpData.level - 1) * (rarityGrowth[rarity] || 0.5));
         return {
-            atk: base + pos + seed + levelBonus,
-            def: base + srsBonus + (20 - seed) + levelBonus
+            atk: base + pos + seed + levelBonus + playerBonus,
+            def: base + srsBonus + (20 - seed) + levelBonus + playerBonus
         };
     }
 
