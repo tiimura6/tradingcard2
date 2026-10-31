@@ -456,6 +456,7 @@
             width: 85%; max-width: 400px; text-align: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(100,60,180,0.15);
             border: 2px solid #9a7a3a; box-sizing: border-box;
+            max-height: 88vh; overflow-y: auto;
         }
         .modal-input {
             width: 100%; padding: 12px; font-size: 18px;
@@ -4147,24 +4148,24 @@
         const stats = getCardStats(card);
         const zoomContent = document.getElementById('zoomContent');
         zoomContent.innerHTML = `
-            <img src="${card.img}" alt="No.${card.no}">
-            <div class="zoom-info">
-                <div style="display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:4px;">
-                    <div class="rarity-badge rarity-badge-${rarity}" style="position:static;display:inline-block;font-size:11px;padding:3px 8px;border-radius:6px;">${rarity}</div>
-                    <span style="background:${srsColor};color:#fff;font-size:10px;padding:2px 7px;border-radius:8px;font-family:monospace;">${srsLabel}</span>
-                    <span style="font-size:10px;color:#907060;">${dueDate}</span>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+                <div style="flex:0 0 auto;width:48%;max-width:180px;">
+                    <img src="${card.img}" alt="No.${card.no}" style="width:100%;height:auto;border-radius:10px;display:block;">
                 </div>
-                <div style="font-size:13px;font-weight:bold;margin-bottom:2px;">No.${card.no}　${card.quiz.answer}</div>
-                <div style="font-size:11px;color:#907060;margin-bottom:4px;">${card.quiz.pos || ''}</div>
-                <div style="font-size:14px;color:#3a2a10;font-weight:bold;margin-bottom:6px;">${card.quiz.meaning}</div>
-                <div style="font-size:11px;color:#6a5a40;font-style:italic;line-height:1.5;">${card.quiz.example || ''}</div>
-                <div style="display:flex;gap:8px;margin:8px 0;flex-wrap:wrap;justify-content:center;">
-                    <span style="background:rgba(200,60,60,0.15);border:1px solid rgba(220,80,80,0.4);color:#cc5555;font-size:12px;font-weight:bold;padding:3px 10px;border-radius:6px;">⚔️ ATK ${stats.atk}</span>
-                    <span style="background:rgba(60,100,200,0.15);border:1px solid rgba(80,120,220,0.4);color:#5588cc;font-size:12px;font-weight:bold;padding:3px 10px;border-radius:6px;">🛡️ DEF ${stats.def}</span>
+                <div style="flex:1;min-width:0;padding-top:2px;">
+                    <div style="font-size:12px;font-weight:bold;color:#3a2a15;margin-bottom:6px;">No.${card.no}　${card.quiz.answer}</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+                        <span class="rarity-badge rarity-badge-${rarity}" style="position:static;display:inline-block;font-size:10px;padding:2px 6px;border-radius:5px;">${rarity}</span>
+                        <span style="background:${srsColor};color:#fff;font-size:10px;padding:2px 6px;border-radius:6px;font-family:monospace;">${srsLabel}</span>
+                    </div>
+                    <div style="font-size:10px;color:#907060;margin-bottom:8px;">${dueDate}　正解${srs.correct}/不正解${srs.incorrect}</div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <span style="background:rgba(200,60,60,0.15);border:1px solid rgba(220,80,80,0.4);color:#cc5555;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:5px;">⚔️${stats.atk}</span>
+                        <span style="background:rgba(60,100,200,0.15);border:1px solid rgba(80,120,220,0.4);color:#5588cc;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:5px;">🛡️${stats.def}</span>
+                    </div>
                 </div>
-                ${detailsHTML}
-                <div style="font-size:10px;color:#aaa;margin-top:8px;">正解 ${srs.correct} / 不正解 ${srs.incorrect}</div>
             </div>
+            ${detailsHTML ? `<div style="margin-top:10px;">${detailsHTML}</div>` : ''}
         `;
         document.getElementById('zoom-overlay').style.display = 'flex';
     }
@@ -5098,7 +5099,8 @@
                     if (rarity === 'SR' || rarity === 'UR') fireRarityConfetti(rarity);
                 }, 150);
             } else {
-                cardEl.classList.add('do-flip');
+                // rAF×2でブラウザに描画サイクルを確保させ、重複imgのキャッシュ再利用を保証
+                requestAnimationFrame(() => requestAnimationFrame(() => cardEl.classList.add('do-flip')));
             }
         }
 
