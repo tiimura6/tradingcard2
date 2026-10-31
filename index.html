@@ -4155,10 +4155,9 @@
     renderCollection();
     checkLoginStreak();
 
-    // タップ音: button / .quiz-choice-btn / .action-btn をタップした時
-    document.addEventListener('pointerdown', (e) => {
-        const target = e.target.closest('button, .quiz-choice-btn, .action-btn, .tab-btn, .cpt-btn, .gacha-close-btn, .modal-cancel-btn');
-        if (target) playSE('tap');
+    // タップ音: 画面のどこかをタップ/クリックした時
+    document.addEventListener('pointerdown', () => {
+        playSE('tap');
     }, { passive: true });
 </script>
 
