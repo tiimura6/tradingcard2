@@ -67,7 +67,7 @@
             background-size: cover;
             background-position: center center;
             background-repeat: no-repeat;
-            z-index: 0;   /* -1→0: transformでstacking contextが分離されるため0で最背面確保 */
+            z-index: -1;
             pointer-events: none;
             /* iOSでのサブピクセルレンダリング最適化 */
             -webkit-transform: translateZ(0);
@@ -396,7 +396,11 @@
             background-size: cover !important;
             background-position: center center !important;
         }
-        /* battle-mode は bg-layer をそのまま維持 (ユーザー背景画像を継続表示) */
+        body.battle-mode #bg-layer {
+            background-image: url('./bgm/boss-bg.jpg') !important;
+            background-size: cover !important;
+            background-position: center center !important;
+        }
         /* 冒険モード中のモーダルに自然な半透明感 */
         body.adventure-mode .custom-box {
             background: rgba(10, 25, 8, 0.82) !important;
@@ -619,9 +623,12 @@
 
         #battle-overlay {
             display: none; position: fixed; inset: 0; z-index: 3000;
-            /* ユーザー背景画像が #bg-layer (z-index:-1) に設定されるため、
-               ここは半透明ダークオーバーレイにして背景を透かす */
-            background: rgba(10, 2, 2, 0.72);
+            /* ボス戦専用背景（bgm/boss-bg.jpg）。画像の上に暗いグラデーションを重ねて文字を読みやすくする。
+               画像が全面を覆うのでメイン画面は透けない。画像が読めない場合も暗色で塗りつぶす */
+            background:
+                linear-gradient(rgba(10, 2, 2, 0.35), rgba(10, 2, 2, 0.65)),
+                url('./bgm/boss-bg.jpg') center center / cover no-repeat,
+                #0a0202;
             flex-direction: column; align-items: center; justify-content: flex-start;
             padding: 12px 12px env(safe-area-inset-bottom);
             overflow-y: auto;
@@ -2083,7 +2090,10 @@
     <div class="battle-header">
         <button class="battle-close-btn" onclick="confirmCloseBattle()">← 逃げる</button>
         <span class="battle-stage-name" id="battleStageName"></span>
-        <span class="battle-turn-label" id="battleTurnLabel">ターン 1</span>
+        <span style="display:flex;align-items:center;gap:6px;">
+            <span class="battle-turn-label" id="battleTurnLabel">ターン 1</span>
+            <button class="battle-close-btn" id="battleBgmBtn" onclick="toggleBGM()" title="BGM ON/OFF" style="padding:6px 10px;">🔇</button>
+        </span>
     </div>
 
     <!-- ターンバナー -->
@@ -5688,6 +5698,7 @@ const Cloud = (function () {
 
         // ボスバトル背景・BGM開始
         document.body.classList.add('battle-mode');
+        updateBgmButtons();
         // BGMはconfirmFormationAndStart()でユーザー操作中に既に再生開始済み
         // ここではbgmOnがtrueでもbossBGMが何らかの理由で停止していた場合のみ再生
         if (bgmOn && window.bossBGM && window.bossBGM.paused) {
@@ -5776,7 +5787,7 @@ const Cloud = (function () {
                 div.className = 'battle-unit-card' + (isActive ? ' active-unit' : '') + (defeated ? ' defeated' : '');
                 div.innerHTML = `
                     <div class="battle-unit-pos-label ${u.pos}">${u.bonus.label}</div>
-                    <div class="battle-unit-rarity ${u.card.rarity}">${u.card.rarity}</div>
+                    <div class="battle-unit-rarity ${getRarity(u.card.no)}">${getRarity(u.card.no)}</div>
                     <img src="${u.card.img}" onerror="this.style.display='none'" style="width:100%;border-radius:6px;display:block;margin-bottom:3px;">
                     <div class="battle-unit-word">${(u.card.quiz.answer||'').slice(0,10)}</div>
                     <div class="battle-unit-pg">P:${u.atk} G:${u.maxHp}</div>
@@ -7376,10 +7387,29 @@ const Cloud = (function () {
         bgmNodes.push(lfo, lfoGain);
     }
 
-    function toggleBGM() {
+    // BGMボタンの表示を同期（メイン画面とバトル画面の2か所）
+    function updateBgmButtons() {
         const btn = document.getElementById('bgmBtn');
+        if (btn) {
+            if (bgmOn) { btn.innerHTML = '🔊 BGM'; btn.style.color = 'rgba(255,210,60,1)'; btn.style.borderColor = 'rgba(255,210,60,0.9)'; btn.style.background = 'rgba(80,50,0,0.85)'; }
+            else       { btn.innerHTML = '🔇 BGM'; btn.style.color = 'rgba(220,170,50,0.85)'; btn.style.borderColor = 'rgba(220,170,50,0.7)'; btn.style.background = 'rgba(30,20,5,0.7)'; }
+        }
+        const bb = document.getElementById('battleBgmBtn');
+        if (bb) bb.textContent = bgmOn ? '🔊' : '🔇';
+    }
+
+    function toggleBGM() {
+        const inBattle = !!(battleSession && battleSession.active);
         if (!bgmOn) {
-            if (bgmAudio) {
+            bgmOn = true;
+            if (inBattle) {
+                // バトル中はボスBGMを鳴らす（メインBGMは鳴らさない）
+                window.bossBGM.loop = true;
+                window.bossBGM.play().catch(() => {});
+                if (!bgmAudio && !bgmCtx) buildBGM();   // 戻ったときのためにメインBGMを読み込んでおく
+            } else if (adventureActive && adventureBGM) {
+                adventureBGM.play().catch(() => {});
+            } else if (bgmAudio) {
                 // 既にロード済み → currentTimeをリセットして確実に再生
                 bgmAudio.currentTime = 0;
                 bgmAudio.loop = true;
@@ -7387,15 +7417,15 @@ const Cloud = (function () {
             } else {
                 buildBGM();
             }
-            if (bgmCtx && bgmCtx.state === 'suspended') bgmCtx.resume();
-            bgmOn = true;
-            if (btn) { btn.innerHTML = '🔊 BGM'; btn.style.color = 'rgba(255,210,60,1)'; btn.style.borderColor = 'rgba(255,210,60,0.9)'; btn.style.background = 'rgba(80,50,0,0.85)'; }
+            if (!inBattle && bgmCtx && bgmCtx.state === 'suspended') bgmCtx.resume();
         } else {
-            if (bgmAudio) { bgmAudio.pause(); }
-            if (bgmCtx) bgmCtx.suspend();
             bgmOn = false;
-            if (btn) { btn.innerHTML = '🔇 BGM'; btn.style.color = 'rgba(220,170,50,0.85)'; btn.style.borderColor = 'rgba(220,170,50,0.7)'; btn.style.background = 'rgba(30,20,5,0.7)'; }
+            if (bgmAudio) bgmAudio.pause();
+            if (bgmCtx) bgmCtx.suspend();
+            if (window.bossBGM) window.bossBGM.pause();
+            if (adventureBGM) adventureBGM.pause();
         }
+        updateBgmButtons();
     }
 
     /* ========== INIT ========== */
