@@ -510,6 +510,178 @@
             100% { opacity: 0; transform: scale(1.1); }
         }
 
+        /* ===== BATTLE SYSTEM ===== */
+        .btn-battle {
+            background: linear-gradient(150deg, #6a1010, #3a0808);
+            color: #ffcccc; border: 1px solid rgba(220,80,80,0.45);
+        }
+        .btn-battle:hover { background: linear-gradient(150deg, #801515, #4a0a0a); }
+
+        #battle-overlay {
+            display: none; position: fixed; inset: 0; z-index: 3000;
+            background: radial-gradient(ellipse at center, #1a0505 0%, #0a0202 100%);
+            flex-direction: column; align-items: center; justify-content: flex-start;
+            padding: 12px 12px env(safe-area-inset-bottom);
+            overflow-y: auto;
+        }
+        .battle-header {
+            width: 100%; max-width: 400px;
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .battle-close-btn {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            color: #fff; font-size: 12px; padding: 6px 14px; border-radius: 20px;
+            cursor: pointer;
+        }
+        .battle-stage-name {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 15px; font-weight: bold; color: #ffcccc;
+        }
+        .battle-turn-label {
+            font-size: 11px; color: #cc8888;
+        }
+
+        /* HP バー */
+        .battle-hp-row {
+            width: 100%; max-width: 400px;
+            display: flex; gap: 8px; margin-bottom: 10px;
+        }
+        .battle-hp-box {
+            flex: 1; background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
+            padding: 8px 10px;
+        }
+        .battle-hp-label { font-size: 10px; color: #aaa; margin-bottom: 3px; }
+        .battle-hp-name { font-size: 13px; font-weight: bold; margin-bottom: 4px; }
+        .battle-hp-bar-track {
+            height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;
+        }
+        .battle-hp-bar-fill {
+            height: 100%; border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        .battle-hp-bar-fill.enemy { background: linear-gradient(90deg, #ff4444, #cc2222); }
+        .battle-hp-bar-fill.player { background: linear-gradient(90deg, #44cc44, #22aa22); }
+        .battle-hp-bar-fill.low { background: linear-gradient(90deg, #ffaa22, #dd7700); }
+        .battle-hp-number { font-size: 11px; color: #ccc; margin-top: 2px; text-align: right; }
+
+        /* 敵キャラ */
+        .battle-enemy-area {
+            width: 100%; max-width: 400px;
+            display: flex; flex-direction: column; align-items: center;
+            margin-bottom: 10px;
+        }
+        .battle-enemy-sprite {
+            font-size: 64px; line-height: 1; margin-bottom: 4px;
+            transition: transform 0.15s;
+        }
+        .battle-enemy-sprite.shake {
+            animation: battleShake 0.35s ease;
+        }
+        @keyframes battleShake {
+            0%,100%{transform:translateX(0)}
+            20%{transform:translateX(-8px)}
+            40%{transform:translateX(8px)}
+            60%{transform:translateX(-5px)}
+            80%{transform:translateX(5px)}
+        }
+        .battle-enemy-sprite.playerHit {
+            animation: battlePlayerHit 0.4s ease;
+        }
+        @keyframes battlePlayerHit {
+            0%,100%{transform:scale(1)}
+            30%{transform:scale(1.2) rotate(5deg)}
+            60%{transform:scale(0.95)}
+        }
+
+        /* 現在のカード */
+        .battle-card-area {
+            width: 100%; max-width: 400px;
+            display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-start;
+        }
+        .battle-current-card {
+            width: 80px; flex-shrink: 0;
+            border: 2px solid rgba(255,200,100,0.5); border-radius: 8px;
+            overflow: hidden;
+        }
+        .battle-current-card img { width: 100%; display: block; }
+        .battle-card-stats {
+            flex: 1; background: rgba(0,0,0,0.35);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+            padding: 8px 10px;
+        }
+        .battle-stat-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .battle-stat-label { font-size: 11px; color: #888; }
+        .battle-stat-val { font-size: 13px; font-weight: bold; }
+        .battle-stat-val.atk { color: #ff8888; }
+        .battle-stat-val.def { color: #88aaff; }
+        .battle-deck-indicator {
+            font-size: 11px; color: #aaa; margin-top: 6px;
+            display: flex; gap: 4px;
+        }
+        .battle-deck-pip { width: 8px; height: 8px; border-radius: 50%; background: #555; }
+        .battle-deck-pip.used { background: #888; }
+        .battle-deck-pip.active { background: #ffd700; }
+        .battle-deck-pip.remaining { background: #aaa; }
+
+        /* ダメージ数字 */
+        .battle-damage-float {
+            position: fixed; pointer-events: none; z-index: 9999;
+            font-size: 28px; font-weight: bold; font-family: 'Noto Serif JP', serif;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+            animation: damageFloat 1.2s ease forwards;
+        }
+        @keyframes damageFloat {
+            0%   { opacity: 1; transform: translateY(0) scale(1); }
+            30%  { opacity: 1; transform: translateY(-20px) scale(1.2); }
+            100% { opacity: 0; transform: translateY(-60px) scale(0.8); }
+        }
+
+        /* バトルログ */
+        .battle-log {
+            width: 100%; max-width: 400px;
+            background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px; padding: 8px 10px;
+            font-size: 12px; color: #c0a080; line-height: 1.8;
+            min-height: 56px; max-height: 90px; overflow-y: auto;
+        }
+
+        /* バトル結果 */
+        .battle-result-overlay {
+            display: none; position: fixed; inset: 0; z-index: 5000;
+            background: rgba(0,0,0,0.82);
+            flex-direction: column; align-items: center; justify-content: center;
+            gap: 16px;
+        }
+        .battle-result-title {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 36px; font-weight: bold;
+            text-shadow: 0 0 20px currentColor;
+        }
+        .battle-result-title.win  { color: #ffd700; }
+        .battle-result-title.lose { color: #cc4444; }
+        .battle-result-desc { font-size: 14px; color: #c0a080; text-align: center; line-height: 1.8; }
+
+        /* ステージ選択モーダル */
+        .battle-stage-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        .battle-stage-item {
+            display: flex; align-items: center; gap: 12px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px; padding: 10px 14px; cursor: pointer;
+            transition: background 0.15s;
+        }
+        .battle-stage-item:hover { background: rgba(255,255,255,0.1); }
+        .battle-stage-item.locked { opacity: 0.4; cursor: not-allowed; }
+        .battle-stage-emoji { font-size: 28px; }
+        .battle-stage-info { flex: 1; }
+        .battle-stage-item-name { font-size: 14px; font-weight: bold; color: #f0d080; }
+        .battle-stage-item-sub { font-size: 11px; color: #888; margin-top: 2px; }
+        .battle-stage-item-badge {
+            font-size: 10px; padding: 2px 7px; border-radius: 10px;
+            background: rgba(255,200,50,0.15); color: #f0c040; border: 1px solid rgba(255,200,50,0.3);
+        }
+
         /* ===== GACHA RARITY ANIMATION OVERLAY ===== */
         #gacha-anim-overlay {
             display: none; position: fixed; inset: 0; z-index: 10000;
@@ -1251,6 +1423,9 @@
     <button class="action-btn btn-study" onclick="showTrainingModal()">
         <span class="btn-icon">🏋</span>トレーニング
     </button>
+    <button class="action-btn btn-battle" onclick="openBattleStageModal()">
+        <span class="btn-icon">⚔️</span>バトル
+    </button>
     <button class="action-btn" id="spGachaBtn" onclick="triggerSpecialGacha()"
         style="display:none;grid-column:1/-1;background:linear-gradient(150deg,#4a1060,#280840);color:#e8b0ff;border:1px solid rgba(200,120,255,0.5);">
         <span class="btn-icon">✨</span><span id="spGachaLabel">SPガチャ（未取得優先）</span>
@@ -1282,6 +1457,87 @@
         </div>
         <button class="modal-cancel-btn" onclick="closeGachaChoiceModal()" style="margin-top:12px;">キャンセル</button>
     </div>
+</div>
+
+<!-- Battle Stage Select Modal -->
+<div id="battle-stage-modal" class="modal-overlay" style="display:none;">
+    <div class="custom-box" style="width:92%;max-width:360px;">
+        <h3 style="margin:0 0 4px;color:#ff8888;font-family:'Noto Serif JP',serif;">⚔️ バトルステージ</h3>
+        <p style="font-size:12px;color:#aa7070;margin:0 0 14px;">デッキは所持カードから自動選出（ATK上位3枚）</p>
+        <div class="battle-stage-list" id="battleStageList"></div>
+        <button class="modal-cancel-btn" onclick="closeBattleStageModal()" style="margin-top:14px;">キャンセル</button>
+    </div>
+</div>
+
+<!-- Battle Overlay -->
+<div id="battle-overlay">
+    <div class="battle-header">
+        <button class="battle-close-btn" onclick="confirmCloseBattle()">← 逃げる</button>
+        <span class="battle-stage-name" id="battleStageName"></span>
+        <span class="battle-turn-label" id="battleTurnLabel"></span>
+    </div>
+
+    <!-- HP バー -->
+    <div class="battle-hp-row">
+        <div class="battle-hp-box">
+            <div class="battle-hp-label">ENEMY</div>
+            <div class="battle-hp-name" id="battleEnemyName">???</div>
+            <div class="battle-hp-bar-track">
+                <div class="battle-hp-bar-fill enemy" id="battleEnemyHPBar" style="width:100%;"></div>
+            </div>
+            <div class="battle-hp-number" id="battleEnemyHPNum">---</div>
+        </div>
+        <div class="battle-hp-box">
+            <div class="battle-hp-label">PLAYER</div>
+            <div class="battle-hp-name">あなた</div>
+            <div class="battle-hp-bar-track">
+                <div class="battle-hp-bar-fill player" id="battlePlayerHPBar" style="width:100%;"></div>
+            </div>
+            <div class="battle-hp-number" id="battlePlayerHPNum">---</div>
+        </div>
+    </div>
+
+    <!-- 敵キャラ -->
+    <div class="battle-enemy-area">
+        <div class="battle-enemy-sprite" id="battleEnemySprite">👾</div>
+    </div>
+
+    <!-- 現在のカード + ステータス -->
+    <div class="battle-card-area">
+        <div class="battle-current-card" id="battleCurrentCardImg">
+            <img src="" alt="card" id="battleCardImage" style="width:100%;display:block;">
+        </div>
+        <div class="battle-card-stats">
+            <div style="font-size:12px;color:#f0d080;font-weight:bold;margin-bottom:6px;" id="battleCardName">---</div>
+            <div class="battle-stat-row">
+                <span class="battle-stat-label">⚔️ ATK</span>
+                <span class="battle-stat-val atk" id="battleCardATK">--</span>
+            </div>
+            <div class="battle-stat-row">
+                <span class="battle-stat-label">🛡️ DEF</span>
+                <span class="battle-stat-val def" id="battleCardDEF">--</span>
+            </div>
+            <div class="battle-deck-indicator" id="battleDeckPips"></div>
+        </div>
+    </div>
+
+    <!-- バトルログ -->
+    <div class="battle-log" id="battleLog">バトル開始！</div>
+
+    <!-- クイズ開始ボタン -->
+    <button class="action-btn btn-battle" id="battleQuizBtn" onclick="battleStartQuiz()"
+        style="width:100%;max-width:400px;margin-top:10px;font-size:15px;padding:14px;">
+        ⚔️ 攻撃する（クイズに答える）
+    </button>
+</div>
+
+<!-- Battle Result Overlay -->
+<div class="battle-result-overlay" id="battle-result-overlay">
+    <div class="battle-result-title" id="battleResultTitle">勝利！</div>
+    <div class="battle-result-desc" id="battleResultDesc"></div>
+    <button class="action-btn btn-battle" onclick="closeBattleResult()" style="padding:12px 32px;font-size:14px;">
+        OK
+    </button>
 </div>
 
 <!-- Training Modal -->
@@ -2627,6 +2883,41 @@
 
     let trainingSession = { active: false, cards: [], index: 0, levelFilter: 'all', masteredIds: new Set() };
 
+    /* ========== BATTLE STATE & CONFIG ========== */
+    let battleSession = {
+        active: false, stage: null,
+        deck: [],           // [{card, atk, def}] 3枚
+        deckIndex: 0,       // 現在のカードインデックス
+        playerHP: 0, playerMaxHP: 0,
+        enemyHP: 0, enemyMaxHP: 0,
+        log: []
+    };
+
+    const BATTLE_STAGES = [
+        { id: 1, name: 'スライム',      emoji: '🟢', hp: 120, atk: 20, minCards: 1,  reward: { type: 'gacha', amount: 1 } },
+        { id: 2, name: 'ゴブリン',      emoji: '👺', hp: 200, atk: 35, minCards: 3,  reward: { type: 'gacha', amount: 1 } },
+        { id: 3, name: 'オーク戦士',    emoji: '🪓', hp: 300, atk: 50, minCards: 5,  reward: { type: 'gacha', amount: 2 } },
+        { id: 4, name: 'ダークエルフ',  emoji: '🧝', hp: 420, atk: 65, minCards: 10, reward: { type: 'gacha', amount: 2 } },
+        { id: 5, name: 'ワイバーン',    emoji: '🐉', hp: 580, atk: 80, minCards: 20, reward: { type: 'sp',    amount: 1 } },
+        { id: 6, name: '魔王',          emoji: '👿', hp: 800, atk: 100, minCards: 40, reward: { type: 'sp',   amount: 2 } },
+    ];
+
+    /* ========== ATK/DEF CALCULATION ========== */
+    function getCardStats(card) {
+        const rarityBase = { N: 40, R: 60, SR: 80, UR: 100 };
+        const posBonus   = { v: 15, adj: 10, n: 5, adv: 0 };
+        const srs = getSRSEntry(card.id);
+        const base = rarityBase[getRarity(card.no)] || 40;
+        const pos  = posBonus[card.quiz && card.quiz.pos] !== undefined ? posBonus[card.quiz.pos] : 5;
+        // 疑似ランダム（同じカードなら毎回同じ値）
+        const seed = (card.no * 7 + card.no % 13) % 20;
+        const srsBonus = srs.level * 4; // SRS定着でDEFが成長
+        return {
+            atk: base + pos + seed,
+            def: base + srsBonus + (20 - seed)
+        };
+    }
+
     /* ========== STUDY MODE STATE ========== */
     let studyState = { cards: [], index: 0, flipped: false, mode: 'all' };
 
@@ -3315,6 +3606,7 @@
                 </div>`;
         }
 
+        const stats = getCardStats(card);
         const zoomContent = document.getElementById('zoomContent');
         zoomContent.innerHTML = `
             <img src="${card.img}" alt="No.${card.no}">
@@ -3325,6 +3617,10 @@
                     <span style="font-size:10px;color:#907060;">${dueDate}</span>
                 </div>
                 <div style="font-size:13px;font-weight:bold;margin-bottom:2px;">No.${card.no}　${card.quiz.answer}</div>
+                <div style="display:flex;gap:10px;justify-content:center;margin:6px 0;">
+                    <span style="background:rgba(200,60,60,0.15);border:1px solid rgba(220,80,80,0.4);color:#ff8888;font-size:12px;font-weight:bold;padding:3px 10px;border-radius:8px;">⚔️ ATK ${stats.atk}</span>
+                    <span style="background:rgba(60,100,200,0.15);border:1px solid rgba(80,120,220,0.4);color:#88aaff;font-size:12px;font-weight:bold;padding:3px 10px;border-radius:8px;">🛡️ DEF ${stats.def}</span>
+                </div>
                 ${detailsHTML}
                 <div style="font-size:10px;color:#aaa;margin-top:8px;">正解 ${srs.correct} / 不正解 ${srs.incorrect}</div>
             </div>
@@ -3511,6 +3807,225 @@
         // 実力ガチャ: クイズに正解してカードゲット！
         document.getElementById('quizTitle').innerText = '🎰 実力ガチャ — 正解でカードゲット！';
         showQuiz(randomCard);
+    }
+
+    /* ========== BATTLE SYSTEM ========== */
+    function openBattleStageModal() {
+        const myCount = unlockedCards.length;
+        const listEl = document.getElementById('battleStageList');
+        listEl.innerHTML = '';
+        BATTLE_STAGES.forEach(stage => {
+            const unlocked = myCount >= stage.minCards;
+            const div = document.createElement('div');
+            div.className = 'battle-stage-item' + (unlocked ? '' : ' locked');
+            const rewardLabel = stage.reward.type === 'sp'
+                ? `✨SPチケット×${stage.reward.amount}`
+                : `🎰ガチャ回数+${stage.reward.amount}`;
+            div.innerHTML = `
+                <span class="battle-stage-emoji">${stage.emoji}</span>
+                <div class="battle-stage-info">
+                    <div class="battle-stage-item-name">${stage.name}</div>
+                    <div class="battle-stage-item-sub">HP:${stage.hp} / ATK:${stage.atk} | 必要:${stage.minCards}枚以上</div>
+                </div>
+                <span class="battle-stage-item-badge">${rewardLabel}</span>`;
+            if (unlocked) div.onclick = () => { closeBattleStageModal(); startBattle(stage); };
+            listEl.appendChild(div);
+        });
+        document.getElementById('battle-stage-modal').style.display = 'flex';
+    }
+    function closeBattleStageModal() {
+        document.getElementById('battle-stage-modal').style.display = 'none';
+    }
+
+    function startBattle(stage) {
+        // ATK上位3枚を自動デッキ選出
+        const myCards = unlockedCards
+            .map(id => cardsData.find(c => c.id === id))
+            .filter(Boolean);
+        const withStats = myCards.map(c => ({ card: c, ...getCardStats(c) }));
+        withStats.sort((a, b) => b.atk - a.atk);
+        const deck = withStats.slice(0, 3);
+        if (deck.length === 0) { alert('カードがありません！'); return; }
+
+        const playerMaxHP = deck.reduce((s, d) => s + d.def, 0);
+
+        battleSession = {
+            active: true, stage,
+            deck, deckIndex: 0,
+            playerHP: playerMaxHP, playerMaxHP,
+            enemyHP: stage.hp, enemyMaxHP: stage.hp,
+            log: []
+        };
+
+        document.getElementById('battle-overlay').style.display = 'flex';
+        renderBattleUI();
+        addBattleLog(`⚔️ ${stage.emoji} ${stage.name}とのバトル開始！`);
+    }
+
+    function renderBattleUI() {
+        const { stage, deck, deckIndex, playerHP, playerMaxHP, enemyHP, enemyMaxHP } = battleSession;
+        // ステージ名
+        document.getElementById('battleStageName').textContent = `${stage.emoji} ${stage.name}`;
+        document.getElementById('battleTurnLabel').textContent = `ターン ${deckIndex + 1}/${deck.length}`;
+        document.getElementById('battleEnemyName').textContent = stage.name;
+        // 敵スプライト
+        document.getElementById('battleEnemySprite').textContent = stage.emoji;
+        // HP数値
+        document.getElementById('battleEnemyHPNum').textContent = `${Math.max(0,enemyHP)} / ${enemyMaxHP}`;
+        document.getElementById('battlePlayerHPNum').textContent = `${Math.max(0,playerHP)} / ${playerMaxHP}`;
+        // HPバー
+        const epct = Math.max(0, Math.min(100, (enemyHP / enemyMaxHP) * 100));
+        const ppct = Math.max(0, Math.min(100, (playerHP / playerMaxHP) * 100));
+        const eBar = document.getElementById('battleEnemyHPBar');
+        const pBar = document.getElementById('battlePlayerHPBar');
+        eBar.style.width = epct + '%';
+        pBar.style.width = ppct + '%';
+        pBar.className = 'battle-hp-bar-fill ' + (ppct <= 30 ? 'low' : 'player');
+        // 現在のカード
+        if (deckIndex < deck.length) {
+            const { card, atk, def } = deck[deckIndex];
+            document.getElementById('battleCardImage').src = card.img;
+            document.getElementById('battleCardName').textContent = `No.${card.no} ${card.quiz.answer}`;
+            document.getElementById('battleCardATK').textContent = atk;
+            document.getElementById('battleCardDEF').textContent = def;
+            // デッキインジケーター
+            const pipsEl = document.getElementById('battleDeckPips');
+            pipsEl.innerHTML = deck.map((_, i) => {
+                const cls = i < deckIndex ? 'used' : i === deckIndex ? 'active' : 'remaining';
+                return `<div class="battle-deck-pip ${cls}"></div>`;
+            }).join('');
+        }
+        // クイズボタン表示
+        const btn = document.getElementById('battleQuizBtn');
+        if (btn) btn.style.display = deckIndex < deck.length ? 'flex' : 'none';
+    }
+
+    function battleStartQuiz() {
+        if (!battleSession.active || battleSession.deckIndex >= battleSession.deck.length) return;
+        const { card } = battleSession.deck[battleSession.deckIndex];
+        // クイズオーバーレイを流用（バトルモードとして）
+        gachaSession.isGachaMode = false;
+        trainingSession.active   = false;
+        battleSession.active     = true; // バトルモードはbattleSessionで管理
+        document.getElementById('quizTitle').innerText = `⚔️ バトル攻撃 — 正解で攻撃！`;
+        showQuiz(card);
+        document.getElementById('battleQuizBtn').style.display = 'none';
+    }
+
+    function addBattleLog(msg) {
+        battleSession.log.push(msg);
+        const el = document.getElementById('battleLog');
+        if (!el) return;
+        el.innerHTML = battleSession.log.slice(-5).join('<br>');
+        el.scrollTop = el.scrollHeight;
+    }
+
+    function showDamageFloat(dmg, isPlayer, color) {
+        const sprite = document.getElementById(isPlayer ? 'battleEnemySprite' : 'battleEnemySprite');
+        const rect = (isPlayer
+            ? document.getElementById('battleEnemySprite')
+            : document.getElementById('battlePlayerHPBar')
+        ).getBoundingClientRect();
+        const el = document.createElement('div');
+        el.className = 'battle-damage-float';
+        el.style.cssText = `left:${rect.left + rect.width/2 - 20}px;top:${rect.top}px;color:${color};`;
+        el.textContent = `-${dmg}`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1300);
+    }
+
+    function processBattleAnswer(isCorrect, card) {
+        const { deck, deckIndex, stage } = battleSession;
+        const { atk, def } = deck[deckIndex];
+        updateSRS(card.id, isCorrect);
+
+        if (isCorrect) {
+            // 攻撃成功
+            const dmg = atk;
+            battleSession.enemyHP = Math.max(0, battleSession.enemyHP - dmg);
+            addXP(15, null);
+            addBattleLog(`✅ 正解！${card.quiz.answer} → ${stage.emoji}に ${dmg} ダメージ！`);
+            // 敵シェイクアニメ
+            const sprite = document.getElementById('battleEnemySprite');
+            sprite.classList.add('shake');
+            setTimeout(() => sprite.classList.remove('shake'), 400);
+            showDamageFloat(dmg, true, '#ff4444');
+        } else {
+            // 被ダメ
+            const dmg = stage.atk;
+            battleSession.playerHP = Math.max(0, battleSession.playerHP - dmg);
+            addBattleLog(`❌ 不正解… ${stage.emoji}に ${dmg} のダメージを受けた`);
+            const sprite = document.getElementById('battleEnemySprite');
+            sprite.classList.add('playerHit');
+            setTimeout(() => sprite.classList.remove('playerHit'), 450);
+            showDamageFloat(dmg, false, '#88aaff');
+        }
+
+        battleSession.deckIndex++;
+        const over = battleSession.enemyHP <= 0 || battleSession.playerHP <= 0 || battleSession.deckIndex >= deck.length;
+
+        setTimeout(() => {
+            renderBattleUI();
+            if (over) {
+                setTimeout(() => endBattle(), 600);
+            }
+        }, 300);
+    }
+
+    function endBattle() {
+        const { enemyHP, playerHP, stage } = battleSession;
+        const win = enemyHP <= 0 && playerHP > 0;
+        const resultOverlay = document.getElementById('battle-result-overlay');
+        const titleEl = document.getElementById('battleResultTitle');
+        const descEl  = document.getElementById('battleResultDesc');
+
+        if (win) {
+            // 報酬付与
+            if (stage.reward.type === 'gacha') {
+                dailyGachaStorage.count = (dailyGachaStorage.count || 0) + stage.reward.amount;
+                localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
+                updateDailyGoalDisplay();
+            } else if (stage.reward.type === 'sp') {
+                let spT = parseInt(localStorage.getItem('specialTickets') || '0', 10);
+                spT += stage.reward.amount;
+                localStorage.setItem('specialTickets', spT);
+                updateSpecialGachaBtn();
+            }
+            const rewardMsg = stage.reward.type === 'sp'
+                ? `✨ SPチケット×${stage.reward.amount} 獲得！`
+                : `🎰 ガチャ回数+${stage.reward.amount} 獲得！`;
+            titleEl.className = 'battle-result-title win';
+            titleEl.textContent = '🎉 勝利！';
+            descEl.innerHTML = `${stage.emoji} ${stage.name}を倒した！<br>${rewardMsg}`;
+            addBattleLog(`🎉 ${stage.name}に勝利！`);
+        } else if (playerHP <= 0) {
+            titleEl.className = 'battle-result-title lose';
+            titleEl.textContent = '💀 敗北…';
+            descEl.innerHTML = `${stage.emoji} ${stage.name}に敗れた…<br>もっとカードを集めて再挑戦！`;
+            addBattleLog('💀 戦闘不能…');
+        } else {
+            titleEl.className = 'battle-result-title lose';
+            titleEl.textContent = '⏱️ 時間切れ';
+            descEl.innerHTML = `カード3枚では倒せなかった…<br>もっと強いカードを集めよう！`;
+            addBattleLog('⏱️ カード切れ…');
+        }
+
+        resultOverlay.style.display = 'flex';
+        battleSession.active = false;
+    }
+
+    function closeBattleResult() {
+        document.getElementById('battle-result-overlay').style.display = 'none';
+        document.getElementById('battle-overlay').style.display = 'none';
+    }
+
+    function confirmCloseBattle() {
+        if (battleSession.active) {
+            if (!confirm('バトルを中断しますか？（報酬は得られません）')) return;
+        }
+        battleSession.active = false;
+        document.getElementById('battle-result-overlay').style.display = 'none';
+        document.getElementById('battle-overlay').style.display = 'none';
     }
 
     /* ========== ALL GACHA (一括) ========== */
@@ -3799,6 +4314,11 @@
         gachaSession.isGachaMode = false;
         trainingSession.active = false; // exit training mode
         stopTrainingTimer(); // 時間ボーナス自動チェック停止
+        // バトル中にクイズを閉じた場合はバトル画面に戻す
+        if (battleSession.active) {
+            document.getElementById('battle-overlay').style.display = 'flex';
+            document.getElementById('battleQuizBtn').style.display = 'flex';
+        }
     }
 
     /* ========== ANSWER VALIDATION ========== */
@@ -3871,6 +4391,10 @@
                 } else {
                     showTrainingQuiz();
                 }
+            } else if (battleSession.active) {
+                // バトルモード: 正解→攻撃 / 不正解→被ダメ
+                document.getElementById('battle-overlay').style.display = 'flex';
+                processBattleAnswer(isCorrect, card);
             } else if (gachaSession.isGachaMode) {
                 // 実力ガチャ: 正解 → カード獲得 & アニメーション / 不正解 → ポイント付与
                 logEvent('gacha', card, isCorrect);
