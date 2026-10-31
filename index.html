@@ -4058,6 +4058,7 @@
             unlock:   './se/unlock.mp3',
             hof:      './se/hof.mp3',
             gacha_bgm:'./bgm/gacha.mp3',
+            tap:      './se/tap.mp3',
         };
         Object.entries(files).forEach(([key, src]) => {
             const a = new Audio(src);
@@ -4068,6 +4069,7 @@
     })();
 
     function playSE(key) {
+        if (!bgmOn) return; // BGMオフ時は効果音も消音
         const a = SE[key];
         if (!a) return;
         a.currentTime = 0;
@@ -4152,6 +4154,12 @@
     updateDailyGoalDisplay();
     renderCollection();
     checkLoginStreak();
+
+    // タップ音: button / .quiz-choice-btn / .action-btn をタップした時
+    document.addEventListener('pointerdown', (e) => {
+        const target = e.target.closest('button, .quiz-choice-btn, .action-btn, .tab-btn, .cpt-btn, .gacha-close-btn, .modal-cancel-btn');
+        if (target) playSE('tap');
+    }, { passive: true });
 </script>
 
 <!-- ================================================================
