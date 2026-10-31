@@ -3212,28 +3212,34 @@
         cardsData.push({ id: `card-${i}`, img: `photo/${i}.webp`, no: i, quiz: quiz });
     }
 
+    /* ========== SAFE localStorage HELPER ========== */
+    function safeParse(key, fallback) {
+        try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+        catch(e) { console.warn('localStorage parse error:', key, e); return fallback; }
+    }
+
     /* ========== STATE ========== */
-    let unlockedCards = JSON.parse(localStorage.getItem('unlockedCards')) || [];
+    let unlockedCards = safeParse('unlockedCards', []);
     let currentSingleCard = null;
 
     let gachaSession = { isGachaMode: false, selectedCard: null, userAnswer: "", onDone: null };
 
     /* ========== SRS (忘却曲線) STATE ========== */
-    let srsData = JSON.parse(localStorage.getItem('srsData') || '{}');
+    let srsData = safeParse('srsData', {});
     const SRS_INTERVALS = [0, 1, 3, 7, 14, 30]; // days per mastery level (0=New)
     const SRS_LABELS = ['New', 'Day1', 'Day3', 'Week1', 'Week2', 'Month'];
     const SRS_COLORS = ['#888888', '#4488ff', '#44bb44', '#aaaa00', '#ff8800', '#cc44ff'];
 
     /* ========== GACHA POINTS STATE ========== */
 
-    let dailyGachaStorage = JSON.parse(localStorage.getItem('dailyGachaStorage')) || {
+    let dailyGachaStorage = safeParse('dailyGachaStorage', null) || {
         lastDate: "", count: 1, usedCoupons: [], firstTrainTime: null, trainBonuses: []
     };
     if (!dailyGachaStorage.usedCoupons) dailyGachaStorage.usedCoupons = [];
     if (!dailyGachaStorage.trainBonuses) dailyGachaStorage.trainBonuses = [];
 
     /* ========== LOGIN STREAK STATE ========== */
-    let loginStreak = JSON.parse(localStorage.getItem('loginStreak')) || {
+    let loginStreak = safeParse('loginStreak', null) || {
         lastDate: "", streak: 0, bonusClaimed: false
     };
 
@@ -3249,13 +3255,13 @@
     const XP_PER_LEVEL = 100;
     const SP_TICKET_XP  = 500;   // 累積500XPごとに強化の種1個
 
-    let xpData = JSON.parse(localStorage.getItem('xpData')) || { xp: 0, level: 1, totalXP: 0 };
+    let xpData = safeParse('xpData', null) || { xp: 0, level: 1, totalXP: 0 };
     if (!xpData.totalXP) xpData.totalXP = 0;  // 旧データ互換
 
     // 強化の種 残数（カード強化に使用）
     let specialTickets = parseInt(localStorage.getItem('specialTickets') || '0', 10);
     // カードごとの強化データ {cardId: {atk:N, def:N}}
-    let spEnhanceData = JSON.parse(localStorage.getItem('spEnhanceData') || '{}');
+    let spEnhanceData = safeParse('spEnhanceData', {});
 
     function addXP(amount, originEl) {
         const prevLevel   = xpData.level;
@@ -3411,7 +3417,7 @@
 
     /* ========== DAILY GOAL STATE ========== */
     const DAILY_GOAL = 10;
-    let dailyStudyData = JSON.parse(localStorage.getItem('dailyStudyData')) || { date: "", count: 0 };
+    let dailyStudyData = safeParse('dailyStudyData', null) || { date: "", count: 0 };
 
     function checkDailyStudyReset() {
         const today = new Date().toLocaleDateString();
@@ -3475,19 +3481,19 @@
         '1級':  [11, 18, 23, 24, 32, 36, 38, 44, 45, 50, 62, 70, 77, 79, 104, 119, 148, 160, 165, 171, 174, 176, 177, 182, 190, 192, 193, 195, 199, 201, 233, 261, 277, 285, 290, 292, 295, 304, 311, 313, 317, 334, 335, 344, 401, 424, 429, 434, 436, 466, 467, 470, 474, 479, 482, 483, 487, 488, 491, 495, 497, 498, 501, 506, 507, 524, 526, 534, 545, 562, 565, 570, 574, 578, 580, 582, 590, 610, 631, 634, 636, 648, 650, 659, 685, 689, 691, 693, 694, 704, 716, 718, 729, 754, 761, 763, 766, 776, 781, 784, 787, 788, 803, 811, 819, 822, 826, 827, 828, 844, 848, 854]
     };
 
-    let dailyChallenges = JSON.parse(localStorage.getItem('dailyChallenges')) || {
+    let dailyChallenges = safeParse('dailyChallenges', null) || {
         date: "",
         completed: { login: false, train10: false, quiz5: false, combo3: false },
         progress: { trainCount: 0, quizCorrect: 0, currentCombo: 0 }
     };
 
-    let weeklyChallenges = JSON.parse(localStorage.getItem('weeklyChallenges')) || {
+    let weeklyChallenges = safeParse('weeklyChallenges', null) || {
         weekStart: "",
         completed: { train50: false, quiz30: false, streak7: false },
         progress: { trainCount: 0, quizCorrect: 0 }
     };
 
-    let hallOfFame = JSON.parse(localStorage.getItem('hallOfFame')) || {
+    let hallOfFame = safeParse('hallOfFame', null) || {
         '金の手帖': { achieved: false, currentStreak: 0, bestStreak: 0 }
     };
     // 旧データ互換: 金の手帖エントリが無ければ追加
@@ -3614,7 +3620,7 @@
     };
 
     // バトル勝利記録 (defeated: [tabIndex, ...]) — 倒した敵のタブインデックス
-    let battleProgress = JSON.parse(localStorage.getItem('battleProgress') || '{"defeated":[]}');
+    let battleProgress = safeParse('battleProgress', null) || { defeated: [] };
 
     // タブごとに中間ボス＋最終ボスの2体構成
     // 中間ボス: タブ内カードを半分以上収集で解禁
@@ -5084,6 +5090,7 @@
             enemyHP: stage.hp, enemyMaxHP: stage.hp,
             turn: 'player', turnCount: 1,
             defendActive: false, buffActive: false,
+            _enhancePower: null, _fortifyActive: false, _synergy: synergy,
             currentAction: null,
             questionPool, questionCard: null, grammarQuestion: null,
             log: [],
@@ -5385,12 +5392,14 @@
     }
 
     function battleDefend() {
+        if (!battleSession.active) return;
         battleSession.defendActive = true;
         addBattleLog(`🛡️ 防御態勢！次の被ダメージを40%カット`);
         setTimeout(() => battleEnemyTurn(), 700);
     }
 
     function battleEnemyTurn() {
+        if (!battleSession.active) return;
         const { stage } = battleSession;
         const banner = document.getElementById('battleTurnBanner');
         if (banner) {
@@ -5450,6 +5459,7 @@
     }
 
     function processBattleAnswer(isCorrect, card) {
+        if (!battleSession.active) return;
         updateSRS(card.id, isCorrect);
 
         const unit = battleSession.units[battleSession.currentUnitIdx];
@@ -5535,6 +5545,7 @@
     }
 
     function processGrammarAnswer(isCorrect) {
+        if (!battleSession.active) return;
         const unit = battleSession.units[battleSession.currentUnitIdx];
         const { stage, buffActive } = battleSession;
         const skill = unit.skill;
@@ -5577,33 +5588,6 @@
                 addBattleLog(`⚡ ${skill.name}！先制${hits > 1 ? '2連' : ''}攻撃 ${totalDmg}ダメージ！`);
                 battleFlash('atk-flash');
                 showDamageFloat(totalDmg, true, '#ffdd00');
-            // ---- 旧型互換 ----
-            } else if (skill.type === 'heal') {
-                const heal = Math.round(unit.maxHp * skill.power);
-                unit.hp = Math.min(unit.maxHp, unit.hp + heal);
-                battleSession.playerHP = Math.min(battleSession.playerMaxHP, battleSession.playerHP + heal);
-                addBattleLog(`💊 HP +${heal} 回復`);
-            } else if (skill.type === 'double') {
-                const dmg1 = unit.atk, dmg2 = unit.atk;
-                battleSession.enemyHP = Math.max(0, battleSession.enemyHP - dmg1 - dmg2);
-                addBattleLog(`⚡ 2連撃！${dmg1}+${dmg2}ダメージ！`);
-                battleFlash('atk-flash');
-                showDamageFloat(dmg1+dmg2, true, '#ff4444');
-            } else if (skill.type === 'pierce') {
-                const dmg = Math.round(unit.atk * skill.power);
-                battleSession.enemyHP = Math.max(0, battleSession.enemyHP - dmg);
-                addBattleLog(`🏹 貫通！${dmg}ダメージ！`);
-                battleFlash('atk-flash');
-                showDamageFloat(dmg, true, '#ff8c00');
-            } else if (skill.type === 'buff') {
-                battleSession.buffActive = true;
-                addBattleLog(`✨ 次ターンPower×2バフ付与！`);
-            } else if (skill.type === 'ultimate') {
-                const dmg = Math.round(unit.atk * skill.power);
-                battleSession.enemyHP = Math.max(0, battleSession.enemyHP - dmg);
-                addBattleLog(`💥 究極奥義！${dmg}の大ダメージ！`);
-                battleFlash('atk-flash');
-                showDamageFloat(dmg, true, '#ff0066');
             }
         } else {
             addBattleLog(`❌ 文法不正解… ${skill.icon}${skill.name}失敗`);
