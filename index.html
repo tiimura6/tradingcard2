@@ -361,20 +361,22 @@
         }
         body.adventure-mode .stars-layer { display: none; }
         body.adventure-mode .particles  { display: none; }
-        #adventure-bg {
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            display: none;
-            background: url('./bgm/adventure-bg.jpg') center center / cover no-repeat;
-            overflow: hidden;
+        body.adventure-mode #main-page  { display: none; }
+        body.adventure-mode #bg-layer {
+            background-image: url('./bgm/adventure-bg.jpg') !important;
+            background-size: cover !important;
+            background-position: center center !important;
         }
-        #adventure-bg::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: rgba(0,0,0,0.08);
+        /* 冒険モード中のモーダルに自然な半透明感 */
+        body.adventure-mode .custom-box {
+            background: rgba(10, 25, 8, 0.82) !important;
+            border-color: rgba(120, 180, 60, 0.45) !important;
+            backdrop-filter: blur(6px);
         }
+        body.adventure-mode .modal-overlay {
+            background: rgba(0,0,0,0.35) !important;
+        }
+        #adventure-bg { display: none; }
         /* 木漏れ日パーティクル */
         @keyframes adv-float {
             0%   { transform: translateY(0) translateX(0) scale(1);    opacity: 0.7; }
@@ -1803,6 +1805,7 @@
   <div class="particle"></div>
 </div>
 
+<div id="main-page">
 <div class="header-plate">
     <!-- 言の葉堂のひみつ手帖 シリーズヘッダー -->
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;position:relative;">
@@ -2125,6 +2128,7 @@
 
 <div class="collection-page-tabs" id="collectionPageTabs"></div>
 <div class="collection-grid" id="collectionGrid"></div>
+</div><!-- /#main-page -->
 
 <script>
     /* ========== CONSTANTS ========== */
@@ -3917,24 +3921,19 @@
         if (adventureActive) { showTrainingModal(); return; }
         adventureActive = true;
         const fade = document.getElementById('adventure-fade');
-        const advBg = document.getElementById('adventure-bg');
 
         // フェードアウト
         fade.style.pointerEvents = 'all';
         fade.style.opacity = '1';
 
         setTimeout(() => {
-            // 背景切り替え
+            // 背景・シーン切り替え（bg-layerに画像を直接セット）
             document.body.classList.add('adventure-mode');
-            advBg.style.display = 'block';
-            spawnAdvParticles(advBg);
 
-            // BGM切り替え（メインBGMをフェードアウト）
+            // BGM切り替え
             if (bgmOn) {
-                if (bgmAudio) {
-                    bgmAudio.pause();
-                }
-                // gacha.mp3 を冒険BGMとして使用
+                if (bgmAudio) bgmAudio.pause();
+                if (bgmCtx) bgmCtx.suspend();
                 if (!adventureBGM) {
                     adventureBGM = new Audio('./bgm/adventure.mp3');
                     adventureBGM.loop = true;
@@ -3957,7 +3956,6 @@
         if (!adventureActive) return;
         adventureActive = false;
         const fade = document.getElementById('adventure-fade');
-        const advBg = document.getElementById('adventure-bg');
 
         // フェードアウト
         fade.style.pointerEvents = 'all';
@@ -3966,46 +3964,18 @@
         setTimeout(() => {
             // 背景を元に戻す
             document.body.classList.remove('adventure-mode');
-            advBg.style.display = 'none';
-            advBg.innerHTML = '';
 
             // BGMを元に戻す
-            if (adventureBGM) {
-                adventureBGM.pause();
-            }
-            if (bgmOn && bgmAudio) {
-                bgmAudio.currentTime = 0;
-                bgmAudio.play().catch(() => {});
+            if (adventureBGM) adventureBGM.pause();
+            if (bgmOn) {
+                if (bgmAudio) { bgmAudio.currentTime = 0; bgmAudio.play().catch(() => {}); }
+                if (bgmCtx && bgmCtx.state === 'suspended') bgmCtx.resume();
             }
 
             // フェードイン
             fade.style.opacity = '0';
             setTimeout(() => { fade.style.pointerEvents = 'none'; }, 650);
         }, 650);
-    }
-
-    function spawnAdvParticles(container) {
-        container.innerHTML = '';
-        const count = 28;
-        for (let i = 0; i < count; i++) {
-            const p = document.createElement('div');
-            p.className = 'adv-particle';
-            const size = 4 + Math.random() * 12;
-            const x = Math.random() * 100;
-            const y = Math.random() * 100;
-            const dur = 4 + Math.random() * 8;
-            const delay = -Math.random() * dur;
-            const hue = 80 + Math.random() * 60; // 緑〜黄緑
-            const alpha = 0.3 + Math.random() * 0.5;
-            p.style.cssText = `
-                width:${size}px; height:${size}px;
-                left:${x}%; top:${y}%;
-                background: radial-gradient(circle, hsla(${hue},80%,65%,${alpha}), transparent 70%);
-                animation-duration: ${dur}s;
-                animation-delay: ${delay}s;
-            `;
-            container.appendChild(p);
-        }
     }
 
     /* ========== TRAINING MODAL ========== */
@@ -4058,25 +4028,25 @@
                     <div style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
                         <div style="height:100%;width:${dispPct}%;background:${done?'#22cc66':'#4080ff'};border-radius:2px;"></div>
                     </div>
-                    <div style="color:#807090;font-size:10px;margin-top:1px;">${done?'✅ 達成（コンボリセット済）':firstTrain?`残り${remain}分`:'トレーニング開始後カウント'}</div>
+                    <div style="color:#807090;font-size:10px;margin-top:1px;">${done?'✅ 達成（コンボリセット済）':firstTrain?`残り${remain}分`:'冒険開始後カウント'}</div>
                 </div>
             </div>`;
         }
 
         el.innerHTML = `
-            <div style="color:#e8d070;font-size:17px;font-weight:bold;margin-bottom:4px;font-family:'Noto Serif JP',serif;">🏋 トレーニング</div>
+            <div style="color:#e8d070;font-size:17px;font-weight:bold;margin-bottom:4px;font-family:'Noto Serif JP',serif;">🗺️ 冒険</div>
             <div style="color:#a090c0;font-size:12px;margin-bottom:2px;">解禁タブ内の単語からランダム出題</div>
             <div style="color:#807090;font-size:11px;margin-bottom:12px;">例文中の（　　）に入る単語を選ぼう</div>
 
             <div style="background:rgba(10,5,30,0.7);border:1px solid rgba(180,150,60,0.2);border-radius:10px;padding:12px;margin-bottom:12px;">
-                <div style="color:#e8a020;font-size:12px;font-weight:bold;margin-bottom:8px;letter-spacing:0.05em;">📋 トレーニングタスク</div>
+                <div style="color:#e8a020;font-size:12px;font-weight:bold;margin-bottom:8px;letter-spacing:0.05em;">📋 冒険タスク</div>
                 ${taskRow('🔥','3連続正解', combo, 3, 'ガチャ+1', combo>=3)}
                 ${taskRow('⚡','5連続正解', combo, 5, 'ガチャ+1', combo>=5)}
                 ${taskRow('🌟','10連続正解', combo, 10, 'ガチャ+3', combo>=10)}
-                ${timeRow(1, '1時間後トレーニング')}
-                ${timeRow(2, '2時間後トレーニング')}
-                ${timeRow(4, '4時間後トレーニング')}
-                ${timeRow(8, '8時間後トレーニング')}
+                ${timeRow(1, '1時間後冒険')}
+                ${timeRow(2, '2時間後冒険')}
+                ${timeRow(4, '4時間後冒険')}
+                ${timeRow(8, '8時間後冒険')}
             </div>
 
             ${(()=>{
@@ -4097,7 +4067,7 @@
             <div style="background:rgba(10,5,30,0.7);border:1px solid rgba(80,120,200,0.25);border-radius:10px;padding:12px;margin-bottom:12px;">
                 <div style="color:#88aaff;font-size:12px;font-weight:bold;margin-bottom:8px;">📅 デイリーチャレンジ <span style="color:#a090c0;font-weight:normal;">${dailyDone}/5</span></div>
                 ${ciRow(dc.completed.login,'ログイン',0,0,'+1回')}
-                ${ciRow(dc.completed.train10,'10枚トレーニング',dc.progress.trainCount,10,'+1回')}
+                ${ciRow(dc.completed.train10,'10枚冒険',dc.progress.trainCount,10,'+1回')}
                 ${ciRow(dc.completed.quiz5,'クイズ5問正解',dc.progress.quizCorrect,5,'+1回')}
                 ${ciRow(dc.completed.combo3,'3連続コンボ',dc.progress.currentCombo,3,'+1回')}
             </div>
@@ -4110,7 +4080,7 @@
             `;
             })()}
 
-            <button class="training-start-btn" onclick="openTrainingMode()">✏️ トレーニング開始</button>`;
+            <button class="training-start-btn" onclick="openTrainingMode()">⚔️ 冒険を始める</button>`;
         document.getElementById('training-modal').style.display = 'flex';
     }
     function closeTrainingModal() {
@@ -4481,7 +4451,7 @@
     /* ========== GACHA TRIGGER ========== */
     function startGachaViaButton() {
         checkAndResetDailyGacha();
-        if (dailyGachaStorage.count <= 0) { alert("ガチャ回数がありません。トレーニングを続けるか明日また来てね！"); return; }
+        if (dailyGachaStorage.count <= 0) { alert("ガチャ回数がありません。冒険を続けるか明日また来てね！"); return; }
         triggerGachaCore();
     }
 
@@ -5461,7 +5431,7 @@
         if (thumbEl) thumbEl.style.display = 'none';
         const sentenceEl = document.getElementById('quizSentence');
         const choicesEl  = document.getElementById('quizChoices');
-        document.getElementById('quizTitle').innerText = '🏆 トレーニング結果';
+        document.getElementById('quizTitle').innerText = '🏆 冒険の記録';
         sentenceEl.innerHTML = `
             <div style="text-align:center;padding:10px 0;">
                 <div style="font-size:40px;font-weight:bold;color:${rate >= 80 ? '#22aa44' : rate >= 60 ? '#e08020' : '#cc3333'};">${rate}%</div>
@@ -5924,7 +5894,7 @@
         weeklyChallenges.progress.trainCount++;
 
         if (!dailyChallenges.completed.train10 && dailyChallenges.progress.trainCount >= 10)
-            completeDailyChallenge('train10', 1, '10枚トレーニング');
+            completeDailyChallenge('train10', 1, '10枚冒険');
         if (!weeklyChallenges.completed.train50 && weeklyChallenges.progress.trainCount >= 50)
             completeWeeklyChallenge('train50', 3, '50枚学習');
 
@@ -5983,7 +5953,7 @@
         markAnswerStart();  // 回答時間計測開始
         const card = trainingSession.cards[trainingSession.index];
         const srsLabel = SRS_LABELS[getSRSEntry(card.id).level] || 'New';
-        document.getElementById('quizTitle').innerText = `🏋 トレーニング`;
+        document.getElementById('quizTitle').innerText = `🗺️ 冒険`;
         showQuiz(card);
     }
 
@@ -6032,7 +6002,7 @@
                     <span style="font-size:12px;color:#a090c0;">${dailyDone}/5 完了</span>
                 </div>
                 ${ciCheck(dc.completed.login,  'ログイン',          0, 0, '+1回')}
-                ${ciCheck(dc.completed.train10,'10枚トレーニング', dc.progress.trainCount, 10, '+1回')}
+                ${ciCheck(dc.completed.train10,'10枚冒険', dc.progress.trainCount, 10, '+1回')}
                 ${ciCheck(dc.completed.quiz5,  'クイズ5問正解',    dc.progress.quizCorrect, 5, '+1回')}
 
                 ${ciCheck(dc.completed.combo3, '3連続コンボ',      dc.progress.currentCombo, 3, '+1回')}
@@ -6056,7 +6026,7 @@
                     <span style="font-size:11px;color:#a090c0;">100問連続正解</span>
                 </div>
                 <div style="font-size:11px;color:#807090;margin-bottom:8px;line-height:1.6;">
-                    トレーニングで100問連続正解すると金の手帖に殿堂入り！<br>
+                    冒険で100問連続正解すると金の手帖に殿堂入り！<br>
                     ※1問でも不正解でカウンターリセット
                 </div>
                 ${hofRow('金の手帖', hof['金の手帖'])}
@@ -6075,16 +6045,16 @@
         const grid = document.getElementById('collectionGrid');
         const total = unlockedCards.length;
         grid.innerHTML = `<div class="training-container" style="grid-column:1/-1;">
-            <div style="color:#e8d070;font-size:17px;font-weight:bold;margin-bottom:6px;font-family:'Noto Serif JP',serif;">🏋 トレーニングモード</div>
+            <div style="color:#e8d070;font-size:17px;font-weight:bold;margin-bottom:6px;font-family:'Noto Serif JP',serif;">🗺️ 冒険モード</div>
             <div style="color:#a090c0;font-size:13px;margin-bottom:4px;">アンロック済み: ${total}枚 | 無制限で練習</div>
             <div style="color:#807090;font-size:12px;margin-bottom:20px;">正解数がチャレンジ進捗に反映されます</div>
 
-            <button class="training-start-btn" onclick="openTrainingMode('all')">🎯 全カードで練習</button>
+            <button class="training-start-btn" onclick="openTrainingMode('all')">🎯 全カードで冒険</button>
 
             <div style="margin-top:22px;padding:14px;background:rgba(20,10,40,0.65);border:1px solid rgba(200,170,50,0.35);border-radius:10px;text-align:left;">
                 <div style="color:#e8d070;font-size:13px;margin-bottom:8px;font-family:'Noto Serif JP',serif;">📒 金の手帖チャレンジ</div>
                 <div style="color:#a090c0;font-size:12px;line-height:1.9;">
-                    • トレーニングで <strong style="color:#f0c840;">100問連続正解</strong> → 金の手帖殿堂入り！<br>
+                    • 冒険で <strong style="color:#f0c840;">100問連続正解</strong> → 金の手帖殿堂入り！<br>
                     • 1問でも不正解でカウンターリセット<br>
                     • 報酬: ガチャ+30回 / 金の手帖バッジ＋称号<br>
                     • 進捗は「チャレンジ」タブで確認
