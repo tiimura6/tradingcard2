@@ -4823,6 +4823,20 @@
 
         renderBattleUI();
         addBattleLog(`⚔️ ${stage.emoji} ${stage.name}とのバトル開始！`);
+
+        // ボスBGM開始
+        if (bgmOn) {
+            if (bgmAudio) bgmAudio.pause();
+            if (bgmCtx && bgmCtx.state !== 'suspended') bgmCtx.suspend();
+            if (adventureBGM) adventureBGM.pause();
+            if (!window.bossBGM) {
+                window.bossBGM = new Audio('./bgm/boss.mp3');
+                window.bossBGM.loop = true;
+                window.bossBGM.volume = 0.35;
+            }
+            window.bossBGM.currentTime = 0;
+            window.bossBGM.play().catch(() => {});
+        }
     }
 
     function renderBattleUI() {
@@ -5253,9 +5267,23 @@
         updateAdventureBattleBtn();
     }
 
+    function stopBossBGM() {
+        if (window.bossBGM) { window.bossBGM.pause(); window.bossBGM.currentTime = 0; }
+        if (!bgmOn) return;
+        // 冒険モード中なら冒険BGMへ、それ以外はメインBGMへ戻す
+        if (adventureActive && adventureBGM) {
+            adventureBGM.currentTime = 0;
+            adventureBGM.play().catch(() => {});
+        } else {
+            if (bgmAudio) { bgmAudio.currentTime = 0; bgmAudio.play().catch(() => {}); }
+            if (bgmCtx && bgmCtx.state === 'suspended') bgmCtx.resume();
+        }
+    }
+
     function closeBattleResult() {
         document.getElementById('battle-result-overlay').style.display = 'none';
         document.getElementById('battle-overlay').style.display = 'none';
+        stopBossBGM();
     }
 
     function confirmCloseBattle() {
@@ -5265,6 +5293,7 @@
         battleSession.active = false;
         document.getElementById('battle-result-overlay').style.display = 'none';
         document.getElementById('battle-overlay').style.display = 'none';
+        stopBossBGM();
     }
 
     function setGachaTitle(text, delay = 0) {
