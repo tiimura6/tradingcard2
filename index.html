@@ -2705,21 +2705,24 @@
         const firstTrain = dailyGachaStorage.firstTrainTime;
         if (!firstTrain) return;
         const elapsed = Math.floor((Date.now() - firstTrain) / 60000); // minutes
-        const milestones = [1, 2, 4, 8]; // hours
-        let awarded = 0;
-        milestones.forEach(hrs => {
+        const milestones = { 1: 1, 2: 2, 4: 3, 8: 4 }; // hours: gacha bonus
+        let totalAwarded = 0;
+        let newMilestone = 0;
+        Object.entries(milestones).forEach(([hrsStr, bonus]) => {
+            const hrs = Number(hrsStr);
             if (elapsed >= hrs * 60 && !dailyGachaStorage.trainBonuses.includes(hrs)) {
                 dailyGachaStorage.trainBonuses.push(hrs);
-                dailyGachaStorage.count++;
-                awarded++;
+                dailyGachaStorage.count += bonus;
+                totalAwarded += bonus;
+                newMilestone = hrs;
                 // 時間マイルストーンでコンボストリークをリセット → また3/5/10正解ボーナスを狙える
                 comboCount = 0;
                 updateComboDisplay();
             }
         });
-        if (awarded > 0) {
+        if (totalAwarded > 0) {
             localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
-            showChallengeToast(`⏱ ${awarded}hボーナス！ コンボリセット＆ガチャ+${awarded}回！`);
+            showChallengeToast(`⏱ ${newMilestone}hボーナス！ コンボリセット＆ガチャ+${totalAwarded}回！`);
             checkAndResetDailyGacha(); // ボタン表示を更新
         }
     }
@@ -2953,8 +2956,10 @@
         const trainBonuses = dailyGachaStorage.trainBonuses || [];
         const elapsed = firstTrain ? Math.floor((Date.now() - firstTrain) / 60000) : 0; // minutes
 
+        const timeBonusMap = { 1: 1, 2: 2, 4: 3, 8: 4 };
         function timeRow(hrs, label) {
             const mins = hrs * 60;
+            const bonus = timeBonusMap[hrs];
             const done = trainBonuses.includes(hrs);
             const pct = firstTrain ? Math.min(100, (elapsed / mins) * 100) : 0;
             const dispPct = done ? 100 : pct;
@@ -2964,12 +2969,12 @@
                 <div style="flex:1;min-width:0;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
                         <span style="color:${done?'#22cc66':'#c8b080'};font-size:11px;">${label}</span>
-                        <span style="color:#e8a020;font-size:10px;font-weight:bold;">ガチャ+1</span>
+                        <span style="color:#e8a020;font-size:10px;font-weight:bold;">ガチャ+${bonus}</span>
                     </div>
                     <div style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
                         <div style="height:100%;width:${dispPct}%;background:${done?'#22cc66':'#4080ff'};border-radius:2px;"></div>
                     </div>
-                    <div style="color:#807090;font-size:10px;margin-top:1px;">${done?'✅ 達成':firstTrain?`残り${remain}分`:'トレーニング開始後カウント'}</div>
+                    <div style="color:#807090;font-size:10px;margin-top:1px;">${done?'✅ 達成（コンボリセット済）':firstTrain?`残り${remain}分`:'トレーニング開始後カウント'}</div>
                 </div>
             </div>`;
         }
