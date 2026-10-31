@@ -450,6 +450,12 @@
             justify-content: center; align-items: center;
             backdrop-filter: blur(3px);
         }
+        /* バトル中のクイズオーバーレイ: battle-overlayより前面に表示 */
+        #quiz-overlay.battle-quiz-mode {
+            z-index: 3100;
+            background: rgba(8,2,2,0.75);
+            backdrop-filter: blur(2px);
+        }
         .custom-box {
             background: linear-gradient(160deg, #f4f0fa 0%, #ede8f8 100%);
             padding: 25px; border-radius: 16px;
@@ -3362,28 +3368,28 @@
     // 中間ボス: タブ内カードを半分以上収集で解禁
     // 最終ボス: タブ内カードを全収集 & 中間ボス撃破で解禁 → 倒すと次タブ開放
     const MID_BOSS_TEMPLATES = [
-        { name: 'スライム将軍', emoji: '🟢', hpBase: 80,  atkBase: 12 },
-        { name: 'ゴブリン長',   emoji: '👺', hpBase: 130, atkBase: 20 },
-        { name: 'オーク隊長',   emoji: '🪓', hpBase: 190, atkBase: 30 },
-        { name: 'ダークナイト', emoji: '🗡️', hpBase: 260, atkBase: 41 },
-        { name: 'ワイバーン',   emoji: '🐲', hpBase: 340, atkBase: 53 },
-        { name: '炎の竜騎士',   emoji: '🔥', hpBase: 430, atkBase: 65 },
-        { name: 'デスナイト',   emoji: '💀', hpBase: 540, atkBase: 78 },
-        { name: '冥府の将',     emoji: '⚔️', hpBase: 670, atkBase: 91 },
-        { name: '魔将軍',       emoji: '👿', hpBase: 820, atkBase: 103 },
-        { name: '冥王',         emoji: '🌑', hpBase: 1000, atkBase: 116 },
+        { name: 'スライム将軍', emoji: '🟢', hpBase: 350,  atkBase: 12 },
+        { name: 'ゴブリン長',   emoji: '👺', hpBase: 550,  atkBase: 20 },
+        { name: 'オーク隊長',   emoji: '🪓', hpBase: 800,  atkBase: 30 },
+        { name: 'ダークナイト', emoji: '🗡️', hpBase: 1100, atkBase: 41 },
+        { name: 'ワイバーン',   emoji: '🐲', hpBase: 1500, atkBase: 53 },
+        { name: '炎の竜騎士',   emoji: '🔥', hpBase: 2000, atkBase: 65 },
+        { name: 'デスナイト',   emoji: '💀', hpBase: 2600, atkBase: 78 },
+        { name: '冥府の将',     emoji: '⚔️', hpBase: 3200, atkBase: 91 },
+        { name: '魔将軍',       emoji: '👿', hpBase: 4000, atkBase: 103 },
+        { name: '冥王',         emoji: '🌑', hpBase: 5000, atkBase: 116 },
     ];
     const FINAL_BOSS_TEMPLATES = [
-        { name: 'スライム王',   emoji: '👑', hpBase: 150, atkBase: 20 },
-        { name: 'ゴブリン王',   emoji: '🏰', hpBase: 240, atkBase: 33 },
-        { name: 'オーク覇王',   emoji: '⚔️', hpBase: 360, atkBase: 50 },
-        { name: 'ダークエルフ女王', emoji: '🧝', hpBase: 500, atkBase: 68 },
-        { name: 'ドラゴンロード', emoji: '🐉', hpBase: 660, atkBase: 88 },
-        { name: 'ドラゴン皇帝', emoji: '🔥', hpBase: 840, atkBase: 108 },
-        { name: 'リッチキング', emoji: '☠️', hpBase: 1050, atkBase: 128 },
-        { name: '魔将',         emoji: '🌙', hpBase: 1300, atkBase: 148 },
-        { name: '魔王',         emoji: '👿', hpBase: 1600, atkBase: 168 },
-        { name: '大魔王',       emoji: '🌑', hpBase: 2000, atkBase: 190 },
+        { name: 'スライム王',      emoji: '👑', hpBase: 700,  atkBase: 20 },
+        { name: 'ゴブリン王',      emoji: '🏰', hpBase: 1100, atkBase: 33 },
+        { name: 'オーク覇王',      emoji: '⚔️', hpBase: 1700, atkBase: 50 },
+        { name: 'ダークエルフ女王', emoji: '🧝', hpBase: 2400, atkBase: 68 },
+        { name: 'ドラゴンロード',   emoji: '🐉', hpBase: 3200, atkBase: 88 },
+        { name: 'ドラゴン皇帝',    emoji: '🔥', hpBase: 4200, atkBase: 108 },
+        { name: 'リッチキング',    emoji: '☠️', hpBase: 5400, atkBase: 128 },
+        { name: '魔将',            emoji: '🌙', hpBase: 6800, atkBase: 148 },
+        { name: '魔王',            emoji: '👿', hpBase: 8500, atkBase: 168 },
+        { name: '大魔王',          emoji: '🌑', hpBase: 10000, atkBase: 190 },
     ];
 
     function getBattleStages() {
@@ -4712,7 +4718,9 @@
         battleSession.questionCard = questionCard;
         gachaSession.isGachaMode = false;
         trainingSession.active = false;
-        document.getElementById('battle-overlay').style.display = 'none';
+        // battle-overlayは表示したままにし、quiz-overlayをその上に重ねる
+        const quizOv = document.getElementById('quiz-overlay');
+        quizOv.classList.add('battle-quiz-mode');
         document.getElementById('quizTitle').innerText = `⚔️ 攻撃！正解で敵にダメージ！`;
         showQuiz(questionCard);
     }
@@ -4844,7 +4852,6 @@
 
     function processBattleAnswer(isCorrect, card) {
         updateSRS(card.id, isCorrect);
-        document.getElementById('battle-overlay').style.display = 'flex';
 
         const unit = battleSession.units[battleSession.currentUnitIdx];
         const { stage } = battleSession;
@@ -5293,13 +5300,14 @@
         }
         const qb = document.getElementById('quizQuitBtn');
         if (qb) qb.style.display = '';
-        document.getElementById('quiz-overlay').style.display = 'none';
+        const quizOv = document.getElementById('quiz-overlay');
+        quizOv.style.display = 'none';
+        quizOv.classList.remove('battle-quiz-mode');
         gachaSession.isGachaMode = false;
         trainingSession.active = false; // exit training mode
         stopTrainingTimer(); // 時間ボーナス自動チェック停止
-        // バトル中にクイズを閉じた場合はバトル画面に戻す
+        // バトル中: battle-overlayはそのまま表示継続（非表示にしていないため不要）
         if (battleSession.active) {
-            document.getElementById('battle-overlay').style.display = 'flex';
             document.getElementById('battleQuizBtn').style.display = 'flex';
         }
     }
@@ -5403,7 +5411,10 @@
                 // オーバーレイは閉じない（次へボタンを押すまで表示を維持）
             } else if (battleSession.active) {
                 // バトルモード: 正解→攻撃 / 不正解→被ダメ
-                document.getElementById('battle-overlay').style.display = 'flex';
+                // quiz-overlayを閉じてバトル画面に戻す
+                const quizOv = document.getElementById('quiz-overlay');
+                quizOv.style.display = 'none';
+                quizOv.classList.remove('battle-quiz-mode');
                 processBattleAnswer(isCorrect, card);
             } else if (gachaSession.isGachaMode) {
                 // 実力ガチャ: 正解 → カード獲得 & アニメーション / 不正解 → ポイント付与
