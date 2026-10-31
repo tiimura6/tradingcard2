@@ -923,10 +923,10 @@
         }
         .gacha-container {
             display: flex; justify-content: center; gap: 15px;
-            flex-wrap: wrap; max-width: 90%; perspective: 1000px; margin-bottom: 30px;
+            flex-wrap: wrap; max-width: 96%; perspective: 1000px; margin-bottom: 16px;
         }
         .gacha-card {
-            width: 240px; height: 390px;
+            width: 260px; height: 430px;
             transform-style: preserve-3d; -webkit-transform-style: preserve-3d;
             transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
@@ -950,7 +950,7 @@
             color: #706858; border-color: #4a4038; font-size: 28px;
         }
         .gacha-front { transform: rotateY(180deg); padding: 5px; border: 3px solid #9a7a2a; border-radius: 10px; justify-content: space-between; }
-        .gacha-front img { width: 100%; flex: 1 1 auto; min-height: 0; object-fit: cover; border-radius: 5px; }
+        .gacha-front img { width: 100%; flex: 1 1 auto; min-height: 0; object-fit: contain; border-radius: 5px; background: #0a0820; }
         .gacha-info { flex-shrink: 0; margin-top: 4px; font-size: 12px; font-weight: bold; text-align: center; color: #c8b080; font-family: 'Noto Serif JP', serif; line-height: 1.5; }
         .gacha-stats { flex-shrink: 0; font-size: 11px; color: #e8d090; margin-top: 3px; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
         .gacha-close-btn {
