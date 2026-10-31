@@ -510,6 +510,61 @@
             100% { opacity: 0; transform: scale(1.1); }
         }
 
+        /* ===== GACHA RARITY ANIMATION OVERLAY ===== */
+        #gacha-anim-overlay {
+            display: none; position: fixed; inset: 0; z-index: 10000;
+            align-items: center; justify-content: center; pointer-events: none;
+            overflow: hidden;
+        }
+        .gacha-anim-n {
+            width: 200px; height: 200px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(160,140,100,0.95) 0%, rgba(80,70,40,0.5) 60%, transparent 100%);
+            animation: gachaNPop 1.1s ease-out forwards;
+        }
+        .gacha-anim-r {
+            width: 280px; height: 280px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(80,160,255,0.95) 0%, rgba(30,80,200,0.5) 60%, transparent 100%);
+            animation: gachaRBurst 1.4s ease-out forwards;
+            box-shadow: 0 0 60px rgba(80,160,255,0.8), 0 0 120px rgba(40,100,200,0.4);
+        }
+        .gacha-anim-sr {
+            width: 340px; height: 340px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,220,50,0.98) 0%, rgba(200,150,0,0.6) 50%, transparent 100%);
+            animation: gachaSRGold 2s ease-out forwards;
+            box-shadow: 0 0 80px rgba(255,210,50,0.9), 0 0 160px rgba(200,150,0,0.5);
+        }
+        .gacha-anim-ur {
+            width: 100vw; height: 100vh;
+            background: radial-gradient(ellipse at center, rgba(255,100,255,0.95) 0%, rgba(120,0,200,0.7) 40%, rgba(0,0,80,0.3) 80%, transparent 100%);
+            animation: gachaURRainbow 2.5s ease-out forwards;
+        }
+        @keyframes gachaNPop {
+            0%   { opacity: 0; transform: scale(0.2); }
+            40%  { opacity: 1; transform: scale(1.1); }
+            70%  { opacity: 0.8; transform: scale(0.95); }
+            100% { opacity: 0; transform: scale(1.3); }
+        }
+        @keyframes gachaRBurst {
+            0%   { opacity: 0; transform: scale(0.1) rotate(0deg); }
+            30%  { opacity: 1; transform: scale(1.2) rotate(10deg); }
+            60%  { opacity: 0.9; transform: scale(0.95) rotate(-5deg); }
+            100% { opacity: 0; transform: scale(1.5) rotate(15deg); }
+        }
+        @keyframes gachaSRGold {
+            0%   { opacity: 0; transform: scale(0.1) rotate(-15deg); }
+            25%  { opacity: 1; transform: scale(1.3) rotate(5deg); }
+            50%  { opacity: 1; transform: scale(1.0) rotate(0deg); }
+            80%  { opacity: 0.7; transform: scale(1.1) rotate(-3deg); }
+            100% { opacity: 0; transform: scale(1.6) rotate(5deg); }
+        }
+        @keyframes gachaURRainbow {
+            0%   { opacity: 0; filter: hue-rotate(0deg) brightness(0.5); transform: scale(0.5); }
+            20%  { opacity: 1; filter: hue-rotate(60deg) brightness(1.5); transform: scale(1); }
+            40%  { opacity: 1; filter: hue-rotate(180deg) brightness(2); transform: scale(1.05); }
+            70%  { opacity: 0.8; filter: hue-rotate(300deg) brightness(1.5); transform: scale(1.02); }
+            100% { opacity: 0; filter: hue-rotate(360deg) brightness(1); transform: scale(1.1); }
+        }
+
         #camera-modal { background: rgba(10,8,4,0.88); z-index: 10; flex-direction: column; }
         #reader { width: 300px; background: white; border-radius: 8px; overflow: hidden; }
         .camera-close {
@@ -1153,7 +1208,12 @@
 
 <div class="header-plate">
     <!-- 言の葉堂のひみつ手帖 シリーズヘッダー -->
-    <div class="series-name">言の葉堂のひみつ手帖</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;position:relative;">
+        <div class="series-name">言の葉堂のひみつ手帖</div>
+        <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
+            style="position:absolute;right:0;background:none;border:1px solid rgba(200,165,60,0.35);border-radius:50%;width:26px;height:26px;font-size:13px;cursor:pointer;color:rgba(200,165,60,0.5);display:flex;align-items:center;justify-content:center;padding:0;transition:all 0.3s;">🔇</button>
+    </div>
+    <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);margin:-2px 0 4px;font-family:'Noto Serif JP',serif;">Designed by Takahiro Iimura</div>
     <div class="series-divider"><span>✦</span></div>
     <h1>金の手帖</h1>
     <div class="book-subtitle">世界をひもとく　難関の英単語</div>
@@ -1184,7 +1244,10 @@
         <span class="btn-icon">📷</span>QRスキャン
     </button>
     <button class="action-btn btn-gacha" id="directGachaBtn" onclick="startGachaViaButton()">
-        <span class="btn-icon">🎰</span>デイリーガチャ
+        <span class="btn-icon">🎰</span>ガチャ 1回
+    </button>
+    <button class="action-btn btn-gacha" id="allGachaBtn" onclick="startAllGachaViaButton()" style="background:linear-gradient(150deg,#6a3800,#3a1800);border:1px solid rgba(255,180,50,0.5);">
+        <span class="btn-icon">🌟</span>全部ガチャ
     </button>
     <button class="action-btn btn-coupon" onclick="openCouponModal()">
         <span class="btn-icon">🎫</span>クーポン入力
@@ -1235,6 +1298,9 @@
 
 <!-- ○/× judge overlay -->
 <div id="quiz-judge-overlay" style="display:none;"></div>
+
+<!-- ガチャ レアリティ アニメーション オーバーレイ -->
+<div id="gacha-anim-overlay"></div>
 
 <div id="quiz-overlay" class="modal-overlay">
     <div class="custom-box">
@@ -1405,10 +1471,10 @@
     }
 
     const RARITY_CONFIG = {
-        'N':  { label: 'N',  backClass: 'rarity-N',  frontClass: 'rarity-front-N',  emoji: '',    resultTitle: 'カード獲得！' },
-        'R':  { label: 'R',  backClass: 'rarity-R',  frontClass: 'rarity-front-R',  emoji: '💠',  resultTitle: 'Rカード獲得！' },
-        'SR': { label: 'SR', backClass: 'rarity-SR', frontClass: 'rarity-front-SR', emoji: '✨',  resultTitle: 'SRカード獲得！！' },
-        'UR': { label: 'UR', backClass: 'rarity-UR', frontClass: 'rarity-front-UR', emoji: '🌟', resultTitle: '⚡ URカード獲得！！！' }
+        'N':  { label: 'N',  color: '#a09070', backClass: 'rarity-N',  frontClass: 'rarity-front-N',  emoji: '',    resultTitle: 'カード獲得！' },
+        'R':  { label: 'R',  color: '#5090ff', backClass: 'rarity-R',  frontClass: 'rarity-front-R',  emoji: '💠',  resultTitle: 'Rカード獲得！' },
+        'SR': { label: 'SR', color: '#f0c840', backClass: 'rarity-SR', frontClass: 'rarity-front-SR', emoji: '✨',  resultTitle: 'SRカード獲得！！' },
+        'UR': { label: 'UR', color: '#ff80ff', backClass: 'rarity-UR', frontClass: 'rarity-front-UR', emoji: '🌟', resultTitle: '⚡ URカード獲得！！！' }
     };
 
     /* ========== QUIZ DATA ========== */
@@ -2293,9 +2359,10 @@
     let gachaSession = { isGachaMode: false, selectedCard: null, userAnswer: "" };
 
     let dailyGachaStorage = JSON.parse(localStorage.getItem('dailyGachaStorage')) || {
-        lastDate: "", count: 1, usedCoupons: []
+        lastDate: "", count: 1, usedCoupons: [], firstTrainTime: null, trainBonuses: []
     };
     if (!dailyGachaStorage.usedCoupons) dailyGachaStorage.usedCoupons = [];
+    if (!dailyGachaStorage.trainBonuses) dailyGachaStorage.trainBonuses = [];
 
     /* ========== LOGIN STREAK STATE ========== */
     let loginStreak = JSON.parse(localStorage.getItem('loginStreak')) || {
@@ -2612,15 +2679,55 @@
     function checkAndResetDailyGacha() {
         const todayStr = new Date().toLocaleDateString();
         if (dailyGachaStorage.lastDate !== todayStr) {
+            // 日付が変わったらリセット（ログインボーナス+1）
             dailyGachaStorage.lastDate = todayStr;
-            dailyGachaStorage.count = 1;
+            dailyGachaStorage.count = (dailyGachaStorage.count || 0) + 1; // ログイン+1
+            dailyGachaStorage.firstTrainTime = null;
+            dailyGachaStorage.trainBonuses = [];
             localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
         }
+        // トレーニング時間ボーナスチェック
+        checkTrainTimeBonus();
+
         const remaining = dailyGachaStorage.count;
-        document.getElementById('gachaLimitInfo').innerText = remaining > 0
+        const el = document.getElementById('gachaLimitInfo');
+        if (el) el.innerText = remaining > 0
             ? `本日のガチャ残り: ${remaining}回`
-            : `本日のガチャ残り: 0回 (次回は明日)`;
-        document.getElementById('directGachaBtn').disabled = (remaining <= 0);
+            : `本日のガチャ残り: 0回`;
+        const btn = document.getElementById('directGachaBtn');
+        if (btn) btn.disabled = (remaining <= 0);
+        const allBtn = document.getElementById('allGachaBtn');
+        if (allBtn) allBtn.disabled = (remaining <= 0);
+    }
+
+    /* ========== TRAINING TIME BONUS ========== */
+    function checkTrainTimeBonus() {
+        const firstTrain = dailyGachaStorage.firstTrainTime;
+        if (!firstTrain) return;
+        const elapsed = Math.floor((Date.now() - firstTrain) / 60000); // minutes
+        const milestones = [1, 2, 4, 8]; // hours
+        let awarded = 0;
+        milestones.forEach(hrs => {
+            if (elapsed >= hrs * 60 && !dailyGachaStorage.trainBonuses.includes(hrs)) {
+                dailyGachaStorage.trainBonuses.push(hrs);
+                dailyGachaStorage.count++;
+                awarded++;
+            }
+        });
+        if (awarded > 0) {
+            localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
+            showChallengeToast(`⏱ 時間ボーナス！ ガチャ+${awarded}回！`);
+        }
+    }
+
+    /* ========== TRAINING START: set firstTrainTime ========== */
+    function recordTrainingStart() {
+        const todayStr = new Date().toLocaleDateString();
+        if (dailyGachaStorage.lastDate !== todayStr) return; // まだリセット前
+        if (!dailyGachaStorage.firstTrainTime) {
+            dailyGachaStorage.firstTrainTime = Date.now();
+            localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
+        }
     }
 
     /* ========== LOGIN STREAK LOGIC ========== */
@@ -2800,10 +2907,69 @@
         const tabIdx = getCurrentGachaTabIndex();
         const poolEnd = Math.min((tabIdx + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
         const poolSize = poolEnd;
+
+        // タスク進捗
+        const combo = comboCount;
+        function taskRow(icon, label, cur, target, reward, done) {
+            const pct = Math.min(100, (cur / target) * 100);
+            const barColor = done ? '#22cc66' : '#e8a020';
+            return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+                <span style="font-size:14px;">${icon}</span>
+                <div style="flex:1;min-width:0;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+                        <span style="color:${done?'#22cc66':'#c8b080'};font-size:11px;white-space:nowrap;">${label}</span>
+                        <span style="color:#e8a020;font-size:10px;font-weight:bold;white-space:nowrap;">${reward}</span>
+                    </div>
+                    <div style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
+                        <div style="height:100%;width:${done?100:pct}%;background:${barColor};border-radius:2px;transition:width 0.4s;"></div>
+                    </div>
+                    <div style="color:#807090;font-size:10px;margin-top:1px;">${done?'✅ 達成':'進捗: '+Math.min(cur,target)+'/'+target}</div>
+                </div>
+            </div>`;
+        }
+
+        // 時間ボーナス進捗
+        const firstTrain = dailyGachaStorage.firstTrainTime;
+        const trainBonuses = dailyGachaStorage.trainBonuses || [];
+        const elapsed = firstTrain ? Math.floor((Date.now() - firstTrain) / 60000) : 0; // minutes
+
+        function timeRow(hrs, label) {
+            const mins = hrs * 60;
+            const done = trainBonuses.includes(hrs);
+            const pct = firstTrain ? Math.min(100, (elapsed / mins) * 100) : 0;
+            const dispPct = done ? 100 : pct;
+            const remain = firstTrain && !done ? Math.max(0, mins - elapsed) : 0;
+            return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+                <span style="font-size:14px;">⏱</span>
+                <div style="flex:1;min-width:0;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+                        <span style="color:${done?'#22cc66':'#c8b080'};font-size:11px;">${label}</span>
+                        <span style="color:#e8a020;font-size:10px;font-weight:bold;">ガチャ+1</span>
+                    </div>
+                    <div style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
+                        <div style="height:100%;width:${dispPct}%;background:${done?'#22cc66':'#4080ff'};border-radius:2px;"></div>
+                    </div>
+                    <div style="color:#807090;font-size:10px;margin-top:1px;">${done?'✅ 達成':firstTrain?`残り${remain}分`:'トレーニング開始後カウント'}</div>
+                </div>
+            </div>`;
+        }
+
         el.innerHTML = `
-            <div style="color:#e8d070;font-size:17px;font-weight:bold;margin-bottom:6px;font-family:'Noto Serif JP',serif;">🏋 トレーニング</div>
-            <div style="color:#a090c0;font-size:12px;margin-bottom:4px;">解禁タブ内 <strong style="color:#f0c840;">${poolSize}</strong> 枚の単語からランダム出題</div>
-            <div style="color:#807090;font-size:11px;margin-bottom:16px;">例文中の（　　）に入る単語を選ぼう</div>
+            <div style="color:#e8d070;font-size:17px;font-weight:bold;margin-bottom:4px;font-family:'Noto Serif JP',serif;">🏋 トレーニング</div>
+            <div style="color:#a090c0;font-size:12px;margin-bottom:2px;">解禁タブ内 <strong style="color:#f0c840;">${poolSize}</strong> 枚の単語からランダム出題</div>
+            <div style="color:#807090;font-size:11px;margin-bottom:12px;">例文中の（　　）に入る単語を選ぼう</div>
+
+            <div style="background:rgba(10,5,30,0.7);border:1px solid rgba(180,150,60,0.2);border-radius:10px;padding:12px;margin-bottom:14px;">
+                <div style="color:#e8a020;font-size:12px;font-weight:bold;margin-bottom:8px;letter-spacing:0.05em;">📋 トレーニングタスク</div>
+                ${taskRow('🔥','3連続正解', combo, 3, 'ガチャ+1', combo>=3)}
+                ${taskRow('⚡','5連続正解', combo, 5, 'ガチャ+1', combo>=5)}
+                ${taskRow('🌟','10連続正解', combo, 10, 'ガチャ+3', combo>=10)}
+                ${timeRow(1, '1時間後トレーニング')}
+                ${timeRow(2, '2時間後トレーニング')}
+                ${timeRow(4, '4時間後トレーニング')}
+                ${timeRow(8, '8時間後トレーニング')}
+            </div>
+
             <button class="training-start-btn" onclick="openTrainingMode()">✏️ トレーニング開始</button>`;
         document.getElementById('training-modal').style.display = 'flex';
     }
@@ -2913,7 +3079,52 @@
             </div>
             <div style="text-align:center;color:#706080;font-size:10px;padding:6px 0 2px;">
                 チャレンジ達成でガチャ回数が付与されます
+            </div>
+            <div class="challenge-section" id="hofRankingSection">
+                <div class="challenge-section-title">
+                    <span>👑 殿堂入りランキング</span>
+                    <button onclick="loadHofRanking()" style="font-size:10px;padding:2px 8px;background:rgba(200,150,30,0.2);border:1px solid rgba(200,150,30,0.4);border-radius:4px;color:#e8d070;cursor:pointer;">更新</button>
+                </div>
+                <div id="hofRankingContent" style="color:#807090;font-size:11px;text-align:center;padding:8px;">
+                    「更新」を押すとランキングを取得します
+                </div>
             </div>`;
+    }
+
+    /* ========== HOF RANKING FROM GAS ========== */
+    function loadHofRanking() {
+        const el = document.getElementById('hofRankingContent');
+        if (!el) return;
+        if (!GAS_URL) {
+            el.innerHTML = '<span style="color:#706080;">（GASが未設定のため取得不可）</span>';
+            return;
+        }
+        el.innerHTML = '<span style="color:#a090c0;">読み込み中...</span>';
+        fetch(GAS_URL + '?action=hofRanking')
+            .then(r => r.json())
+            .then(data => {
+                if (!data || !data.ranking || data.ranking.length === 0) {
+                    el.innerHTML = '<span style="color:#706080;">まだ殿堂入り達成者がいません</span>';
+                    return;
+                }
+                const medals = ['🥇','🥈','🥉'];
+                el.innerHTML = data.ranking.slice(0, 10).map((row, i) => {
+                    const medal = medals[i] || `${i+1}.`;
+                    const level = row.level || '';
+                    const name  = row.name  || row.userId || '匿名';
+                    const date  = row.date  || '';
+                    return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <span style="font-size:14px;width:24px;text-align:center;">${medal}</span>
+                        <div style="flex:1;">
+                            <div style="color:#e8d070;font-size:12px;">${name}</div>
+                            <div style="color:#907080;font-size:10px;">${level} · ${date}</div>
+                        </div>
+                    </div>`;
+                }).join('');
+            })
+            .catch(() => {
+                el.innerHTML = '<span style="color:#cc4444;">取得に失敗しました</span>';
+            });
     }
 
     /* ========== COLLECTION RENDER ========== */
@@ -3059,8 +3270,16 @@
     /* ========== GACHA TRIGGER ========== */
     function startGachaViaButton() {
         checkAndResetDailyGacha();
-        if (dailyGachaStorage.count <= 0) { alert("本日のガチャ回数がなくなりました。コードを入力するか明日まで待ってね！"); return; }
+        if (dailyGachaStorage.count <= 0) { alert("ガチャ回数がありません。トレーニングを続けるか明日また来てね！"); return; }
         triggerGachaCore();
+    }
+
+    function startAllGachaViaButton() {
+        checkAndResetDailyGacha();
+        const total = dailyGachaStorage.count;
+        if (total <= 0) { alert("ガチャ回数がありません。トレーニングを続けるか明日また来てね！"); return; }
+        // すべてのガチャをまとめて回す
+        triggerAllGachaCore(total);
     }
     /* ---- タブ解禁ロジック ----
      * Tab 0 = cards 1〜100, Tab 1 = 101〜200 …
@@ -3079,7 +3298,7 @@
         return totalTabs - 1;             // 全タブ完了 → 最終タブ
     }
 
-    function triggerGachaCore() {
+    function triggerGachaCore(onDone) {
         if (cardsData.length === 0) { alert("カードデータがありません。"); return; }
 
         // 現在解禁中のタブのカードプールから重み付き抽選
@@ -3091,11 +3310,127 @@
 
         gachaSession.isGachaMode = true;
         gachaSession.selectedCard = randomCard;
-        // ガチャ回数を消費してすぐカード付与（クイズなし）
+        // ガチャ回数を消費
         dailyGachaStorage.count = Math.max(0, dailyGachaStorage.count - 1);
         localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
         checkAndResetDailyGacha();
-        evaluateAndShowGachaResult(true);
+
+        // レアリティアニメーション → カード表示
+        const rarity = getRarity(randomCard.no);
+        playRarityAnimation(rarity, () => {
+            evaluateAndShowGachaResult(true);
+            if (onDone) onDone();
+        });
+    }
+
+    /* ========== ALL GACHA (一括) ========== */
+    function triggerAllGachaCore(total) {
+        if (cardsData.length === 0) { alert("カードデータがありません。"); return; }
+
+        const tabIdx  = getCurrentGachaTabIndex();
+        const start   = tabIdx * COLLECTION_PAGE_SIZE;
+        const end     = Math.min((tabIdx + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
+        const tabPool = cardsData.slice(start, end);
+
+        // 全ガチャを引いてカードを確定（表示は最後の一枚で演出）
+        const results = [];
+        for (let i = 0; i < total; i++) {
+            const card = weightedGachaPick(tabPool);
+            results.push(card);
+        }
+
+        // カウント消費
+        dailyGachaStorage.count = 0;
+        localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
+        checkAndResetDailyGacha();
+
+        // 最高レアリティを求めてアニメーション
+        const rarityOrder = ['N','R','SR','UR'];
+        const bestRarity = results.reduce((best, c) => {
+            const r = getRarity(c.no);
+            return rarityOrder.indexOf(r) > rarityOrder.indexOf(best) ? r : best;
+        }, 'N');
+
+        // 全カードをunlockedCardsへ追加
+        let newCount = 0;
+        results.forEach(card => {
+            if (!unlockedCards.includes(card.id)) { unlockedCards.push(card.id); newCount++; }
+        });
+        localStorage.setItem('unlockedCards', JSON.stringify(unlockedCards));
+        renderCollection();
+
+        // 最後のカードをgachaSessionにセット（表示用）
+        gachaSession.isGachaMode = true;
+        gachaSession.selectedCard = results[results.length - 1];
+
+        // アニメーション後にまとめ結果表示
+        playRarityAnimation(bestRarity, () => {
+            showAllGachaResult(results, newCount, bestRarity);
+        });
+    }
+
+    function showAllGachaResult(results, newCount, bestRarity) {
+        const container = document.getElementById('gachaContainer');
+        container.innerHTML = '';
+        document.getElementById('gachaCloseBtn').style.display = 'none';
+        document.getElementById('gacha-overlay').style.display = 'flex';
+
+        const rc = RARITY_CONFIG[bestRarity];
+        document.getElementById('gachaResultTitle').innerText =
+            `🎊 ${results.length}回ガチャ完了！ 新規${newCount}枚獲得！`;
+
+        // レア度分布を集計
+        const dist = { UR: 0, SR: 0, R: 0, N: 0 };
+        results.forEach(c => dist[getRarity(c.no)]++);
+
+        const distHtml = ['UR','SR','R','N'].filter(r => dist[r] > 0)
+            .map(r => `<span style="color:${RARITY_CONFIG[r].color||'#c8b080'};font-weight:bold;">${RARITY_CONFIG[r].label}×${dist[r]}</span>`)
+            .join('　');
+
+        const summaryEl = document.createElement('div');
+        summaryEl.style.cssText = 'color:#c8b080;font-size:13px;margin:8px 0 12px;line-height:1.8;text-align:center;';
+        summaryEl.innerHTML = distHtml + `<br><span style="color:#22cc66;font-size:12px;">新規: ${newCount}枚</span>`;
+        container.appendChild(summaryEl);
+
+        // 最高レアリティのカードを1枚フィーチャー表示
+        const featCard = results.find(c => getRarity(c.no) === bestRarity) || results[results.length-1];
+        const rcFeat = RARITY_CONFIG[getRarity(featCard.no)];
+        const cardEl = document.createElement('div');
+        cardEl.className = 'gacha-card';
+        cardEl.id = 'gachaCard-0';
+        cardEl.innerHTML = `
+            <div class="gacha-face gacha-back ${rcFeat.backClass}">？</div>
+            <div class="gacha-face gacha-front ${rcFeat.frontClass}">
+                <div class="gacha-rarity-badge gacha-rarity-badge-${getRarity(featCard.no)}">${rcFeat.label}</div>
+                <img src="${featCard.img}">
+                <div class="gacha-info">No.${featCard.no}</div>
+            </div>`;
+        container.appendChild(cardEl);
+
+        setTimeout(() => {
+            document.getElementById('gachaCard-0').classList.add('do-flip');
+            fireRarityConfetti(bestRarity);
+        }, 400);
+        setTimeout(() => { document.getElementById('gachaCloseBtn').style.display = 'block'; }, 1200);
+    }
+
+    /* ========== RARITY ANIMATION ========== */
+    function playRarityAnimation(rarity, callback) {
+        const ov = document.getElementById('gacha-anim-overlay');
+        if (!ov) { if (callback) callback(); return; }
+
+        const classMap = { N: 'gacha-anim-n', R: 'gacha-anim-r', SR: 'gacha-anim-sr', UR: 'gacha-anim-ur' };
+        const durMap   = { N: 1100, R: 1400, SR: 2000, UR: 2500 };
+        const cls = classMap[rarity] || 'gacha-anim-n';
+        const dur = durMap[rarity] || 1100;
+
+        ov.innerHTML = `<div class="${cls}"></div>`;
+        ov.style.display = 'flex';
+        setTimeout(() => {
+            ov.style.display = 'none';
+            ov.innerHTML = '';
+            if (callback) callback();
+        }, dur);
     }
 
     /* ========== WEIGHTED GACHA PICK ========== */
@@ -3510,6 +3845,7 @@
     /* ========== TRAINING MODE ========== */
     function openTrainingMode() {
         closeTrainingModal();
+        recordTrainingStart(); // 初回トレーニング時刻を記録
         // 解禁済みタブ（0〜currentGachaTab）内の全カードをプールに
         const tabIdx = getCurrentGachaTabIndex();
         const poolEnd = Math.min((tabIdx + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
@@ -3662,6 +3998,56 @@
     /* ========== KEYBOARD SHORTCUTS ========== */
     // (answerInput removed — quiz now uses 4-choice buttons)
     document.getElementById('couponInput').addEventListener('keypress', e => { if (e.key === 'Enter') submitCoupon(); });
+
+    /* ========== BGM ========== */
+    // Web Audio API で環境音風BGMを生成（外部ファイル不要）
+    let bgmCtx = null, bgmNodes = [], bgmOn = false;
+
+    function buildBGM() {
+        if (bgmCtx) return;
+        bgmCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const master = bgmCtx.createGain();
+        master.gain.value = 0.18;
+        master.connect(bgmCtx.destination);
+        bgmNodes.push(master);
+
+        // 幻想的なドローン音：4つのオシレーターを微妙にデチューン
+        const freqs = [110, 110.3, 220, 329.6];
+        freqs.forEach((f, i) => {
+            const osc = bgmCtx.createOscillator();
+            const g   = bgmCtx.createGain();
+            osc.type      = i < 2 ? 'sine' : 'triangle';
+            osc.frequency.value = f;
+            g.gain.value  = i < 2 ? 0.4 : 0.15;
+            osc.connect(g); g.connect(master);
+            osc.start();
+            bgmNodes.push(osc, g);
+        });
+
+        // ゆっくりとした LFO で揺らぎ（ambient感）
+        const lfo = bgmCtx.createOscillator();
+        const lfoGain = bgmCtx.createGain();
+        lfo.frequency.value = 0.12;
+        lfoGain.gain.value = 0.04;
+        lfo.connect(lfoGain);
+        lfoGain.connect(master.gain);
+        lfo.start();
+        bgmNodes.push(lfo, lfoGain);
+    }
+
+    function toggleBGM() {
+        const btn = document.getElementById('bgmBtn');
+        if (!bgmOn) {
+            buildBGM();
+            if (bgmCtx.state === 'suspended') bgmCtx.resume();
+            bgmOn = true;
+            if (btn) { btn.textContent = '🔊'; btn.style.color = 'rgba(220,180,60,0.9)'; btn.style.borderColor = 'rgba(220,180,60,0.6)'; }
+        } else {
+            if (bgmCtx) bgmCtx.suspend();
+            bgmOn = false;
+            if (btn) { btn.textContent = '🔇'; btn.style.color = 'rgba(200,165,60,0.5)'; btn.style.borderColor = 'rgba(200,165,60,0.35)'; }
+        }
+    }
 
     /* ========== INIT ========== */
     updateXPDisplay();
