@@ -3005,6 +3005,7 @@
     function showHallOfFameModal() {
         const allComplete = unlockedCards.length >= TOTAL_CARDS;
         if (allComplete) playSE('hof');
+        else playSE('locked');
         if (!allComplete) {
             // 未コンプリートならロック画面を表示
             const remaining = TOTAL_CARDS - unlockedCards.length;
@@ -3241,7 +3242,7 @@
 
     /* ========== CARD TAP / ZOOM ========== */
     function tapCard(card, isUnlocked) {
-        if (!isUnlocked) return;
+        if (!isUnlocked) { playSE('locked'); return; }
         const rarity = getRarity(card.no);
         const zoomContent = document.getElementById('zoomContent');
         zoomContent.innerHTML = `
@@ -4160,6 +4161,9 @@
 
     // タップ音 / ロック音
     document.addEventListener('pointerdown', (e) => {
+        // インタラクティブ要素のみ対象
+        const interactive = e.target.closest('button, a, [onclick], .card-container, .quiz-choice-btn, .action-btn, .tab-btn, .cpt-btn, .collection-card');
+        if (!interactive) return;
         // disabledボタンをタップした時はlocked SE
         const btn = e.target.closest('button');
         if (btn && btn.disabled) {
