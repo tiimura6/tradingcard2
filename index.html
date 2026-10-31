@@ -925,8 +925,9 @@
             flex-wrap: wrap; max-width: 90%; perspective: 1000px; margin-bottom: 30px;
         }
         .gacha-card {
-            width: 200px; height: 340px; transform-style: preserve-3d;
+            width: 240px; height: 400px; transform-style: preserve-3d;
             transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
         }
         .gacha-card.do-flip { transform: rotateY(180deg); }
         .gacha-face {
@@ -946,8 +947,9 @@
             color: #706858; border-color: #4a4038; font-size: 28px;
         }
         .gacha-front { transform: rotateY(180deg); padding: 5px; border: 3px solid #9a7a2a; border-radius: 10px; }
-        .gacha-front img { width: 100%; max-height: 65%; object-fit: contain; border-radius: 5px; }
-        .gacha-info { margin-top: 4px; font-size: 13px; font-weight: bold; text-align: center; color: #c8b080; font-family: 'Noto Serif JP', serif; }
+        .gacha-front img { width: 100%; max-height: 60%; object-fit: contain; border-radius: 5px; }
+        .gacha-info { margin-top: 4px; font-size: 12px; font-weight: bold; text-align: center; color: #c8b080; font-family: 'Noto Serif JP', serif; line-height: 1.5; }
+        .gacha-stats { font-size: 11px; color: #e8d090; margin-top: 3px; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
         .gacha-close-btn {
             display: none; padding: 12px 40px; font-size: 18px; font-weight: bold;
             background: #7a5a1a; color: #fdf0d0; border: none; border-radius: 25px;
@@ -974,7 +976,8 @@
         .zoom-card-img { flex: 0 0 auto; width: 42%; max-width: 160px; }
         .zoom-card-img img { width: 100%; height: auto; border-radius: 10px; display: block; }
         .zoom-card-back { flex: 1; min-width: 0; text-align: left; }
-        .zoom-info { font-size: 18px; font-weight: bold; color: #2a1a50; font-family: 'Noto Serif JP', serif; }
+        .zoom-info { font-size: 13px; color: #2a1a50; font-family: 'Noto Serif JP', serif; text-align: center; padding-top: 8px; }
+        .zoom-box img { width: 100%; max-width: 220px; height: auto; border-radius: 12px; display: block; margin: 0 auto 4px; }
         .zoom-close-btn {
             position: absolute; top: -15px; right: -15px;
             width: 36px; height: 36px; background: #8a4040;
@@ -3812,25 +3815,23 @@
         const stats = getCardStats(card);
         const zoomContent = document.getElementById('zoomContent');
         zoomContent.innerHTML = `
-            <div class="zoom-card-layout">
-                <div class="zoom-card-img">
-                    <img src="${card.img}" alt="No.${card.no}">
+            <img src="${card.img}" alt="No.${card.no}">
+            <div class="zoom-info">
+                <div style="display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:4px;">
+                    <div class="rarity-badge rarity-badge-${rarity}" style="position:static;display:inline-block;font-size:11px;padding:3px 8px;border-radius:6px;">${rarity}</div>
+                    <span style="background:${srsColor};color:#fff;font-size:10px;padding:2px 7px;border-radius:8px;font-family:monospace;">${srsLabel}</span>
+                    <span style="font-size:10px;color:#907060;">${dueDate}</span>
                 </div>
-                <div class="zoom-card-back">
-                    <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px;">
-                        <div class="rarity-badge rarity-badge-${rarity}" style="position:static;display:inline-block;font-size:10px;padding:2px 7px;border-radius:5px;">${rarity}</div>
-                        <span style="background:${srsColor};color:#fff;font-size:10px;padding:2px 6px;border-radius:8px;font-family:monospace;">${srsLabel}</span>
-                        <span style="font-size:10px;color:#907060;">${dueDate}</span>
-                    </div>
-                    <div style="font-size:14px;font-weight:bold;color:#2a1a50;margin-bottom:4px;font-family:'Noto Serif JP',serif;">No.${card.no}　${card.quiz.answer}</div>
-                    <div style="font-size:11px;color:#504030;margin-bottom:2px;">${card.quiz.meaning}</div>
-                    <div style="display:flex;gap:6px;margin:6px 0;flex-wrap:wrap;">
-                        <span style="background:rgba(200,60,60,0.15);border:1px solid rgba(220,80,80,0.4);color:#cc5555;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:6px;">⚔️ ATK ${stats.atk}</span>
-                        <span style="background:rgba(60,100,200,0.15);border:1px solid rgba(80,120,220,0.4);color:#5588cc;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:6px;">🛡️ DEF ${stats.def}</span>
-                    </div>
-                    <div style="font-size:10px;color:#907878;margin-bottom:6px;">正解 ${srs.correct} / 不正解 ${srs.incorrect}</div>
-                    ${detailsHTML}
+                <div style="font-size:13px;font-weight:bold;margin-bottom:2px;">No.${card.no}　${card.quiz.answer}</div>
+                <div style="font-size:11px;color:#907060;margin-bottom:4px;">${card.quiz.pos || ''}</div>
+                <div style="font-size:14px;color:#3a2a10;font-weight:bold;margin-bottom:6px;">${card.quiz.meaning}</div>
+                <div style="font-size:11px;color:#6a5a40;font-style:italic;line-height:1.5;">${card.quiz.example || ''}</div>
+                <div style="display:flex;gap:8px;margin:8px 0;flex-wrap:wrap;justify-content:center;">
+                    <span style="background:rgba(200,60,60,0.15);border:1px solid rgba(220,80,80,0.4);color:#cc5555;font-size:12px;font-weight:bold;padding:3px 10px;border-radius:6px;">⚔️ ATK ${stats.atk}</span>
+                    <span style="background:rgba(60,100,200,0.15);border:1px solid rgba(80,120,220,0.4);color:#5588cc;font-size:12px;font-weight:bold;padding:3px 10px;border-radius:6px;">🛡️ DEF ${stats.def}</span>
                 </div>
+                ${detailsHTML}
+                <div style="font-size:10px;color:#aaa;margin-top:8px;">正解 ${srs.correct} / 不正解 ${srs.incorrect}</div>
             </div>
         `;
         document.getElementById('zoom-overlay').style.display = 'flex';
@@ -4383,7 +4384,7 @@
 
         // カードスロット
         const cardSlot = document.createElement('div');
-        cardSlot.style.cssText = 'perspective:600px;flex:0 0 auto;';
+        cardSlot.style.cssText = 'flex:0 0 auto;';
         cardArea.appendChild(cardSlot);
 
         // 右矢印
@@ -4401,6 +4402,7 @@
             const card = results[idx];
             const rarity = getRarity(card.no);
             const rc = RARITY_CONFIG[rarity];
+            const st = getCardStats(card);
 
             cardSlot.innerHTML = '';
             const cardEl = document.createElement('div');
@@ -4410,7 +4412,8 @@
                 <div class="gacha-face gacha-front ${rc.frontClass}">
                     <div class="gacha-rarity-badge gacha-rarity-badge-${rarity}">${rc.label}</div>
                     <img src="${card.img}">
-                    <div class="gacha-info">No.${card.no}</div>
+                    <div class="gacha-info">No.${card.no}　${card.quiz.answer}<br><span style="font-size:10px;font-weight:normal;color:#d0c090;">${card.quiz.meaning}</span></div>
+                    <div class="gacha-stats"><span>⚔️ ${st.atk}</span><span>🛡️ ${st.def}</span></div>
                 </div>`;
             if (rarity === bestRarity) cardEl.style.filter = `drop-shadow(0 0 8px ${rc.color || '#ffd700'})`;
             cardSlot.appendChild(cardEl);
@@ -4556,6 +4559,17 @@
             }
             document.getElementById('quizSentence').innerHTML = sentence;
 
+            // 文頭に穴埋めがあるか判定（選択肢の大文字化に使用）
+            const blankAtStart = sentence.trimStart().startsWith('<span class="quiz-blank">');
+
+            // a / an の直前文脈を判定（文法フィルタ用）
+            const lowerEx = (card.quiz.example || '').toLowerCase();
+            const ansIdx = lowerEx.indexOf(correctAnswer.toLowerCase());
+            const textBefore = ansIdx >= 0 ? lowerEx.substring(0, ansIdx).trimEnd() : '';
+            const articleBeforeIsAn = /\ban$/.test(textBefore);
+            const articleBeforeIsA  = /\ba$/.test(textBefore);
+            const vowelStart = /^[aeiou]/i;
+
             // トレーニング時は同じ品詞の単語をダミーとして優先使用
             const cardPos = card.quiz && card.quiz.pos ? card.quiz.pos.replace(/[.\s]/g, '').toLowerCase() : '';
             let allAnswers;
@@ -4566,7 +4580,6 @@
                 if (samePos.length >= 3) {
                     allAnswers = samePos;
                 } else {
-                    // 同品詞が足りない場合は全体から補完
                     const others = Object.values(quizList).map(q => q.answer).filter(a => a !== correctAnswer && !samePos.includes(a));
                     allAnswers = [...samePos, ...others];
                 }
@@ -4575,6 +4588,16 @@
                     .map(q => q.answer)
                     .filter(a => a !== correctAnswer);
             }
+
+            // 文法フィルタ: a/an の後ろの語が不適切な選択肢を除去
+            if (articleBeforeIsAn) {
+                const filtered = allAnswers.filter(a => vowelStart.test(a));
+                if (filtered.length >= 3) allAnswers = filtered;
+            } else if (articleBeforeIsA) {
+                const filtered = allAnswers.filter(a => !vowelStart.test(a));
+                if (filtered.length >= 3) allAnswers = filtered;
+            }
+
             for (let i = allAnswers.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [allAnswers[i], allAnswers[j]] = [allAnswers[j], allAnswers[i]];
@@ -4588,7 +4611,11 @@
             choices.forEach(ans => {
                 const btn = document.createElement('button');
                 btn.className = 'quiz-choice-btn';
-                btn.textContent = ans;
+                // 文頭の穴埋めなら選択肢の頭文字を大文字に
+                const displayAns = blankAtStart
+                    ? ans.charAt(0).toUpperCase() + ans.slice(1)
+                    : ans;
+                btn.textContent = displayAns;
                 btn.onclick = () => submitChoice(ans === correctAnswer, card, ans, btn);
                 choicesEl.appendChild(btn);
             });
@@ -4787,12 +4814,14 @@
             // ガチャでXP獲得（レアリティに応じてボーナス）
             const xpGain = { N: 5, R: 10, SR: 20, UR: 50 }[rarity] || 5;
             addXP(xpGain, null);
+            const st = getCardStats(card);
             gachaCardEl.innerHTML = `
                 <div class="gacha-face gacha-back ${rc.backClass}">？</div>
                 <div class="gacha-face gacha-front ${rc.frontClass}">
                     <div class="gacha-rarity-badge gacha-rarity-badge-${rarity}">${rc.label}</div>
                     <img src="${card.img}">
-                    <div class="gacha-info">No.${card.no}${isNew ? '' : '　<span style="font-size:11px;opacity:0.75;">✔ 取得済み</span>'}</div>
+                    <div class="gacha-info">No.${card.no}　${card.quiz.answer}${isNew ? '' : '　<span style="font-size:10px;opacity:0.75;">✔ 取得済み</span>'}<br><span style="font-size:10px;font-weight:normal;color:#d0c090;">${card.quiz.meaning}</span></div>
+                    <div class="gacha-stats"><span>⚔️ ${st.atk}</span><span>🛡️ ${st.def}</span></div>
                 </div>
             `;
             // タブ解禁チェック：カード取得後に次タブが解禁されたか確認
@@ -4854,12 +4883,14 @@
         const gachaCardEl = document.createElement('div');
         gachaCardEl.className = 'gacha-card';
         gachaCardEl.id = 'gachaCard-0';
+        const st2 = getCardStats(card);
         gachaCardEl.innerHTML = `
             <div class="gacha-face gacha-back ${rc.backClass}">？</div>
             <div class="gacha-face gacha-front ${rc.frontClass}">
                 <div class="gacha-rarity-badge gacha-rarity-badge-${rarity}">${rc.label}</div>
                 <img src="${card.img}">
-                <div class="gacha-info">No.${card.no}</div>
+                <div class="gacha-info">No.${card.no}　${card.quiz.answer}<br><span style="font-size:10px;font-weight:normal;color:#d0c090;">${card.quiz.meaning}</span></div>
+                <div class="gacha-stats"><span>⚔️ ${st2.atk}</span><span>🛡️ ${st2.def}</span></div>
             </div>
         `;
         container.appendChild(gachaCardEl);
