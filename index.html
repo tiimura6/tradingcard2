@@ -1905,7 +1905,10 @@
 
 <div id="quiz-overlay" class="modal-overlay">
     <div class="custom-box">
-        <h3 style="margin:0 0 10px;color:#524130;" id="quizTitle">🔍 穴埋め問題</h3>
+        <h3 style="margin:0 0 8px;color:#524130;" id="quizTitle">🔍 穴埋め問題</h3>
+        <div id="quizCardThumb" style="width:100%;height:110px;overflow:hidden;border-radius:10px;margin-bottom:10px;display:none;position:relative;">
+            <img id="quizCardImg" src="" alt="" style="width:100%;position:absolute;top:0;left:0;transform:translateY(-18%);object-fit:cover;">
+        </div>
         <div class="quiz-sentence" id="quizSentence"></div>
         <div class="quiz-choices" id="quizChoices"></div>
         <button class="modal-cancel-btn" onclick="closeQuiz()">やめる</button>
@@ -5168,6 +5171,14 @@
     function showQuiz(card) {
         markAnswerStart();  // 回答時間計測開始
 
+        // カードイラストをクロップ表示（上部テキスト部分を隠してイラスト中央を見せる）
+        const thumbEl = document.getElementById('quizCardThumb');
+        const imgEl   = document.getElementById('quizCardImg');
+        if (thumbEl && imgEl && card.img) {
+            imgEl.src = card.img;
+            thumbEl.style.display = 'block';
+        }
+
         // SR/UR カードは50%の確率で上級問題形式（英単語 → 日本語意味選択）
         const rarity = getRarity(card.no);
         const isAdvanced = (rarity === 'SR' || rarity === 'UR') && Math.random() < 0.5;
@@ -5287,6 +5298,8 @@
     function showTrainingResult() {
         const total = trainingSession.correct + trainingSession.incorrect;
         const rate = total > 0 ? Math.round(trainingSession.correct / total * 100) : 0;
+        const thumbEl = document.getElementById('quizCardThumb');
+        if (thumbEl) thumbEl.style.display = 'none';
         const sentenceEl = document.getElementById('quizSentence');
         const choicesEl  = document.getElementById('quizChoices');
         document.getElementById('quizTitle').innerText = '🏆 トレーニング結果';
