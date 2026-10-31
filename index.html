@@ -1258,6 +1258,11 @@
         style="display:none;grid-column:1/-1;background:linear-gradient(150deg,#4a1060,#280840);color:#e8b0ff;border:1px solid rgba(200,120,255,0.5);">
         <span class="btn-icon">✨</span><span id="spGachaLabel">SPガチャ（未取得優先）</span>
     </button>
+    <button class="action-btn" id="pointGachaBtn" onclick="spendGachaPoints()"
+        style="display:none;grid-column:1/-1;background:linear-gradient(150deg,#1a4060,#0a2840);color:#80c8ff;border:1px solid rgba(80,160,255,0.5);">
+        <span class="btn-icon">💡</span>ポイントガチャ（3pt消費）
+    </button>
+    <div id="gachaPointsDisplay" style="display:none;grid-column:1/-1;text-align:center;font-size:11px;color:#80a8c0;padding:2px 0 4px;"></div>
     <button class="action-btn" id="hofBtn" onclick="showHallOfFameModal()"
         style="grid-column:1/-1;background:linear-gradient(150deg,#4a3010,#2a1800);color:#f0d080;border:1px solid rgba(200,150,30,0.4);">
         <span class="btn-icon">🏆</span>殿堂入りへの道
@@ -2343,6 +2348,28 @@
         863: { meaning: 'ゼロ抵抗（超伝導）', answer: 'zero resistance', example: 'The perfectly smooth rune-carved stone surface offered zero resistance — nothing could grip or slow on it.', pos: 'n.' },
     };
 
+    /* ========== CARD DETAILS (裏面コンテンツ: UR + 主要SR) ========== */
+    const CARD_DETAILS = {
+        10: { nuance: '"accessible" は「近づきやすい・使いやすい」という意味で、デザイン（user-friendly）や物理的なアクセス両方に使う。"available"（入手可能）とは別物。', etymology: 'ラテン語 accedere（近づく）→ access + -ible（可能の接尾辞）', mistake: '❌ "The book is accessible to understand." → ✅ "The book is easy to understand." / accessible は「理解する」には使わない' },
+        25: { nuance: '"admittedly" は「認めるが」という譲歩の副詞。自分の主張に不利な点を認める時に使う。"certainly" より強い譲歩のニュアンス。', etymology: 'admit の過去分詞 admitted + -ly。Latin admittere（送り込む→認める）', mistake: '❌ "Admittedly, this food is great!"（単なる同意）→ ✅ "Admittedly, the plan has flaws, but it\'s worth pursuing."（譲歩+反論の構造で使う）' },
+        40: { nuance: '"amuse" は軽く楽しませる・微笑ませる程度のニュアンス。"entertain" や "delight" より弱い。大きなイベントや強い感動には使いにくい。', etymology: 'フランス語 amuser → a-（〜に）+ muser（ぼんやりする）。もともと「注意をそらす」意味', mistake: '❌ "The concert greatly amused the 10,000 fans." → ✅ "The concert thrilled the fans." / 大規模な感動には amuse は弱すぎる' },
+        43: { nuance: '"animal behaviorist" は動物の行動を科学的に研究する専門家。"zoologist"（動物全般を研究）や "veterinarian"（動物を治療）とは役割が異なる。', etymology: 'animal（ラテン anima = 魂・命）+ behaviorist（behavior = 振る舞い + -ist）', mistake: '❌ "The animal behaviorist treated the sick dog." → ✅ "The veterinarian treated the sick dog." / 治療するのは獣医師' },
+        139: { nuance: '"casing" は機能的な保護外層を指す。弾丸のケーシング・ケーブルの被覆など技術的文脈が多い。"shell"（天然の殻）や "cover"（単なるカバー）より機能性を強調。', etymology: 'ラテン語 capsa（箱）→ case + -ing（材料・被覆を表す接尾辞）', mistake: '❌ "She put the book in a casing." → ✅ "She put the book in a case/cover." / 本の入れ物には casing は不自然' },
+        235: { nuance: '"densely" は「密度が高く」を表す副詞。森・都市・文章など高密度を科学的に表現する。"thickly"（物理的な厚さ）より客観的・学術的なニュアンス。', etymology: 'ラテン語 densus（密な・厚い）→ dense + -ly', mistake: '❌ "He spoke densely."（「難解に話した」の意図でも不自然）→ ✅ "densely populated"（人口密集した）/ "densely forested"（樹木が密集した）が自然な用法' },
+        331: { nuance: '"failure" は「成功の不在」か「失敗の事例」を指す。"mistake"（ミス・誤り）とは別物。"failure to + 動詞"（〜することの失敗）は重要フォーム。', etymology: 'アングロフランス語 faillure → フランス語 faillir（失敗する）← ラテン語 fallere（だます）', mistake: '❌ "He made a failure in the test." → ✅ "He made a mistake in the test." / failure は「make」するものではなく「experience / suffer」するもの' },
+        427: { nuance: '"hurdle" は元々陸上競技のハードル。比喩的に「乗り越えられる障害」を指す。"obstacle" より楽観的なニュアンスがあり、「越えられる」前提が含まれる。', etymology: '古英語 hyrdel（持ち運べる柵・フレーム）', mistake: '❌ "an insurmountable hurdle"（乗り越えられない = hurdleの比喩と矛盾）→ ✅ "a major obstacle/barrier" / 乗り越えられない場合は hurdle を避ける' },
+        523: { nuance: '"lead up to" は段階的な積み重ねが主要な出来事に向かうことを強調する句動詞。瞬間的な因果ではなく、徐々に進む過程に使う。', etymology: 'lead（古英語 lǣdan = 導く）+ up（方向強調）+ to（到達点）', mistake: '❌ "The rain leads up to flooding."（即座の因果）→ ✅ "The arguments led up to the breakup."（徐々に積み重なる過程）' },
+        619: { nuance: '"participate in" は能動的な関与を意味する。"attend"（出席するだけ）より積極的。"join"（グループに入る）とも異なる。必ず "in" が必要。', etymology: 'ラテン語 participare（分かち合う）← pars（部分）+ capere（取る）', mistake: '❌ "He participated the meeting." → ✅ "He participated in the meeting." / "in" は必須・省略不可' },
+        715: { nuance: '"renewable" は自然のプロセスで補充可能なリソースに使う。"sustainable"（広義の持続可能性）や "reusable"（人間が再利用できる）とは別概念。', etymology: 're-（再び）+ new（新しい）+ -able（可能）→ 再び新しくなれる', mistake: '❌ "Plastic is renewable."（プラスチックは自然には補充されない = reusable が正確）→ ✅ Solar, wind, hydroelectric power = renewable energy' },
+        811: { nuance: '"time-consuming" は「必要以上に時間がかかる」というやや否定的なニュアンス。"time-intensive"（時間集中型）より不満・コスト感が強い。', etymology: 'time + consuming（消費する現在分詞）→ 時間を食い尽くす', mistake: '❌ "Learning this beautiful language is a time-consuming hobby."（好意的文脈と矛盾）→ ✅ "a time-consuming process/task/procedure" / 不満・コストを強調したい文脈で使う' },
+        // 主要SR cards
+        5:   { nuance: '"abnormal" は統計的・医学的な「正常範囲外」を指す中立的な技術語。"weird"（変な）や "strange"（奇妙な）より客観的で科学的なニュアンス。', etymology: 'ラテン語 abnormis → ab-（〜から離れた）+ norma（規則・基準）', mistake: '❌ "His weird behavior was abnormal."（重複。abnormal = 変な行動の意を含む）→ ✅ "His behavior was abnormal." のみで十分' },
+        20:  { nuance: '"adequate" は「十分だが優れてはいない」という最低ラインを満たす意味。"sufficient"（必要量を満たす）と近いが、adequate はやや消極的な評価を含む。', etymology: 'ラテン語 adaequatus → ad-（〜に）+ aequus（等しい）→ 等しい量に達している', mistake: '❌ "The hotel was adequate, so I loved it!"（adequate は称賛に使わない）→ ✅ "The hotel was adequate for our needs." / adequate は「まあ十分」止まり' },
+        35:  { nuance: '"amid" は「〜の中で・〜に囲まれて」を意味し、状況・騒音・混乱など抽象的な環境の中にいることを表す。"among"（複数の人/物の間）とは使い方が異なる。', etymology: 'Old English "on middan"（真ん中に）→ amid', mistake: '❌ "He stood amid his friends."（friends = 人→ among が自然）→ ✅ "He stood amid the chaos/noise/controversy." / 抽象的な状況や雰囲気に使う' },
+        50:  { nuance: '"analyze" は体系的に分解・検討することを意味する。"examine"（視覚的に調べる）や "investigate"（調査する）より、要素分解と論理的解釈を強調。', etymology: 'ギリシャ語 analuein → ana-（上に）+ luein（解く）→ 分解して調べる', mistake: '❌ "Analyze the patient\'s eyes."（視覚的検査→ examine が自然）→ ✅ "Analyze the data/results/essay." / 論理・データの分解に使う' },
+        70:  { nuance: '"arise" は「（問題・状況が）生じる・発生する」を意味し、物事が自然に起こることを表す。"rise"（物が物理的に上がる）や "occur"（出来事が起きる）と混同しやすい。', etymology: 'Old English āRīsan → ā-（強調）+ rīsan（立ち上がる）', mistake: '❌ "A new problem raised."（raise = 誰かが持ち上げる・他動詞）→ ✅ "A new problem arose." / arise = 自然に発生する・自動詞' },
+    };
+
     /* ========== CARD DATA ========== */
     const cardsData = [];
     for (let i = 1; i <= TOTAL_CARDS; i++) {
@@ -2355,7 +2382,17 @@
     let html5QrcodeScanner = null;
     let currentSingleCard = null;
 
-    let gachaSession = { isGachaMode: false, selectedCard: null, userAnswer: "" };
+    let gachaSession = { isGachaMode: false, selectedCard: null, userAnswer: "", onDone: null };
+
+    /* ========== SRS (忘却曲線) STATE ========== */
+    let srsData = JSON.parse(localStorage.getItem('srsData') || '{}');
+    const SRS_INTERVALS = [0, 1, 3, 7, 14, 30]; // days per mastery level (0=New)
+    const SRS_LABELS = ['New', 'Day1', 'Day3', 'Week1', 'Week2', 'Month'];
+    const SRS_COLORS = ['#888888', '#4488ff', '#44bb44', '#aaaa00', '#ff8800', '#cc44ff'];
+
+    /* ========== GACHA POINTS STATE ========== */
+    let gachaPoints = parseInt(localStorage.getItem('gachaPoints') || '0', 10);
+    const GACHA_POINTS_PER_FREE = 3;
 
     let dailyGachaStorage = JSON.parse(localStorage.getItem('dailyGachaStorage')) || {
         lastDate: "", count: 1, usedCoupons: [], firstTrainTime: null, trainBonuses: []
@@ -3228,6 +3265,7 @@
             cardEl.className = `card-container ${isUnlocked ? `card-rarity-${rarity}` : 'locked'}`;
             cardEl.onclick = () => tapCard(card, isUnlocked);
 
+            const srsBadge = isUnlocked ? getSRSBadgeHTML(card.id) : '';
             let cardVisualHTML = isUnlocked
                 ? `<div style="position:relative">
                        <img src="${card.img}" alt="No.${card.no}" class="card-img" loading="lazy">
@@ -3235,7 +3273,7 @@
                    </div>`
                 : `<div class="locked-placeholder">？</div>`;
 
-            cardEl.innerHTML = `${cardVisualHTML}<div class="card-info"><div>No.${card.no}</div></div>`;
+            cardEl.innerHTML = `${cardVisualHTML}<div class="card-info"><div>No.${card.no} ${srsBadge}</div></div>`;
             grid.appendChild(cardEl);
         });
     }
@@ -3244,12 +3282,39 @@
     function tapCard(card, isUnlocked) {
         if (!isUnlocked) { playSE('locked'); return; }
         const rarity = getRarity(card.no);
+        const details = CARD_DETAILS[card.no];
+        const srs = getSRSEntry(card.id);
+        const srsLabel = SRS_LABELS[srs.level] || 'New';
+        const srsColor = SRS_COLORS[srs.level] || '#888';
+        const dueDate = srs.nextReview > Date.now()
+            ? `次回: ${new Date(srs.nextReview).toLocaleDateString('ja-JP')}`
+            : (srs.correct + srs.incorrect > 0 ? '復習タイム！' : '未挑戦');
+
+        let detailsHTML = '';
+        if (details) {
+            detailsHTML = `
+                <div style="margin-top:12px;text-align:left;font-size:12px;line-height:1.6;color:#3a2a15;border-top:1px solid rgba(100,70,30,0.2);padding-top:10px;">
+                    <div style="margin-bottom:8px;"><span style="font-weight:bold;color:#6a3800;">🔍 ニュアンス</span><br>${details.nuance}</div>
+                    <div style="margin-bottom:8px;"><span style="font-weight:bold;color:#6a3800;">📖 語源</span><br>${details.etymology}</div>
+                    <div><span style="font-weight:bold;color:#c03030;">⚠️ 誤用注意</span><br>${details.mistake}</div>
+                </div>`;
+        }
+
         const zoomContent = document.getElementById('zoomContent');
         zoomContent.innerHTML = `
             <img src="${card.img}" alt="No.${card.no}">
             <div class="zoom-info">
-                <div class="rarity-badge rarity-badge-${rarity}" style="position:static;display:inline-block;font-size:11px;padding:3px 8px;border-radius:6px;margin-bottom:6px;">${rarity}</div>
-                <div>No.${card.no}</div>
+                <div style="display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:4px;">
+                    <div class="rarity-badge rarity-badge-${rarity}" style="position:static;display:inline-block;font-size:11px;padding:3px 8px;border-radius:6px;">${rarity}</div>
+                    <span style="background:${srsColor};color:#fff;font-size:10px;padding:2px 7px;border-radius:8px;font-family:monospace;">${srsLabel}</span>
+                    <span style="font-size:10px;color:#907060;">${dueDate}</span>
+                </div>
+                <div style="font-size:13px;font-weight:bold;margin-bottom:2px;">No.${card.no}　${card.quiz.answer}</div>
+                <div style="font-size:11px;color:#907060;margin-bottom:4px;">${card.quiz.pos || ''}</div>
+                <div style="font-size:14px;color:#3a2a10;font-weight:bold;margin-bottom:6px;">${card.quiz.meaning}</div>
+                <div style="font-size:11px;color:#6a5a40;font-style:italic;line-height:1.5;">${card.quiz.example || ''}</div>
+                ${detailsHTML}
+                <div style="font-size:10px;color:#aaa;margin-top:8px;">正解 ${srs.correct} / 不正解 ${srs.incorrect}</div>
             </div>
         `;
         document.getElementById('zoom-overlay').style.display = 'flex';
@@ -3326,6 +3391,76 @@
         return totalTabs - 1;             // 全タブ完了 → 最終タブ
     }
 
+    /* ========== SRS (忘却曲線) FUNCTIONS ========== */
+    function getSRSEntry(cardId) {
+        if (!srsData[cardId]) srsData[cardId] = { level: 0, nextReview: 0, correct: 0, incorrect: 0 };
+        return srsData[cardId];
+    }
+    function updateSRS(cardId, isCorrect) {
+        const e = getSRSEntry(cardId);
+        if (isCorrect) {
+            e.correct++;
+            e.level = Math.min(e.level + 1, SRS_INTERVALS.length - 1);
+        } else {
+            e.incorrect++;
+            e.level = Math.max(e.level > 0 ? 1 : 0, e.level - 1);
+        }
+        const days = SRS_INTERVALS[e.level];
+        e.nextReview = days > 0 ? Date.now() + days * 86400000 : Date.now();
+        srsData[cardId] = e;
+        localStorage.setItem('srsData', JSON.stringify(srsData));
+    }
+    function getSRSBadgeHTML(cardId) {
+        const e = getSRSEntry(cardId);
+        const label = SRS_LABELS[e.level] || 'New';
+        const color = SRS_COLORS[e.level] || '#888';
+        return `<span style="background:${color};color:#fff;font-size:9px;padding:2px 5px;border-radius:8px;font-family:monospace;vertical-align:middle;">${label}</span>`;
+    }
+    function sortCardsBySRS(cards) {
+        const now = Date.now();
+        return [...cards].sort((a, b) => {
+            const ea = getSRSEntry(a.id), eb = getSRSEntry(b.id);
+            const dueA = ea.nextReview <= now ? 0 : 1;
+            const dueB = eb.nextReview <= now ? 0 : 1;
+            if (dueA !== dueB) return dueA - dueB;
+            return ea.level - eb.level; // lower level = higher priority
+        });
+    }
+
+    /* ========== GACHA POINTS FUNCTIONS ========== */
+    function updateGachaPointsDisplay() {
+        const el = document.getElementById('gachaPointsDisplay');
+        if (!el) return;
+        if (gachaPoints >= GACHA_POINTS_PER_FREE) {
+            el.textContent = `💡 ガチャポイント ${gachaPoints}pt — ポイントガチャ可能！`;
+            el.style.display = '';
+        } else if (gachaPoints > 0) {
+            el.textContent = `💡 ガチャポイント ${gachaPoints}/${GACHA_POINTS_PER_FREE}pt（不正解ボーナス）`;
+            el.style.display = '';
+        } else {
+            el.textContent = '';
+            el.style.display = 'none';
+        }
+        const btn = document.getElementById('pointGachaBtn');
+        if (btn) btn.style.display = gachaPoints >= GACHA_POINTS_PER_FREE ? '' : 'none';
+    }
+    function spendGachaPoints() {
+        if (gachaPoints < GACHA_POINTS_PER_FREE) return;
+        gachaPoints -= GACHA_POINTS_PER_FREE;
+        localStorage.setItem('gachaPoints', gachaPoints);
+        updateGachaPointsDisplay();
+        // ポイントガチャ: 未取得カード優先、クイズなしで即獲得
+        const tabIdx = getCurrentGachaTabIndex();
+        const pool = cardsData.slice(tabIdx * COLLECTION_PAGE_SIZE, Math.min((tabIdx + 1) * COLLECTION_PAGE_SIZE, cardsData.length));
+        const uncollected = pool.filter(c => !unlockedCards.includes(c.id));
+        const freePool = uncollected.length > 0 ? uncollected : pool;
+        const card = freePool[Math.floor(Math.random() * freePool.length)];
+        gachaSession.isGachaMode = false;
+        gachaSession.selectedCard = card;
+        const rarity = getRarity(card.no);
+        playRarityAnimation(rarity, () => evaluateAndShowGachaResult(true));
+    }
+
     function triggerGachaCore(onDone) {
         if (cardsData.length === 0) { alert("カードデータがありません。"); return; }
 
@@ -3338,17 +3473,15 @@
 
         gachaSession.isGachaMode = true;
         gachaSession.selectedCard = randomCard;
+        gachaSession.onDone = onDone || null;
         // ガチャ回数を消費
         dailyGachaStorage.count = Math.max(0, dailyGachaStorage.count - 1);
         localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
         checkAndResetDailyGacha();
 
-        // レアリティアニメーション → カード表示
-        const rarity = getRarity(randomCard.no);
-        playRarityAnimation(rarity, () => {
-            evaluateAndShowGachaResult(true);
-            if (onDone) onDone();
-        });
+        // 実力ガチャ: クイズに正解してカードゲット！
+        document.getElementById('quizTitle').innerText = '🎰 実力ガチャ — 正解でカードゲット！';
+        showQuiz(randomCard);
     }
 
     /* ========== ALL GACHA (一括) ========== */
@@ -3502,49 +3635,80 @@
     /* ========== QUIZ DISPLAY ========== */
     function showQuiz(card) {
         markAnswerStart();  // 回答時間計測開始
-        // 例文中の答え単語を（　　）に動的置換
-        const correctAnswer = card.quiz.answer;
-        let sentence = card.quiz.example || '___';
-        // 答え単語（大文字小文字問わず）を空欄に差し替え
-        const escaped = correctAnswer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp('\\b' + escaped + '\\b', 'gi');
-        if (regex.test(sentence)) {
-            sentence = sentence.replace(new RegExp('\\b' + escaped + '\\b', 'gi'),
-                '<span class="quiz-blank">（　　）</span>');
-        } else {
-            // 単語境界マッチ失敗時（句動詞など）は単純置換
-            const regex2 = new RegExp(escaped, 'gi');
-            sentence = regex2.test(sentence)
-                ? sentence.replace(new RegExp(escaped, 'gi'), '<span class="quiz-blank">（　　）</span>')
-                : '<span class="quiz-blank">（　　）</span> &mdash; ' + sentence;
-        }
-        document.getElementById('quizSentence').innerHTML = sentence;
 
-        // 選択肢を生成（正解1 + 不正解3 = 計4択）
-        const allAnswers = Object.values(quizList)
-            .map(q => q.answer)
-            .filter(a => a !== correctAnswer);
-        // シャッフルして3つ抽出
-        for (let i = allAnswers.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [allAnswers[i], allAnswers[j]] = [allAnswers[j], allAnswers[i]];
-        }
-        const choices = [correctAnswer, ...allAnswers.slice(0, 3)];
-        // 選択肢をシャッフル
-        for (let i = choices.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [choices[i], choices[j]] = [choices[j], choices[i]];
-        }
+        // SR/UR カードは50%の確率で上級問題形式（英単語 → 日本語意味選択）
+        const rarity = getRarity(card.no);
+        const isAdvanced = (rarity === 'SR' || rarity === 'UR') && Math.random() < 0.5;
 
         const choicesEl = document.getElementById('quizChoices');
         choicesEl.innerHTML = '';
-        choices.forEach(ans => {
-            const btn = document.createElement('button');
-            btn.className = 'quiz-choice-btn';
-            btn.textContent = ans;
-            btn.onclick = () => submitChoice(ans === correctAnswer, card, ans, btn);
-            choicesEl.appendChild(btn);
-        });
+
+        if (isAdvanced) {
+            // 上級問題: 英単語を見て日本語の意味を選ぶ（逆引き問題）
+            const correctMeaning = card.quiz.meaning;
+            const allMeanings = Object.values(quizList)
+                .map(q => q.meaning)
+                .filter(m => m !== correctMeaning);
+            for (let i = allMeanings.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [allMeanings[i], allMeanings[j]] = [allMeanings[j], allMeanings[i]];
+            }
+            const choices = [correctMeaning, ...allMeanings.slice(0, 3)];
+            for (let i = choices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [choices[i], choices[j]] = [choices[j], choices[i]];
+            }
+
+            document.getElementById('quizSentence').innerHTML =
+                `<span style="font-size:22px;font-weight:bold;letter-spacing:0.05em;color:#3a2010;">${card.quiz.answer}</span>` +
+                `<div style="font-size:11px;color:#907060;margin-top:4px;">${card.quiz.pos || ''}</div>` +
+                `<div style="font-size:11px;color:#b08050;margin-top:8px;">この単語の日本語の意味は？</div>`;
+
+            choices.forEach(ans => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-choice-btn';
+                btn.textContent = ans;
+                btn.onclick = () => submitChoice(ans === correctMeaning, card, ans, btn);
+                choicesEl.appendChild(btn);
+            });
+        } else {
+            // 標準問題: 例文の穴埋め（英語を選ぶ）
+            const correctAnswer = card.quiz.answer;
+            let sentence = card.quiz.example || '___';
+            const escaped = correctAnswer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp('\\b' + escaped + '\\b', 'gi');
+            if (regex.test(sentence)) {
+                sentence = sentence.replace(new RegExp('\\b' + escaped + '\\b', 'gi'),
+                    '<span class="quiz-blank">（　　）</span>');
+            } else {
+                const regex2 = new RegExp(escaped, 'gi');
+                sentence = regex2.test(sentence)
+                    ? sentence.replace(new RegExp(escaped, 'gi'), '<span class="quiz-blank">（　　）</span>')
+                    : '<span class="quiz-blank">（　　）</span> &mdash; ' + sentence;
+            }
+            document.getElementById('quizSentence').innerHTML = sentence;
+
+            const allAnswers = Object.values(quizList)
+                .map(q => q.answer)
+                .filter(a => a !== correctAnswer);
+            for (let i = allAnswers.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [allAnswers[i], allAnswers[j]] = [allAnswers[j], allAnswers[i]];
+            }
+            const choices = [correctAnswer, ...allAnswers.slice(0, 3)];
+            for (let i = choices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [choices[i], choices[j]] = [choices[j], choices[i]];
+            }
+
+            choices.forEach(ans => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-choice-btn';
+                btn.textContent = ans;
+                btn.onclick = () => submitChoice(ans === correctAnswer, card, ans, btn);
+                choicesEl.appendChild(btn);
+            });
+        }
 
         document.getElementById('quiz-overlay').style.display = 'flex';
     }
@@ -3606,6 +3770,7 @@
                 logEvent('training', card, isCorrect);
                 trackChallengeAnswer(isCorrect, card.no);
                 updateCombo(isCorrect);
+                updateSRS(card.id, isCorrect);
                 if (isCorrect) {
                     addXP(10, btnEl);
                     // 正解したカードをプールから除外（再出題しない）
@@ -3623,6 +3788,24 @@
                     closeQuiz();
                 } else {
                     showTrainingQuiz();
+                }
+            } else if (gachaSession.isGachaMode) {
+                // 実力ガチャ: 正解 → カード獲得 & アニメーション / 不正解 → ポイント付与
+                logEvent('gacha', card, isCorrect);
+                updateCombo(isCorrect);
+                updateSRS(card.id, isCorrect);
+                if (isCorrect) {
+                    addXP(20, btnEl);
+                    const rarity = getRarity(card.no);
+                    playRarityAnimation(rarity, () => {
+                        evaluateAndShowGachaResult(true);
+                        if (gachaSession.onDone) gachaSession.onDone();
+                    });
+                } else {
+                    gachaPoints = Math.min(gachaPoints + 1, 99);
+                    localStorage.setItem('gachaPoints', gachaPoints);
+                    evaluateAndShowGachaResult(false);
+                    // ポイント表示は次回ガチャタブ表示時に更新
                 }
             } else {
                 logEvent('challenge', card, isCorrect);
@@ -3911,10 +4094,13 @@
 
     function showTrainingQuiz() {
         if (!trainingSession.active || trainingSession.cards.length === 0) return;
-        if (trainingSession.index >= trainingSession.cards.length) trainingSession.index = 0;
+        // SRS優先: 復習期限が来たカードを先に出題
+        trainingSession.cards = sortCardsBySRS(trainingSession.cards);
+        trainingSession.index = 0;
         markAnswerStart();  // 回答時間計測開始
         const card = trainingSession.cards[trainingSession.index];
-        document.getElementById('quizTitle').innerText = '🏋 トレーニング — やめる ↓';
+        const srsLabel = SRS_LABELS[getSRSEntry(card.id).level] || 'New';
+        document.getElementById('quizTitle').innerText = `🏋 トレーニング [${srsLabel}] — やめる ↓`;
         showQuiz(card);
     }
 
@@ -4158,6 +4344,7 @@
     updateDailyGoalDisplay();
     renderCollection();
     checkLoginStreak();
+    updateGachaPointsDisplay();
 
     // タップ音 / ロック音
     document.addEventListener('pointerdown', (e) => {
