@@ -4141,25 +4141,27 @@
 
         const stats = getCardStats(card);
         const zoomContent = document.getElementById('zoomContent');
+        const detailsBtnHTML = details ? `
+            <button onclick="
+                const d=document.getElementById('zoomDetails');
+                const b=this;
+                if(d.style.display==='none'){d.style.display='block';b.textContent='▲ 詳細を閉じる';}
+                else{d.style.display='none';b.textContent='▼ 語源・ニュアンスを見る';}
+            " style="margin-top:10px;width:100%;padding:7px;font-size:12px;background:rgba(100,70,30,0.15);border:1px solid rgba(150,110,50,0.4);border-radius:8px;color:#7a5020;cursor:pointer;font-family:'Noto Serif JP',serif;">▼ 語源・ニュアンスを見る</button>
+            <div id="zoomDetails" style="display:none;margin-top:8px;">${detailsHTML}</div>
+        ` : '';
         zoomContent.innerHTML = `
-            <div style="display:flex;gap:10px;align-items:flex-start;">
-                <div style="flex:0 0 auto;width:48%;max-width:180px;">
-                    <img src="${card.img}" alt="No.${card.no}" style="width:100%;height:auto;border-radius:10px;display:block;">
-                </div>
-                <div style="flex:1;min-width:0;padding-top:2px;">
-                    <div style="font-size:12px;font-weight:bold;color:#3a2a15;margin-bottom:6px;">No.${card.no}　${card.quiz.answer}</div>
-                    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
-                        <span class="rarity-badge rarity-badge-${rarity}" style="position:static;display:inline-block;font-size:10px;padding:2px 6px;border-radius:5px;">${rarity}</span>
-                        <span style="background:${srsColor};color:#fff;font-size:10px;padding:2px 6px;border-radius:6px;font-family:monospace;">${srsLabel}</span>
-                    </div>
-                    <div style="font-size:10px;color:#907060;margin-bottom:8px;">${dueDate}　正解${srs.correct}/不正解${srs.incorrect}</div>
-                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                        <span style="background:rgba(200,60,60,0.15);border:1px solid rgba(220,80,80,0.4);color:#cc5555;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:5px;">⚔️ Power:${stats.atk}</span>
-                        <span style="background:rgba(60,100,200,0.15);border:1px solid rgba(80,120,220,0.4);color:#5588cc;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:5px;">🛡️ Guard:${stats.def}</span>
-                    </div>
-                </div>
+            <img src="${card.img}" alt="No.${card.no}" style="width:100%;max-width:340px;height:auto;border-radius:12px;display:block;margin:0 auto 10px;">
+            <div style="display:flex;justify-content:center;gap:10px;margin-bottom:8px;">
+                <span style="background:rgba(200,60,60,0.15);border:1px solid rgba(220,80,80,0.4);color:#cc5555;font-size:13px;font-weight:bold;padding:4px 14px;border-radius:8px;">⚔️ Power ${stats.atk}</span>
+                <span style="background:rgba(60,100,200,0.15);border:1px solid rgba(80,120,220,0.4);color:#5588cc;font-size:13px;font-weight:bold;padding:4px 14px;border-radius:8px;">🛡️ Guard ${stats.def}</span>
             </div>
-            ${detailsHTML ? `<div style="margin-top:10px;">${detailsHTML}</div>` : ''}
+            <div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
+                <span class="rarity-badge rarity-badge-${rarity}" style="position:static;display:inline-block;font-size:10px;padding:2px 7px;border-radius:5px;">${rarity}</span>
+                <span style="background:${srsColor};color:#fff;font-size:10px;padding:2px 7px;border-radius:6px;font-family:monospace;">${srsLabel}</span>
+                <span style="font-size:10px;color:#907060;padding:2px 4px;">${dueDate}</span>
+            </div>
+            ${detailsBtnHTML}
         `;
         document.getElementById('zoom-overlay').style.display = 'flex';
     }
