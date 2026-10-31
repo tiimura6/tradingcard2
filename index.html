@@ -1929,9 +1929,9 @@
     <button class="action-btn btn-study" id="adventureBattleBtn" onclick="adventureOrBattle()" style="grid-column:span 2;">
         <span class="btn-icon" id="adventureBattleBtnIcon">🗺️</span><span id="adventureBattleBtnLabel">冒険</span>
     </button>
-    <button class="action-btn" id="spGachaBtn" onclick="triggerSpecialGacha()"
-        style="display:none;grid-column:1/-1;background:linear-gradient(150deg,#4a1060,#280840);color:#e8b0ff;border:1px solid rgba(200,120,255,0.5);">
-        <span class="btn-icon">✨</span><span id="spGachaLabel">SPガチャ（未取得優先）</span>
+    <button class="action-btn" id="spGachaBtn" onclick="openSPEnhanceModal()"
+        style="display:none;grid-column:1/-1;background:linear-gradient(150deg,#104060,#082840);color:#a0d8ff;border:1px solid rgba(80,160,255,0.5);">
+        <span class="btn-icon">💎</span><span id="spGachaLabel">SP強化 <span id="spPointBadge" style="background:rgba(80,160,255,0.3);border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px;">0pt</span></span>
     </button>
     <button class="action-btn" id="hofBtn" onclick="showHallOfFameModal()"
         style="grid-column:1/-1;background:linear-gradient(150deg,#4a3010,#2a1800);color:#f0d080;border:1px solid rgba(200,150,30,0.4);">
@@ -1940,6 +1940,20 @@
 </div>
 
 <!-- Gacha Choice Modal -->
+<!-- SP強化モーダル -->
+<div id="sp-enhance-modal" class="modal-overlay" style="display:none;">
+    <div class="custom-box" style="width:92%;max-width:380px;max-height:80vh;display:flex;flex-direction:column;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <h3 style="margin:0;color:#a0d8ff;font-family:'Noto Serif JP',serif;">💎 SP強化</h3>
+            <button onclick="closeSPEnhanceModal()" style="background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:0 4px;">✕</button>
+        </div>
+        <p id="spEnhanceDesc" style="font-size:12px;color:#80a0c0;margin:0 0 10px;text-align:center;"></p>
+        <p style="font-size:11px;color:#607090;margin:0 0 10px;text-align:center;">強化するカードを選択してください（ATK/DEF +10）</p>
+        <div id="spEnhanceCardList" style="overflow-y:auto;flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 2px;"></div>
+        <button onclick="closeSPEnhanceModal()" style="margin-top:12px;background:rgba(40,60,80,0.8);border:1px solid rgba(80,120,160,0.4);border-radius:8px;color:#80a0c0;padding:8px;font-size:13px;cursor:pointer;font-family:'Noto Serif JP',serif;">閉じる</button>
+    </div>
+</div>
+
 <div id="gacha-choice-modal" class="modal-overlay" style="display:none;">
     <div class="custom-box" style="width:88%;max-width:340px;text-align:center;">
         <h3 style="margin:0 0 6px;color:#e8d070;font-family:'Noto Serif JP',serif;">🎰 ガチャ</h3>
@@ -3234,8 +3248,10 @@
     let xpData = JSON.parse(localStorage.getItem('xpData')) || { xp: 0, level: 1, totalXP: 0 };
     if (!xpData.totalXP) xpData.totalXP = 0;  // 旧データ互換
 
-    // SPガチャチケット残枚数
+    // SPポイント残数（カード強化に使用）
     let specialTickets = parseInt(localStorage.getItem('specialTickets') || '0', 10);
+    // カードごとの強化データ {cardId: {atk:N, def:N}}
+    let spEnhanceData = JSON.parse(localStorage.getItem('spEnhanceData') || '{}');
 
     function addXP(amount, originEl) {
         const prevLevel   = xpData.level;
@@ -3273,16 +3289,16 @@
         if (bar) bar.style.width = Math.round((xpData.xp / XP_PER_LEVEL) * 100) + '%';
         // 次のSPチケットまでの残りXPを表示
         const toNext = SP_TICKET_XP - (xpData.totalXP % SP_TICKET_XP);
-        if (label) label.textContent = `${xpData.xp}/${XP_PER_LEVEL} XP ｜ SP次回まで${toNext}`;
+        if (label) label.textContent = `${xpData.xp}/${XP_PER_LEVEL} XP ｜ SP次回まで${toNext}XP`;
     }
 
     function updateSpecialGachaBtn() {
         const btn   = document.getElementById('spGachaBtn');
-        const label = document.getElementById('spGachaLabel');
+        const badge = document.getElementById('spPointBadge');
         if (!btn) return;
         if (specialTickets > 0) {
             btn.style.display = '';
-            if (label) label.textContent = `SPガチャ × ${specialTickets}`;
+            if (badge) badge.textContent = `${specialTickets}pt`;
         } else {
             btn.style.display = 'none';
         }
@@ -3291,37 +3307,70 @@
     function showSPTicketToast(count) {
         const t = document.getElementById('levelupToast');
         if (!t) return;
-        t.textContent = `🎫 SPガチャチケット ×${count} 獲得！`;
+        t.textContent = `💎 SPポイント ×${count} 獲得！カード強化に使おう！`;
         t.classList.add('show');
         setTimeout(() => t.classList.remove('show'), 3000);
         confetti({ particleCount: 80, spread: 70, origin: { y: 0.4 } });
     }
 
-    /* ========== SP GACHA（未取得カード優先） ========== */
-    function triggerSpecialGacha() {
+    /* ========== SP強化モーダル ========== */
+    function openSPEnhanceModal() {
         if (specialTickets <= 0) return;
+        const desc = document.getElementById('spEnhanceDesc');
+        if (desc) desc.textContent = `SPポイント残り: ${specialTickets}pt`;
+        renderSPEnhanceCardList();
+        const modal = document.getElementById('sp-enhance-modal');
+        if (modal) { modal.style.display = 'flex'; modal.classList.add('modal-animate'); }
+    }
 
-        // 解禁タブ内の未取得カードを優先プール、なければ全解禁タブ内から
-        const tabIdx  = getCurrentGachaTabIndex();
-        const poolEnd = Math.min((tabIdx + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
-        const tabCards = cardsData.slice(0, poolEnd);
+    function closeSPEnhanceModal() {
+        const modal = document.getElementById('sp-enhance-modal');
+        if (modal) { modal.classList.remove('modal-animate'); modal.style.display = 'none'; }
+    }
 
-        const uncollected = tabCards.filter(c => !unlockedCards.includes(c.id));
-        const pool = uncollected.length > 0 ? uncollected : tabCards;
+    function renderSPEnhanceCardList() {
+        const list = document.getElementById('spEnhanceCardList');
+        if (!list) return;
+        // 所持カードのみ表示
+        const owned = cardsData.filter(c => unlockedCards.includes(c.id));
+        list.innerHTML = owned.length === 0
+            ? '<div style="grid-column:span 2;text-align:center;color:#607090;padding:20px">カードを取得してください</div>'
+            : owned.map(c => {
+                const enh = spEnhanceData[c.id] || { atk: 0, def: 0 };
+                const baseStats = getCardStats(c, false);
+                const rarity = getRarity(c.no);
+                const rc = RARITY_CONFIG[rarity] || { color: '#888', glow: '#888' };
+                return `<div onclick="applySPEnhance('${c.id}')" style="cursor:pointer;background:rgba(10,30,50,0.7);border:1px solid rgba(80,140,200,0.35);border-radius:10px;padding:8px;text-align:center;transition:all 0.2s;position:relative;"
+                    onmouseover="this.style.borderColor='rgba(100,180,255,0.7)'" onmouseout="this.style.borderColor='rgba(80,140,200,0.35)'">
+                    <div style="font-size:22px;margin-bottom:4px;">${c.emoji || '🃏'}</div>
+                    <div style="font-size:10px;font-weight:bold;color:${rc.color};margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.en}</div>
+                    <div style="font-size:9px;color:#607090;">ATK ${baseStats.atk}${enh.atk > 0 ? `<span style="color:#4af;"> +${enh.atk}</span>` : ''}</div>
+                    <div style="font-size:9px;color:#607090;">DEF ${baseStats.def}${enh.def > 0 ? `<span style="color:#4af;"> +${enh.def}</span>` : ''}</div>
+                    ${enh.atk > 0 || enh.def > 0 ? `<div style="position:absolute;top:4px;right:4px;font-size:9px;background:rgba(0,100,200,0.5);border-radius:6px;padding:1px 4px;color:#a0d8ff;">💎×${enh.atk/10}</div>` : ''}
+                </div>`;
+            }).join('');
+    }
 
-        const card = pool[Math.floor(Math.random() * pool.length)];
-
+    function applySPEnhance(cardId) {
+        if (specialTickets <= 0) { closeSPEnhanceModal(); return; }
+        if (!spEnhanceData[cardId]) spEnhanceData[cardId] = { atk: 0, def: 0 };
+        spEnhanceData[cardId].atk += 10;
+        spEnhanceData[cardId].def += 10;
         specialTickets--;
         localStorage.setItem('specialTickets', specialTickets);
+        localStorage.setItem('spEnhanceData', JSON.stringify(spEnhanceData));
         updateSpecialGachaBtn();
-
-        // クイズなしで直接カード獲得（通常ガチャと同じ演出）
-        gachaSession.isGachaMode = false;
-        gachaSession.selectedCard = card;
-        const rarity = getRarity(card.no);
-        playRarityAnimation(rarity, () => {
-            evaluateAndShowGachaResult(true);
-        });
+        // 演出
+        confetti({ particleCount: 50, spread: 50, origin: { y: 0.5 } });
+        const t = document.getElementById('levelupToast');
+        if (t) { t.textContent = '💎 強化成功！ATK/DEF +10'; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
+        if (specialTickets > 0) {
+            const desc = document.getElementById('spEnhanceDesc');
+            if (desc) desc.textContent = `SPポイント残り: ${specialTickets}pt`;
+            renderSPEnhanceCardList();
+        } else {
+            closeSPEnhanceModal();
+        }
     }
 
     function showLevelUpToast(lv) {
@@ -3608,7 +3657,7 @@
     }
 
     /* ========== ATK/DEF CALCULATION ========== */
-    function getCardStats(card) {
+    function getCardStats(card, withSPBonus) {
         const rarityBase = { N: 40, R: 60, SR: 80, UR: 100 };
         const posBonus   = { v: 15, adj: 10, n: 5, adv: 0 };
         const srs = getSRSEntry(card.id);
@@ -3626,9 +3675,11 @@
         const rarityGrowth = { N: 0.5, R: 1.0, SR: 1.5, UR: 2.5 };
         const rarity = getRarity(card.no);
         const playerBonus = Math.floor((xpData.level - 1) * (rarityGrowth[rarity] || 0.5));
+        // SP強化ボーナス（withSPBonus=falseの時はベースステータスのみ）
+        const sp = (withSPBonus !== false && spEnhanceData && spEnhanceData[card.id]) ? spEnhanceData[card.id] : { atk: 0, def: 0 };
         return {
-            atk: base + pos + seed + levelBonus + playerBonus,
-            def: base + srsBonus + (20 - seed) + levelBonus + playerBonus
+            atk: base + pos + seed + levelBonus + playerBonus + (sp.atk || 0),
+            def: base + srsBonus + (20 - seed) + levelBonus + playerBonus + (sp.def || 0)
         };
     }
 
@@ -4720,7 +4771,7 @@
                 const div = document.createElement('div');
                 div.className = 'battle-stage-item' + (isUnlocked ? '' : ' locked');
                 const rewardLabel = stage.reward.type === 'sp'
-                    ? `✨SPチケット×${stage.reward.amount}`
+                    ? `💎SP+${stage.reward.amount}pt`
                     : `🎰ガチャ+${stage.reward.amount}`;
                 const unlockHint = stage.type === 'mid'
                     ? `${collected}/${half}枚収集`
@@ -5470,7 +5521,7 @@
                 updateSpecialGachaBtn();
             }
             const rewardMsg = stage.reward.type === 'sp'
-                ? `✨ SPチケット×${stage.reward.amount} 獲得！`
+                ? `💎 SPポイント×${stage.reward.amount} 獲得！カード強化に使おう！`
                 : `🎰 ガチャ回数+${stage.reward.amount} 獲得！`;
 
             titleEl.className = 'battle-result-title win';
@@ -5891,6 +5942,14 @@
                     trainingSession.masteredIds.add(card.id);
                     trainingSession.cards = trainingSession.cards.filter(c => c.id !== card.id);
                     trainingSession.index = Math.min(trainingSession.index, trainingSession.cards.length);
+                    // 冒険中：20%の確率でSPポイント+1
+                    if (adventureActive && Math.random() < 0.20) {
+                        specialTickets++;
+                        localStorage.setItem('specialTickets', specialTickets);
+                        updateSpecialGachaBtn();
+                        const t = document.getElementById('levelupToast');
+                        if (t) { t.textContent = '💎 SPポイント +1 獲得！'; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
+                    }
                 } else {
                     trainingSession.incorrect++;
                     trainingSession.index++;
