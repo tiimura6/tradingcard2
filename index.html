@@ -2023,8 +2023,7 @@
         <img id="battleEnemyImg" src="" alt=""
              style="display:none;max-height:240px;max-width:min(300px,80vw);object-fit:contain;
                     filter:drop-shadow(0 6px 24px rgba(0,0,0,0.8));
-                    image-rendering:auto;"
-             onerror="this.style.display='none';this.src='';var sp=document.getElementById('battleEnemySprite');if(sp){sp.style.display='block';}">
+                    image-rendering:auto;">
         <div class="battle-enemy-sprite" id="battleEnemySprite">👾</div>
     </div>
 
@@ -3492,7 +3491,7 @@
     // ボス画像は /boss/ フォルダ内に配置 (例: /boss/slime_general.png)
     // 画像がない場合は emoji にフォールバック
     const MID_BOSS_TEMPLATES = [
-        { name: 'スライム将軍', emoji: '🟢', hpBase: 350,  atkBase: 12,  img: './boss/slime_general.png' },
+        { name: 'スライム将軍', emoji: '🟢', hpBase: 350,  atkBase: 12,  img: './boss/slime_general.webp' },
         { name: 'ゴブリン長',   emoji: '👺', hpBase: 550,  atkBase: 20,  img: './boss/goblin_chief.png' },
         { name: 'オーク隊長',   emoji: '🪓', hpBase: 800,  atkBase: 30,  img: './boss/orc_captain.png' },
         { name: 'ダークナイト', emoji: '🗡️', hpBase: 1100, atkBase: 41,  img: './boss/dark_knight.png' },
@@ -4035,24 +4034,32 @@
 
     // 冒険背景スクロール状態
 
-    // ボスBGMをページ起動時にプリロード（autoplay制限対策）
+    // ボスBGM（プリロードなし：4.2MBをページ起動時にダウンロードしないようpreload='none'）
     const bossBGMPreload = new Audio('./bgm/boss.mp3');
     bossBGMPreload.loop = true;
     bossBGMPreload.volume = 0.35;
-    bossBGMPreload.preload = 'auto';
+    bossBGMPreload.preload = 'none';
     window.bossBGM = bossBGMPreload;
 
-    // タブ復帰時にBGMを再開（ブラウザの音声中断対策）
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible' && bgmOn) {
-            if (battleSession && battleSession.active && window.bossBGM && window.bossBGM.paused) {
-                window.bossBGM.play().catch(() => {});
-            } else if (adventureActive && adventureBGM && adventureBGM.paused) {
-                adventureBGM.play().catch(() => {});
-            } else if (bgmAudio && bgmAudio.paused) {
-                bgmAudio.play().catch(() => {});
-            }
+    // BGM再開ヘルパー（visibilitychange / focus / pageshow で共通使用）
+    function resumeActiveBGM() {
+        if (!bgmOn) return;
+        if (battleSession && battleSession.active && window.bossBGM && window.bossBGM.paused) {
+            window.bossBGM.play().catch(() => {});
+        } else if (adventureActive && adventureBGM && adventureBGM.paused) {
+            adventureBGM.play().catch(() => {});
+        } else if (bgmAudio && bgmAudio.paused) {
+            bgmAudio.play().catch(() => {});
         }
+    }
+
+    // タブ復帰・フォーカス復帰時にBGMを再開（iOS/Android の音声中断対策）
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') resumeActiveBGM();
+    });
+    window.addEventListener('focus', () => resumeActiveBGM());
+    window.addEventListener('pageshow', (e) => {
+        if (e.persisted) resumeActiveBGM(); // bfcache から復帰した場合
     });
 
     function enterAdventureMode() {
@@ -4943,26 +4950,26 @@
         const bossImg = document.getElementById('battleEnemyImg');
         const bossSprite = document.getElementById('battleEnemySprite');
         if (stage.img) {
-            // 既に同じsrcで読み込み済みならそのまま表示（毎ターン再チェック不要）
-            if (bossImg.src && bossImg.src.endsWith(stage.img.replace('./', '/')) && bossImg.complete && bossImg.naturalHeight > 0) {
+            // 同じsrcが既にロード済みならそのまま表示
+            const currentSrc = bossImg.getAttribute('data-loaded-src');
+            if (currentSrc === stage.img && bossImg.complete && bossImg.naturalHeight > 0) {
                 bossImg.style.display = 'block';
                 bossSprite.style.display = 'none';
-            } else if (!bossImg._loading) {
-                bossImg._loading = true;
+            } else if (currentSrc !== stage.img) {
+                // 新しい画像を設定（1度だけ、Date.now()なし）
+                bossImg.setAttribute('data-loaded-src', stage.img);
                 bossSprite.style.display = 'none';
                 bossImg.style.display = 'none';
-                const testImg = new Image();
-                testImg.onload = () => {
-                    bossImg.src = stage.img;
+                bossImg.onload = () => {
                     bossImg.style.display = 'block';
-                    bossImg._loading = false;
+                    bossSprite.style.display = 'none';
                 };
-                testImg.onerror = () => {
+                bossImg.onerror = () => {
+                    bossImg.style.display = 'none';
                     bossSprite.style.display = 'block';
                     bossSprite.textContent = stage.emoji;
-                    bossImg._loading = false;
                 };
-                testImg.src = stage.img + '?v=' + Date.now();
+                bossImg.src = stage.img;
             }
         } else {
             bossImg.style.display = 'none';
