@@ -1321,7 +1321,7 @@
 </div>
 
 <div id="gacha-overlay">
-    <h2 id="gachaResultTitle" style="color:#e8d070;margin-bottom:30px;font-family:'Noto Serif JP',serif;text-shadow:0 0 18px rgba(220,180,50,0.6), 0 0 35px rgba(180,140,30,0.3);">結果発表！</h2>
+    <h2 id="gachaResultTitle" style="color:#e8d070;margin-bottom:30px;font-family:'Noto Serif JP',serif;text-shadow:0 0 18px rgba(220,180,50,0.6), 0 0 35px rgba(180,140,30,0.3);opacity:0;transition:opacity 0.6s ease;">結果発表！</h2>
     <div class="gacha-container" id="gachaContainer"></div>
     <button class="gacha-close-btn" id="gachaCloseBtn" onclick="closeGacha()">結果を確認して戻る</button>
 </div>
@@ -3401,8 +3401,7 @@
         document.getElementById('gacha-overlay').style.display = 'flex';
 
         const rc = RARITY_CONFIG[bestRarity];
-        document.getElementById('gachaResultTitle').innerText =
-            `🎊 ${results.length}回ガチャ完了！ 新規${newCount}枚獲得！`;
+        setGachaTitle(`🎊 ${results.length}回ガチャ完了！ 新規${newCount}枚獲得！`, 1000);
 
         // レア度分布を集計
         const dist = { UR: 0, SR: 0, R: 0, N: 0 };
@@ -3437,6 +3436,14 @@
             fireRarityConfetti(bestRarity);
         }, 400);
         setTimeout(() => { document.getElementById('gachaCloseBtn').style.display = 'block'; }, 1200);
+    }
+
+    function setGachaTitle(text, delay = 0) {
+        const el = document.getElementById('gachaResultTitle');
+        if (!el) return;
+        el.style.opacity = '0';
+        el.innerText = text;
+        setTimeout(() => { el.style.opacity = '1'; }, delay);
     }
 
     /* ========== RARITY ANIMATION ========== */
@@ -3669,13 +3676,12 @@
                     playSE('unlock');
                     const nextStart = tabAfter * COLLECTION_PAGE_SIZE + 1;
                     const nextEnd   = Math.min((tabAfter + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
-                    document.getElementById('gachaResultTitle').innerText =
-                        `🎉 タブ${tabAfter + 1}解禁！ No.${nextStart}〜${nextEnd} のカードが登場！`;
+                    setGachaTitle(`🎉 タブ${tabAfter + 1}解禁！ No.${nextStart}〜${nextEnd} のカードが登場！`, 1000);
                 } else {
-                    document.getElementById('gachaResultTitle').innerText = `${rc.emoji} ${rc.resultTitle}`;
+                    setGachaTitle(`${rc.emoji} ${rc.resultTitle}`, 1000);
                 }
             } else {
-                document.getElementById('gachaResultTitle').innerText = `${rc.emoji} おかわり！（取得済みカード）`;
+                setGachaTitle(`${rc.emoji} おかわり！（取得済みカード）`, 1000);
             }
             jumpToCardTab(card.no);
         } else {
@@ -3683,7 +3689,7 @@
             gachaCardEl.innerHTML = `
                 <div class="gacha-face gacha-back is-missed">✕<br><span style="font-size:14px;margin-top:10px;display:block;">ハズレ</span></div>
             `;
-            document.getElementById('gachaResultTitle').innerText = `判定：不正解（正しい意味は: ${primaryAns}）`;
+            setGachaTitle(`判定：不正解（正しい意味は: ${primaryAns}）`, 800);
         }
         container.appendChild(gachaCardEl);
         localStorage.setItem('unlockedCards', JSON.stringify(unlockedCards));
@@ -3702,11 +3708,14 @@
         const container = document.getElementById('gachaContainer');
         container.innerHTML = '';
         document.getElementById('gachaCloseBtn').style.display = 'none';
+        // タイトルを非表示にリセット
+        const titleEl = document.getElementById('gachaResultTitle');
+        if (titleEl) { titleEl.style.opacity = '0'; titleEl.innerText = ''; }
         document.getElementById('gacha-overlay').style.display = 'flex';
 
         const rarity = getRarity(card.no);
         const rc = RARITY_CONFIG[rarity];
-        document.getElementById('gachaResultTitle').innerText = `${rc.emoji} ${rc.resultTitle}`;
+        setGachaTitle(`${rc.emoji} ${rc.resultTitle}`, 1000);
 
         if (!unlockedCards.includes(card.id)) {
             unlockedCards.push(card.id);
