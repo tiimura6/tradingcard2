@@ -5300,6 +5300,8 @@
             playSE('locked');
             return;
         }
+        // quiz-choice-btnは submitChoice 側で正解/不正解音を鳴らすためここでは無音
+        if (e.target.closest('.quiz-choice-btn')) return;
         playSE('tap');
     }, { passive: true });
 </script>
