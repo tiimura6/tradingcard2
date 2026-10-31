@@ -346,6 +346,18 @@
         }
         .btn-study:hover { background: linear-gradient(150deg, #46347c, #281855); }
 
+        /* ===== 冒険/ボスボタン切り替え ===== */
+        #adventureBattleBtn.boss-mode {
+            background: linear-gradient(150deg, #6b0000, #3a0000) !important;
+            color: #ffcccc !important;
+            border: 1px solid rgba(255, 60, 60, 0.6) !important;
+            animation: boss-pulse 1.4s ease-in-out infinite;
+        }
+        @keyframes boss-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220,30,30,0); }
+            50%       { box-shadow: 0 0 16px 4px rgba(220,30,30,0.55); }
+        }
+
         /* ===== 冒険モード 背景フェード ===== */
         #adventure-fade {
             position: fixed;
@@ -1848,11 +1860,8 @@
     <button class="action-btn btn-coupon" onclick="openCouponModal()">
         <span class="btn-icon">🎫</span>クーポン入力
     </button>
-    <button class="action-btn btn-study" onclick="enterAdventureMode()" style="grid-column:span 2;">
-        <span class="btn-icon">🗺️</span>冒険
-    </button>
-    <button class="action-btn btn-battle" onclick="openBattleStageModal()" style="grid-column:span 2;">
-        <span class="btn-icon">⚔️</span>バトル
+    <button class="action-btn btn-study" id="adventureBattleBtn" onclick="adventureOrBattle()" style="grid-column:span 2;">
+        <span class="btn-icon" id="adventureBattleBtnIcon">🗺️</span><span id="adventureBattleBtnLabel">冒険</span>
     </button>
     <button class="action-btn" id="spGachaBtn" onclick="triggerSpecialGacha()"
         style="display:none;grid-column:1/-1;background:linear-gradient(150deg,#4a1060,#280840);color:#e8b0ff;border:1px solid rgba(200,120,255,0.5);">
@@ -3320,6 +3329,7 @@
                 hofBtn.innerHTML = `<span class="btn-icon">🔒</span>殿堂入りへの道 (残り${total - acquired}枚)`;
             }
         }
+        updateAdventureBattleBtn();
     }
 
     /* ========== CHALLENGE / TRAINING STATE ========== */
@@ -3911,6 +3921,50 @@
         checkAndResetDailyGacha();
         confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
         alert("クーポン適用成功！🎉");
+    }
+
+    /* ========== 冒険/バトル ボタン判定 ========== */
+    // 現在タブで未撃破のボス挑戦条件が整っているか確認し、ボタンを切り替える
+    function updateAdventureBattleBtn() {
+        const btn  = document.getElementById('adventureBattleBtn');
+        const icon = document.getElementById('adventureBattleBtnIcon');
+        const lbl  = document.getElementById('adventureBattleBtnLabel');
+        if (!btn) return;
+        const pendingBoss = getPendingBoss();
+        if (pendingBoss) {
+            btn.classList.add('boss-mode');
+            const typeLabel = pendingBoss.type === 'mid' ? '中間ボス出現！' : '最終ボス出現！';
+            icon.textContent = '⚔️';
+            lbl.textContent  = typeLabel;
+        } else {
+            btn.classList.remove('boss-mode');
+            icon.textContent = '🗺️';
+            lbl.textContent  = '冒険';
+        }
+    }
+
+    // 現在進行中タブで条件を満たしているが未撃破のボスを返す（中間優先）
+    function getPendingBoss() {
+        const stages = getBattleStages();
+        const tabIdx = getCurrentGachaTabIndex();
+        // 中間ボス → 最終ボスの順で確認
+        for (const type of ['mid', 'final']) {
+            const stage = stages.find(s => s.tabIdx === tabIdx && s.type === type);
+            if (stage && isBattleStageUnlocked(stage) && !battleProgress.defeated.includes(stage.id)) {
+                return stage;
+            }
+        }
+        return null;
+    }
+
+    function adventureOrBattle() {
+        const pendingBoss = getPendingBoss();
+        if (pendingBoss) {
+            // ボス必須バトル
+            openBattleFormationModal(pendingBoss);
+        } else {
+            enterAdventureMode();
+        }
     }
 
     /* ========== 冒険モード（背景・BGM切り替え） ========== */
@@ -5188,6 +5242,7 @@
         void resultOverlay.offsetWidth;
         resultOverlay.classList.add('showing');
         battleSession.active = false;
+        updateAdventureBattleBtn();
     }
 
     function closeBattleResult() {
