@@ -5101,6 +5101,13 @@
         overlay.classList.remove('battle-enter');
         void overlay.offsetWidth;
         overlay.classList.add('battle-enter');
+        // 入場アニメ完了後にクラスを外す。残したままだと screen-shake 解除時に
+        // battleOverlayEnter (opacity 0→1) が再生され、画面がフェードし直してしまう
+        overlay.addEventListener('animationend', function onEnterEnd(e) {
+            if (e.target !== overlay || e.animationName !== 'battleOverlayEnter') return;
+            overlay.classList.remove('battle-enter');
+            overlay.removeEventListener('animationend', onEnterEnd);
+        });
 
         const sprite = document.getElementById('battleEnemySprite');
         sprite.classList.remove('appearing','floating');
