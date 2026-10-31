@@ -1977,7 +1977,7 @@
         <h3 style="margin:0 0 8px;color:#524130;" id="quizTitle">🔍 穴埋め問題</h3>
         <div class="quiz-sentence" id="quizSentence"></div>
         <div class="quiz-choices" id="quizChoices"></div>
-        <button class="modal-cancel-btn" onclick="closeQuiz()">やめる</button>
+        <button class="modal-cancel-btn" id="quizQuitBtn" onclick="closeQuiz()">やめる</button>
     </div>
 </div>
 
@@ -5109,33 +5109,46 @@
     function showQuiz(card) {
         markAnswerStart();  // 回答時間計測開始
 
-        // SR/UR カードは50%の確率で上級問題形式（英単語 → 日本語意味選択）
-        const rarity = getRarity(card.no);
-        const isAdvanced = (rarity === 'SR' || rarity === 'UR') && Math.random() < 0.5;
+        // 問題タイプを決定
+        // トレーニング: 3種ランダム（穴埋め40%・意味→英語30%・英語→意味30%）
+        // ガチャ・バトル: 従来通り（穴埋め or 英語→意味）
+        let quizType;
+        if (trainingSession.active) {
+            const r = Math.random();
+            if (r < 0.40) quizType = 'fillBlank';
+            else if (r < 0.70) quizType = 'meaningToEng';
+            else quizType = 'engToMeaning';
+        } else {
+            const rarity = getRarity(card.no);
+            const isAdvanced = (rarity === 'SR' || rarity === 'UR') && Math.random() < 0.5;
+            quizType = isAdvanced ? 'engToMeaning' : 'fillBlank';
+        }
 
         const choicesEl = document.getElementById('quizChoices');
         choicesEl.innerHTML = '';
 
-        if (isAdvanced) {
-            // 上級問題: 英単語を見て日本語の意味を選ぶ（逆引き問題）
-            const correctMeaning = card.quiz.meaning;
-            const allMeanings = Object.values(quizList)
-                .map(q => q.meaning)
-                .filter(m => m !== correctMeaning);
-            for (let i = allMeanings.length - 1; i > 0; i--) {
+        // ---- ヘルパー: 配列シャッフル ----
+        function shuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [allMeanings[i], allMeanings[j]] = [allMeanings[j], allMeanings[i]];
+                [arr[i], arr[j]] = [arr[j], arr[i]];
             }
-            const choices = [correctMeaning, ...allMeanings.slice(0, 3)];
-            for (let i = choices.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [choices[i], choices[j]] = [choices[j], choices[i]];
-            }
+            return arr;
+        }
 
+        if (quizType === 'engToMeaning') {
+            // 【タイプA】英単語→日本語意味選択
+            const correctMeaning = card.quiz.meaning;
+            const allMeanings = shuffle(
+                Object.values(quizList).map(q => q.meaning).filter(m => m !== correctMeaning)
+            );
+            const choices = shuffle([correctMeaning, ...allMeanings.slice(0, 3)]);
+
+            document.getElementById('quizTitle').innerText = '📖 意味を選ぼう';
             document.getElementById('quizSentence').innerHTML =
-                `<span style="font-size:22px;font-weight:bold;letter-spacing:0.05em;color:#3a2010;">${card.quiz.answer}</span>` +
-                `<div style="font-size:11px;color:#907060;margin-top:4px;">${card.quiz.pos || ''}</div>` +
-                `<div style="font-size:11px;color:#b08050;margin-top:8px;">この単語の日本語の意味は？</div>`;
+                `<div style="font-size:13px;color:#b08050;margin-bottom:6px;">この単語の日本語の意味は？</div>` +
+                `<span style="font-size:26px;font-weight:bold;letter-spacing:0.05em;color:#3a2010;">${card.quiz.answer}</span>` +
+                `<div style="font-size:12px;color:#907060;margin-top:5px;">${card.quiz.pos || ''}</div>`;
 
             choices.forEach(ans => {
                 const btn = document.createElement('button');
@@ -5144,7 +5157,44 @@
                 btn.onclick = () => submitChoice(ans === correctMeaning, card, ans, btn);
                 choicesEl.appendChild(btn);
             });
+
+        } else if (quizType === 'meaningToEng') {
+            // 【タイプB】日本語意味→英単語選択（例文なし）
+            const correctAnswer = card.quiz.answer;
+            const cardPos = card.quiz.pos ? card.quiz.pos.replace(/[.\s]/g, '').toLowerCase() : '';
+            let pool;
+            if (cardPos) {
+                const samePos = Object.values(quizList)
+                    .filter(q => q.pos && q.pos.replace(/[.\s]/g, '').toLowerCase() === cardPos && q.answer !== correctAnswer)
+                    .map(q => q.answer);
+                if (samePos.length >= 3) {
+                    pool = samePos;
+                } else {
+                    const others = Object.values(quizList).map(q => q.answer).filter(a => a !== correctAnswer && !samePos.includes(a));
+                    pool = [...samePos, ...others];
+                }
+            } else {
+                pool = Object.values(quizList).map(q => q.answer).filter(a => a !== correctAnswer);
+            }
+            const choices = shuffle([correctAnswer, ...shuffle(pool).slice(0, 3)]);
+
+            document.getElementById('quizTitle').innerText = '🔤 英単語を選ぼう';
+            document.getElementById('quizSentence').innerHTML =
+                `<div style="font-size:13px;color:#b08050;margin-bottom:8px;">次の意味を持つ英単語は？</div>` +
+                `<div style="font-size:24px;font-weight:bold;color:#2a1a08;line-height:1.4;">${card.quiz.meaning}</div>` +
+                (card.quiz.pos ? `<div style="font-size:11px;color:#908070;margin-top:5px;">（品詞: ${card.quiz.pos}）</div>` : '');
+
+            choices.forEach(ans => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-choice-btn';
+                btn.textContent = ans;
+                btn.onclick = () => submitChoice(ans === correctAnswer, card, ans, btn);
+                choicesEl.appendChild(btn);
+            });
+
         } else {
+            // 【タイプC】穴埋め問題（例文→英単語、既存）
+            document.getElementById('quizTitle').innerText = '🔍 穴埋め問題';
             // 標準問題: 例文の穴埋め（英語を選ぶ）
             const correctAnswer = card.quiz.answer;
             let sentence = card.quiz.example || '___';
@@ -5200,15 +5250,7 @@
                 if (filtered.length >= 3) allAnswers = filtered;
             }
 
-            for (let i = allAnswers.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [allAnswers[i], allAnswers[j]] = [allAnswers[j], allAnswers[i]];
-            }
-            const choices = [correctAnswer, ...allAnswers.slice(0, 3)];
-            for (let i = choices.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [choices[i], choices[j]] = [choices[j], choices[i]];
-            }
+            const choices = shuffle([correctAnswer, ...shuffle(allAnswers).slice(0, 3)]);
 
             choices.forEach(ans => {
                 const btn = document.createElement('button');
@@ -5249,12 +5291,16 @@
                 ${trainingSession.masteredIds.size > 0 ? `<div style="margin-top:10px;font-size:12px;color:#5080a0;">🌟 マスター済み: ${trainingSession.masteredIds.size}枚</div>` : ''}
             </div>`;
         choicesEl.innerHTML = '';
+        // 結果画面では「やめる」を隠し、「閉じる」だけ表示
+        const quitBtn = document.getElementById('quizQuitBtn');
+        if (quitBtn) quitBtn.style.display = 'none';
         const closeBtn = document.createElement('button');
         closeBtn.className = 'action-btn';
         closeBtn.style.cssText = 'width:100%;padding:12px;font-size:15px;font-weight:bold;margin-top:8px;';
         closeBtn.textContent = '閉じる';
         closeBtn.onclick = () => {
             document.getElementById('quiz-overlay').style.display = 'none';
+            if (quitBtn) quitBtn.style.display = '';
             trainingSession.active = false;
             stopTrainingTimer();
         };
@@ -5268,6 +5314,8 @@
             showTrainingResult();
             return;
         }
+        const qb = document.getElementById('quizQuitBtn');
+        if (qb) qb.style.display = '';
         document.getElementById('quiz-overlay').style.display = 'none';
         gachaSession.isGachaMode = false;
         trainingSession.active = false; // exit training mode
