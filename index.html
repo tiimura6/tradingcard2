@@ -1800,11 +1800,6 @@
         style="display:none;grid-column:1/-1;background:linear-gradient(150deg,#4a1060,#280840);color:#e8b0ff;border:1px solid rgba(200,120,255,0.5);">
         <span class="btn-icon">✨</span><span id="spGachaLabel">SPガチャ（未取得優先）</span>
     </button>
-    <button class="action-btn" id="pointGachaBtn" onclick="spendGachaPoints()"
-        style="display:none;grid-column:1/-1;background:linear-gradient(150deg,#1a4060,#0a2840);color:#80c8ff;border:1px solid rgba(80,160,255,0.5);">
-        <span class="btn-icon">💡</span>ポイントガチャ（3pt消費）
-    </button>
-    <div id="gachaPointsDisplay" style="display:none;grid-column:1/-1;text-align:center;font-size:11px;color:#80a8c0;padding:2px 0 4px;"></div>
     <button class="action-btn" id="hofBtn" onclick="showHallOfFameModal()"
         style="grid-column:1/-1;background:linear-gradient(150deg,#4a3010,#2a1800);color:#f0d080;border:1px solid rgba(200,150,30,0.4);">
         <span class="btn-icon">🏆</span>殿堂入りへの道
@@ -3070,8 +3065,6 @@
     const SRS_COLORS = ['#888888', '#4488ff', '#44bb44', '#aaaa00', '#ff8800', '#cc44ff'];
 
     /* ========== GACHA POINTS STATE ========== */
-    let gachaPoints = parseInt(localStorage.getItem('gachaPoints') || '0', 10);
-    const GACHA_POINTS_PER_FREE = 3;
 
     let dailyGachaStorage = JSON.parse(localStorage.getItem('dailyGachaStorage')) || {
         lastDate: "", count: 1, usedCoupons: [], firstTrainTime: null, trainBonuses: []
@@ -4402,40 +4395,6 @@
         });
     }
 
-    /* ========== GACHA POINTS FUNCTIONS ========== */
-    function updateGachaPointsDisplay() {
-        const el = document.getElementById('gachaPointsDisplay');
-        if (!el) return;
-        if (gachaPoints >= GACHA_POINTS_PER_FREE) {
-            el.textContent = `💡 ガチャポイント ${gachaPoints}pt — ポイントガチャ可能！`;
-            el.style.display = '';
-        } else if (gachaPoints > 0) {
-            el.textContent = `💡 ガチャポイント ${gachaPoints}/${GACHA_POINTS_PER_FREE}pt（不正解ボーナス）`;
-            el.style.display = '';
-        } else {
-            el.textContent = '';
-            el.style.display = 'none';
-        }
-        const btn = document.getElementById('pointGachaBtn');
-        if (btn) btn.style.display = gachaPoints >= GACHA_POINTS_PER_FREE ? '' : 'none';
-    }
-    function spendGachaPoints() {
-        if (gachaPoints < GACHA_POINTS_PER_FREE) return;
-        gachaPoints -= GACHA_POINTS_PER_FREE;
-        localStorage.setItem('gachaPoints', gachaPoints);
-        updateGachaPointsDisplay();
-        // ポイントガチャ: 未取得カード優先、クイズなしで即獲得
-        const tabIdx = getCurrentGachaTabIndex();
-        const pool = cardsData.slice(tabIdx * COLLECTION_PAGE_SIZE, Math.min((tabIdx + 1) * COLLECTION_PAGE_SIZE, cardsData.length));
-        const uncollected = pool.filter(c => !unlockedCards.includes(c.id));
-        const freePool = uncollected.length > 0 ? uncollected : pool;
-        const card = freePool[Math.floor(Math.random() * freePool.length)];
-        gachaSession.isGachaMode = false;
-        gachaSession.selectedCard = card;
-        const rarity = getRarity(card.no);
-        playRarityAnimation(rarity, () => evaluateAndShowGachaResult(true));
-    }
-
     function triggerGachaCore(onDone) {
         if (cardsData.length === 0) { alert("カードデータがありません。"); return; }
 
@@ -5413,10 +5372,7 @@
                         if (gachaSession.onDone) gachaSession.onDone();
                     });
                 } else {
-                    gachaPoints = Math.min(gachaPoints + 1, 99);
-                    localStorage.setItem('gachaPoints', gachaPoints);
                     evaluateAndShowGachaResult(false);
-                    // ポイント表示は次回ガチャタブ表示時に更新
                 }
             } else {
                 logEvent('challenge', card, isCorrect);
@@ -5943,7 +5899,6 @@
     updateDailyGoalDisplay();
     renderCollection();
     checkLoginStreak();
-    updateGachaPointsDisplay();
 
     // タップ音
     document.addEventListener('pointerdown', (e) => {
