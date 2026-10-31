@@ -615,7 +615,7 @@
             overflow-y: auto;
         }
         .battle-header {
-            width: 100%; max-width: 400px;
+            width: 100%; max-width: min(560px, 98vw);
             display: flex; align-items: center; justify-content: space-between;
             margin-bottom: 8px;
         }
@@ -634,7 +634,7 @@
 
         /* HP バー */
         .battle-hp-row {
-            width: 100%; max-width: 400px;
+            width: 100%; max-width: min(560px, 98vw);
             display: flex; gap: 8px; margin-bottom: 10px;
         }
         .battle-hp-box {
@@ -658,7 +658,7 @@
 
         /* 敵キャラ */
         .battle-enemy-area {
-            width: 100%; max-width: 400px;
+            width: 100%; max-width: 520px;
             display: flex; flex-direction: column; align-items: center;
             margin-bottom: 10px;
         }
@@ -687,7 +687,7 @@
 
         /* 現在のカード */
         .battle-card-area {
-            width: 100%; max-width: 400px;
+            width: 100%; max-width: min(560px, 98vw);
             display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-start;
         }
         .battle-current-card {
@@ -730,7 +730,7 @@
 
         /* バトルログ */
         .battle-log {
-            width: 100%; max-width: 400px;
+            width: 100%; max-width: min(560px, 98vw);
             background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08);
             border-radius: 8px; padding: 8px 10px;
             font-size: 12px; color: #c0a080; line-height: 1.8;
@@ -1598,22 +1598,34 @@
         .formation-slot-card-img { width: 64px; height: auto; border-radius: 7px; border: 1px solid rgba(255,200,100,0.5); margin: 2px 0; }
         .formation-slot-card-name { font-size: 9px; color: #f0d080; line-height: 1.3; }
         .formation-slot-empty { font-size: 26px; opacity: 0.25; margin-top: 20px; }
-        .formation-card-pool { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; max-height: 220px; overflow-y: auto; margin: 10px 0; padding-right: 2px; }
+        .formation-pool-sort-bar { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:6px; }
+        .formation-pool-sort-btn {
+            font-size:10px; padding:3px 7px; border-radius:12px; border:1px solid #554466;
+            background:rgba(255,255,255,0.06); color:#aaa; cursor:pointer; transition:all 0.15s;
+        }
+        .formation-pool-sort-btn.active { background:#6633aa; border-color:#aa66ff; color:#fff; font-weight:bold; }
+        .formation-card-pool { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; max-height: 240px; overflow-y: auto; margin: 4px 0; padding-right: 2px; }
         .formation-pool-card {
-            cursor: pointer; border-radius: 8px; overflow: hidden;
+            cursor: pointer; border-radius: 6px; overflow: hidden;
             border: 2px solid transparent; transition: all 0.15s; text-align: center;
-            background: rgba(255,255,255,0.04);
+            background: rgba(255,255,255,0.04); position: relative;
         }
         .formation-pool-card:hover { border-color: #ffd700; transform: scale(1.04); }
         .formation-pool-card.used { opacity: 0.35; pointer-events: none; }
-        .formation-pool-card img { width: 100%; display: block; border-radius: 6px 6px 0 0; }
-        .formation-pool-card-info { padding: 2px 3px 4px; }
-        .formation-pool-card-name { font-size: 8px; color: #c0a060; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .formation-pool-card-stats { font-size: 8px; color: #88bbff; margin-top: 1px; }
+        .formation-pool-card img { width: 100%; display: block; border-radius: 5px; }
+        .formation-pool-card-overlay {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: linear-gradient(transparent 0%, rgba(0,0,0,0.82) 30%);
+            padding: 8px 2px 2px; pointer-events: none;
+        }
+        .formation-pool-card-name { font-size: 7px; color: #f0d080; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+        .formation-pool-card-rarity { font-size: 7px; font-weight: bold; line-height: 1.1; }
+        .formation-pool-card-stats { font-size: 7px; color: #88ccff; line-height: 1.2; }
+        .formation-pool-card-skill { font-size: 6px; color: #ddaaff; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* ターンインジケーター */
         .battle-turn-banner {
-            width: 100%; max-width: 400px; text-align: center;
+            width: 100%; max-width: min(560px, 98vw); text-align: center;
             font-size: 12px; font-weight: bold; padding: 4px 10px;
             border-radius: 20px; margin-bottom: 8px;
             transition: all 0.3s;
@@ -1623,8 +1635,8 @@
 
         /* 部隊ユニット表示 */
         .battle-units-row {
-            width: 100%; max-width: 400px;
-            display: grid; grid-template-columns: repeat(3,1fr); gap: 6px;
+            width: 100%; max-width: min(560px, 98vw);
+            display: grid; grid-template-columns: repeat(3,1fr); gap: 8px;
             margin-bottom: 10px;
         }
         .battle-unit-card {
@@ -1646,7 +1658,7 @@
 
         /* アクションボタン */
         .battle-action-area {
-            width: 100%; max-width: 400px; display: grid;
+            width: 100%; max-width: min(560px, 98vw); display: grid;
             grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px;
         }
         .battle-action-btn {
@@ -1907,7 +1919,7 @@
 <!-- Battle Stage Select Modal -->
 <!-- Battle Formation Modal -->
 <div id="battle-formation-modal" class="modal-overlay" style="display:none;">
-    <div class="custom-box" style="width:96%;max-width:560px;padding:18px 16px;background:#110820;">
+    <div class="custom-box" style="width:98%;max-width:680px;padding:18px 16px;background:#110820;">
         <div style="font-family:'Noto Serif JP',serif;font-size:17px;font-weight:bold;color:#f0d080;text-align:center;margin-bottom:4px;">⚔️ 部隊編成</div>
         <div style="font-size:11px;color:#a08060;text-align:center;margin-bottom:12px;" id="formationEnemyLabel"></div>
         <!-- ポジションスロット -->
@@ -1931,7 +1943,14 @@
                 <div id="fslot-rear-content" style="display:none"></div>
             </div>
         </div>
-        <div style="font-size:11px;color:#a08060;margin-bottom:6px;">▼ カードを選んでポジションに配置</div>
+        <div style="font-size:11px;color:#a08060;margin-bottom:4px;">▼ カードを選んでポジションに配置</div>
+        <div class="formation-pool-sort-bar" id="formationSortBar">
+            <span style="font-size:10px;color:#886699;align-self:center;">並替:</span>
+            <button class="formation-pool-sort-btn active" onclick="setFormationSort('rarity')">レアリティ</button>
+            <button class="formation-pool-sort-btn" onclick="setFormationSort('power')">Power ↓</button>
+            <button class="formation-pool-sort-btn" onclick="setFormationSort('guard')">Guard ↓</button>
+            <button class="formation-pool-sort-btn" onclick="setFormationSort('skill')">スキル</button>
+        </div>
         <div class="formation-card-pool" id="formationCardPool"></div>
         <div id="formationSelectedSlotLabel" style="font-size:11px;color:#88aaff;min-height:18px;margin-bottom:8px;"></div>
         <div style="display:flex;gap:8px;margin-top:4px;">
@@ -1988,8 +2007,8 @@
     <div class="battle-enemy-area">
         <!-- イラスト表示（画像あれば表示、なければ emoji フォールバック） -->
         <img id="battleEnemyImg" src="" alt=""
-             style="display:none;max-height:160px;max-width:220px;object-fit:contain;
-                    filter:drop-shadow(0 4px 18px rgba(0,0,0,0.7));
+             style="display:none;max-height:240px;max-width:min(300px,80vw);object-fit:contain;
+                    filter:drop-shadow(0 6px 24px rgba(0,0,0,0.8));
                     image-rendering:auto;"
              onerror="this.style.display='none';document.getElementById('battleEnemySprite').style.display='block';">
         <div class="battle-enemy-sprite" id="battleEnemySprite">👾</div>
@@ -3446,6 +3465,9 @@
         SSR: { name: '究極奥義',  icon: '💥', desc: 'Power×3',       type: 'ultimate', power: 3   },
     };
 
+    // 編成プールソート状態
+    let formationPoolSort = 'rarity';
+
     // 編成作業中の状態
     let formationState = {
         stage: null,
@@ -4731,35 +4753,57 @@
         });
     }
 
+    function setFormationSort(key) {
+        formationPoolSort = key;
+        document.querySelectorAll('.formation-pool-sort-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.textContent.trim().startsWith(
+                key === 'rarity' ? 'レア' : key === 'power' ? 'Power' : key === 'guard' ? 'Guard' : 'スキル'
+            ));
+        });
+        renderFormationPool();
+    }
+
     function renderFormationPool() {
         const pool = document.getElementById('formationCardPool');
         pool.innerHTML = '';
         const rarityRank = { SSR: 4, SR: 3, R: 2, N: 1 };
+        const tabScale = battleSession.tabScale || 1;
+        const midBonus = POSITION_BONUS['mid'];
+
         const myCards = unlockedCards
             .map(id => cardsData.find(c => c.id === id))
             .filter(Boolean)
-            .sort((a, b) => (rarityRank[getRarity(b.no)] || 0) - (rarityRank[getRarity(a.no)] || 0));
+            .map(card => {
+                const stats = getCardStats(card);
+                const rarity = getRarity(card.no);
+                const skill = UNIT_SKILLS[rarity] || UNIT_SKILLS['N'];
+                const power = Math.round(stats.atk * midBonus.atkMult * tabScale);
+                const guard = Math.round(stats.def * midBonus.hpMult * 3 * tabScale);
+                return { card, rarity, skill, power, guard };
+            })
+            .sort((a, b) => {
+                if (formationPoolSort === 'power')  return b.power - a.power;
+                if (formationPoolSort === 'guard')  return b.guard - a.guard;
+                if (formationPoolSort === 'skill')  return a.skill.name.localeCompare(b.skill.name);
+                return (rarityRank[b.rarity] || 0) - (rarityRank[a.rarity] || 0);
+            });
+
         if (myCards.length === 0) {
             pool.innerHTML = '<div style="color:#888;padding:8px">カードがありません</div>';
             return;
         }
-        myCards.forEach(card => {
+        const rarityColors = { SSR: '#ff8800', SR: '#cc88ff', R: '#4499ff', N: '#888' };
+        myCards.forEach(({ card, rarity, skill, power, guard }) => {
             const used = formationState.usedCardIds.has(card.id);
-            const rarity = getRarity(card.no);
-            const stats = getCardStats(card);
-            const midBonus = POSITION_BONUS['mid'];
-            const tabScale = battleSession.tabScale || 1;
-            const power = Math.round(stats.atk * midBonus.atkMult * tabScale);
-            const guard = Math.round(stats.def * midBonus.hpMult * 3 * tabScale);
-            const rarityColors = { SSR: '#ff6600', SR: '#cc88ff', R: '#4488ff', N: '#888' };
             const div = document.createElement('div');
             div.className = 'formation-pool-card' + (used ? ' used' : '');
             div.innerHTML = `
                 <img src="${card.img}" onerror="this.style.display='none'">
-                <div class="formation-pool-card-info">
-                    <div class="formation-pool-card-name">${card.quiz.answer.slice(0,8)}</div>
-                    <div style="font-size:8px;color:${rarityColors[rarity]||'#888'};font-weight:bold">${rarity}</div>
-                    <div class="formation-pool-card-stats">P:${power}<br>G:${guard}</div>
+                <div class="formation-pool-card-overlay">
+                    <div class="formation-pool-card-name">${(card.quiz.answer||'').slice(0,8)}</div>
+                    <div class="formation-pool-card-rarity" style="color:${rarityColors[rarity]||'#888'}">${rarity}</div>
+                    <div class="formation-pool-card-stats">P:${power} G:${guard}</div>
+                    <div class="formation-pool-card-skill">${skill.icon}${skill.name}</div>
                 </div>`;
             if (!used) div.onclick = () => addCardToFormation(card);
             pool.appendChild(div);
@@ -4868,13 +4912,12 @@
             if (bgmAudio) bgmAudio.pause();
             if (bgmCtx && bgmCtx.state !== 'suspended') bgmCtx.suspend();
             if (adventureBGM) adventureBGM.pause();
-            if (!window.bossBGM) {
-                window.bossBGM = new Audio('./bgm/boss.mp3');
-                window.bossBGM.loop = true;
-                window.bossBGM.volume = 0.35;
-            }
-            window.bossBGM.currentTime = 0;
-            window.bossBGM.play().catch(() => {});
+            // 毎回新しいAudioを生成して確実に再生（キャッシュが壊れることがあるため）
+            if (window.bossBGM) { window.bossBGM.pause(); window.bossBGM.src = ''; }
+            window.bossBGM = new Audio('./bgm/boss.mp3');
+            window.bossBGM.loop = true;
+            window.bossBGM.volume = 0.35;
+            window.bossBGM.play().catch(e => console.warn('bossBGM play failed:', e));
         }
     }
 
