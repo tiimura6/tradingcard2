@@ -386,6 +386,10 @@
         /* モーダルは冒険中でも表示できるようにする */
         body.adventure-mode #main-page .modal-overlay,
         body.adventure-mode #main-page .modal-overlay * { visibility: visible; pointer-events: auto; }
+        /* トースト・通知は冒険モードでも表示 */
+        body.adventure-mode #comboBonusNotice,
+        body.adventure-mode #challengeToast,
+        body.adventure-mode #levelupToast { visibility: visible; pointer-events: auto; }
         body.adventure-mode #bg-layer {
             background-image: url('./bgm/adventure-bg.jpg') !important;
             background-size: cover !important;
@@ -3543,14 +3547,60 @@
         rear:  { atkMult: 0.7, hpMult: 1.3,  label: '後衛', cls: 'rear'  },
     };
 
-    // ユニットスキル (レアリティ別)
-    const UNIT_SKILLS = {
-        N:   { name: '応急処置',  icon: '💊', desc: '回復 +15%HP',  type: 'heal',    power: 0.15 },
-        C:   { name: '連続攻撃',  icon: '⚡', desc: '2回攻撃',      type: 'double',  power: 1    },
-        R:   { name: '貫通攻撃',  icon: '🏹', desc: 'Power×1.5',     type: 'pierce',  power: 1.5  },
-        SR:  { name: '全体強化',  icon: '✨', desc: '次ターンPower×2',type: 'buff',    power: 2    },
-        SSR: { name: '究極奥義',  icon: '💥', desc: 'Power×3',       type: 'ultimate', power: 3   },
+    // ユニットスキル (品詞別 × レアリティ強化)
+    // posを正規化して判定する補助
+    function normPos(pos) {
+        if (!pos) return 'n';
+        const p = pos.replace(/[.\s]/g, '').toLowerCase();
+        if (p === 'v' || p.startsWith('v') || p === 'phrv') return 'v';
+        if (p === 'adj' || p.startsWith('adj')) return 'adj';
+        if (p === 'adv' || p.startsWith('adv')) return 'adv';
+        return 'n'; // n / phr / conj / prep / etc → 名詞系扱い
+    }
+
+    // 品詞別スキル定義（typeはシナジー判定にも使用）
+    const POS_SKILLS = {
+        // 動詞: 行動的・連撃系
+        v: {
+            base:  { name: '行動力',   icon: '⚔️',  desc: 'ATK×1.4 貫通攻撃',    type: 'strike',  power: 1.4 },
+            high:  { name: '連鎖突撃', icon: '🗡️', desc: '2連続ATK×1.2攻撃',    type: 'strike',  power: 1.2, hits: 2 },
+        },
+        // 形容詞: バフ・強化系
+        adj: {
+            base:  { name: '形容の輝き', icon: '✨', desc: '次ターン全員ATK×1.5',  type: 'enhance', power: 1.5 },
+            high:  { name: '絶対優勢',   icon: '🌟', desc: '次ターン全員ATK×2.0',  type: 'enhance', power: 2.0 },
+        },
+        // 名詞: 防御・回復系
+        n: {
+            base:  { name: '堅固な存在', icon: '🛡️', desc: 'HP回復+20%・被ダメ-20%', type: 'fortify', power: 0.20 },
+            high:  { name: '不動の柱',   icon: '🏰', desc: 'HP回復+35%・被ダメ-30%', type: 'fortify', power: 0.35 },
+        },
+        // 副詞: 速攻・先制系
+        adv: {
+            base:  { name: '加速',     icon: '⚡', desc: '先制+ATK×1.3 即時攻撃', type: 'swift',   power: 1.3 },
+            high:  { name: '超加速',   icon: '💨', desc: '先制+ATK×1.8 即時2連',  type: 'swift',   power: 1.8 },
+        },
     };
+
+    // カードのスキルを取得（品詞 + レアリティ）
+    function getWordSkill(card) {
+        const pos = normPos(card && card.quiz && card.quiz.pos);
+        const rarity = getRarity(card ? card.no : 1);
+        const posSkill = POS_SKILLS[pos] || POS_SKILLS['n'];
+        const isHigh = (rarity === 'SR' || rarity === 'SSR' || rarity === 'UR');
+        return isHigh ? posSkill.high : posSkill.base;
+    }
+
+    // シナジーボーナス計算（同じtypeが2枚以上で発動）
+    function calcSynergyBonus(units) {
+        const types = units.map(u => u.skill && u.skill.type).filter(Boolean);
+        const counts = {};
+        types.forEach(t => { counts[t] = (counts[t] || 0) + 1; });
+        const maxCount = Math.max(...Object.values(counts));
+        if (maxCount === 3) return { mult: 1.6, label: '🔥 トリプルシナジー×1.6！', count: 3 };
+        if (maxCount === 2) return { mult: 1.3, label: '✨ ダブルシナジー×1.3！', count: 2 };
+        return { mult: 1.0, label: '', count: 1 };
+    }
 
     // 編成プールソート状態
     let formationPoolSort = 'rarity';
@@ -4857,8 +4907,7 @@
             slot.className = 'formation-slot' + (isActive ? ' active' : '') + (card ? ' filled' : '');
             if (card) {
                 const stats = getCardStats(card);
-                const cardRarity = getRarity(card.no);
-                const skill = UNIT_SKILLS[cardRarity] || UNIT_SKILLS['N'];
+                const skill = getWordSkill(card);
                 const power = Math.round(stats.atk * bonus.atkMult * tabScale);
                 const guard = Math.round(stats.def * bonus.hpMult * 3 * tabScale);
                 slot.innerHTML = `
@@ -4903,7 +4952,7 @@
             .map(card => {
                 const stats = getCardStats(card);
                 const rarity = getRarity(card.no);
-                const skill = UNIT_SKILLS[rarity] || UNIT_SKILLS['N'];
+                const skill = getWordSkill(card);
                 const power = Math.round(stats.atk * midBonus.atkMult * tabScale);
                 const guard = Math.round(stats.def * midBonus.hpMult * 3 * tabScale);
                 return { card, rarity, skill, power, guard };
@@ -4978,6 +5027,21 @@
         const allFilled = Object.values(formationState.slots).every(s => s !== null);
         if (!allFilled) { alert('前衛・中衛・後衛にカードを配置してください'); return; }
         closeFormationModal();
+        // ボスBGMをユーザー操作中に即時再生開始（iOS autoplay制限対策：fadeScreen内のsetTimeoutでは遅延しすぎる）
+        if (bgmOn) {
+            if (bgmAudio) bgmAudio.pause();
+            if (bgmCtx && bgmCtx.state !== 'suspended') bgmCtx.suspend();
+            if (adventureBGM) adventureBGM.pause();
+            window.bossBGM.pause();
+            window.bossBGM.currentTime = 0;
+            window.bossBGM.play().catch(e => {
+                console.warn('bossBGM early play failed:', e);
+                const fresh = new Audio('./bgm/boss.mp3');
+                fresh.loop = true; fresh.volume = 0.35;
+                window.bossBGM = fresh;
+                fresh.play().catch(e2 => console.warn('bossBGM fresh play failed:', e2));
+            });
+        }
         fadeScreen(function() { startBattle(formationState.stage); });
     }
 
@@ -4990,13 +5054,19 @@
             const card = formationState.slots[pos];
             const stats = getCardStats(card);
             const bonus = POSITION_BONUS[pos];
-            const skill = UNIT_SKILLS[getRarity(card.no)] || UNIT_SKILLS['N'];
+            const skill = getWordSkill(card);
             const maxHp = Math.round(stats.def * bonus.hpMult * 3 * tabScale);
             return { card, pos, bonus,
                      atk: Math.round(stats.atk * bonus.atkMult * tabScale),
                      maxHp, hp: maxHp, skill,
                      buffActive: false };
         });
+        // シナジーボーナス計算（同品詞で強化）
+        const synergy = calcSynergyBonus(units);
+        if (synergy.mult > 1) {
+            units.forEach(u => { u.atk = Math.round(u.atk * synergy.mult); });
+        }
+        battleSession._synergy = synergy;
 
         // プレイヤーHP = カード合算 + レベルボーナス (Lv上昇で耐久力アップ)
         const cardMaxHP = units.reduce((s, u) => s + u.maxHp, 0);
@@ -5034,25 +5104,16 @@
 
         renderBattleUI();
         addBattleLog(`⚔️ ${stage.emoji} ${stage.name}とのバトル開始！`);
+        if (synergy.mult > 1) {
+            addBattleLog(synergy.label);
+        }
 
         // ボスバトル背景・BGM開始
         document.body.classList.add('battle-mode');
-        if (bgmOn) {
-            if (bgmAudio) bgmAudio.pause();
-            if (bgmCtx && bgmCtx.state !== 'suspended') bgmCtx.suspend();
-            if (adventureBGM) adventureBGM.pause();
-            // 毎回新しいAudioを生成して確実に再生（キャッシュが壊れることがあるため）
-            // プリロード済みのbossBGMを再利用（autoplay制限対策）
-            window.bossBGM.pause();
-            window.bossBGM.currentTime = 0;
-            window.bossBGM.play().catch(e => {
-                // フォールバック：新規生成
-                console.warn('bossBGM preload play failed, retrying fresh:', e);
-                const fresh = new Audio('./bgm/boss.mp3');
-                fresh.loop = true; fresh.volume = 0.35;
-                window.bossBGM = fresh;
-                fresh.play().catch(e2 => console.warn('bossBGM fresh play failed:', e2));
-            });
+        // BGMはconfirmFormationAndStart()でユーザー操作中に既に再生開始済み
+        // ここではbgmOnがtrueでもbossBGMが何らかの理由で停止していた場合のみ再生
+        if (bgmOn && window.bossBGM && window.bossBGM.paused) {
+            window.bossBGM.play().catch(() => {});
         }
     }
 
@@ -5124,24 +5185,43 @@
     function renderBattleUnits() {
         const row = document.getElementById('battleUnitsRow');
         if (!row) return;
-        row.innerHTML = '';
-        battleSession.units.forEach((u, idx) => {
-            const hpPct = Math.max(0, Math.min(100, (u.hp / u.maxHp) * 100));
-            const isActive = idx === battleSession.currentUnitIdx;
-            const defeated = u.hp <= 0;
-            const div = document.createElement('div');
-            div.className = 'battle-unit-card' + (isActive ? ' active-unit' : '') + (defeated ? ' defeated' : '');
-            div.innerHTML = `
-                <div class="battle-unit-pos-label ${u.pos}">${u.bonus.label}</div>
-                <div class="battle-unit-rarity ${u.card.rarity}">${u.card.rarity}</div>
-                <img src="${u.card.img}" onerror="this.style.display='none'" style="width:100%;border-radius:6px;display:block;margin-bottom:3px;">
-                <div class="battle-unit-word">${(u.card.quiz.answer||'').slice(0,10)}</div>
-                <div class="battle-unit-pg">P:${u.atk} G:${u.maxHp}</div>
-                <div class="battle-unit-hp-bar"><div class="battle-unit-hp-fill${hpPct<=30?' low':''}" style="width:${hpPct}%"></div></div>
-                <div class="battle-unit-hp-num">${u.hp}/${u.maxHp}</div>
-                <div class="battle-unit-skill-label">${u.skill.icon}${u.skill.name}</div>`;
-            row.appendChild(div);
-        });
+
+        const existing = row.querySelectorAll('.battle-unit-card');
+        if (existing.length !== battleSession.units.length) {
+            // 初回 or 枚数変更時のみ全再構築
+            row.innerHTML = '';
+            battleSession.units.forEach((u, idx) => {
+                const hpPct = Math.max(0, Math.min(100, (u.hp / u.maxHp) * 100));
+                const isActive = idx === battleSession.currentUnitIdx;
+                const defeated = u.hp <= 0;
+                const div = document.createElement('div');
+                div.className = 'battle-unit-card' + (isActive ? ' active-unit' : '') + (defeated ? ' defeated' : '');
+                div.innerHTML = `
+                    <div class="battle-unit-pos-label ${u.pos}">${u.bonus.label}</div>
+                    <div class="battle-unit-rarity ${u.card.rarity}">${u.card.rarity}</div>
+                    <img src="${u.card.img}" onerror="this.style.display='none'" style="width:100%;border-radius:6px;display:block;margin-bottom:3px;">
+                    <div class="battle-unit-word">${(u.card.quiz.answer||'').slice(0,10)}</div>
+                    <div class="battle-unit-pg">P:${u.atk} G:${u.maxHp}</div>
+                    <div class="battle-unit-hp-bar"><div class="battle-unit-hp-fill${hpPct<=30?' low':''}" style="width:${hpPct}%"></div></div>
+                    <div class="battle-unit-hp-num">${u.hp}/${u.maxHp}</div>
+                    <div class="battle-unit-skill-label">${u.skill.icon}${u.skill.name}</div>`;
+                row.appendChild(div);
+            });
+        } else {
+            // 既存カードをin-place更新（innerHTML消去によるちらつき防止）
+            battleSession.units.forEach((u, idx) => {
+                const div = existing[idx];
+                if (!div) return;
+                const hpPct = Math.max(0, Math.min(100, (u.hp / u.maxHp) * 100));
+                const isActive = idx === battleSession.currentUnitIdx;
+                const defeated = u.hp <= 0;
+                div.className = 'battle-unit-card' + (isActive ? ' active-unit' : '') + (defeated ? ' defeated' : '');
+                const fill = div.querySelector('.battle-unit-hp-fill');
+                if (fill) { fill.style.width = hpPct + '%'; fill.className = 'battle-unit-hp-fill' + (hpPct <= 30 ? ' low' : ''); }
+                const hpNum = div.querySelector('.battle-unit-hp-num');
+                if (hpNum) hpNum.textContent = `${u.hp}/${u.maxHp}`;
+            });
+        }
 
         // 総合P/G表示を更新
         const totalP = battleSession.units.reduce((s, u) => s + u.atk, 0);
@@ -5324,6 +5404,13 @@
                 dmg = Math.round(dmg * 0.6);
                 battleSession.defendActive = false;
             }
+            if (battleSession._fortifyActive) {
+                // fortifyの名詞スキル: 被ダメージ軽減（powerは回復量と共用、軽減は固定-20%or-30%）
+                const fortifyUnit = battleSession.units.find(u => u.skill && u.skill.type === 'fortify');
+                const reduction = fortifyUnit ? fortifyUnit.skill.power : 0.20;
+                dmg = Math.round(dmg * (1 - reduction));
+                battleSession._fortifyActive = false;
+            }
             battleSession.playerHP = Math.max(0, battleSession.playerHP - dmg);
             addBattleLog(`${stage.emoji} ${stage.name}の攻撃！ ${dmg} ダメージ`);
 
@@ -5370,7 +5457,12 @@
 
         if (isCorrect) {
             let dmg = unit.atk;
-            if (battleSession.buffActive) { dmg = Math.round(dmg * 2); battleSession.buffActive = false; }
+            if (battleSession.buffActive) {
+                const mult = battleSession._enhancePower || 2;
+                dmg = Math.round(dmg * mult);
+                battleSession.buffActive = false;
+                battleSession._enhancePower = null;
+            }
             battleSession.enemyHP = Math.max(0, battleSession.enemyHP - dmg);
             addXP(15, null);
             addBattleLog(`✅ 正解！${card.quiz ? card.quiz.answer : card.word} → ${stage.emoji}に ${dmg} ダメージ！`);
@@ -5417,16 +5509,29 @@
                 }
                 showDamageFloat(dmg, false, '#88aaff');
             });
+            // 不正解時は即時被ダメ済みのためターンカウント進め、次のプレイヤーターンへ
+            setTimeout(() => {
+                if (battleSession.playerHP <= 0) {
+                    endBattle();
+                } else {
+                    battleSession.turnCount++;
+                    battleSession.currentUnitIdx = (battleSession.currentUnitIdx + 1) % battleSession.units.length;
+                    battleSession.turn = 'player';
+                    renderBattleUI();
+                }
+            }, 900);
         }
 
-        setTimeout(() => {
-            if (battleSession.enemyHP <= 0 || battleSession.playerHP <= 0) {
-                endBattle();
-            } else {
-                battleSession.turn = 'enemy';
-                battleEnemyTurn();
-            }
-        }, 900);
+        if (isCorrect) {
+            setTimeout(() => {
+                if (battleSession.enemyHP <= 0 || battleSession.playerHP <= 0) {
+                    endBattle();
+                } else {
+                    battleSession.turn = 'enemy';
+                    battleEnemyTurn();
+                }
+            }, 900);
+        }
     }
 
     function processGrammarAnswer(isCorrect) {
@@ -5436,13 +5541,49 @@
 
         if (isCorrect) {
             addBattleLog(`✅ 文法正解！${skill.icon}${skill.name} 発動！`);
-            if (skill.type === 'heal') {
+            // ---- 動詞スキル: strike ----
+            if (skill.type === 'strike') {
+                if (skill.hits && skill.hits >= 2) {
+                    const dmg1 = Math.round(unit.atk * skill.power);
+                    const dmg2 = Math.round(unit.atk * skill.power);
+                    battleSession.enemyHP = Math.max(0, battleSession.enemyHP - dmg1 - dmg2);
+                    addBattleLog(`🗡️ 連鎖突撃！${dmg1}+${dmg2}ダメージ！`);
+                    showDamageFloat(dmg1+dmg2, true, '#ff4444');
+                } else {
+                    const dmg = Math.round(unit.atk * skill.power);
+                    battleSession.enemyHP = Math.max(0, battleSession.enemyHP - dmg);
+                    addBattleLog(`⚔️ 行動力！貫通${dmg}ダメージ！`);
+                    showDamageFloat(dmg, true, '#ff6622');
+                }
+                battleFlash('atk-flash');
+            // ---- 形容詞スキル: enhance ----
+            } else if (skill.type === 'enhance') {
+                battleSession.buffActive = true;
+                battleSession._enhancePower = skill.power;
+                addBattleLog(`✨ ${skill.name}！次ターン全員ATK×${skill.power}！`);
+            // ---- 名詞スキル: fortify ----
+            } else if (skill.type === 'fortify') {
                 const heal = Math.round(unit.maxHp * skill.power);
                 unit.hp = Math.min(unit.maxHp, unit.hp + heal);
                 battleSession.playerHP = Math.min(battleSession.playerMaxHP, battleSession.playerHP + heal);
-                addBattleLog(`💊 ${unit.bonus.label}ユニットHP +${heal} 回復`);
+                battleSession._fortifyActive = true;
+                addBattleLog(`🛡️ ${skill.name}！HP+${heal} 回復・次ダメ-${Math.round(skill.power*100)}%！`);
+            // ---- 副詞スキル: swift (先制即時攻撃) ----
+            } else if (skill.type === 'swift') {
+                const hits = skill.hits || 1;
+                let totalDmg = 0;
+                for (let i = 0; i < hits; i++) totalDmg += Math.round(unit.atk * skill.power);
+                battleSession.enemyHP = Math.max(0, battleSession.enemyHP - totalDmg);
+                addBattleLog(`⚡ ${skill.name}！先制${hits > 1 ? '2連' : ''}攻撃 ${totalDmg}ダメージ！`);
+                battleFlash('atk-flash');
+                showDamageFloat(totalDmg, true, '#ffdd00');
+            // ---- 旧型互換 ----
+            } else if (skill.type === 'heal') {
+                const heal = Math.round(unit.maxHp * skill.power);
+                unit.hp = Math.min(unit.maxHp, unit.hp + heal);
+                battleSession.playerHP = Math.min(battleSession.playerMaxHP, battleSession.playerHP + heal);
+                addBattleLog(`💊 HP +${heal} 回復`);
             } else if (skill.type === 'double') {
-                // 2連攻撃
                 const dmg1 = unit.atk, dmg2 = unit.atk;
                 battleSession.enemyHP = Math.max(0, battleSession.enemyHP - dmg1 - dmg2);
                 addBattleLog(`⚡ 2連撃！${dmg1}+${dmg2}ダメージ！`);
@@ -5978,18 +6119,23 @@
                 const choicesEl = document.getElementById('quizChoices');
                 choicesEl.innerHTML = '';
                 const exMeaning = card.quiz.exMeaning || card.quiz.meaning || '';
-                const resultColor = isCorrect ? '#1a6630' : '#882020';
-                const resultBg    = isCorrect ? 'rgba(30,120,60,0.13)' : 'rgba(160,30,30,0.10)';
-                const resultBorder= isCorrect ? 'rgba(40,160,80,0.35)' : 'rgba(200,40,40,0.25)';
+                const isAdv = document.body.classList.contains('adventure-mode');
+                const resultColor = isCorrect ? (isAdv ? '#6ddf90' : '#1a6630') : (isAdv ? '#ff8080' : '#882020');
+                const resultBg    = isCorrect ? (isAdv ? 'rgba(30,120,60,0.30)' : 'rgba(30,120,60,0.13)') : (isAdv ? 'rgba(160,30,30,0.30)' : 'rgba(160,30,30,0.10)');
+                const resultBorder= isCorrect ? (isAdv ? 'rgba(80,200,100,0.55)' : 'rgba(40,160,80,0.35)') : (isAdv ? 'rgba(240,80,80,0.45)' : 'rgba(200,40,40,0.25)');
+                const textMain    = isAdv ? '#f0e8c8' : '#2a1a08';
+                const textSub     = isAdv ? '#c8b890' : '#604830';
+                const textEx      = isAdv ? '#b8a878' : '#5a4030';
+                const borderEx    = isAdv ? 'rgba(200,180,120,0.30)' : 'rgba(150,120,80,0.25)';
                 const resultIcon  = isCorrect ? '✅ 正解！' : '❌ 不正解';
                 const meaningEl = document.createElement('div');
                 meaningEl.style.cssText = 'margin:4px 0 10px;';
                 meaningEl.innerHTML = `
                     <div style="text-align:center;font-size:16px;font-weight:bold;color:${resultColor};margin-bottom:10px;">${resultIcon}</div>
                     <div style="background:${resultBg};border:1px solid ${resultBorder};border-radius:12px;padding:12px 14px;">
-                        <div style="font-size:14px;font-weight:bold;color:#2a1a08;margin-bottom:6px;">💡 ${card.quiz.answer}</div>
-                        <div style="font-size:12px;color:#604830;margin-bottom:${exMeaning ? '8px' : '0'};">${card.quiz.meaning}</div>
-                        ${exMeaning ? `<div style="font-size:12px;color:#5a4030;line-height:1.7;border-top:1px solid rgba(150,120,80,0.25);padding-top:8px;">📖 ${exMeaning}</div>` : ''}
+                        <div style="font-size:14px;font-weight:bold;color:${textMain};margin-bottom:6px;">💡 ${card.quiz.answer}</div>
+                        <div style="font-size:12px;color:${textSub};margin-bottom:${exMeaning ? '8px' : '0'};">${card.quiz.meaning}</div>
+                        ${exMeaning ? `<div style="font-size:12px;color:${textEx};line-height:1.7;border-top:1px solid ${borderEx};padding-top:8px;">📖 ${exMeaning}</div>` : ''}
                     </div>
                 `;
                 choicesEl.appendChild(meaningEl);
