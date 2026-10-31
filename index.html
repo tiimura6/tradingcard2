@@ -1744,6 +1744,59 @@
         .grammar-choice-btn:hover { background: rgba(80,80,160,0.8); }
         .grammar-choice-btn.correct { background: rgba(40,120,40,0.7); border-color: #44cc44; color: #aaffaa; }
         .grammar-choice-btn.wrong   { background: rgba(120,30,30,0.7); border-color: #cc4444; color: #ffaaaa; }
+    
+        /* ===== アカウント（ログイン・同期） ===== */
+        #accountChip {
+            background: rgba(20,15,40,0.6); border: 1px solid rgba(200,170,80,0.45);
+            border-radius: 20px; padding: 3px 10px; font-size: 11px; cursor: pointer;
+            color: rgba(240,220,160,0.9); font-family: 'Noto Serif JP', serif;
+            display: none; align-items: center; gap: 4px; flex-shrink: 1; min-width: 0;
+            max-width: 42vw; margin-left: 6px;
+        }
+        #accountChip .chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #accountChip .chip-sync { font-size: 10px; opacity: 0.85; }
+        #auth-overlay { z-index: 20000; }
+        #auth-overlay .custom-box { text-align: left; padding: 22px 20px; }
+        .auth-title { text-align: center; margin: 0 0 4px; font-family: 'Noto Serif JP', serif; color: #3a2a10; font-size: 19px; }
+        .auth-sub { text-align: center; font-size: 12px; color: #7a6a50; margin: 0 0 14px; line-height: 1.6; }
+        .auth-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+        .auth-tab {
+            flex: 1; padding: 8px 0; font-size: 14px; font-weight: bold; cursor: pointer;
+            border: 1.5px solid #c0a870; background: #fffdf5; color: #7a5a1a; border-radius: 8px;
+            font-family: 'Noto Serif JP', serif;
+        }
+        .auth-tab.active { background: #7a5a1a; color: #fdf0d0; border-color: #7a5a1a; }
+        .auth-label { display: block; font-size: 12px; font-weight: bold; color: #5a4520; margin: 0 0 4px; }
+        .auth-label small { font-weight: normal; color: #8a7a60; }
+        #auth-overlay .modal-input { font-size: 16px; padding: 10px; margin-bottom: 12px; text-align: left; }
+        .auth-error {
+            display: none; background: #fbe9e7; border: 1px solid #e5a29a; color: #a5281b;
+            border-radius: 8px; padding: 8px 10px; font-size: 12.5px; margin-bottom: 12px; line-height: 1.5;
+        }
+        .auth-note { font-size: 11.5px; color: #7a6a50; line-height: 1.6; margin: 10px 0 0; }
+        .auth-guest-btn {
+            display: block; width: 100%; margin-top: 14px; padding: 10px; font-size: 13px;
+            background: transparent; border: 1.5px dashed #b0a080; color: #6a5a40; border-radius: 8px;
+            cursor: pointer; font-family: 'Noto Serif JP', serif;
+        }
+        .auth-choice-btn {
+            display: block; width: 100%; text-align: left; margin-bottom: 10px; padding: 12px;
+            border: 1.5px solid #c0a870; background: #fffdf5; border-radius: 10px; cursor: pointer;
+            font-family: 'Noto Serif JP', serif; color: #3a2a10; font-size: 14px; font-weight: bold;
+        }
+        .auth-choice-btn span { display: block; font-size: 11.5px; font-weight: normal; color: #7a6a50; margin-top: 3px; }
+        .auth-choice-btn.primary { border-color: #7a5a1a; background: #fff6dc; }
+        .auth-kv { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #e4dccb; color: #3a2a10; }
+        .auth-kv span:first-child { color: #7a6a50; }
+        .modal-btn:disabled { opacity: 0.6; cursor: wait; }
+        #authToast {
+            position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+            background: rgba(25,18,8,0.92); color: #f3e2a9; border: 1px solid rgba(200,170,80,0.5);
+            padding: 9px 16px; border-radius: 20px; font-size: 13px; z-index: 20001;
+            font-family: 'Noto Serif JP', serif; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+            max-width: 90vw; text-align: center;
+        }
+        #authToast.show { opacity: 1; }
     </style>
 </head>
 <body>
@@ -1896,6 +1949,7 @@
     <div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px;margin-bottom:4px;">
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
+        <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
         <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura</div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
@@ -2116,6 +2170,14 @@
     </div>
 </div>
 
+<!-- アカウント（ログイン・登録・同期） -->
+<div id="auth-overlay" class="modal-overlay">
+    <div class="custom-box" id="authBox">
+        <div id="authBody"></div>
+    </div>
+</div>
+<div id="authToast"></div>
+
 <div id="coupon-overlay" class="modal-overlay">
     <div class="custom-box">
         <h3>🗝️ 秘密の鍵</h3>
@@ -2230,6 +2292,508 @@
 </div><!-- /#main-page (end) -->
 
 <script>
+/* ================================================================
+   アカウント・クラウド同期（GAS）
+   - メインスクリプトより先に読み込む（localStorage の変更を検知するため）
+   - GAS_URL が空ならログイン機能は無効（これまで通り端末保存のみで動作）
+   ================================================================ */
+
+/* GASをデプロイ後、ウェブアプリのURLをここに貼る。空ならオフライン動作。 */
+const GAS_URL = '';
+
+const Cloud = (function () {
+    // サーバーに保存する進捗データのキー
+    const SYNC_KEYS = [
+        'unlockedCards', 'srsData', 'dailyGachaStorage', 'loginStreak', 'xpData',
+        'specialTickets', 'spEnhanceData', 'dailyStudyData', 'dailyChallenges',
+        'weeklyChallenges', 'hallOfFame', 'battleProgress',
+    ];
+    const K = { SESSION: 'authSession', GUEST: 'authGuest', DIRTY: 'authDirty', QUEUE: 'logQueue', LAST: 'authLastSync' };
+
+    const rawSet    = Storage.prototype.setItem;
+    const rawRemove = Storage.prototype.removeItem;
+    const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+    const lsSet = (k, v) => { try { rawSet.call(localStorage, k, v); } catch (e) {} };
+    const lsDel = k => { try { rawRemove.call(localStorage, k); } catch (e) {} };
+
+    let session = null;
+    try { session = JSON.parse(lsGet(K.SESSION) || 'null'); } catch (e) { session = null; }
+    const dirtyAtLoad = lsGet(K.DIRTY) === '1';   // 前回までに未送信の変更があったか
+
+    let changeSeq = 0, saving = false, savePending = false, saveTimer = null;
+    let syncState = 'idle';      // idle | saving | ok | error | offline
+    let conflictOpen = false;
+    let firstRun = false;
+
+    /* ---------- 進捗の変更を検知 ---------- */
+    function markDirty() {
+        changeSeq++;
+        lsSet(K.DIRTY, '1');
+        if (!session || !GAS_URL || conflictOpen) return;
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => saveNow(), 8000);
+    }
+    Storage.prototype.setItem = function (k, v) {
+        rawSet.call(this, k, v);
+        if (this === window.localStorage && SYNC_KEYS.indexOf(k) >= 0) markDirty();
+    };
+    Storage.prototype.removeItem = function (k) {
+        rawRemove.call(this, k);
+        if (this === window.localStorage && SYNC_KEYS.indexOf(k) >= 0) markDirty();
+    };
+
+    function snapshot() {
+        const d = {};
+        SYNC_KEYS.forEach(k => { d[k] = lsGet(k); });
+        return d;
+    }
+    function localHasProgress() {
+        try {
+            // XPは起動時のログインボーナスでも増えるため判定に使わない
+            const u = JSON.parse(lsGet('unlockedCards') || '[]');
+            const srs = JSON.parse(lsGet('srsData') || '{}');
+            return (Array.isArray(u) && u.length > 0) || Object.keys(srs || {}).length > 0;
+        } catch (e) { return false; }
+    }
+    function saveSession() { session ? lsSet(K.SESSION, JSON.stringify(session)) : lsDel(K.SESSION); }
+
+    /* ---------- 通信 ---------- */
+    async function api(action, payload) {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 20000);
+        try {
+            // text/plain にするとプリフライトが発生せず、GASの応答を読める
+            const res = await fetch(GAS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(Object.assign({ action: action }, payload)),
+                signal: ctrl.signal,
+            });
+            return await res.json();
+        } catch (e) {
+            return { ok: false, error: 'network' };
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+
+    /* ---------- 保存・復元 ---------- */
+    async function saveNow(opts) {
+        opts = opts || {};
+        if (!session || !GAS_URL) return { ok: false, error: 'no_session' };
+        if (conflictOpen && !opts.force) return { ok: false, error: 'conflict' };
+        if (saving) { savePending = true; return { ok: false, error: 'busy' }; }
+        clearTimeout(saveTimer);
+        saving = true; setSync('saving');
+        const seq = changeSeq;
+        const res = await api('saveProgress', { token: session.token, rev: session.rev || 0, data: snapshot(), force: !!opts.force });
+        saving = false;
+
+        if (res.ok) {
+            session.rev = res.rev; saveSession();
+            lsSet(K.LAST, new Date().toISOString());
+            if (seq === changeSeq) lsDel(K.DIRTY);
+            setSync('ok');
+        } else if (res.error === 'conflict') {
+            setSync('error'); showConflict();
+        } else if (res.error === 'auth') {
+            setSync('error'); sessionExpired();
+        } else {
+            setSync(res.error === 'network' ? 'offline' : 'error');
+        }
+        if (savePending) { savePending = false; if (res.ok) setTimeout(() => saveNow(), 500); }
+        return res;
+    }
+
+    function applyServerData(res) {
+        const data = res.data || {};
+        SYNC_KEYS.forEach(k => {
+            const v = data[k];
+            if (v === null || v === undefined) lsDel(k); else lsSet(k, v);
+        });
+        session.rev = res.rev; saveSession();
+        lsDel(K.DIRTY);
+        lsSet(K.LAST, new Date().toISOString());
+        location.reload();
+    }
+
+    async function syncOnStartup() {
+        setSync('saving');
+        const res = await api('loadProgress', { token: session.token });
+        if (!res.ok) {
+            if (res.error === 'auth') return sessionExpired();
+            return setSync('offline');
+        }
+        const localRev = session.rev || 0;
+        if (!res.data || res.rev === 0) return saveNow({ force: true });   // サーバー側が空
+        if (res.rev === localRev) {
+            if (lsGet(K.DIRTY) === '1') return saveNow();
+            return setSync('ok');
+        }
+        if (res.rev > localRev) {
+            // 他の端末で進んでいる。こちらに未送信の変更がなければ自動で取り込む
+            if (!dirtyAtLoad) return applyServerData(res);
+            return showConflict();
+        }
+        return saveNow({ force: true });
+    }
+
+    function sessionExpired() {
+        session = null; saveSession();
+        renderChip();
+        openModal('login', { error: 'ログインの有効期限が切れました。もう一度ログインしてください。' });
+    }
+
+    /* ---------- 学習ログ（まとめて送信） ---------- */
+    let queue = [];
+    try { queue = JSON.parse(lsGet(K.QUEUE) || '[]'); } catch (e) { queue = []; }
+    let flushing = false, flushTimer = null;
+
+    function log(ev) {
+        if (!GAS_URL) return;
+        queue.push(ev);
+        if (queue.length > 1000) queue = queue.slice(-1000);
+        lsSet(K.QUEUE, JSON.stringify(queue));
+        if (queue.length >= 20) flushLogs();
+        else if (!flushTimer) flushTimer = setTimeout(flushLogs, 15000);
+    }
+    function logPayload(events) {
+        return {
+            action: 'log',
+            token: session ? session.token : null,
+            guestId: (typeof researchUserId !== 'undefined') ? researchUserId : lsGet('researchUserId'),
+            sessionId: (typeof researchSessionId !== 'undefined') ? researchSessionId : '',
+            events: events,
+        };
+    }
+    async function flushLogs() {
+        clearTimeout(flushTimer); flushTimer = null;
+        if (!GAS_URL || flushing || queue.length === 0) return;
+        flushing = true;
+        const batch = queue.slice(0, 100);
+        const res = await api('log', logPayload(batch));
+        flushing = false;
+        if (res.ok) {
+            queue = queue.slice(batch.length);
+            lsSet(K.QUEUE, JSON.stringify(queue));
+            if (queue.length) flushTimer = setTimeout(flushLogs, 2000);
+        }
+    }
+    function flushLogsOnExit() {
+        if (!GAS_URL || queue.length === 0 || !navigator.sendBeacon) return;
+        const batch = queue.slice(0, 100);
+        const ok = navigator.sendBeacon(GAS_URL, new Blob([JSON.stringify(logPayload(batch))], { type: 'text/plain' }));
+        if (ok) { queue = queue.slice(batch.length); lsSet(K.QUEUE, JSON.stringify(queue)); }
+    }
+
+    /* ---------- 表示 ---------- */
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    function toast(msg) {
+        const el = document.getElementById('authToast');
+        if (!el) return;
+        el.textContent = msg; el.classList.add('show');
+        clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('show'), 2600);
+    }
+    function setSync(s) { syncState = s; renderChip(); }
+    function renderChip() {
+        const chip = document.getElementById('accountChip');
+        if (!chip) return;
+        if (!GAS_URL) { chip.style.display = 'none'; return; }
+        chip.style.display = 'flex';
+        const icon = { saving: '⏳', ok: '☁️', error: '⚠️', offline: '📴', idle: '' }[syncState] || '';
+        chip.innerHTML = session
+            ? `👤 <span class="chip-name">${esc(session.nickname)}</span><span class="chip-sync">${icon}</span>`
+            : `👤 <span class="chip-name">ゲスト</span>`;
+        chip.title = session ? '' : 'ログインすると別の端末でも続きから遊べます';
+    }
+
+    const ERR = {
+        network: '通信できませんでした。電波の良い場所でもう一度お試しください。',
+        server_error: 'サーバーでエラーが起きました。時間をおいてお試しください。',
+        invalid_id: 'ログインIDは半角の英小文字・数字・_（アンダーバー）で3〜16文字にしてください。',
+        invalid_nickname: 'ニックネームを入力してください（12文字以内）。',
+        invalid_name: '氏名を入力してください。',
+        invalid_pin: 'PINは4〜8桁の数字にしてください。',
+        pin_mismatch: '確認用のPINが一致しません。',
+        id_taken: 'このログインIDはすでに使われています。別のIDにしてください。',
+        nickname_taken: 'このニックネームはすでに使われています。別の名前にしてください。',
+        bad_credentials: 'ログインIDまたはPINが違います。',
+        too_large: 'データが大きすぎて保存できませんでした。先生に知らせてください。',
+    };
+    function errMsg(res) {
+        if (res.error === 'locked') return `PINを続けて間違えたため、${res.minutes}分間ログインできません。`;
+        let m = ERR[res.error] || ('エラーが発生しました（' + esc(res.error) + '）');
+        if (res.error === 'bad_credentials' && res.remaining) m += `（あと${res.remaining}回でロックされます）`;
+        return m;
+    }
+
+    /* ---------- モーダル ---------- */
+    let view = 'login';
+    function openModal(v, opts) {
+        opts = opts || {};
+        view = v;
+        const body = document.getElementById('authBody');
+        const ov = document.getElementById('auth-overlay');
+        if (!body || !ov) return;
+        body.innerHTML = render(v);
+        ov.style.display = 'flex';
+        if (opts.error) showError(opts.error);
+        const first = body.querySelector('input');
+        if (first && !('ontouchstart' in window)) setTimeout(() => first.focus(), 50);
+    }
+    function closeModal() {
+        const ov = document.getElementById('auth-overlay');
+        if (ov) ov.style.display = 'none';
+    }
+    function showError(msg) {
+        const el = document.getElementById('authError');
+        if (el) { el.innerHTML = msg; el.style.display = 'block'; }
+    }
+    function busy(on) {
+        document.querySelectorAll('#authBody button').forEach(b => { b.disabled = on; });
+    }
+    const val = id => (document.getElementById(id) || {}).value || '';
+
+    function tabs(active) {
+        return `<div class="auth-tabs">
+            <button class="auth-tab ${active === 'login' ? 'active' : ''}" onclick="Cloud.openModal('login')">ログイン</button>
+            <button class="auth-tab ${active === 'register' ? 'active' : ''}" onclick="Cloud.openModal('register')">はじめて登録</button>
+        </div>`;
+    }
+    function guestButton() {
+        if (session) return '';
+        return firstRun
+            ? `<button class="auth-guest-btn" onclick="Cloud.playAsGuest()">ゲストで遊ぶ<br><small>進捗はこの端末だけに保存・ランキングには載りません</small></button>`
+            : `<button class="modal-cancel-btn" style="display:block;margin:12px auto 0;" onclick="Cloud.closeModal()">閉じる</button>`;
+    }
+
+    function render(v) {
+        if (v === 'login') return `
+            <h3 class="auth-title">金の手帖へようこそ</h3>
+            <p class="auth-sub">ログインすると、家のスマホでも学校の端末でも<br>続きから遊べます。</p>
+            ${tabs('login')}
+            <div class="auth-error" id="authError"></div>
+            <form onsubmit="event.preventDefault();Cloud.submitLogin();">
+                <label class="auth-label" for="authId">ログインID</label>
+                <input class="modal-input" id="authId" autocomplete="username" autocapitalize="off" spellcheck="false"
+                    oninput="this.value=this.value.toLowerCase()">
+                <label class="auth-label" for="authPin">PIN（数字）</label>
+                <input class="modal-input" id="authPin" type="password" inputmode="numeric" autocomplete="current-password">
+                <button class="modal-btn" type="submit">ログイン</button>
+            </form>
+            <p class="auth-note">PINを忘れたときは先生に伝えてください。</p>
+            ${guestButton()}`;
+
+        if (v === 'register') return `
+            <h3 class="auth-title">はじめての登録</h3>
+            <p class="auth-sub">いまこの端末で遊んだ記録は、そのまま引き継がれます。</p>
+            ${tabs('register')}
+            <div class="auth-error" id="authError"></div>
+            <form onsubmit="event.preventDefault();Cloud.submitRegister();">
+                <label class="auth-label" for="regId">ログインID <small>半角英小文字・数字・_　3〜16文字</small></label>
+                <input class="modal-input" id="regId" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="16"
+                    oninput="this.value=this.value.toLowerCase()">
+                <label class="auth-label" for="regNick">ニックネーム <small>ランキングに表示されます・12文字以内</small></label>
+                <input class="modal-input" id="regNick" maxlength="12" autocomplete="nickname">
+                <label class="auth-label" for="regName">氏名 <small>先生だけが見ます</small></label>
+                <input class="modal-input" id="regName" maxlength="30" autocomplete="name">
+                <label class="auth-label" for="regClass">クラス <small>任意（例: 2-3）</small></label>
+                <input class="modal-input" id="regClass" maxlength="10">
+                <label class="auth-label" for="regPin">PIN <small>4〜8桁の数字・忘れないように</small></label>
+                <input class="modal-input" id="regPin" type="password" inputmode="numeric" maxlength="8" autocomplete="new-password">
+                <label class="auth-label" for="regPin2">PIN（確認）</label>
+                <input class="modal-input" id="regPin2" type="password" inputmode="numeric" maxlength="8" autocomplete="new-password">
+                <button class="modal-btn" type="submit">登録して始める</button>
+            </form>
+            <p class="auth-note">ニックネームに本名は使わないでください。</p>
+            ${guestButton()}`;
+
+        if (v === 'choice') return `
+            <h3 class="auth-title">どちらの記録で遊びますか？</h3>
+            <p class="auth-sub">このアカウントには保存された記録があります。<br>この端末にも別の記録があります。</p>
+            <div class="auth-error" id="authError"></div>
+            <button class="auth-choice-btn primary" onclick="Cloud.useServer()">アカウントの記録を使う<span>おすすめ。この端末の記録は消えます</span></button>
+            <button class="auth-choice-btn" onclick="Cloud.useLocal()">この端末の記録を使う<span>アカウントの記録はこの端末の内容で上書きされます</span></button>`;
+
+        if (v === 'conflict') return `
+            <h3 class="auth-title">別の端末で記録が進んでいます</h3>
+            <p class="auth-sub">このアカウントは別の端末でも遊ばれていて、<br>この端末の記録と食い違っています。</p>
+            <div class="auth-error" id="authError"></div>
+            <button class="auth-choice-btn primary" onclick="Cloud.useServer()">保存されている記録を読み込む<span>おすすめ。この端末でまだ保存していない分は消えます</span></button>
+            <button class="auth-choice-btn" onclick="Cloud.useLocal()">この端末の記録で上書きする<span>別の端末で進めた分は消えます</span></button>`;
+
+        if (v === 'account') {
+            const last = lsGet(K.LAST);
+            const lastStr = last ? new Date(last).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+            const state = { saving: '保存中…', ok: '保存済み', error: '保存できていません', offline: 'オフライン', idle: '—' }[syncState];
+            return `
+            <h3 class="auth-title">アカウント</h3>
+            <div class="auth-error" id="authError"></div>
+            <div class="auth-kv"><span>ニックネーム</span><span>${esc(session.nickname)}</span></div>
+            <div class="auth-kv"><span>ログインID</span><span>${esc(session.loginId)}</span></div>
+            <div class="auth-kv"><span>同期の状態</span><span>${state}</span></div>
+            <div class="auth-kv" style="margin-bottom:14px;"><span>最後に保存</span><span>${lastStr}</span></div>
+            <button class="modal-btn" onclick="Cloud.manualSave()">☁️ 今すぐ保存</button>
+            <button class="modal-btn" style="background:#6a3030;margin-top:10px;" onclick="Cloud.logout()">ログアウト</button>
+            <p class="auth-note">共用の端末ではログアウトしてください。ログアウトすると、この端末の記録は消え、次の人が新しく始められます（記録はアカウントに保存されています）。</p>
+            <button class="modal-cancel-btn" style="display:block;margin:10px auto 0;" onclick="Cloud.closeModal()">閉じる</button>`;
+        }
+        return '';
+    }
+
+    /* ---------- 操作 ---------- */
+    async function submitLogin() {
+        const loginId = val('authId').trim().toLowerCase();
+        const pin = val('authPin').trim();
+        if (!loginId || !pin) return showError('ログインIDとPINを入力してください。');
+        busy(true);
+        const res = await api('login', { loginId: loginId, pin: pin });
+        busy(false);
+        if (!res.ok) return showError(errMsg(res));
+        await afterAuth(res, false);
+    }
+
+    async function submitRegister() {
+        const loginId = val('regId').trim().toLowerCase();
+        const nickname = val('regNick').trim();
+        const realName = val('regName').trim();
+        const klass = val('regClass').trim();
+        const pin = val('regPin').trim();
+        if (!/^[a-z0-9_]{3,16}$/.test(loginId)) return showError(ERR.invalid_id);
+        if (!nickname) return showError(ERR.invalid_nickname);
+        if (!realName) return showError(ERR.invalid_name);
+        if (!/^\d{4,8}$/.test(pin)) return showError(ERR.invalid_pin);
+        if (pin !== val('regPin2').trim()) return showError(ERR.pin_mismatch);
+        busy(true);
+        const res = await api('register', { loginId: loginId, nickname: nickname, realName: realName, klass: klass, pin: pin });
+        busy(false);
+        if (!res.ok) return showError(errMsg(res));
+        await afterAuth(res, true);
+    }
+
+    async function afterAuth(res, isRegister) {
+        session = { loginId: res.loginId, nickname: res.nickname, token: res.token, rev: 0 };
+        saveSession();
+        lsDel(K.GUEST);
+        renderChip();
+        flushLogs();
+
+        if (isRegister) {
+            // ゲストで遊んでいた記録をそのままアカウントへ
+            busy(true);
+            await saveNow({ force: true });
+            closeModal();
+            return toast(`ようこそ、${session.nickname} さん！記録を保存しました`);
+        }
+
+        busy(true);
+        const p = await api('loadProgress', { token: session.token });
+        busy(false);
+        if (!p.ok) {
+            closeModal();
+            return toast('ログインしました（記録の読み込みは後でもう一度試します）');
+        }
+        if (!p.data || p.rev === 0) {
+            await saveNow({ force: true });
+            closeModal();
+            return toast(`ようこそ、${session.nickname} さん！`);
+        }
+        if (localHasProgress()) {
+            pendingServer = p;
+            return openModal('choice');
+        }
+        applyServerData(p);
+    }
+
+    let pendingServer = null;
+    async function useServer() {
+        busy(true);
+        const p = pendingServer || await api('loadProgress', { token: session.token });
+        pendingServer = null;
+        if (!p.ok) { busy(false); return showError(errMsg(p)); }
+        conflictOpen = false;
+        applyServerData(p);
+    }
+    async function useLocal() {
+        busy(true);
+        pendingServer = null;
+        conflictOpen = false;
+        const res = await saveNow({ force: true });
+        busy(false);
+        if (!res.ok) return showError(errMsg(res));
+        closeModal();
+        toast('この端末の記録で保存しました');
+    }
+    function showConflict() {
+        if (conflictOpen) return;
+        conflictOpen = true;
+        openModal('conflict');
+    }
+
+    async function manualSave() {
+        busy(true);
+        const res = await saveNow();
+        busy(false);
+        if (res.ok) { openModal('account'); toast('保存しました'); }
+        else if (res.error !== 'conflict' && res.error !== 'auth') showError(errMsg(res));
+    }
+
+    async function logout() {
+        busy(true);
+        await flushLogs();
+        const res = await saveNow();
+        if (!res.ok && res.error !== 'no_session') {
+            busy(false);
+            if (!confirm('記録をサーバーに保存できませんでした。このままログアウトすると、最後に保存してからの記録は失われます。ログアウトしますか？')) return;
+        }
+        api('logout', { token: session.token });
+        SYNC_KEYS.forEach(k => lsDel(k));
+        lsDel(K.DIRTY); lsDel(K.LAST);
+        session = null; saveSession();
+        location.reload();
+    }
+
+    function playAsGuest() {
+        lsSet(K.GUEST, '1');
+        firstRun = false;
+        closeModal();
+    }
+
+    function chipClick() { openModal(session ? 'account' : 'login'); }
+
+    /* ---------- 起動 ---------- */
+    function start() {
+        if (!GAS_URL) return;
+        renderChip();
+        flushLogs();
+        if (session) {
+            syncOnStartup();
+        } else if (lsGet(K.GUEST) !== '1') {
+            firstRun = true;
+            openModal('login');
+        }
+        // 保存漏れ対策：定期保存と、アプリを閉じる/切り替えるときの保存
+        setInterval(() => { if (session && lsGet(K.DIRTY) === '1' && !saving) saveNow(); }, 60000);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState !== 'hidden') return;
+            flushLogsOnExit();
+            if (session && lsGet(K.DIRTY) === '1') saveNow();
+        });
+    }
+
+    return {
+        start, log, saveNow, openModal, closeModal, chipClick, playAsGuest,
+        submitLogin, submitRegister, useServer, useLocal, manualSave, logout,
+        isLoggedIn: () => !!session,
+        nickname: () => session ? session.nickname : null,
+        esc,
+    };
+})();
+</script>
+
+<script>
     /* ========== CONSTANTS ========== */
     const TOTAL_CARDS = 863;
     const CARDS_PER_PAGE = 50;
@@ -2240,10 +2804,8 @@
     const VALID_COUPONS = { "MAGIC5": 5, "BONUS3": 3, "SUPER10": 10 };
 
     /* ========== 研究データ収集設定 ==========
-     * GASをデプロイ後、下記URLを書き換えてください。
-     * 空文字のままだとデータ送信はスキップされます（アプリは通常動作）。
+     * GAS_URL はアカウント機能のスクリプト（このスクリプトの直前）で設定する。
      */
-    const GAS_URL = '';  // ← デプロイ後のWebアプリURLをここに貼る
 
     // デバイス固有ID（localStorage で永続化）
     let researchUserId = localStorage.getItem('researchUserId');
@@ -2272,10 +2834,8 @@
     function logEvent(eventType, card, isCorrect) {
         if (!GAS_URL) return;  // URL未設定時はスキップ
         const tabIndex = card ? Math.floor((card.no - 1) / COLLECTION_PAGE_SIZE) : null;
-        const payload = {
+        Cloud.log({
             timestamp:      Date.now(),
-            userId:         researchUserId,
-            sessionId:      researchSessionId,
             eventType:      eventType,
             cardNo:         card ? card.no : null,
             word:           card ? card.quiz.answer : null,
@@ -2286,13 +2846,7 @@
             tabIndex:       tabIndex,
             totalUnlocked:  unlockedCards.length,
             combo:          comboCount,
-        };
-        fetch(GAS_URL, {
-            method: 'POST',
-            mode:   'no-cors',   // GASはCORSヘッダーを返さないためno-cors
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        }).catch(() => {});  // ネットワークエラーはサイレントに無視
+        });  // まとめて送信（Cloud.log がキューに積み、15秒ごと or 20件ごとに送る）
     }
 
     /* ========== RARITY SYSTEM ========== */
@@ -4408,6 +4962,19 @@
     }
 
     /* ========== 殿堂入りへの道 ========== */
+    let _hofRankingHtml = null;   // 再描画時に「読み込み中」に戻らないよう直近の結果を保持
+    function hofRankingSectionHtml() {
+        if (!GAS_URL) return '';
+        return `
+            <div class="challenge-section" id="hofRankingSection" style="text-align:left;">
+                <div class="challenge-section-title">
+                    <span>👑 殿堂入りランキング</span>
+                    <button onclick="loadHofRanking()" style="font-size:10px;padding:2px 8px;background:rgba(200,150,30,0.2);border:1px solid rgba(200,150,30,0.4);border-radius:4px;color:#e8d070;cursor:pointer;">更新</button>
+                </div>
+                <div id="hofRankingContent" style="color:#807090;font-size:11px;text-align:center;padding:8px;">${_hofRankingHtml || '読み込み中...'}</div>
+            </div>`;
+    }
+
     function showHallOfFameModal() {
         const allComplete = unlockedCards.length >= TOTAL_CARDS;
         // SE はボタン押下では流れない（コンプ解禁時・ボスラッシュクリア時のみ）
@@ -4428,12 +4995,15 @@
                             ガチャでカードを集めて<br>コレクションを完成させよう！
                         </div>
                     </div>
-                </div>`;
+                </div>
+                ${hofRankingSectionHtml()}`;
             document.getElementById('challenge-modal').style.display = 'flex';
+            loadHofRanking();
             return;
         }
         renderChallengeModal();
         document.getElementById('challenge-modal').style.display = 'flex';
+        loadHofRanking();
     }
     function showChallengeModal() {
         showHallOfFameModal();
@@ -4486,15 +5056,7 @@
             <div style="text-align:center;color:#706080;font-size:10px;padding:6px 0 2px;">
                 チャレンジ達成でガチャ回数が付与されます
             </div>
-            <div class="challenge-section" id="hofRankingSection">
-                <div class="challenge-section-title">
-                    <span>👑 殿堂入りランキング</span>
-                    <button onclick="loadHofRanking()" style="font-size:10px;padding:2px 8px;background:rgba(200,150,30,0.2);border:1px solid rgba(200,150,30,0.4);border-radius:4px;color:#e8d070;cursor:pointer;">更新</button>
-                </div>
-                <div id="hofRankingContent" style="color:#807090;font-size:11px;text-align:center;padding:8px;">
-                    「更新」を押すとランキングを取得します
-                </div>
-            </div>`;
+            ${hofRankingSectionHtml()}`;
     }
 
     /* ========== HOF RANKING FROM GAS ========== */
@@ -4505,31 +5067,34 @@
             el.innerHTML = '<span style="color:#706080;">（GASが未設定のため取得不可）</span>';
             return;
         }
-        el.innerHTML = '<span style="color:#a090c0;">読み込み中...</span>';
+        if (!_hofRankingHtml) el.innerHTML = '<span style="color:#a090c0;">読み込み中...</span>';
+        const show = html => { _hofRankingHtml = html; const cur = document.getElementById('hofRankingContent'); if (cur) cur.innerHTML = html; };
         fetch(GAS_URL + '?action=hofRanking')
             .then(r => r.json())
             .then(data => {
                 if (!data || !data.ranking || data.ranking.length === 0) {
-                    el.innerHTML = '<span style="color:#706080;">まだ殿堂入り達成者がいません</span>';
+                    show('<span style="color:#706080;">まだ殿堂入り達成者がいません。最初の1人を目指そう！</span>');
                     return;
                 }
                 const medals = ['🥇','🥈','🥉'];
-                el.innerHTML = data.ranking.slice(0, 10).map((row, i) => {
+                show(data.ranking.slice(0, 10).map((row, i) => {
                     const medal = medals[i] || `${i+1}.`;
-                    const level = row.level || '';
-                    const name  = row.name  || row.userId || '匿名';
-                    const date  = row.date  || '';
-                    return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                    const level = Cloud.esc(row.level || '');
+                    const name  = Cloud.esc(row.name || '名無し');
+                    const date  = Cloud.esc(row.date || '');
+                    const isMe  = Cloud.nickname() && row.name === Cloud.nickname();
+                    return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);${isMe ? 'background:rgba(232,208,112,0.12);border-radius:4px;' : ''}">
                         <span style="font-size:14px;width:24px;text-align:center;">${medal}</span>
                         <div style="flex:1;">
-                            <div style="color:#e8d070;font-size:12px;">${name}</div>
+                            <div style="color:#e8d070;font-size:12px;">${name}${isMe ? '（あなた）' : ''}</div>
                             <div style="color:#907080;font-size:10px;">${level} · ${date}</div>
                         </div>
                     </div>`;
-                }).join('');
+                }).join(''));
             })
             .catch(() => {
-                el.innerHTML = '<span style="color:#cc4444;">取得に失敗しました</span>';
+                const cur = document.getElementById('hofRankingContent');
+                if (cur && !_hofRankingHtml) cur.innerHTML = '<span style="color:#cc4444;">取得に失敗しました</span>';
             });
     }
 
@@ -6150,6 +6715,7 @@
                 const quizOv = document.getElementById('quiz-overlay');
                 quizOv.style.display = 'none';
                 quizOv.classList.remove('battle-quiz-mode');
+                logEvent('battle', card, isCorrect);
                 processBattleAnswer(isCorrect, card);
             } else if (gachaSession.isGachaMode) {
                 // 実力ガチャ: 正解 → カード獲得 & アニメーション / 不正解 → ポイント付与
@@ -6202,7 +6768,7 @@
         if (isCorrect) {
             const isNew = !unlockedCards.includes(card.id);
             if (isNew) unlockedCards.push(card.id);
-            logEvent('gacha', card, true);
+            if (isNew) logEvent('unlock', card, null);   // 回答は直前の logEvent('gacha') で記録済み
             // ガチャでXP獲得（レアリティに応じてボーナス）
             const xpGain = { N: 5, R: 10, SR: 20, UR: 50 }[rarity] || 5;
             addXP(xpGain, null);
@@ -6460,7 +7026,9 @@
             document.getElementById('battleResultTitle').className = 'battle-result-title win';
             document.getElementById('battleResultTitle').textContent = '🏆 殿堂入り！';
             document.getElementById('battleResultDesc').innerHTML =
-                `全ボスラッシュ制覇！<br>🎖️ 金の手帖バッジ取得！<br>🎰 ガチャ+${r.gacha}回！`;
+                `全ボスラッシュ制覇！<br>🎖️ 金の手帖バッジ取得！<br>🎰 ガチャ+${r.gacha}回！` +
+                (GAS_URL && !Cloud.isLoggedIn() ? '<br><small>ログインすると殿堂入りランキングに名前が載ります</small>' : '');
+            Cloud.saveNow();   // ランキングへすぐ反映させる
             document.getElementById('battle-result-overlay').style.display = 'flex';
         } else {
             // 次のボスへ
@@ -6872,6 +7440,9 @@
             fn();
         });
     });
+
+    // アカウント・クラウド同期を開始（GAS_URL が空なら何もしない）
+    Cloud.start();
 </script>
 
 <!-- ================================================================
