@@ -1647,14 +1647,22 @@
         .battle-unit-card.active-unit { border-color: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.4); }
         .battle-unit-card.defeated { opacity: 0.3; filter: grayscale(1); }
         .battle-unit-card img { width: 100%; border-radius: 6px; display: block; margin-bottom: 3px; }
-        .battle-unit-pos-label { font-size: 9px; font-weight: bold; padding: 1px 5px; border-radius: 8px; display: inline-block; margin-bottom: 3px; }
+        .battle-unit-pos-label { font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 8px; display: inline-block; margin-bottom: 3px; }
         .battle-unit-pos-label.front { background: rgba(255,80,80,0.3); color: #ff8888; }
         .battle-unit-pos-label.mid   { background: rgba(80,150,255,0.3); color: #88aaff; }
         .battle-unit-pos-label.rear  { background: rgba(80,220,80,0.3);  color: #88ff88; }
-        .battle-unit-hp-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; margin-top: 3px; }
-        .battle-unit-hp-fill { height: 100%; background: linear-gradient(90deg,#44cc44,#22aa22); transition: width 0.4s; border-radius: 2px; }
+        .battle-unit-rarity { font-size: 11px; font-weight: bold; margin-bottom: 2px; }
+        .battle-unit-rarity.N  { color: #c0a878; }
+        .battle-unit-rarity.R  { color: #5090ff; }
+        .battle-unit-rarity.SR { color: #f0c840; }
+        .battle-unit-rarity.UR { color: #ff80ff; }
+        .battle-unit-word { font-size: 12px; color: #fff; font-weight: bold; line-height: 1.2; margin-bottom: 2px; }
+        .battle-unit-pg { font-size: 11px; color: #88ccff; font-weight: bold; margin-bottom: 1px; }
+        .battle-unit-hp-bar { height: 5px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-top: 3px; }
+        .battle-unit-hp-fill { height: 100%; background: linear-gradient(90deg,#44cc44,#22aa22); transition: width 0.4s; border-radius: 3px; }
         .battle-unit-hp-fill.low { background: linear-gradient(90deg,#ff8822,#cc5500); }
-        .battle-unit-skill-label { font-size: 8px; color: #c0a060; margin-top: 2px; }
+        .battle-unit-hp-num { font-size: 10px; color: #aaa; margin-top: 1px; }
+        .battle-unit-skill-label { font-size: 11px; color: #e0c070; margin-top: 2px; font-weight: bold; }
 
         /* アクションボタン */
         .battle-action-area {
@@ -2010,7 +2018,7 @@
              style="display:none;max-height:240px;max-width:min(300px,80vw);object-fit:contain;
                     filter:drop-shadow(0 6px 24px rgba(0,0,0,0.8));
                     image-rendering:auto;"
-             onerror="this.style.display='none';document.getElementById('battleEnemySprite').style.display='block';">
+             onerror="this.style.display='none';this.src='';var sp=document.getElementById('battleEnemySprite');if(sp){sp.style.display='block';}">
         <div class="battle-enemy-sprite" id="battleEnemySprite">👾</div>
     </div>
 
@@ -4026,6 +4034,13 @@
     let adventureActive = false;
     let adventureBGM = null;
 
+    // ボスBGMをページ起動時にプリロード（autoplay制限対策）
+    const bossBGMPreload = new Audio('./bgm/boss.mp3');
+    bossBGMPreload.loop = true;
+    bossBGMPreload.volume = 0.35;
+    bossBGMPreload.preload = 'auto';
+    window.bossBGM = bossBGMPreload;
+
     function enterAdventureMode() {
         if (adventureActive) { showTrainingModal(); return; }
         adventureActive = true;
@@ -4929,11 +4944,17 @@
             if (bgmCtx && bgmCtx.state !== 'suspended') bgmCtx.suspend();
             if (adventureBGM) adventureBGM.pause();
             // 毎回新しいAudioを生成して確実に再生（キャッシュが壊れることがあるため）
-            if (window.bossBGM) { window.bossBGM.pause(); window.bossBGM.src = ''; }
-            window.bossBGM = new Audio('./bgm/boss.mp3');
-            window.bossBGM.loop = true;
-            window.bossBGM.volume = 0.35;
-            window.bossBGM.play().catch(e => console.warn('bossBGM play failed:', e));
+            // プリロード済みのbossBGMを再利用（autoplay制限対策）
+            window.bossBGM.pause();
+            window.bossBGM.currentTime = 0;
+            window.bossBGM.play().catch(e => {
+                // フォールバック：新規生成
+                console.warn('bossBGM preload play failed, retrying fresh:', e);
+                const fresh = new Audio('./bgm/boss.mp3');
+                fresh.loop = true; fresh.volume = 0.35;
+                window.bossBGM = fresh;
+                fresh.play().catch(e2 => console.warn('bossBGM fresh play failed:', e2));
+            });
         }
     }
 
@@ -4946,9 +4967,19 @@
         const bossImg = document.getElementById('battleEnemyImg');
         const bossSprite = document.getElementById('battleEnemySprite');
         if (stage.img) {
-            bossImg.src = stage.img;
-            bossImg.style.display = 'block';
             bossSprite.style.display = 'none';
+            bossImg.style.display = 'none';
+            // 新しいImageオブジェクトで先にロード確認してからsrc反映
+            const testImg = new Image();
+            testImg.onload = () => {
+                bossImg.src = stage.img;
+                bossImg.style.display = 'block';
+            };
+            testImg.onerror = () => {
+                bossSprite.style.display = 'block';
+                bossSprite.textContent = stage.emoji;
+            };
+            testImg.src = stage.img;
         } else {
             bossImg.style.display = 'none';
             bossSprite.style.display = 'block';
@@ -4996,11 +5027,12 @@
             div.className = 'battle-unit-card' + (isActive ? ' active-unit' : '') + (defeated ? ' defeated' : '');
             div.innerHTML = `
                 <div class="battle-unit-pos-label ${u.pos}">${u.bonus.label}</div>
+                <div class="battle-unit-rarity ${u.card.rarity}">${u.card.rarity}</div>
                 <img src="${u.card.img}" onerror="this.style.display='none'" style="width:100%;border-radius:6px;display:block;margin-bottom:3px;">
-                <div style="font-size:9px;color:#ddd;font-weight:bold;line-height:1.2">${(u.card.quiz.answer||'').slice(0,8)}</div>
-                <div style="font-size:8px;color:#88bbff">P:${u.atk} G:${u.maxHp}</div>
+                <div class="battle-unit-word">${(u.card.quiz.answer||'').slice(0,10)}</div>
+                <div class="battle-unit-pg">P:${u.atk} G:${u.maxHp}</div>
                 <div class="battle-unit-hp-bar"><div class="battle-unit-hp-fill${hpPct<=30?' low':''}" style="width:${hpPct}%"></div></div>
-                <div style="font-size:9px;color:#aaa">${u.hp}/${u.maxHp}</div>
+                <div class="battle-unit-hp-num">${u.hp}/${u.maxHp}</div>
                 <div class="battle-unit-skill-label">${u.skill.icon}${u.skill.name}</div>`;
             row.appendChild(div);
         });
