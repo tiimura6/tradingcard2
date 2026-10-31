@@ -926,7 +926,7 @@
             flex-wrap: wrap; max-width: 90%; perspective: 1000px; margin-bottom: 30px;
         }
         .gacha-card {
-            width: 240px; height: 400px;
+            width: 290px; height: 480px;
             transform-style: preserve-3d; -webkit-transform-style: preserve-3d;
             transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
@@ -970,8 +970,87 @@
             position: relative; background: transparent; padding: 0;
             border-radius: 16px; width: 88%; max-width: 400px;
             animation: zoomIn 0.25s ease-out; border: none;
-            max-height: 90vh; overflow-y: auto;
+            overflow: visible;
         }
+
+        /* ===== ZOOM INFO SIDE PANEL ===== */
+        #zoom-info-panel {
+            position: fixed; top: 0; right: -110%;
+            width: min(320px, 90vw); height: 100%;
+            background: linear-gradient(160deg, #0e0c20 0%, #12102a 60%, #0a0818 100%);
+            z-index: 200;
+            transition: right 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto; overflow-x: hidden;
+            padding: 0 0 40px 0;
+            box-sizing: border-box;
+            border-left: 1px solid rgba(160,100,255,0.25);
+            box-shadow: -16px 0 48px rgba(0,0,0,0.8);
+        }
+        #zoom-info-panel.open { right: 0; }
+        .zip-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 18px 16px 14px;
+            border-bottom: 1px solid rgba(160,100,255,0.2);
+            position: sticky; top: 0; z-index: 1;
+            background: linear-gradient(160deg, #0e0c20 0%, #12102a 100%);
+        }
+        .zip-title { margin: 0; color: #c8a0ff; font-size: 15px; font-family: 'Noto Serif JP', serif; }
+        .zip-close-btn {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: rgba(180,100,255,0.15); border: 1px solid rgba(180,100,255,0.3);
+            color: #c8a0ff; font-size: 16px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .zip-word {
+            padding: 14px 16px 10px;
+            border-bottom: 1px solid rgba(160,100,255,0.15);
+        }
+        .zip-word-en { font-size: 22px; font-weight: bold; color: #e8d8ff; font-family: 'Noto Serif JP', serif; }
+        .zip-word-ja { font-size: 13px; color: #9070c0; margin-top: 2px; }
+        .zip-section {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(100,60,180,0.15);
+        }
+        .zip-section:last-child { border-bottom: none; }
+        .zip-label {
+            font-size: 11px; font-weight: bold; color: #9070d0;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            margin-bottom: 6px; display: flex; align-items: center; gap: 5px;
+        }
+        .zip-value {
+            font-size: 13px; color: #c8b8e8; line-height: 1.7;
+            font-family: 'Noto Serif JP', serif;
+        }
+        .zip-pos-badge {
+            display: inline-block; padding: 3px 12px;
+            background: rgba(120,60,220,0.25); border: 1px solid rgba(160,100,255,0.4);
+            border-radius: 12px; color: #c0a0ff; font-size: 13px;
+        }
+        .zip-phrases { list-style: none; margin: 0; padding: 0; }
+        .zip-phrases li {
+            padding: 5px 0; color: #b0a0d0; font-size: 12.5px; line-height: 1.6;
+            border-bottom: 1px dashed rgba(120,80,200,0.2);
+        }
+        .zip-phrases li:last-child { border-bottom: none; }
+        .zip-mistake {
+            background: rgba(180,40,40,0.12); border-left: 3px solid rgba(220,80,80,0.5);
+            border-radius: 0 8px 8px 0; padding: 8px 10px;
+            font-size: 12px; color: #d09090; line-height: 1.7;
+        }
+        .zoom-info-btn {
+            position: absolute; right: -14px; top: 50%;
+            transform: translateY(-50%);
+            width: 28px; height: 68px;
+            background: linear-gradient(180deg, #5a20b0, #2d0e68);
+            border: 1px solid rgba(180,120,255,0.5);
+            border-radius: 0 14px 14px 0;
+            color: #d0a8ff; font-size: 15px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 4px 0 16px rgba(80,20,200,0.5);
+            z-index: 1;
+        }
+        .zoom-info-btn:active { background: linear-gradient(180deg, #7030d8, #3d1290); }
         .zoom-card-layout {
             display: flex; gap: 12px; align-items: flex-start;
         }
@@ -1737,15 +1816,9 @@
     <div class="custom-box" style="width:88%;max-width:340px;text-align:center;">
         <h3 style="margin:0 0 6px;color:#e8d070;font-family:'Noto Serif JP',serif;">🎰 ガチャ</h3>
         <p id="gachaChoiceDesc" style="font-size:13px;color:#b0a080;margin:0 0 18px;"></p>
-        <div style="display:flex;gap:10px;justify-content:center;">
-            <button class="action-btn btn-gacha" onclick="closeGachaChoiceModal();triggerGachaCore();" style="flex:1;font-size:14px;padding:12px 8px;">
-                <span class="btn-icon">🎰</span>1回まわす
-            </button>
-            <button class="action-btn" id="allGachaChoiceBtn" onclick="closeGachaChoiceModal();startAllGachaViaButton();"
-                style="flex:1;font-size:14px;padding:12px 8px;background:linear-gradient(150deg,#6a3800,#3a1800);border:1px solid rgba(255,180,50,0.5);color:#fdd080;">
-                <span class="btn-icon">🌟</span>全部まわす
-            </button>
-        </div>
+        <button class="action-btn btn-gacha" onclick="closeGachaChoiceModal();triggerGachaCore();" style="width:100%;font-size:14px;padding:12px 8px;">
+            <span class="btn-icon">🎰</span>ガチャをまわす
+        </button>
         <button class="modal-cancel-btn" onclick="closeGachaChoiceModal()" style="margin-top:12px;">キャンセル</button>
     </div>
 </div>
@@ -1907,9 +1980,6 @@
 <div id="quiz-overlay" class="modal-overlay">
     <div class="custom-box">
         <h3 style="margin:0 0 8px;color:#524130;" id="quizTitle">🔍 穴埋め問題</h3>
-        <div id="quizCardThumb" style="width:100%;height:110px;overflow:hidden;border-radius:10px;margin-bottom:10px;display:none;position:relative;">
-            <img id="quizCardImg" src="" alt="" style="width:100%;position:absolute;top:0;left:0;transform:translateY(-8%);object-fit:cover;">
-        </div>
         <div class="quiz-sentence" id="quizSentence"></div>
         <div class="quiz-choices" id="quizChoices"></div>
         <button class="modal-cancel-btn" onclick="closeQuiz()">やめる</button>
@@ -1936,6 +2006,15 @@
     <div class="zoom-box" onclick="event.stopPropagation()">
         <div id="zoomContent"></div>
     </div>
+</div>
+
+<!-- 補足情報サイドパネル -->
+<div id="zoom-info-panel">
+    <div class="zip-header">
+        <h3 class="zip-title">📚 単語ガイド</h3>
+        <button class="zip-close-btn" onclick="closeZoomInfoPanel()">✕</button>
+    </div>
+    <div id="zoomInfoContent"></div>
 </div>
 
 <div class="combo-bonus-notice" id="comboBonusNotice"></div>
@@ -2950,24 +3029,24 @@
 
     /* ========== CARD DETAILS (裏面コンテンツ: UR + 主要SR) ========== */
     const CARD_DETAILS = {
-        10: { nuance: '"accessible" は「近づきやすい・使いやすい」という意味で、デザイン（user-friendly）や物理的なアクセス両方に使う。"available"（入手可能）とは別物。', etymology: 'ラテン語 accedere（近づく）→ access + -ible（可能の接尾辞）', mistake: '❌ "The book is accessible to understand." → ✅ "The book is easy to understand." / accessible は「理解する」には使わない' },
-        25: { nuance: '"admittedly" は「認めるが」という譲歩の副詞。自分の主張に不利な点を認める時に使う。"certainly" より強い譲歩のニュアンス。', etymology: 'admit の過去分詞 admitted + -ly。Latin admittere（送り込む→認める）', mistake: '❌ "Admittedly, this food is great!"（単なる同意）→ ✅ "Admittedly, the plan has flaws, but it\'s worth pursuing."（譲歩+反論の構造で使う）' },
-        40: { nuance: '"amuse" は軽く楽しませる・微笑ませる程度のニュアンス。"entertain" や "delight" より弱い。大きなイベントや強い感動には使いにくい。', etymology: 'フランス語 amuser → a-（〜に）+ muser（ぼんやりする）。もともと「注意をそらす」意味', mistake: '❌ "The concert greatly amused the 10,000 fans." → ✅ "The concert thrilled the fans." / 大規模な感動には amuse は弱すぎる' },
-        43: { nuance: '"animal behaviorist" は動物の行動を科学的に研究する専門家。"zoologist"（動物全般を研究）や "veterinarian"（動物を治療）とは役割が異なる。', etymology: 'animal（ラテン anima = 魂・命）+ behaviorist（behavior = 振る舞い + -ist）', mistake: '❌ "The animal behaviorist treated the sick dog." → ✅ "The veterinarian treated the sick dog." / 治療するのは獣医師' },
-        139: { nuance: '"casing" は機能的な保護外層を指す。弾丸のケーシング・ケーブルの被覆など技術的文脈が多い。"shell"（天然の殻）や "cover"（単なるカバー）より機能性を強調。', etymology: 'ラテン語 capsa（箱）→ case + -ing（材料・被覆を表す接尾辞）', mistake: '❌ "She put the book in a casing." → ✅ "She put the book in a case/cover." / 本の入れ物には casing は不自然' },
-        235: { nuance: '"densely" は「密度が高く」を表す副詞。森・都市・文章など高密度を科学的に表現する。"thickly"（物理的な厚さ）より客観的・学術的なニュアンス。', etymology: 'ラテン語 densus（密な・厚い）→ dense + -ly', mistake: '❌ "He spoke densely."（「難解に話した」の意図でも不自然）→ ✅ "densely populated"（人口密集した）/ "densely forested"（樹木が密集した）が自然な用法' },
-        331: { nuance: '"failure" は「成功の不在」か「失敗の事例」を指す。"mistake"（ミス・誤り）とは別物。"failure to + 動詞"（〜することの失敗）は重要フォーム。', etymology: 'アングロフランス語 faillure → フランス語 faillir（失敗する）← ラテン語 fallere（だます）', mistake: '❌ "He made a failure in the test." → ✅ "He made a mistake in the test." / failure は「make」するものではなく「experience / suffer」するもの' },
-        427: { nuance: '"hurdle" は元々陸上競技のハードル。比喩的に「乗り越えられる障害」を指す。"obstacle" より楽観的なニュアンスがあり、「越えられる」前提が含まれる。', etymology: '古英語 hyrdel（持ち運べる柵・フレーム）', mistake: '❌ "an insurmountable hurdle"（乗り越えられない = hurdleの比喩と矛盾）→ ✅ "a major obstacle/barrier" / 乗り越えられない場合は hurdle を避ける' },
-        523: { nuance: '"lead up to" は段階的な積み重ねが主要な出来事に向かうことを強調する句動詞。瞬間的な因果ではなく、徐々に進む過程に使う。', etymology: 'lead（古英語 lǣdan = 導く）+ up（方向強調）+ to（到達点）', mistake: '❌ "The rain leads up to flooding."（即座の因果）→ ✅ "The arguments led up to the breakup."（徐々に積み重なる過程）' },
-        619: { nuance: '"participate in" は能動的な関与を意味する。"attend"（出席するだけ）より積極的。"join"（グループに入る）とも異なる。必ず "in" が必要。', etymology: 'ラテン語 participare（分かち合う）← pars（部分）+ capere（取る）', mistake: '❌ "He participated the meeting." → ✅ "He participated in the meeting." / "in" は必須・省略不可' },
-        715: { nuance: '"renewable" は自然のプロセスで補充可能なリソースに使う。"sustainable"（広義の持続可能性）や "reusable"（人間が再利用できる）とは別概念。', etymology: 're-（再び）+ new（新しい）+ -able（可能）→ 再び新しくなれる', mistake: '❌ "Plastic is renewable."（プラスチックは自然には補充されない = reusable が正確）→ ✅ Solar, wind, hydroelectric power = renewable energy' },
-        811: { nuance: '"time-consuming" は「必要以上に時間がかかる」というやや否定的なニュアンス。"time-intensive"（時間集中型）より不満・コスト感が強い。', etymology: 'time + consuming（消費する現在分詞）→ 時間を食い尽くす', mistake: '❌ "Learning this beautiful language is a time-consuming hobby."（好意的文脈と矛盾）→ ✅ "a time-consuming process/task/procedure" / 不満・コストを強調したい文脈で使う' },
+        10: { nuance: '"accessible" は「近づきやすい・使いやすい」という意味で、デザイン（user-friendly）や物理的なアクセス両方に使う。"available"（入手可能）とは別物。', etymology: 'ラテン語 accedere（近づく）→ access + -ible（可能の接尾辞）', affixes: 'ac-（ad-の異形：〜に）＋ cess（cedere：進む）＋ -ible（可能）', phrases: 'accessible to everyone / easily accessible / wheelchair accessible / make A accessible to B', mistake: '❌ "The book is accessible to understand." → ✅ "The book is easy to understand." / accessible は「理解する」には使わない' },
+        25: { nuance: '"admittedly" は「認めるが」という譲歩の副詞。自分の主張に不利な点を認める時に使う。"certainly" より強い譲歩のニュアンス。', etymology: 'admit の過去分詞 admitted + -ly。Latin admittere（送り込む→認める）', affixes: 'ad-（〜に）＋ mitt（mittere：送る）＋ -ted（過去分詞）＋ -ly（副詞）', phrases: 'Admittedly, … but … / Admittedly, it\'s difficult, but worth trying.', mistake: '❌ "Admittedly, this food is great!"（単なる同意）→ ✅ "Admittedly, the plan has flaws, but it\'s worth pursuing."（譲歩+反論の構造で使う）' },
+        40: { nuance: '"amuse" は軽く楽しませる・微笑ませる程度のニュアンス。"entertain" や "delight" より弱い。大きなイベントや強い感動には使いにくい。', etymology: 'フランス語 amuser → a-（〜に）+ muser（ぼんやりする）。もともと「注意をそらす」意味', affixes: 'a-（方向）＋ muser（ぼんやりさせる）→ 接頭辞のみ（接尾辞なし）', phrases: 'amuse oneself / amuse the audience / mildly amused / an amused smile / amuse sb with sth', mistake: '❌ "The concert greatly amused the 10,000 fans." → ✅ "The concert thrilled the fans." / 大規模な感動には amuse は弱すぎる' },
+        43: { nuance: '"animal behaviorist" は動物の行動を科学的に研究する専門家。"zoologist"（動物全般を研究）や "veterinarian"（動物を治療）とは役割が異なる。', etymology: 'animal（ラテン anima = 魂・命）+ behaviorist（behavior = 振る舞い + -ist）', affixes: 'behave + -ior（名詞）＋ -ist（専門家を表す接尾辞）', phrases: 'animal behaviorist / certified behaviorist / consult a behaviorist', mistake: '❌ "The animal behaviorist treated the sick dog." → ✅ "The veterinarian treated the sick dog." / 治療するのは獣医師' },
+        139: { nuance: '"casing" は機能的な保護外層を指す。弾丸のケーシング・ケーブルの被覆など技術的文脈が多い。"shell"（天然の殻）や "cover"（単なるカバー）より機能性を強調。', etymology: 'ラテン語 capsa（箱）→ case + -ing（材料・被覆を表す接尾辞）', affixes: 'case（名詞：容器）＋ -ing（材料・被覆を表す名詞的接尾辞）', phrases: 'bullet casing / outer casing / protective casing / metal casing / pipe casing', mistake: '❌ "She put the book in a casing." → ✅ "She put the book in a case/cover." / 本の入れ物には casing は不自然' },
+        235: { nuance: '"densely" は「密度が高く」を表す副詞。森・都市・文章など高密度を科学的に表現する。"thickly"（物理的な厚さ）より客観的・学術的なニュアンス。', etymology: 'ラテン語 densus（密な・厚い）→ dense + -ly', affixes: 'dense（形容詞：密な）＋ -ly（副詞を作る接尾辞）', phrases: 'densely populated / densely forested / densely packed / densely worded text', mistake: '❌ "He spoke densely."（「難解に話した」の意図でも不自然）→ ✅ "densely populated"（人口密集した）/ "densely forested"（樹木が密集した）が自然な用法' },
+        331: { nuance: '"failure" は「成功の不在」か「失敗の事例」を指す。"mistake"（ミス・誤り）とは別物。"failure to + 動詞"（〜することの失敗）は重要フォーム。', etymology: 'アングロフランス語 faillure → フランス語 faillir（失敗する）← ラテン語 fallere（だます）', affixes: 'fail（動詞）＋ -ure（状態・結果を表す名詞接尾辞）', phrases: 'failure to do … / end in failure / risk of failure / fear of failure / face failure', mistake: '❌ "He made a failure in the test." → ✅ "He made a mistake in the test." / failure は「make」するものではなく「experience / suffer」するもの' },
+        427: { nuance: '"hurdle" は元々陸上競技のハードル。比喩的に「乗り越えられる障害」を指す。"obstacle" より楽観的なニュアンスがあり、「越えられる」前提が含まれる。', etymology: '古英語 hyrdel（持ち運べる柵・フレーム）', affixes: '接頭辞・接尾辞なし（純粋な名詞→比喩的動詞に派生）', phrases: 'clear a hurdle / overcome a hurdle / a major hurdle / the final hurdle / hurdle over sth', mistake: '❌ "an insurmountable hurdle"（乗り越えられない = hurdleの比喩と矛盾）→ ✅ "a major obstacle/barrier" / 乗り越えられない場合は hurdle を避ける' },
+        523: { nuance: '"lead up to" は段階的な積み重ねが主要な出来事に向かうことを強調する句動詞。瞬間的な因果ではなく、徐々に進む過程に使う。', etymology: 'lead（古英語 lǣdan = 導く）+ up（方向強調）+ to（到達点）', affixes: 'lead + up（副詞：上昇・強調）+ to（前置詞：到達点）→ 句動詞（分離不可）', phrases: 'events leading up to … / in the days leading up to … / tensions led up to the crisis', mistake: '❌ "The rain leads up to flooding."（即座の因果）→ ✅ "The arguments led up to the breakup."（徐々に積み重なる過程）' },
+        619: { nuance: '"participate in" は能動的な関与を意味する。"attend"（出席するだけ）より積極的。"join"（グループに入る）とも異なる。必ず "in" が必要。', etymology: 'ラテン語 participare（分かち合う）← pars（部分）+ capere（取る）', affixes: 'parti-（pars：部分）＋ -cip-（capere：取る）＋ -ate（動詞）＋ in（前置詞：必須）', phrases: 'participate in a discussion / actively participate / participation rate / full participation', mistake: '❌ "He participated the meeting." → ✅ "He participated in the meeting." / "in" は必須・省略不可' },
+        715: { nuance: '"renewable" は自然のプロセスで補充可能なリソースに使う。"sustainable"（広義の持続可能性）や "reusable"（人間が再利用できる）とは別概念。', etymology: 're-（再び）+ new（新しい）+ -able（可能）→ 再び新しくなれる', affixes: 're-（再び：ラテン語）＋ new（古英語 nīwe）＋ -able（可能を表す形容詞接尾辞）', phrases: 'renewable energy / renewable resources / renewable contract / non-renewable fuels', mistake: '❌ "Plastic is renewable."（プラスチックは自然には補充されない = reusable が正確）→ ✅ Solar, wind, hydroelectric power = renewable energy' },
+        811: { nuance: '"time-consuming" は「必要以上に時間がかかる」というやや否定的なニュアンス。"time-intensive"（時間集中型）より不満・コスト感が強い。', etymology: 'time + consuming（消費する現在分詞）→ 時間を食い尽くす', affixes: 'time（名詞）＋ consum-（consumere：食い尽くす）＋ -ing（現在分詞・形容詞化）', phrases: 'a time-consuming process / time-consuming task / tedious and time-consuming', mistake: '❌ "Learning this beautiful language is a time-consuming hobby."（好意的文脈と矛盾）→ ✅ "a time-consuming process/task/procedure" / 不満・コストを強調したい文脈で使う' },
         // 主要SR cards
-        5:   { nuance: '"abnormal" は統計的・医学的な「正常範囲外」を指す中立的な技術語。"weird"（変な）や "strange"（奇妙な）より客観的で科学的なニュアンス。', etymology: 'ラテン語 abnormis → ab-（〜から離れた）+ norma（規則・基準）', mistake: '❌ "His weird behavior was abnormal."（重複。abnormal = 変な行動の意を含む）→ ✅ "His behavior was abnormal." のみで十分' },
-        20:  { nuance: '"adequate" は「十分だが優れてはいない」という最低ラインを満たす意味。"sufficient"（必要量を満たす）と近いが、adequate はやや消極的な評価を含む。', etymology: 'ラテン語 adaequatus → ad-（〜に）+ aequus（等しい）→ 等しい量に達している', mistake: '❌ "The hotel was adequate, so I loved it!"（adequate は称賛に使わない）→ ✅ "The hotel was adequate for our needs." / adequate は「まあ十分」止まり' },
-        35:  { nuance: '"amid" は「〜の中で・〜に囲まれて」を意味し、状況・騒音・混乱など抽象的な環境の中にいることを表す。"among"（複数の人/物の間）とは使い方が異なる。', etymology: 'Old English "on middan"（真ん中に）→ amid', mistake: '❌ "He stood amid his friends."（friends = 人→ among が自然）→ ✅ "He stood amid the chaos/noise/controversy." / 抽象的な状況や雰囲気に使う' },
-        50:  { nuance: '"analyze" は体系的に分解・検討することを意味する。"examine"（視覚的に調べる）や "investigate"（調査する）より、要素分解と論理的解釈を強調。', etymology: 'ギリシャ語 analuein → ana-（上に）+ luein（解く）→ 分解して調べる', mistake: '❌ "Analyze the patient\'s eyes."（視覚的検査→ examine が自然）→ ✅ "Analyze the data/results/essay." / 論理・データの分解に使う' },
-        70:  { nuance: '"arise" は「（問題・状況が）生じる・発生する」を意味し、物事が自然に起こることを表す。"rise"（物が物理的に上がる）や "occur"（出来事が起きる）と混同しやすい。', etymology: 'Old English āRīsan → ā-（強調）+ rīsan（立ち上がる）', mistake: '❌ "A new problem raised."（raise = 誰かが持ち上げる・他動詞）→ ✅ "A new problem arose." / arise = 自然に発生する・自動詞' },
+        5:   { nuance: '"abnormal" は統計的・医学的な「正常範囲外」を指す中立的な技術語。"weird"（変な）や "strange"（奇妙な）より客観的で科学的なニュアンス。', etymology: 'ラテン語 abnormis → ab-（〜から離れた）+ norma（規則・基準）', affixes: 'ab-（〜から離れた：ラテン語）＋ norm（norma：基準・規則）＋ -al（形容詞接尾辞）', phrases: 'abnormal behavior / abnormal results / medically abnormal / it\'s abnormal to …', mistake: '❌ "His weird behavior was abnormal."（重複。abnormal = 変な行動の意を含む）→ ✅ "His behavior was abnormal." のみで十分' },
+        20:  { nuance: '"adequate" は「十分だが優れてはいない」という最低ラインを満たす意味。"sufficient"（必要量を満たす）と近いが、adequate はやや消極的な評価を含む。', etymology: 'ラテン語 adaequatus → ad-（〜に）+ aequus（等しい）→ 等しい量に達している', affixes: 'ad-（〜に）＋ aequ（aequus：等しい）＋ -ate（形容詞接尾辞）', phrases: 'adequate for the task / more than adequate / adequate supply / adequate funding', mistake: '❌ "The hotel was adequate, so I loved it!"（adequate は称賛に使わない）→ ✅ "The hotel was adequate for our needs." / adequate は「まあ十分」止まり' },
+        35:  { nuance: '"amid" は「〜の中で・〜に囲まれて」を意味し、状況・騒音・混乱など抽象的な環境の中にいることを表す。"among"（複数の人/物の間）とは使い方が異なる。', etymology: 'Old English "on middan"（真ん中に）→ amid', affixes: 'a-（on：〜に）＋ mid（古英語：中間）→ 接頭辞 a- の縮約形（接尾辞なし）', phrases: 'amid the chaos / amid controversy / amid growing concern / amid the crowd', mistake: '❌ "He stood amid his friends."（friends = 人→ among が自然）→ ✅ "He stood amid the chaos/noise/controversy." / 抽象的な状況や雰囲気に使う' },
+        50:  { nuance: '"analyze" は体系的に分解・検討することを意味する。"examine"（視覚的に調べる）や "investigate"（調査する）より、要素分解と論理的解釈を強調。', etymology: 'ギリシャ語 analuein → ana-（上に）+ luein（解く）→ 分解して調べる', affixes: 'ana-（ギリシャ語：上に・分解）＋ lyz（lysis：解く・ほどく）', phrases: 'analyze data / analyze the situation / critical analysis / in-depth analysis', mistake: '❌ "Analyze the patient\'s eyes."（視覚的検査→ examine が自然）→ ✅ "Analyze the data/results/essay." / 論理・データの分解に使う' },
+        70:  { nuance: '"arise" は「（問題・状況が）生じる・発生する」を意味し、物事が自然に起こることを表す。"rise"（物が物理的に上がる）や "occur"（出来事が起きる）と混同しやすい。', etymology: 'Old English āRīsan → ā-（強調）+ rīsan（立ち上がる）', affixes: 'ā-（古英語：強調接頭辞）＋ rīsan（立ち上がる）→ 接尾辞なし', phrases: 'problems arise / opportunities arise / arise from … / as the need arises', mistake: '❌ "A new problem raised."（raise = 誰かが持ち上げる・他動詞）→ ✅ "A new problem arose." / arise = 自然に発生する・自動詞' },
     };
 
     /* ========== CARD DATA ========== */
@@ -4106,10 +4185,17 @@
 
             const srsBadge = isUnlocked ? getSRSBadgeHTML(card.id) : '';
             let cardVisualHTML = isUnlocked
-                ? `<div style="position:relative">
-                       <img src="${card.img}" alt="No.${card.no}" class="card-img" loading="lazy">
-                       <div class="rarity-badge rarity-badge-${rarity}">${rarity}</div>
-                   </div>`
+                ? (() => {
+                      const st = getCardStats(card);
+                      return `<div style="position:relative">
+                          <img src="${card.img}" alt="No.${card.no}" class="card-img" loading="lazy">
+                          <div class="rarity-badge rarity-badge-${rarity}">${rarity}</div>
+                          <div style="position:absolute;bottom:2px;left:0;right:0;display:flex;justify-content:center;gap:4px;pointer-events:none;">
+                              <span style="background:rgba(20,5,5,0.78);border:1px solid rgba(220,60,60,0.55);color:#ff9090;font-size:9px;font-weight:bold;padding:1px 6px;border-radius:8px;">P${st.atk}</span>
+                              <span style="background:rgba(5,5,20,0.78);border:1px solid rgba(60,100,220,0.55);color:#90b0ff;font-size:9px;font-weight:bold;padding:1px 6px;border-radius:8px;">G${st.def}</span>
+                          </div>
+                      </div>`;
+                  })()
                 : `<div class="locked-placeholder">？</div>`;
 
             cardEl.innerHTML = `${cardVisualHTML}<div class="card-info"><div>No.${card.no} ${srsBadge}</div></div>`;
@@ -4120,47 +4206,92 @@
     /* ========== CARD TAP / ZOOM ========== */
     function tapCard(card, isUnlocked) {
         if (!isUnlocked) { return; }
-        const rarity = getRarity(card.no);
-        const details = CARD_DETAILS[card.no];
-        const srs = getSRSEntry(card.id);
-        const srsLabel = SRS_LABELS[srs.level] || 'New';
-        const srsColor = SRS_COLORS[srs.level] || '#888';
-        const dueDate = srs.nextReview > Date.now()
-            ? `次回: ${new Date(srs.nextReview).toLocaleDateString('ja-JP')}`
-            : (srs.correct + srs.incorrect > 0 ? '復習タイム！' : '未挑戦');
-
-        let detailsHTML = '';
-        if (details) {
-            detailsHTML = `
-                <div style="font-size:11px;line-height:1.6;color:#3a2a15;border-top:1px solid rgba(100,70,30,0.2);padding-top:8px;">
-                    <div style="margin-bottom:6px;"><span style="font-weight:bold;color:#6a3800;">🔍 ニュアンス</span><br>${details.nuance}</div>
-                    <div style="margin-bottom:6px;"><span style="font-weight:bold;color:#6a3800;">📖 語源</span><br>${details.etymology}</div>
-                    <div><span style="font-weight:bold;color:#c03030;">⚠️ 誤用</span><br>${details.mistake}</div>
-                </div>`;
-        }
-
         const stats = getCardStats(card);
         const zoomContent = document.getElementById('zoomContent');
-        const detailsBtnHTML = details ? `
-            <button onclick="
-                const d=document.getElementById('zoomDetails');
-                const b=this;
-                if(d.style.display==='none'){d.style.display='block';b.textContent='▲ 詳細を閉じる';}
-                else{d.style.display='none';b.textContent='▼ 語源・ニュアンスを見る';}
-            " style="margin-top:10px;width:100%;padding:7px;font-size:12px;background:rgba(100,70,30,0.15);border:1px solid rgba(150,110,50,0.4);border-radius:8px;color:#7a5020;cursor:pointer;font-family:'Noto Serif JP',serif;">▼ 語源・ニュアンスを見る</button>
-            <div id="zoomDetails" style="display:none;margin-top:8px;">${detailsHTML}</div>
-        ` : '';
         zoomContent.innerHTML = `
-            <img src="${card.img}" alt="No.${card.no}" style="width:100%;height:auto;border-radius:14px;display:block;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
+            <div style="position:relative;">
+                <img src="${card.img}" alt="No.${card.no}" style="width:100%;height:auto;border-radius:14px;display:block;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
+                <button class="zoom-info-btn" onclick="event.stopPropagation();showZoomInfoPanel(${card.no})">📖</button>
+            </div>
             <div style="display:flex;justify-content:center;gap:10px;margin-top:10px;">
                 <span style="background:rgba(30,10,10,0.72);border:1px solid rgba(220,80,80,0.5);color:#ff9999;font-size:13px;font-weight:bold;padding:5px 16px;border-radius:20px;backdrop-filter:blur(4px);">⚔️ Power ${stats.atk}</span>
                 <span style="background:rgba(10,10,30,0.72);border:1px solid rgba(80,120,220,0.5);color:#99bbff;font-size:13px;font-weight:bold;padding:5px 16px;border-radius:20px;backdrop-filter:blur(4px);">🛡️ Guard ${stats.def}</span>
             </div>
-            ${detailsBtnHTML}
         `;
         document.getElementById('zoom-overlay').style.display = 'flex';
     }
-    function closeZoom() { document.getElementById('zoom-overlay').style.display = 'none'; }
+    function closeZoom() {
+        document.getElementById('zoom-overlay').style.display = 'none';
+        closeZoomInfoPanel();
+    }
+
+    function showZoomInfoPanel(cardNo) {
+        const card = cardsData.find(c => c.no === cardNo);
+        if (!card) return;
+        const details = CARD_DETAILS[cardNo];
+        const pos = (card.quiz && card.quiz.pos) ? card.quiz.pos : '';
+        const meaning = (card.quiz && card.quiz.meaning) ? card.quiz.meaning : '';
+        const answer = (card.quiz && card.quiz.answer) ? card.quiz.answer : `No.${cardNo}`;
+
+        let html = `
+            <div class="zip-word">
+                <div class="zip-word-en">${answer}</div>
+                ${meaning ? `<div class="zip-word-ja">${meaning}</div>` : ''}
+            </div>
+        `;
+
+        if (pos) {
+            html += `<div class="zip-section">
+                <div class="zip-label">🔤 品詞</div>
+                <div class="zip-value"><span class="zip-pos-badge">${pos}</span></div>
+            </div>`;
+        }
+
+        if (details) {
+            if (details.etymology) {
+                html += `<div class="zip-section">
+                    <div class="zip-label">📖 語源</div>
+                    <div class="zip-value">${details.etymology}</div>
+                </div>`;
+            }
+            if (details.affixes) {
+                html += `<div class="zip-section">
+                    <div class="zip-label">🔡 接頭辞・接尾辞</div>
+                    <div class="zip-value">${details.affixes}</div>
+                </div>`;
+            }
+            if (details.nuance) {
+                html += `<div class="zip-section">
+                    <div class="zip-label">💡 ニュアンス</div>
+                    <div class="zip-value">${details.nuance}</div>
+                </div>`;
+            }
+            if (details.phrases) {
+                const plist = details.phrases.split(' / ').map(p => `<li>${p}</li>`).join('');
+                html += `<div class="zip-section">
+                    <div class="zip-label">🗣️ よく使うフレーズ</div>
+                    <ul class="zip-phrases">${plist}</ul>
+                </div>`;
+            }
+            if (details.mistake) {
+                html += `<div class="zip-section">
+                    <div class="zip-label">⚠️ 誤用注意</div>
+                    <div class="zip-mistake">${details.mistake}</div>
+                </div>`;
+            }
+        } else {
+            html += `<div class="zip-section" style="text-align:center;color:#604880;padding:30px 16px;">
+                <div style="font-size:28px;margin-bottom:8px;">🔮</div>
+                <div style="font-size:12px;">この単語の詳細情報は<br>準備中です</div>
+            </div>`;
+        }
+
+        document.getElementById('zoomInfoContent').innerHTML = html;
+        document.getElementById('zoom-info-panel').classList.add('open');
+    }
+    function closeZoomInfoPanel() {
+        document.getElementById('zoom-info-panel').classList.remove('open');
+    }
 
     /* ========== CAMERA / QR ========== */
     function openCamera() {
@@ -4207,8 +4338,6 @@
         const remaining = dailyGachaStorage.count;
         const desc = document.getElementById('gachaChoiceDesc');
         if (desc) desc.textContent = `本日のガチャ残り: ${remaining}回`;
-        const allBtn = document.getElementById('allGachaChoiceBtn');
-        if (allBtn) allBtn.disabled = (remaining <= 0);
         const modal = document.getElementById('gacha-choice-modal');
         if (modal) modal.style.display = 'flex';
     }
@@ -4225,13 +4354,6 @@
         triggerGachaCore();
     }
 
-    function startAllGachaViaButton() {
-        checkAndResetDailyGacha();
-        const total = dailyGachaStorage.count;
-        if (total <= 0) { alert("ガチャ回数がありません。トレーニングを続けるか明日また来てね！"); return; }
-        // すべてのガチャをまとめて回す
-        triggerAllGachaCore(total);
-    }
     /* ---- タブ解禁ロジック ----
      * Tab 0 = cards 1〜100, Tab 1 = 101〜200 …
      * バトルに勝利するごとに次のタブが解禁される。
@@ -4962,150 +5084,6 @@
         document.getElementById('battle-overlay').style.display = 'none';
     }
 
-    /* ========== ALL GACHA (一括) ========== */
-    function triggerAllGachaCore(total) {
-        if (cardsData.length === 0) { alert("カードデータがありません。"); return; }
-
-        const tabIdx  = getCurrentGachaTabIndex();
-        const start   = tabIdx * COLLECTION_PAGE_SIZE;
-        const end     = Math.min((tabIdx + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
-        const tabPool = cardsData.slice(start, end);
-
-        // 全ガチャを引いてカードを確定（表示は最後の一枚で演出）
-        const results = [];
-        for (let i = 0; i < total; i++) {
-            const card = weightedGachaPick(tabPool);
-            results.push(card);
-        }
-
-        // カウント消費
-        dailyGachaStorage.count = 0;
-        localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
-        checkAndResetDailyGacha();
-
-        // 最高レアリティを求めてアニメーション
-        const rarityOrder = ['N','R','SR','UR'];
-        const bestRarity = results.reduce((best, c) => {
-            const r = getRarity(c.no);
-            return rarityOrder.indexOf(r) > rarityOrder.indexOf(best) ? r : best;
-        }, 'N');
-
-        // 全カードをunlockedCardsへ追加
-        let newCount = 0;
-        results.forEach(card => {
-            if (!unlockedCards.includes(card.id)) { unlockedCards.push(card.id); newCount++; }
-        });
-        localStorage.setItem('unlockedCards', JSON.stringify(unlockedCards));
-        renderCollection();
-
-        // 最後のカードをgachaSessionにセット（表示用）
-        gachaSession.isGachaMode = true;
-        gachaSession.selectedCard = results[results.length - 1];
-
-        // アニメーション後にまとめ結果表示
-        playRarityAnimation(bestRarity, () => {
-            showAllGachaResult(results, newCount, bestRarity);
-        });
-    }
-
-    function showAllGachaResult(results, newCount, bestRarity) {
-        const container = document.getElementById('gachaContainer');
-        container.innerHTML = '';
-        document.getElementById('gachaCloseBtn').style.display = 'none';
-        document.getElementById('gacha-overlay').style.display = 'flex';
-
-        setGachaTitle(`🎊 ${results.length}回ガチャ完了！ 新規${newCount}枚獲得！`, 600);
-
-        // レア度分布サマリー
-        const dist = { UR: 0, SR: 0, R: 0, N: 0 };
-        results.forEach(c => dist[getRarity(c.no)]++);
-        const distHtml = ['UR','SR','R','N'].filter(r => dist[r] > 0)
-            .map(r => `<span style="color:${RARITY_CONFIG[r].color||'#c8b080'};font-weight:bold;">${RARITY_CONFIG[r].label}×${dist[r]}</span>`)
-            .join('　');
-        const summaryEl = document.createElement('div');
-        summaryEl.style.cssText = 'color:#c8b080;font-size:12px;margin:6px 0 8px;line-height:1.8;text-align:center;';
-        summaryEl.innerHTML = distHtml + `<br><span style="color:#22cc66;font-size:11px;">新規: ${newCount}枚</span>`;
-        container.appendChild(summaryEl);
-
-        // 1枚ずつナビゲーション表示
-        let currentIdx = 0;
-
-        // カード表示エリア
-        const cardArea = document.createElement('div');
-        cardArea.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:12px;width:100%;';
-        container.appendChild(cardArea);
-
-        // 左矢印
-        const prevBtn = document.createElement('button');
-        prevBtn.textContent = '◀';
-        prevBtn.style.cssText = 'font-size:28px;background:none;border:none;color:#c8b080;cursor:pointer;padding:8px;opacity:0.3;';
-        prevBtn.disabled = true;
-        cardArea.appendChild(prevBtn);
-
-        // カードスロット
-        const cardSlot = document.createElement('div');
-        cardSlot.style.cssText = 'flex:0 0 auto;perspective:1000px;';
-        cardArea.appendChild(cardSlot);
-
-        // 右矢印
-        const nextBtn = document.createElement('button');
-        nextBtn.textContent = '▶';
-        nextBtn.style.cssText = 'font-size:28px;background:none;border:none;color:#c8b080;cursor:pointer;padding:8px;';
-        cardArea.appendChild(nextBtn);
-
-        // カードカウンター
-        const counterEl = document.createElement('div');
-        counterEl.style.cssText = 'text-align:center;color:#a09070;font-size:12px;margin-top:6px;';
-        container.appendChild(counterEl);
-
-        function renderCard(idx, animate) {
-            const card = results[idx];
-            const rarity = getRarity(card.no);
-            const rc = RARITY_CONFIG[rarity];
-            const st = getCardStats(card);
-
-            cardSlot.innerHTML = '';
-            const cardEl = document.createElement('div');
-            cardEl.className = 'gacha-card';
-            cardEl.innerHTML = `
-                <div class="gacha-face gacha-back ${rc.backClass}">？</div>
-                <div class="gacha-face gacha-front ${rc.frontClass}">
-                    <div class="gacha-rarity-badge gacha-rarity-badge-${rarity}">${rc.label}</div>
-                    <img src="${card.img}">
-                    <div class="gacha-info">No.${card.no}　${card.quiz.answer}<br><span style="font-size:10px;font-weight:normal;color:#d0c090;">${card.quiz.meaning}</span></div>
-                    <div class="gacha-stats"><span>⚔️ Power:${st.atk}</span><span>🛡️ Guard:${st.def}</span></div>
-                </div>`;
-            if (rarity === bestRarity) cardEl.style.filter = `drop-shadow(0 0 8px ${rc.color || '#ffd700'})`;
-            cardSlot.appendChild(cardEl);
-            counterEl.textContent = `${idx + 1} / ${results.length}`;
-
-            prevBtn.disabled = idx === 0;
-            prevBtn.style.opacity = idx === 0 ? '0.3' : '1';
-            nextBtn.disabled = idx === results.length - 1;
-            nextBtn.style.opacity = idx === results.length - 1 ? '0.3' : '1';
-
-            if (animate) {
-                setTimeout(() => {
-                    cardEl.classList.add('do-flip');
-                    if (rarity === 'SR' || rarity === 'UR') fireRarityConfetti(rarity);
-                }, 150);
-            } else {
-                // rAF×2でブラウザに描画サイクルを確保させ、重複imgのキャッシュ再利用を保証
-                requestAnimationFrame(() => requestAnimationFrame(() => cardEl.classList.add('do-flip')));
-            }
-        }
-
-        prevBtn.onclick = () => { if (currentIdx > 0) { currentIdx--; renderCard(currentIdx, false); } };
-        nextBtn.onclick = () => { if (currentIdx < results.length - 1) { currentIdx++; renderCard(currentIdx, false); } };
-
-        // 最初のカードを表示（アニメーション付き）
-        renderCard(0, true);
-        setTimeout(() => {
-            fireRarityConfetti(bestRarity);
-            document.getElementById('gachaCloseBtn').style.display = 'block';
-        }, 1000);
-    }
-
     function setGachaTitle(text, delay = 0) {
         const el = document.getElementById('gachaResultTitle');
         if (!el) return;
@@ -5167,14 +5145,6 @@
     /* ========== QUIZ DISPLAY ========== */
     function showQuiz(card) {
         markAnswerStart();  // 回答時間計測開始
-
-        // カードイラストをクロップ表示（上部テキスト部分を隠してイラスト中央を見せる）
-        const thumbEl = document.getElementById('quizCardThumb');
-        const imgEl   = document.getElementById('quizCardImg');
-        if (thumbEl && imgEl && card.img) {
-            imgEl.src = card.img;
-            thumbEl.style.display = 'block';
-        }
 
         // SR/UR カードは50%の確率で上級問題形式（英単語 → 日本語意味選択）
         const rarity = getRarity(card.no);
