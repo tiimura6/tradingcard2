@@ -361,6 +361,22 @@
             z-index: 9999;
             transition: opacity 0.6s ease;
         }
+        /* ===== 共通画面フェードオーバーレイ ===== */
+        #screen-fade {
+            position: fixed; inset: 0; background: #000;
+            opacity: 0; pointer-events: none;
+            z-index: 8500; transition: opacity 0.28s ease;
+        }
+        #screen-fade.fading { opacity: 1; pointer-events: all; }
+        /* モーダル フェードインアニメーション */
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.97) translateY(8px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-overlay.modal-animate > .modal-box,
+        .modal-overlay.modal-animate > div:first-child {
+            animation: modalFadeIn 0.22s ease-out;
+        }
         body.adventure-mode {
             background-color: #1a2e14;
         }
@@ -1269,9 +1285,13 @@
             background: linear-gradient(135deg, #8a4010, #c06020);
             color: #fff8e0; padding: 13px 30px; border-radius: 14px;
             font-size: 15px; font-weight: bold; text-align: center;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.4); z-index: 50;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4); z-index: 10001;
             display: none; border: 1px solid #e09040; white-space: nowrap;
             font-family: 'Noto Serif JP', serif;
+            animation: none;
+        }
+        .combo-bonus-notice.visible {
+            animation: toastIn 0.3s ease-out;
         }
 
         /* ===== STREAK BONUS MODAL ===== */
@@ -1727,6 +1747,7 @@
 <div id="bg-layer"></div>
 <div id="adventure-bg"></div>
 <div id="adventure-fade"></div>
+<div id="screen-fade"></div>
 
 <!-- ===== ATMOSPHERIC BACKGROUND LAYERS ===== -->
 <!-- Star field -->
@@ -3345,7 +3366,7 @@
             setTimeout(() => {
                 confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
                 const n = document.getElementById('comboBonusNotice');
-                if (n) { n.textContent = '🎉 本日の目標達成！素晴らしい！'; n.style.display='block'; setTimeout(()=>n.style.display='none', 2800); }
+                if (n) { n.textContent = '🎉 本日の目標達成！素晴らしい！'; n.classList.remove('visible'); n.style.display='block'; void n.offsetWidth; n.classList.add('visible'); setTimeout(()=>{ n.classList.remove('visible'); n.style.display='none'; }, 2800); }
             }, 300);
         }
     }
@@ -3919,12 +3940,12 @@
         const el = document.getElementById('comboBonusNotice');
         if (!el) return;
         el.innerText = msg;
+        el.classList.remove('visible');
         el.style.display = 'block';
-        el.style.animation = 'none';
         void el.offsetWidth;
-        el.style.animation = 'slideUp 0.4s ease-out';
+        el.classList.add('visible');
         confetti({ particleCount: 60, spread: 50, origin: { y: 0.85 } });
-        setTimeout(() => { el.style.display = 'none'; }, 2800);
+        setTimeout(() => { el.classList.remove('visible'); el.style.display = 'none'; }, 2800);
     }
 
     /* ========== RARITY CONFETTI ========== */
@@ -4048,7 +4069,7 @@
             window.bossBGM.play().catch(() => {});
         } else if (adventureActive && adventureBGM && adventureBGM.paused) {
             adventureBGM.play().catch(() => {});
-        } else if (bgmAudio && bgmAudio.paused) {
+        } else if (!adventureActive && !(battleSession && battleSession.active) && bgmAudio && bgmAudio.paused) {
             bgmAudio.play().catch(() => {});
         }
     }
@@ -4061,6 +4082,22 @@
     window.addEventListener('pageshow', (e) => {
         if (e.persisted) resumeActiveBGM(); // bfcache から復帰した場合
     });
+
+    // 汎用フェード関数：画面全体を黒くフェードアウト→コールバック→フェードイン
+    function fadeScreen(fn, dur) {
+        dur = dur || 280;
+        const el = document.getElementById('screen-fade');
+        if (!el) { fn(); return; }
+        el.style.transition = 'opacity ' + (dur * 0.45 | 0) + 'ms ease';
+        el.classList.add('fading');
+        setTimeout(function() {
+            fn();
+            setTimeout(function() {
+                el.style.transition = 'opacity ' + (dur * 0.55 | 0) + 'ms ease';
+                el.classList.remove('fading');
+            }, 40);
+        }, dur * 0.45 | 0);
+    }
 
     function enterAdventureMode() {
         if (adventureActive) { showTrainingModal(); return; }
@@ -4560,12 +4597,12 @@
         const desc = document.getElementById('gachaChoiceDesc');
         if (desc) desc.textContent = `本日のガチャ残り: ${remaining}回`;
         const modal = document.getElementById('gacha-choice-modal');
-        if (modal) modal.style.display = 'flex';
+        if (modal) { modal.style.display = 'flex'; modal.classList.add('modal-animate'); }
     }
 
     function closeGachaChoiceModal() {
         const modal = document.getElementById('gacha-choice-modal');
-        if (modal) modal.style.display = 'none';
+        if (modal) { modal.classList.remove('modal-animate'); modal.style.display = 'none'; }
     }
 
     /* ========== GACHA TRIGGER ========== */
@@ -4656,7 +4693,8 @@
 
         if (stages.length === 0) {
             listEl.innerHTML = '<div style="padding:16px;color:#888">カードデータを読み込み中…</div>';
-            document.getElementById('battle-stage-modal').style.display = 'flex';
+            const sm = document.getElementById('battle-stage-modal');
+            sm.style.display = 'flex'; sm.classList.add('modal-animate');
             return;
         }
 
@@ -4708,10 +4746,14 @@
                 listEl.appendChild(div);
             });
         }
-        document.getElementById('battle-stage-modal').style.display = 'flex';
+        const stageModal = document.getElementById('battle-stage-modal');
+        stageModal.style.display = 'flex';
+        stageModal.classList.add('modal-animate');
     }
     function closeBattleStageModal() {
-        document.getElementById('battle-stage-modal').style.display = 'none';
+        const stageModal = document.getElementById('battle-stage-modal');
+        stageModal.classList.remove('modal-animate');
+        stageModal.style.display = 'none';
     }
 
     /* ===== Formation Modal ===== */
@@ -4730,7 +4772,9 @@
         renderFormationPool();
         document.getElementById('formationSelectedSlotLabel').textContent = 'ポジションを選択してください';
         document.getElementById('formationStartBtn').disabled = true;
-        document.getElementById('battle-formation-modal').style.display = 'flex';
+        const fModal = document.getElementById('battle-formation-modal');
+        fModal.style.display = 'flex';
+        fModal.classList.add('modal-animate');
     }
 
     function renderFormationSlots() {
@@ -4856,14 +4900,16 @@
     }
 
     function closeFormationModal() {
-        document.getElementById('battle-formation-modal').style.display = 'none';
+        const fm = document.getElementById('battle-formation-modal');
+        fm.classList.remove('modal-animate');
+        fm.style.display = 'none';
     }
 
     function confirmFormationAndStart() {
         const allFilled = Object.values(formationState.slots).every(s => s !== null);
         if (!allFilled) { alert('前衛・中衛・後衛にカードを配置してください'); return; }
         closeFormationModal();
-        startBattle(formationState.stage);
+        fadeScreen(function() { startBattle(formationState.stage); });
     }
 
     function startBattle(stage) {
@@ -5486,9 +5532,11 @@
     }
 
     function closeBattleResult() {
-        document.getElementById('battle-result-overlay').style.display = 'none';
-        document.getElementById('battle-overlay').style.display = 'none';
-        stopBossBGM();
+        fadeScreen(function() {
+            document.getElementById('battle-result-overlay').style.display = 'none';
+            document.getElementById('battle-overlay').style.display = 'none';
+            stopBossBGM();
+        });
     }
 
     function confirmCloseBattle() {
@@ -5496,9 +5544,11 @@
             if (!confirm('バトルを中断しますか？（報酬は得られません）')) return;
         }
         battleSession.active = false;
-        document.getElementById('battle-result-overlay').style.display = 'none';
-        document.getElementById('battle-overlay').style.display = 'none';
-        stopBossBGM();
+        fadeScreen(function() {
+            document.getElementById('battle-result-overlay').style.display = 'none';
+            document.getElementById('battle-overlay').style.display = 'none';
+            stopBossBGM();
+        });
     }
 
     function setGachaTitle(text, delay = 0) {
@@ -6033,9 +6083,11 @@
 
     /* ========== CLOSE GACHA ========== */
     function closeGacha() {
-        document.getElementById('gacha-overlay').style.display = 'none';
-        gachaSession.isGachaMode = false;
-        renderCollection();
+        fadeScreen(function() {
+            document.getElementById('gacha-overlay').style.display = 'none';
+            gachaSession.isGachaMode = false;
+            renderCollection();
+        });
     }
 
     /* ========== CHALLENGE SYSTEM FUNCTIONS ========== */
@@ -6497,7 +6549,10 @@
         testAudio.volume = 0.35;
         testAudio.addEventListener('canplaythrough', () => {
             bgmAudio = testAudio;
-            bgmAudio.play().catch(() => {});
+            // 冒険中・バトル中はメインBGMを自動再生しない（非同期ロード完了時の誤再生防止）
+            if (!adventureActive && !(battleSession && battleSession.active)) {
+                bgmAudio.play().catch(() => {});
+            }
         }, { once: true });
         testAudio.addEventListener('error', () => {
             // フォールバック: Web Audio API
