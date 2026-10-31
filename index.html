@@ -2712,21 +2712,41 @@
                 dailyGachaStorage.trainBonuses.push(hrs);
                 dailyGachaStorage.count++;
                 awarded++;
+                // 時間マイルストーンでコンボストリークをリセット → また3/5/10正解ボーナスを狙える
+                comboCount = 0;
+                updateComboDisplay();
             }
         });
         if (awarded > 0) {
             localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
-            showChallengeToast(`⏱ 時間ボーナス！ ガチャ+${awarded}回！`);
+            showChallengeToast(`⏱ ${awarded}hボーナス！ コンボリセット＆ガチャ+${awarded}回！`);
+            checkAndResetDailyGacha(); // ボタン表示を更新
         }
     }
 
     /* ========== TRAINING START: set firstTrainTime ========== */
+    let trainingTimerInterval = null;
+
     function recordTrainingStart() {
         const todayStr = new Date().toLocaleDateString();
-        if (dailyGachaStorage.lastDate !== todayStr) return; // まだリセット前
+        if (dailyGachaStorage.lastDate !== todayStr) return;
         if (!dailyGachaStorage.firstTrainTime) {
             dailyGachaStorage.firstTrainTime = Date.now();
             localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
+        }
+    }
+
+    function startTrainingTimer() {
+        if (trainingTimerInterval) return; // すでに動いている
+        trainingTimerInterval = setInterval(() => {
+            checkTrainTimeBonus();
+        }, 30000); // 30秒ごとにチェック
+    }
+
+    function stopTrainingTimer() {
+        if (trainingTimerInterval) {
+            clearInterval(trainingTimerInterval);
+            trainingTimerInterval = null;
         }
     }
 
@@ -3513,6 +3533,7 @@
         document.getElementById('quiz-overlay').style.display = 'none';
         gachaSession.isGachaMode = false;
         trainingSession.active = false; // exit training mode
+        stopTrainingTimer(); // 時間ボーナス自動チェック停止
     }
 
     /* ========== ANSWER VALIDATION ========== */
@@ -3846,6 +3867,7 @@
     function openTrainingMode() {
         closeTrainingModal();
         recordTrainingStart(); // 初回トレーニング時刻を記録
+        startTrainingTimer(); // 時間ボーナス自動チェック開始
         // 解禁済みタブ（0〜currentGachaTab）内の全カードをプールに
         const tabIdx = getCurrentGachaTabIndex();
         const poolEnd = Math.min((tabIdx + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
