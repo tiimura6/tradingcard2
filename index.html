@@ -5978,29 +5978,29 @@
         el._timer = setTimeout(() => el.classList.remove('show'), 3200);
     }
 
-    function addGachaFromChallenge(count, toastMsg) {
+    function addGachaFromChallenge(count, toastMsg, silent) {
         dailyGachaStorage.count += count;
         localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
         checkAndResetDailyGacha();
         showChallengeToast(toastMsg);
-        confetti({ particleCount: 80, spread: 60, origin: { y: 0.5 } });
+        if (!silent) confetti({ particleCount: 80, spread: 60, origin: { y: 0.5 } });
         if (document.getElementById('challenge-modal').style.display !== 'none') renderChallengeModal();
     }
 
-    function completeDailyChallenge(key, rewardCount, label) {
+    function completeDailyChallenge(key, rewardCount, label, silent) {
         checkDailyChallengeReset();
         if (dailyChallenges.completed[key]) return;
         dailyChallenges.completed[key] = true;
         localStorage.setItem('dailyChallenges', JSON.stringify(dailyChallenges));
-        addGachaFromChallenge(rewardCount, `🎯 ${label} 達成！ ガチャ+${rewardCount}回`);
+        addGachaFromChallenge(rewardCount, `🎯 ${label} 達成！ ガチャ+${rewardCount}回`, silent);
     }
 
-    function completeWeeklyChallenge(key, rewardCount, label) {
+    function completeWeeklyChallenge(key, rewardCount, label, silent) {
         checkWeeklyChallengeReset();
         if (weeklyChallenges.completed[key]) return;
         weeklyChallenges.completed[key] = true;
         localStorage.setItem('weeklyChallenges', JSON.stringify(weeklyChallenges));
-        addGachaFromChallenge(rewardCount, `📆 ${label} 達成！ ガチャ+${rewardCount}回`);
+        addGachaFromChallenge(rewardCount, `📆 ${label} 達成！ ガチャ+${rewardCount}回`, silent);
     }
 
     const HOF_REWARDS = {
@@ -6088,9 +6088,9 @@
         weeklyChallenges.progress.trainCount++;
 
         if (!dailyChallenges.completed.train10 && dailyChallenges.progress.trainCount >= 10)
-            completeDailyChallenge('train10', 1, '10枚冒険');
+            completeDailyChallenge('train10', 1, '10枚冒険', !isCorrect);
         if (!weeklyChallenges.completed.train50 && weeklyChallenges.progress.trainCount >= 50)
-            completeWeeklyChallenge('train50', 3, '50枚学習');
+            completeWeeklyChallenge('train50', 3, '50枚学習', !isCorrect);
 
         if (isCorrect) {
             dailyChallenges.progress.quizCorrect++;
