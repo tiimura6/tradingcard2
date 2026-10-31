@@ -5987,6 +5987,26 @@
         if (e.target.closest('.quiz-choice-btn')) return;
         playSE('tap');
     }, { passive: true });
+
+    // ===== モーダルオーバーレイ外タップで閉じる =====
+    const MODAL_CLOSE_MAP = {
+        'gacha-choice-modal':   () => closeGachaChoiceModal(),
+        'battle-stage-modal':   () => closeBattleStageModal(),
+        'battle-formation-modal': () => closeFormationModal(),
+        'training-modal':       () => closeTrainingModal(),
+        'challenge-modal':      () => closeChallengeModal(),
+        'coupon-overlay':       () => closeCouponModal(),
+        'streak-bonus-overlay': () => closeStreakBonusModal(),
+        'quiz-overlay':         () => closeQuiz(),
+        'zoom-overlay':         () => closeZoom(),
+    };
+    Object.entries(MODAL_CLOSE_MAP).forEach(([id, closeFn]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('click', function(e) {
+            if (e.target === el) closeFn();
+        });
+    });
 </script>
 
 <!-- ================================================================
