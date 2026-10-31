@@ -1870,6 +1870,8 @@
 <div class="header-plate">
     <!-- 言の葉堂のひみつ手帖 シリーズヘッダー -->
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;position:relative;">
+        <button onclick="openCouponModal()" title="秘密の鍵"
+            style="position:absolute;left:0;background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;">🗝️</button>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="position:absolute;right:0;background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;">🔇 BGM</button>
     </div>
@@ -1902,9 +1904,6 @@
 <div class="action-grid">
     <button class="action-btn btn-gacha" id="gachaBtn" onclick="startGachaViaButton()" style="grid-column:span 2;">
         <span class="btn-icon">🎰</span>ガチャ <span id="gachaBtnCount"></span>
-    </button>
-    <button class="action-btn btn-coupon" onclick="openCouponModal()" style="grid-column:span 2;">
-        <span class="btn-icon">🗝️</span>秘密の鍵
     </button>
     <button class="action-btn btn-study" id="adventureBattleBtn" onclick="adventureOrBattle()" style="grid-column:span 2;">
         <span class="btn-icon" id="adventureBattleBtnIcon">🗺️</span><span id="adventureBattleBtnLabel">冒険</span>
