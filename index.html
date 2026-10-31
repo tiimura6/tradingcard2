@@ -4829,7 +4829,8 @@
 
                 // 例文の日本語訳を表示（次へボタン付き）
                 const choicesEl = document.getElementById('quizChoices');
-                choicesEl.innerHTML = '';
+                // 選択肢ボタンはそのまま残す（正解/不正解の色表示を維持）
+                // 例文訳ブロックを選択肢の上に挿入
                 const meaningEl = document.createElement('div');
                 meaningEl.style.cssText = 'margin:12px 0 10px;text-align:center;';
                 // 例文訳 or 意味
@@ -4839,7 +4840,7 @@
                     <div style="font-size:13px;color:#3a2010;line-height:1.6;background:rgba(200,160,80,0.12);border-radius:8px;padding:8px 10px;">${exMeaning || '（訳なし）'}</div>
                     <div style="font-size:11px;color:#a08050;margin-top:6px;">💡 <b>${card.quiz.answer}</b>：${card.quiz.meaning}</div>
                 `;
-                choicesEl.appendChild(meaningEl);
+                choicesEl.insertBefore(meaningEl, choicesEl.firstChild);
 
                 const isFinished = trainingSession.cards.length === 0;
                 const nextBtn = document.createElement('button');
@@ -4853,7 +4854,7 @@
                         showTrainingQuiz();
                     }
                 };
-                choicesEl.appendChild(nextBtn);
+                choicesEl.appendChild(nextBtn);  // 次へボタンは末尾（選択肢の下）
                 // オーバーレイは閉じない（次へボタンを押すまで表示を維持）
             } else if (battleSession.active) {
                 // バトルモード: 正解→攻撃 / 不正解→被ダメ
