@@ -372,9 +372,8 @@
         body.adventure-mode #main-page .modal-overlay * { visibility: visible; pointer-events: auto; }
         body.adventure-mode #bg-layer {
             background-image: url('./bgm/adventure-bg.jpg') !important;
-            background-size: 180% auto !important;
-            background-position: 0% center !important;
-            transition: background-position 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+            background-size: cover !important;
+            background-position: center center !important;
         }
         body.battle-mode #bg-layer {
             background-image: url('./bgm/boss-bg.jpg') !important;
@@ -3681,7 +3680,6 @@
         if (knew) {
             addXP(10, document.getElementById('studyAssessment'));
             trackChallengeAnswer(true, card.no);
-            if (adventureActive) slideAdventureBg();
         } else {
             addXP(2, document.getElementById('studyAssessment'));
             trackChallengeAnswer(false, card.no);
@@ -4037,24 +4035,6 @@
     let adventureBGM = null;
 
     // 冒険背景スクロール状態
-    let adventureBgOffset = 0;      // 0〜100 の背景位置
-    let adventureBgDirection = 1;   // 1=右へ, -1=左へ（折り返し）
-
-    function slideAdventureBg() {
-        if (!adventureActive) return;
-        adventureBgOffset += adventureBgDirection * 4; // 1正解で4%スライド
-        if (adventureBgOffset >= 100) { adventureBgOffset = 100; adventureBgDirection = -1; }
-        if (adventureBgOffset <= 0)   { adventureBgOffset = 0;   adventureBgDirection =  1; }
-        const bg = document.getElementById('bg-layer');
-        if (bg) bg.style.backgroundPosition = `${adventureBgOffset}% center`;
-    }
-
-    function resetAdventureBgScroll() {
-        adventureBgOffset = 0;
-        adventureBgDirection = 1;
-        const bg = document.getElementById('bg-layer');
-        if (bg) bg.style.backgroundPosition = '0% center';
-    }
 
     // ボスBGMをページ起動時にプリロード（autoplay制限対策）
     const bossBGMPreload = new Audio('./bgm/boss.mp3');
@@ -4114,7 +4094,6 @@
     function exitAdventureMode() {
         if (!adventureActive) return;
         adventureActive = false;
-        resetAdventureBgScroll();
         const fade = document.getElementById('adventure-fade');
 
         // フェードアウト
@@ -5854,7 +5833,6 @@
                     trainingSession.totalXP += 10;
                     trainingSession.correct++;
                     trainingSession.masteredIds.add(card.id);
-                    if (adventureActive) slideAdventureBg();
                     trainingSession.cards = trainingSession.cards.filter(c => c.id !== card.id);
                     trainingSession.index = Math.min(trainingSession.index, trainingSession.cards.length);
                 } else {
@@ -6599,22 +6577,25 @@
     }, { passive: true });
 
     // ===== モーダルオーバーレイ外タップで閉じる =====
+    // 冒険中は問題系モーダル（training / challenge / quiz）を誤タップで閉じない
     const MODAL_CLOSE_MAP = {
-        'gacha-choice-modal':   () => closeGachaChoiceModal(),
-        'battle-stage-modal':   () => closeBattleStageModal(),
-        'battle-formation-modal': () => closeFormationModal(),
-        'training-modal':       () => closeTrainingModal(),
-        'challenge-modal':      () => closeChallengeModal(),
-        'coupon-overlay':       () => closeCouponModal(),
-        'streak-bonus-overlay': () => closeStreakBonusModal(),
-        'quiz-overlay':         () => closeQuiz(),
-        'zoom-overlay':         () => closeZoom(),
+        'gacha-choice-modal':     { fn: () => closeGachaChoiceModal(), skipInAdventure: false },
+        'battle-stage-modal':     { fn: () => closeBattleStageModal(), skipInAdventure: false },
+        'battle-formation-modal': { fn: () => closeFormationModal(),   skipInAdventure: false },
+        'training-modal':         { fn: () => closeTrainingModal(),    skipInAdventure: true  },
+        'challenge-modal':        { fn: () => closeChallengeModal(),   skipInAdventure: true  },
+        'coupon-overlay':         { fn: () => closeCouponModal(),      skipInAdventure: false },
+        'streak-bonus-overlay':   { fn: () => closeStreakBonusModal(), skipInAdventure: false },
+        'quiz-overlay':           { fn: () => closeQuiz(),             skipInAdventure: true  },
+        'zoom-overlay':           { fn: () => closeZoom(),             skipInAdventure: false },
     };
-    Object.entries(MODAL_CLOSE_MAP).forEach(([id, closeFn]) => {
+    Object.entries(MODAL_CLOSE_MAP).forEach(([id, { fn, skipInAdventure }]) => {
         const el = document.getElementById(id);
         if (!el) return;
         el.addEventListener('click', function(e) {
-            if (e.target === el) closeFn();
+            if (e.target !== el) return;
+            if (skipInAdventure && adventureActive) return;
+            fn();
         });
     });
 </script>
