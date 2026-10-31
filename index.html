@@ -3199,6 +3199,8 @@
                     currentCollectionPage = i;
                     renderCollection();
                 };
+            } else {
+                btn.onclick = () => playSE('locked');
             }
             tabsEl.appendChild(btn);
         }
@@ -4059,6 +4061,7 @@
             hof:      './se/hof.mp3',
             gacha_bgm:'./bgm/gacha.mp3',
             tap:      './se/tap.mp3',
+            locked:   './se/locked.mp3',
         };
         Object.entries(files).forEach(([key, src]) => {
             const a = new Audio(src);
@@ -4155,8 +4158,14 @@
     renderCollection();
     checkLoginStreak();
 
-    // タップ音: 画面のどこかをタップ/クリックした時
-    document.addEventListener('pointerdown', () => {
+    // タップ音 / ロック音
+    document.addEventListener('pointerdown', (e) => {
+        // disabledボタンをタップした時はlocked SE
+        const btn = e.target.closest('button');
+        if (btn && btn.disabled) {
+            playSE('locked');
+            return;
+        }
         playSE('tap');
     }, { passive: true });
 </script>
