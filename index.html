@@ -3147,7 +3147,7 @@
         if (!btn) return;
         if (specialTickets > 0) {
             btn.style.display = '';
-            if (label) label.textContent = `SPガチャ（未取得優先）× ${specialTickets}`;
+            if (label) label.textContent = `SPガチャ × ${specialTickets}`;
         } else {
             btn.style.display = 'none';
         }
@@ -3180,11 +3180,13 @@
         localStorage.setItem('specialTickets', specialTickets);
         updateSpecialGachaBtn();
 
-        // 通常のガチャ演出を流用
-        gachaSession.isGachaMode = true;
+        // クイズなしで直接カード獲得（通常ガチャと同じ演出）
+        gachaSession.isGachaMode = false;
         gachaSession.selectedCard = card;
-        document.getElementById('quizTitle').innerText = '✨ SPガチャ — やめる ↓';
-        showQuiz(card);
+        const rarity = getRarity(card.no);
+        playRarityAnimation(rarity, () => {
+            evaluateAndShowGachaResult(true);
+        });
     }
 
     function showLevelUpToast(lv) {
