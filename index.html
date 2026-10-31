@@ -1931,7 +1931,7 @@
     </button>
     <button class="action-btn" id="spGachaBtn" onclick="openSPEnhanceModal()"
         style="display:none;grid-column:1/-1;background:linear-gradient(150deg,#104060,#082840);color:#a0d8ff;border:1px solid rgba(80,160,255,0.5);">
-        <span class="btn-icon">💎</span><span id="spGachaLabel">SP強化 <span id="spPointBadge" style="background:rgba(80,160,255,0.3);border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px;">0pt</span></span>
+        <span class="btn-icon">🌱</span><span id="spGachaLabel">強化の種 <span id="spPointBadge" style="background:rgba(80,160,255,0.3);border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px;">0個</span></span>
     </button>
     <button class="action-btn" id="hofBtn" onclick="showHallOfFameModal()"
         style="grid-column:1/-1;background:linear-gradient(150deg,#4a3010,#2a1800);color:#f0d080;border:1px solid rgba(200,150,30,0.4);">
@@ -1944,11 +1944,11 @@
 <div id="sp-enhance-modal" class="modal-overlay" style="display:none;">
     <div class="custom-box" style="width:92%;max-width:380px;max-height:80vh;display:flex;flex-direction:column;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <h3 style="margin:0;color:#a0d8ff;font-family:'Noto Serif JP',serif;">💎 SP強化</h3>
+            <h3 style="margin:0;color:#a0d8ff;font-family:'Noto Serif JP',serif;">🌱 強化の種</h3>
             <button onclick="closeSPEnhanceModal()" style="background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:0 4px;">✕</button>
         </div>
         <p id="spEnhanceDesc" style="font-size:12px;color:#80a0c0;margin:0 0 10px;text-align:center;"></p>
-        <p style="font-size:11px;color:#607090;margin:0 0 10px;text-align:center;">強化するカードを選択してください（ATK/DEF +10）</p>
+        <p style="font-size:11px;color:#607090;margin:0 0 10px;text-align:center;">強化の種を使うカードを選択（ATK/DEF +10）</p>
         <div id="spEnhanceCardList" style="overflow-y:auto;flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 2px;"></div>
         <button onclick="closeSPEnhanceModal()" style="margin-top:12px;background:rgba(40,60,80,0.8);border:1px solid rgba(80,120,160,0.4);border-radius:8px;color:#80a0c0;padding:8px;font-size:13px;cursor:pointer;font-family:'Noto Serif JP',serif;">閉じる</button>
     </div>
@@ -3243,12 +3243,12 @@
         "伝説の魔法使い","魔法界の英雄","世界樹の守者","時空の探求者","不死の賢者"
     ];
     const XP_PER_LEVEL = 100;
-    const SP_TICKET_XP  = 500;   // 累積500XPごとにSPチケット1枚
+    const SP_TICKET_XP  = 500;   // 累積500XPごとに強化の種1個
 
     let xpData = JSON.parse(localStorage.getItem('xpData')) || { xp: 0, level: 1, totalXP: 0 };
     if (!xpData.totalXP) xpData.totalXP = 0;  // 旧データ互換
 
-    // SPポイント残数（カード強化に使用）
+    // 強化の種 残数（カード強化に使用）
     let specialTickets = parseInt(localStorage.getItem('specialTickets') || '0', 10);
     // カードごとの強化データ {cardId: {atk:N, def:N}}
     let spEnhanceData = JSON.parse(localStorage.getItem('spEnhanceData') || '{}');
@@ -3289,7 +3289,7 @@
         if (bar) bar.style.width = Math.round((xpData.xp / XP_PER_LEVEL) * 100) + '%';
         // 次のSPチケットまでの残りXPを表示
         const toNext = SP_TICKET_XP - (xpData.totalXP % SP_TICKET_XP);
-        if (label) label.textContent = `${xpData.xp}/${XP_PER_LEVEL} XP ｜ SP次回まで${toNext}XP`;
+        if (label) label.textContent = `${xpData.xp}/${XP_PER_LEVEL} XP ｜ 種まで${toNext}XP`;
     }
 
     function updateSpecialGachaBtn() {
@@ -3298,7 +3298,7 @@
         if (!btn) return;
         if (specialTickets > 0) {
             btn.style.display = '';
-            if (badge) badge.textContent = `${specialTickets}pt`;
+            if (badge) badge.textContent = `${specialTickets}個`;
         } else {
             btn.style.display = 'none';
         }
@@ -3307,7 +3307,7 @@
     function showSPTicketToast(count) {
         const t = document.getElementById('levelupToast');
         if (!t) return;
-        t.textContent = `💎 SPポイント ×${count} 獲得！カード強化に使おう！`;
+        t.textContent = `🌱 強化の種 ×${count} 獲得！`;
         t.classList.add('show');
         setTimeout(() => t.classList.remove('show'), 3000);
         confetti({ particleCount: 80, spread: 70, origin: { y: 0.4 } });
@@ -3317,7 +3317,7 @@
     function openSPEnhanceModal() {
         if (specialTickets <= 0) return;
         const desc = document.getElementById('spEnhanceDesc');
-        if (desc) desc.textContent = `SPポイント残り: ${specialTickets}pt`;
+        if (desc) desc.textContent = `強化の種 残り: ${specialTickets}個`;
         renderSPEnhanceCardList();
         const modal = document.getElementById('sp-enhance-modal');
         if (modal) { modal.style.display = 'flex'; modal.classList.add('modal-animate'); }
@@ -3363,10 +3363,10 @@
         // 演出
         confetti({ particleCount: 50, spread: 50, origin: { y: 0.5 } });
         const t = document.getElementById('levelupToast');
-        if (t) { t.textContent = '💎 強化成功！ATK/DEF +10'; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
+        if (t) { t.textContent = '🌱 強化成功！ATK/DEF +10'; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
         if (specialTickets > 0) {
             const desc = document.getElementById('spEnhanceDesc');
-            if (desc) desc.textContent = `SPポイント残り: ${specialTickets}pt`;
+            if (desc) desc.textContent = `強化の種 残り: ${specialTickets}個`;
             renderSPEnhanceCardList();
         } else {
             closeSPEnhanceModal();
@@ -4771,7 +4771,7 @@
                 const div = document.createElement('div');
                 div.className = 'battle-stage-item' + (isUnlocked ? '' : ' locked');
                 const rewardLabel = stage.reward.type === 'sp'
-                    ? `💎SP+${stage.reward.amount}pt`
+                    ? `🌱種+${stage.reward.amount}`
                     : `🎰ガチャ+${stage.reward.amount}`;
                 const unlockHint = stage.type === 'mid'
                     ? `${collected}/${half}枚収集`
@@ -5521,7 +5521,7 @@
                 updateSpecialGachaBtn();
             }
             const rewardMsg = stage.reward.type === 'sp'
-                ? `💎 SPポイント×${stage.reward.amount} 獲得！カード強化に使おう！`
+                ? `🌱 強化の種×${stage.reward.amount} 獲得！カードを強化しよう！`
                 : `🎰 ガチャ回数+${stage.reward.amount} 獲得！`;
 
             titleEl.className = 'battle-result-title win';
@@ -5942,13 +5942,13 @@
                     trainingSession.masteredIds.add(card.id);
                     trainingSession.cards = trainingSession.cards.filter(c => c.id !== card.id);
                     trainingSession.index = Math.min(trainingSession.index, trainingSession.cards.length);
-                    // 冒険中：20%の確率でSPポイント+1
+                    // 冒険中：20%の確率で強化の種+1
                     if (adventureActive && Math.random() < 0.20) {
                         specialTickets++;
                         localStorage.setItem('specialTickets', specialTickets);
                         updateSpecialGachaBtn();
                         const t = document.getElementById('levelupToast');
-                        if (t) { t.textContent = '💎 SPポイント +1 獲得！'; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
+                        if (t) { t.textContent = '🌱 強化の種 +1 獲得！'; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
                     }
                 } else {
                     trainingSession.incorrect++;
