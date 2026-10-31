@@ -7,7 +7,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         /* ===== KOTONOHA-DO SERIES DESIGN SYSTEM =====
@@ -305,12 +304,6 @@
             letter-spacing: 0.02em;
         }
         .action-btn .btn-icon { font-size: 17px; line-height: 1; }
-        /* QRスキャン */
-        .btn-scan {
-            background: linear-gradient(150deg, #3d6630, #27461a);
-            color: #d8f0c0; border: 1px solid rgba(80,160,40,0.35);
-        }
-        .btn-scan:hover { background: linear-gradient(150deg, #4a7a3a, #2f5420); }
         /* デイリーガチャ */
         @keyframes gachaPulse {
             0%, 100% { box-shadow: 0 4px 16px rgba(220,160,40,0.5), 0 0 0 0 rgba(220,160,40,0.3); }
@@ -987,14 +980,6 @@
             40%  { opacity: 1; filter: hue-rotate(180deg) brightness(2); transform: scale(1.05); }
             70%  { opacity: 0.8; filter: hue-rotate(300deg) brightness(1.5); transform: scale(1.02); }
             100% { opacity: 0; filter: hue-rotate(360deg) brightness(1); transform: scale(1.1); }
-        }
-
-        #camera-modal { background: rgba(10,8,4,0.88); z-index: 10; flex-direction: column; }
-        #reader { width: 300px; background: white; border-radius: 8px; overflow: hidden; }
-        .camera-close {
-            margin-top: 15px; padding: 8px 16px;
-            background: #fdf8ea; border: none; border-radius: 4px;
-            cursor: pointer; font-family: 'Noto Serif JP', serif;
         }
 
         /* ===== GACHA OVERLAY ===== */
@@ -1894,10 +1879,7 @@
     <button class="action-btn btn-gacha" id="gachaBtn" onclick="startGachaViaButton()" style="grid-column:span 2;">
         <span class="btn-icon">🎰</span>ガチャ <span id="gachaBtnCount"></span>
     </button>
-    <button class="action-btn btn-scan" onclick="openCamera()">
-        <span class="btn-icon">📷</span>QRスキャン
-    </button>
-    <button class="action-btn btn-coupon" onclick="openCouponModal()">
+    <button class="action-btn btn-coupon" onclick="openCouponModal()" style="grid-column:span 2;">
         <span class="btn-icon">🗝️</span>秘密の鍵
     </button>
     <button class="action-btn btn-study" id="adventureBattleBtn" onclick="adventureOrBattle()" style="grid-column:span 2;">
@@ -2074,17 +2056,11 @@
     </div>
 </div>
 
-<div id="camera-modal" class="modal-overlay">
-    <div id="reader"></div>
-    <button class="camera-close" onclick="closeCamera()">閉じる</button>
-</div>
-
 <div id="coupon-overlay" class="modal-overlay">
     <div class="custom-box">
         <h3>🗝️ 秘密の鍵</h3>
-        <p style="font-size:13px;color:#555;margin:0 0 15px 0;">鍵のコードを入力すると、ガチャを引ける回数が増えます！</p>
-        <input type="text" id="couponInput" class="modal-input" placeholder="コードを入力" autocomplete="off">
-        <button class="modal-btn" style="background:#3a6850;" onclick="submitCoupon()">コードを適用する</button><br>
+        <input type="text" id="couponInput" class="modal-input" placeholder="秘密の鍵を入力" autocomplete="off">
+        <button class="modal-btn" style="background:#3a6850;" onclick="submitCoupon()">鍵を開錠する</button><br>
         <button class="modal-cancel-btn" onclick="closeCouponModal()">閉じる</button>
     </div>
 </div>
@@ -3177,7 +3153,6 @@
 
     /* ========== STATE ========== */
     let unlockedCards = JSON.parse(localStorage.getItem('unlockedCards')) || [];
-    let html5QrcodeScanner = null;
     let currentSingleCard = null;
 
     let gachaSession = { isGachaMode: false, selectedCard: null, userAnswer: "", onDone: null };
@@ -3957,7 +3932,7 @@
     }
     function submitCoupon() {
         const inputCode = document.getElementById('couponInput').value.trim().toUpperCase();
-        if (inputCode === "") { alert("コードを入力してください。"); return; }
+        if (inputCode === "") { alert("秘密の鍵を入力してください。"); return; }
 
         // ===== 管理者テスト用クーポン（リリース時削除予定） =====
         if (inputCode === "SHION3215T") {
@@ -4555,44 +4530,6 @@
     }
 
     /* ========== CAMERA / QR ========== */
-    function openCamera() {
-        document.getElementById('camera-modal').style.display = 'flex';
-        html5QrcodeScanner = new Html5Qrcode("reader");
-        html5QrcodeScanner.start(
-            { facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess
-        ).catch(() => {
-            alert("カメラの起動に失敗しました。");
-            document.getElementById('camera-modal').style.display = 'none';
-        });
-    }
-    function closeCamera() {
-        if (html5QrcodeScanner) {
-            html5QrcodeScanner.stop().then(() => { document.getElementById('camera-modal').style.display = 'none'; });
-        } else {
-            document.getElementById('camera-modal').style.display = 'none';
-        }
-    }
-    function onScanSuccess(decodedText) {
-        closeCamera();
-        const cleanedText = decodedText.trim();
-        if (cleanedText === 'gacha-3') {
-            checkAndResetDailyGacha();
-            if (dailyGachaStorage.count <= 0) { alert("本日のガチャ回数がなくなりました。コードを入力するか明日まで待ってね！"); return; }
-            triggerGachaCore();
-            return;
-        }
-        const foundCard = cardsData.find(card => cleanedText === card.id);
-        if (foundCard) {
-            if (unlockedCards.includes(foundCard.id)) { alert(`No.${foundCard.no} のカードはすでに持っています！`); return; }
-            gachaSession.isGachaMode = false;
-            currentSingleCard = foundCard;
-            document.getElementById('quizTitle').innerText = "🔍 穴埋め問題";
-            showQuiz(foundCard);
-        } else {
-            alert("これは有効なトレカのQRコードではありません。");
-        }
-    }
-
     /* ========== GACHA CHOICE MODAL ========== */
     function openGachaChoiceModal() {
         checkAndResetDailyGacha();
