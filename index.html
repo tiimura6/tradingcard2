@@ -67,7 +67,8 @@
             background-size: cover;
             background-position: center center;
             background-repeat: no-repeat;
-            z-index: -1;
+            z-index: 0;   /* -1→0: transformでstacking contextが分離されるため0で最背面確保 */
+            pointer-events: none;
             /* iOSでのサブピクセルレンダリング最適化 */
             -webkit-transform: translateZ(0);
             transform: translateZ(0);
@@ -395,11 +396,7 @@
             background-size: cover !important;
             background-position: center center !important;
         }
-        body.battle-mode #bg-layer {
-            background-image: url('./bgm/boss-bg.jpg') !important;
-            background-size: cover !important;
-            background-position: center center !important;
-        }
+        /* battle-mode は bg-layer をそのまま維持 (ユーザー背景画像を継続表示) */
         /* 冒険モード中のモーダルに自然な半透明感 */
         body.adventure-mode .custom-box {
             background: rgba(10, 25, 8, 0.82) !important;
@@ -622,7 +619,9 @@
 
         #battle-overlay {
             display: none; position: fixed; inset: 0; z-index: 3000;
-            background: radial-gradient(ellipse at center, #1a0505 0%, #0a0202 100%);
+            /* ユーザー背景画像が #bg-layer (z-index:-1) に設定されるため、
+               ここは半透明ダークオーバーレイにして背景を透かす */
+            background: rgba(10, 2, 2, 0.72);
             flex-direction: column; align-items: center; justify-content: flex-start;
             padding: 12px 12px env(safe-area-inset-bottom);
             overflow-y: auto;
