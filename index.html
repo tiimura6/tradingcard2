@@ -4516,11 +4516,12 @@
             slot.className = 'formation-slot' + (isActive ? ' active' : '') + (card ? ' filled' : '');
             if (card) {
                 const stats = getCardStats(card);
-                const skill = UNIT_SKILLS[card.rarity] || UNIT_SKILLS['N'];
+                const cardRarity = getRarity(card.no);
+                const skill = UNIT_SKILLS[cardRarity] || UNIT_SKILLS['N'];
                 slot.innerHTML = `
                     <div class="formation-slot-label ${pos}">${bonus.label}</div>
-                    <div style="font-size:22px">${card.emoji || '🃏'}</div>
-                    <div style="font-size:11px;font-weight:bold;color:#fff">${card.name || card.word}</div>
+                    <div style="font-size:22px">🃏</div>
+                    <div style="font-size:11px;font-weight:bold;color:#fff">${card.quiz.answer}</div>
                     <div style="font-size:10px;color:#aaa">Power:${Math.round(stats.atk*bonus.atkMult)} Guard:${Math.round(stats.def*bonus.hpMult*3)}</div>
                     <div style="font-size:10px;color:#f9ca24">${skill.icon}${skill.name}</div>
                     <div style="font-size:10px;color:#aaa;cursor:pointer;margin-top:2px" onclick="removeFormationCard('${pos}')">✕ 外す</div>`;
@@ -4550,9 +4551,9 @@
             const used = formationState.usedCardIds.has(card.id);
             const div = document.createElement('div');
             div.className = 'formation-pool-card' + (used ? ' used' : '');
-            div.innerHTML = `<div style="font-size:20px">${card.emoji || '🃏'}</div>
-                             <div style="font-size:10px;color:#ddd">${(card.name||card.word).slice(0,8)}</div>
-                             <div style="font-size:9px;color:#f9ca24">${card.rarity}</div>`;
+            div.innerHTML = `<div style="font-size:20px">🃏</div>
+                             <div style="font-size:10px;color:#ddd">${card.quiz.answer.slice(0,10)}</div>
+                             <div style="font-size:9px;color:#f9ca24">${getRarity(card.no)}</div>`;
             if (!used) div.onclick = () => addCardToFormation(card);
             pool.appendChild(div);
         });
@@ -4607,7 +4608,7 @@
             const card = formationState.slots[pos];
             const stats = getCardStats(card);
             const bonus = POSITION_BONUS[pos];
-            const skill = UNIT_SKILLS[card.rarity] || UNIT_SKILLS['N'];
+            const skill = UNIT_SKILLS[getRarity(card.no)] || UNIT_SKILLS['N'];
             const maxHp = Math.round(stats.def * bonus.hpMult * 3);
             return { card, pos, bonus,
                      atk: Math.round(stats.atk * bonus.atkMult),
@@ -4697,8 +4698,8 @@
             div.className = 'battle-unit-card' + (isActive ? ' active-unit' : '');
             div.innerHTML = `
                 <div class="battle-unit-pos-label ${u.pos}">${u.bonus.label}</div>
-                <div style="font-size:24px">${u.card.emoji || '🃏'}</div>
-                <div style="font-size:10px;color:#ddd;font-weight:bold">${(u.card.name||u.card.word||'').slice(0,8)}</div>
+                <div style="font-size:24px">🃏</div>
+                <div style="font-size:10px;color:#ddd;font-weight:bold">${(u.card.quiz.answer||'').slice(0,10)}</div>
                 <div class="battle-unit-hp-bar"><div class="battle-unit-hp-fill" style="width:${hpPct}%"></div></div>
                 <div style="font-size:9px;color:#aaa">${u.hp}/${u.maxHp}</div>
                 <div class="battle-unit-skill-label">${u.skill.icon}${u.skill.name}</div>`;
