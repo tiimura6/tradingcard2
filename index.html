@@ -3846,7 +3846,6 @@
             ${(()=>{
                 checkDailyChallengeReset(); checkWeeklyChallengeReset();
                 const dc = dailyChallenges, wc = weeklyChallenges;
-                const hof = hallOfFame;
                 const dailyDone = Object.values(dc.completed).filter(Boolean).length;
                 const weeklyDone = Object.values(wc.completed).filter(Boolean).length;
                 function ciRow(done, label, cur, target, reward) {
@@ -3858,8 +3857,6 @@
                 }
                 const wkDone = wc.completed.streak7, ws = loginStreak.streak;
                 const wkP = !wkDone ? ` (${Math.min(ws,7)}/7)` : '';
-                const hofData = hof['金の手帖'];
-                const hofPct = Math.min(100,(hofData.currentStreak/100)*100);
                 return `
             <div style="background:rgba(10,5,30,0.7);border:1px solid rgba(80,120,200,0.25);border-radius:10px;padding:12px;margin-bottom:12px;">
                 <div style="color:#88aaff;font-size:12px;font-weight:bold;margin-bottom:8px;">📅 デイリーチャレンジ <span style="color:#a090c0;font-weight:normal;">${dailyDone}/5</span></div>
@@ -3874,13 +3871,7 @@
                 ${ciRow(wc.completed.quiz30,'クイズ30問正解',wc.progress.quizCorrect,30,'+2回')}
                 ${ciRow(wkDone,'7日連続ログイン'+wkP,0,0,'+5回')}
             </div>
-            <div style="background:rgba(10,5,30,0.7);border:1px solid rgba(200,170,50,0.3);border-radius:10px;padding:12px;margin-bottom:12px;">
-                <div style="color:#e8d070;font-size:12px;font-weight:bold;margin-bottom:6px;">📒 金の手帖 ${hofData.achieved?'<span style="color:#f0c840;">殿堂入り！</span>':`<span style="color:#a090c0;">${hofData.currentStreak}/100</span>`}</div>
-                <div style="height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;margin-bottom:4px;">
-                    <div style="height:100%;width:${hofPct}%;background:${hofData.achieved?'#f0c840':'#c09020'};border-radius:3px;transition:width 0.4s;"></div>
-                </div>
-                <div style="color:#807090;font-size:10px;">最高連続正解: ${hofData.bestStreak} 問 | 報酬: ガチャ+30回</div>
-            </div>`;
+            `;
             })()}
 
             <button class="training-start-btn" onclick="openTrainingMode()">✏️ トレーニング開始</button>`;
