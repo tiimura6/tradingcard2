@@ -3906,7 +3906,7 @@
 
         el.innerHTML = `
             <div style="color:#e8d070;font-size:17px;font-weight:bold;margin-bottom:4px;font-family:'Noto Serif JP',serif;">🏋 トレーニング</div>
-            <div style="color:#a090c0;font-size:12px;margin-bottom:2px;">解禁タブ内 <strong style="color:#f0c840;">${poolSize}</strong> 枚の単語からランダム出題</div>
+            <div style="color:#a090c0;font-size:12px;margin-bottom:2px;">解禁タブ内の単語からランダム出題</div>
             <div style="color:#807090;font-size:11px;margin-bottom:12px;">例文中の（　　）に入る単語を選ぼう</div>
 
             <div style="background:rgba(10,5,30,0.7);border:1px solid rgba(180,150,60,0.2);border-radius:10px;padding:12px;margin-bottom:12px;">
@@ -4398,11 +4398,13 @@
     function triggerGachaCore(onDone) {
         if (cardsData.length === 0) { alert("カードデータがありません。"); return; }
 
-        // 解禁済みタブのカードプールから重み付き抽選
+        // 解禁済みタブのカードプールから未取得カードのみ抽選
         const unlockedCount = getUnlockedTabCount();
         const end     = Math.min(unlockedCount * COLLECTION_PAGE_SIZE, cardsData.length);
         const tabPool = cardsData.slice(0, end);
-        const randomCard = weightedGachaPick(tabPool);
+        const uncollectedPool = tabPool.filter(c => !unlockedCards.includes(c.id));
+        const drawPool = uncollectedPool.length > 0 ? uncollectedPool : tabPool;
+        const randomCard = weightedGachaPick(drawPool);
 
         gachaSession.isGachaMode = false;
         gachaSession.selectedCard = randomCard;
