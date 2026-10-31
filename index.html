@@ -346,6 +346,54 @@
         }
         .btn-study:hover { background: linear-gradient(150deg, #46347c, #281855); }
 
+        /* ===== 冒険モード 背景フェード ===== */
+        #adventure-fade {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 9999;
+            transition: opacity 0.6s ease;
+        }
+        body.adventure-mode {
+            background-color: #0a1a08;
+        }
+        body.adventure-mode .stars-layer { display: none; }
+        body.adventure-mode .particles  { display: none; }
+        #adventure-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            display: none;
+            background:
+                radial-gradient(ellipse at 20% 80%, rgba(20,60,10,0.95) 0%, transparent 55%),
+                radial-gradient(ellipse at 80% 20%, rgba(10,40,5,0.9) 0%, transparent 55%),
+                radial-gradient(ellipse at 50% 50%, rgba(5,25,3,1) 0%, #050f03 100%);
+            overflow: hidden;
+        }
+        #adventure-bg::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 15% 60%, rgba(60,120,20,0.25) 0%, transparent 30%),
+                radial-gradient(circle at 85% 40%, rgba(40,100,15,0.2) 0%, transparent 25%),
+                radial-gradient(circle at 50% 90%, rgba(80,140,30,0.15) 0%, transparent 40%);
+        }
+        /* 木漏れ日パーティクル */
+        @keyframes adv-float {
+            0%   { transform: translateY(0) translateX(0) scale(1);    opacity: 0.7; }
+            33%  { transform: translateY(-18px) translateX(8px) scale(1.1); opacity: 1; }
+            66%  { transform: translateY(-8px)  translateX(-5px) scale(0.9); opacity: 0.85; }
+            100% { transform: translateY(0) translateX(0) scale(1);    opacity: 0.7; }
+        }
+        .adv-particle {
+            position: absolute;
+            border-radius: 50%;
+            animation: adv-float linear infinite;
+        }
+
         /* ===== MODAL OVERLAYS (challenge / training) ===== */
         .modal-inner-scroll {
             max-height: 78vh; overflow-y: auto;
@@ -1620,6 +1668,8 @@
 </head>
 <body>
 <div id="bg-layer"></div>
+<div id="adventure-bg"></div>
+<div id="adventure-fade"></div>
 
 <!-- ===== ATMOSPHERIC BACKGROUND LAYERS ===== -->
 <!-- Star field -->
@@ -1801,8 +1851,8 @@
     <button class="action-btn btn-coupon" onclick="openCouponModal()">
         <span class="btn-icon">🎫</span>クーポン入力
     </button>
-    <button class="action-btn btn-study" onclick="showTrainingModal()" style="grid-column:span 2;">
-        <span class="btn-icon">🏋</span>トレーニング
+    <button class="action-btn btn-study" onclick="enterAdventureMode()" style="grid-column:span 2;">
+        <span class="btn-icon">🗺️</span>冒険
     </button>
     <button class="action-btn btn-battle" onclick="openBattleStageModal()" style="grid-column:span 2;">
         <span class="btn-icon">⚔️</span>バトル
@@ -3865,6 +3915,105 @@
         alert("クーポン適用成功！🎉");
     }
 
+    /* ========== 冒険モード（背景・BGM切り替え） ========== */
+    let adventureActive = false;
+    let adventureBGM = null;
+
+    function enterAdventureMode() {
+        if (adventureActive) { showTrainingModal(); return; }
+        adventureActive = true;
+        const fade = document.getElementById('adventure-fade');
+        const advBg = document.getElementById('adventure-bg');
+
+        // フェードアウト
+        fade.style.pointerEvents = 'all';
+        fade.style.opacity = '1';
+
+        setTimeout(() => {
+            // 背景切り替え
+            document.body.classList.add('adventure-mode');
+            advBg.style.display = 'block';
+            spawnAdvParticles(advBg);
+
+            // BGM切り替え（メインBGMをフェードアウト）
+            if (bgmOn) {
+                if (bgmAudio) {
+                    bgmAudio.pause();
+                }
+                // gacha.mp3 を冒険BGMとして使用
+                if (!adventureBGM) {
+                    adventureBGM = new Audio('./bgm/gacha.mp3');
+                    adventureBGM.loop = true;
+                    adventureBGM.volume = 0.35;
+                }
+                adventureBGM.currentTime = 0;
+                adventureBGM.play().catch(() => {});
+            }
+
+            // フェードイン
+            fade.style.opacity = '0';
+            setTimeout(() => {
+                fade.style.pointerEvents = 'none';
+                showTrainingModal();
+            }, 650);
+        }, 650);
+    }
+
+    function exitAdventureMode() {
+        if (!adventureActive) return;
+        adventureActive = false;
+        const fade = document.getElementById('adventure-fade');
+        const advBg = document.getElementById('adventure-bg');
+
+        // フェードアウト
+        fade.style.pointerEvents = 'all';
+        fade.style.opacity = '1';
+
+        setTimeout(() => {
+            // 背景を元に戻す
+            document.body.classList.remove('adventure-mode');
+            advBg.style.display = 'none';
+            advBg.innerHTML = '';
+
+            // BGMを元に戻す
+            if (adventureBGM) {
+                adventureBGM.pause();
+            }
+            if (bgmOn && bgmAudio) {
+                bgmAudio.currentTime = 0;
+                bgmAudio.play().catch(() => {});
+            }
+
+            // フェードイン
+            fade.style.opacity = '0';
+            setTimeout(() => { fade.style.pointerEvents = 'none'; }, 650);
+        }, 650);
+    }
+
+    function spawnAdvParticles(container) {
+        container.innerHTML = '';
+        const count = 28;
+        for (let i = 0; i < count; i++) {
+            const p = document.createElement('div');
+            p.className = 'adv-particle';
+            const size = 4 + Math.random() * 12;
+            const x = Math.random() * 100;
+            const y = Math.random() * 100;
+            const dur = 4 + Math.random() * 8;
+            const delay = -Math.random() * dur;
+            const hue = 80 + Math.random() * 60; // 緑〜黄緑
+            const alpha = 0.3 + Math.random() * 0.5;
+            p.style.cssText = `
+                width:${size}px; height:${size}px;
+                left:${x}%; top:${y}%;
+                background: radial-gradient(circle, hsla(${hue},80%,65%,${alpha}), transparent 70%);
+                animation-duration: ${dur}s;
+                animation-delay: ${delay}s;
+            `;
+            container.appendChild(p);
+        }
+    }
+
     /* ========== TRAINING MODAL ========== */
     function showTrainingModal() {
         const el = document.getElementById('trainingModalContent');
@@ -3972,6 +4121,7 @@
     }
     function closeTrainingModal() {
         document.getElementById('training-modal').style.display = 'none';
+        exitAdventureMode();
     }
 
     /* ========== 殿堂入りへの道 ========== */
@@ -5346,6 +5496,7 @@
             if (quitBtn) quitBtn.style.display = '';
             trainingSession.active = false;
             stopTrainingTimer();
+            exitAdventureMode();
         };
         choicesEl.appendChild(closeBtn);
         if (rate === 100) confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
@@ -5365,6 +5516,7 @@
         gachaSession.isGachaMode = false;
         trainingSession.active = false; // exit training mode
         stopTrainingTimer(); // 時間ボーナス自動チェック停止
+        exitAdventureMode();
         // バトル中: battle-overlayはそのまま表示継続（非表示にしていないため不要）
         if (battleSession.active) {
             document.getElementById('battleQuizBtn').style.display = 'flex';
