@@ -3336,26 +3336,36 @@
         list.innerHTML = owned.length === 0
             ? '<div style="grid-column:span 2;text-align:center;color:#607090;padding:20px">カードを取得してください</div>'
             : owned.map(c => {
-                const enh = spEnhanceData[c.id] || { atk: 0, def: 0 };
+                const enhEntry = spEnhanceData[c.id];
+                const enhCount = enhEntry
+                    ? (enhEntry.count !== undefined ? enhEntry.count : Math.round((enhEntry.atk || 0) / 10))
+                    : 0;
                 const baseStats = getCardStats(c, false);
+                const enhStats = getCardStats(c, true);
                 const rarity = getRarity(c.no);
                 const rc = RARITY_CONFIG[rarity] || { color: '#888', glow: '#888' };
+                const pctLabel = enhCount > 0 ? `+${enhCount * 10}%` : '';
                 return `<div onclick="applySPEnhance('${c.id}')" style="cursor:pointer;background:rgba(10,30,50,0.7);border:1px solid rgba(80,140,200,0.35);border-radius:10px;padding:8px;text-align:center;transition:all 0.2s;position:relative;"
                     onmouseover="this.style.borderColor='rgba(100,180,255,0.7)'" onmouseout="this.style.borderColor='rgba(80,140,200,0.35)'">
                     <div style="font-size:22px;margin-bottom:4px;">${c.emoji || '🃏'}</div>
                     <div style="font-size:10px;font-weight:bold;color:${rc.color};margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.en}</div>
-                    <div style="font-size:9px;color:#607090;">ATK ${baseStats.atk}${enh.atk > 0 ? `<span style="color:#4af;"> +${enh.atk}</span>` : ''}</div>
-                    <div style="font-size:9px;color:#607090;">DEF ${baseStats.def}${enh.def > 0 ? `<span style="color:#4af;"> +${enh.def}</span>` : ''}</div>
-                    ${enh.atk > 0 || enh.def > 0 ? `<div style="position:absolute;top:4px;right:4px;font-size:9px;background:rgba(0,100,200,0.5);border-radius:6px;padding:1px 4px;color:#a0d8ff;">💎×${enh.atk/10}</div>` : ''}
+                    <div style="font-size:9px;color:#607090;">ATK ${baseStats.atk}${enhCount > 0 ? `<span style="color:#4af;"> →${enhStats.atk}</span>` : ''}</div>
+                    <div style="font-size:9px;color:#607090;">DEF ${baseStats.def}${enhCount > 0 ? `<span style="color:#4af;"> →${enhStats.def}</span>` : ''}</div>
+                    ${enhCount > 0 ? `<div style="position:absolute;top:4px;right:4px;font-size:9px;background:rgba(0,100,200,0.5);border-radius:6px;padding:1px 4px;color:#a0d8ff;">🌱${pctLabel}</div>` : ''}
                 </div>`;
             }).join('');
     }
 
     function applySPEnhance(cardId) {
         if (specialTickets <= 0) { closeSPEnhanceModal(); return; }
-        if (!spEnhanceData[cardId]) spEnhanceData[cardId] = { atk: 0, def: 0 };
-        spEnhanceData[cardId].atk += 10;
-        spEnhanceData[cardId].def += 10;
+        if (!spEnhanceData[cardId]) spEnhanceData[cardId] = { count: 0 };
+        // 旧フォーマット(atk/def)からcountへ移行
+        if (spEnhanceData[cardId].count === undefined) {
+            spEnhanceData[cardId].count = Math.round((spEnhanceData[cardId].atk || 0) / 10);
+            delete spEnhanceData[cardId].atk;
+            delete spEnhanceData[cardId].def;
+        }
+        spEnhanceData[cardId].count++;
         specialTickets--;
         localStorage.setItem('specialTickets', specialTickets);
         localStorage.setItem('spEnhanceData', JSON.stringify(spEnhanceData));
@@ -3363,7 +3373,8 @@
         // 演出
         confetti({ particleCount: 50, spread: 50, origin: { y: 0.5 } });
         const t = document.getElementById('levelupToast');
-        if (t) { t.textContent = '🌱 強化成功！ATK/DEF +10'; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
+        const newCount = spEnhanceData[cardId].count;
+        if (t) { t.textContent = `🌱 強化成功！ATK/DEF +${newCount * 10}%`; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
         if (specialTickets > 0) {
             const desc = document.getElementById('spEnhanceDesc');
             if (desc) desc.textContent = `強化の種 残り: ${specialTickets}個`;
@@ -3676,10 +3687,17 @@
         const rarity = getRarity(card.no);
         const playerBonus = Math.floor((xpData.level - 1) * (rarityGrowth[rarity] || 0.5));
         // SP強化ボーナス（withSPBonus=falseの時はベースステータスのみ）
-        const sp = (withSPBonus !== false && spEnhanceData && spEnhanceData[card.id]) ? spEnhanceData[card.id] : { atk: 0, def: 0 };
+        // 強化の種1個 = ATK/DEF ベース値の10%アップ（累積）
+        const enhEntry = spEnhanceData && spEnhanceData[card.id];
+        const enhCount = withSPBonus !== false && enhEntry
+            ? (enhEntry.count !== undefined ? enhEntry.count : Math.round((enhEntry.atk || 0) / 10)) // 旧フォーマット互換
+            : 0;
+        const pct = 1 + enhCount * 0.10;
+        const baseAtk = base + pos + seed + levelBonus + playerBonus;
+        const baseDef = base + srsBonus + (20 - seed) + levelBonus + playerBonus;
         return {
-            atk: base + pos + seed + levelBonus + playerBonus + (sp.atk || 0),
-            def: base + srsBonus + (20 - seed) + levelBonus + playerBonus + (sp.def || 0)
+            atk: Math.round(baseAtk * pct),
+            def: Math.round(baseDef * pct)
         };
     }
 
