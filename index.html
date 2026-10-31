@@ -805,6 +805,11 @@
         #battle-overlay.screen-shake {
             animation: screenShake 0.35s ease;
         }
+        /* battle-overlayをGPUレイヤーに昇格させてリフロー時のちらつきを防止 */
+        #battle-overlay {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
 
         /* 勝利 */
         @keyframes victoryTitle {
@@ -4833,9 +4838,13 @@
             const overlay = document.getElementById('battle-overlay');
             if (overlay) {
                 overlay.classList.remove('screen-shake');
-                void overlay.offsetWidth;
-                overlay.classList.add('screen-shake');
-                setTimeout(() => overlay.classList.remove('screen-shake'), 380);
+                // rAFでアニメーション再開始（offsetWidthリフロー不要）
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        overlay.classList.add('screen-shake');
+                        setTimeout(() => overlay.classList.remove('screen-shake'), 380);
+                    });
+                });
             }
             showDamageFloat(dmg, false, '#88aaff');
 
@@ -4885,9 +4894,13 @@
             battleFlash('hit-flash');
             const overlay = document.getElementById('battle-overlay');
             if (overlay) {
-                overlay.classList.remove('screen-shake'); void overlay.offsetWidth;
-                overlay.classList.add('screen-shake');
-                setTimeout(() => overlay.classList.remove('screen-shake'), 380);
+                overlay.classList.remove('screen-shake');
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        overlay.classList.add('screen-shake');
+                        setTimeout(() => overlay.classList.remove('screen-shake'), 380);
+                    });
+                });
             }
             showDamageFloat(dmg, false, '#88aaff');
         }
