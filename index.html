@@ -4082,7 +4082,14 @@
     function toggleBGM() {
         const btn = document.getElementById('bgmBtn');
         if (!bgmOn) {
-            buildBGM();
+            if (bgmAudio) {
+                // 既にロード済み → currentTimeをリセットして確実に再生
+                bgmAudio.currentTime = 0;
+                bgmAudio.loop = true;
+                bgmAudio.play().catch(() => {});
+            } else {
+                buildBGM();
+            }
             if (bgmCtx && bgmCtx.state === 'suspended') bgmCtx.resume();
             bgmOn = true;
             if (btn) { btn.innerHTML = '🔊 BGM'; btn.style.color = 'rgba(255,210,60,1)'; btn.style.borderColor = 'rgba(255,210,60,0.9)'; btn.style.background = 'rgba(80,50,0,0.85)'; }
