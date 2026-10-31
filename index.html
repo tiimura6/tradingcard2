@@ -312,15 +312,26 @@
         }
         .btn-scan:hover { background: linear-gradient(150deg, #4a7a3a, #2f5420); }
         /* デイリーガチャ */
-        .btn-gacha {
-            background: linear-gradient(150deg, #4a3474, #2c1a52);
-            color: #e8d0ff; border: 1px solid rgba(140,80,220,0.35);
+        @keyframes gachaPulse {
+            0%, 100% { box-shadow: 0 4px 16px rgba(220,160,40,0.5), 0 0 0 0 rgba(220,160,40,0.3); }
+            50%       { box-shadow: 0 4px 24px rgba(220,160,40,0.8), 0 0 0 8px rgba(220,160,40,0); }
         }
-        .btn-gacha:hover { background: linear-gradient(150deg, #5a3c88, #341e60); }
+        .btn-gacha {
+            background: linear-gradient(135deg, #7a4a00, #4a2800, #7a4a00);
+            background-size: 200% 100%;
+            color: #ffe080; border: 2px solid rgba(255,200,60,0.7);
+            font-size: 15px; padding: 14px 10px;
+            animation: gachaPulse 2.4s ease-in-out infinite;
+            letter-spacing: 0.05em;
+        }
+        .btn-gacha:hover {
+            background: linear-gradient(135deg, #9a6000, #5a3400, #9a6000);
+            filter: brightness(1.15);
+        }
         .btn-gacha:disabled {
             background: linear-gradient(#6a6560, #4a4440);
             border-color: rgba(100,90,80,0.3); color: #a09888;
-            cursor: not-allowed; box-shadow: none;
+            cursor: not-allowed; box-shadow: none; animation: none;
         }
         /* クーポン */
         .btn-coupon {
@@ -682,6 +693,162 @@
             background: rgba(255,200,50,0.15); color: #f0c040; border: 1px solid rgba(255,200,50,0.3);
         }
 
+        /* ===== BATTLE ANIMATIONS ===== */
+        /* バトル画面入場アニメーション */
+        @keyframes battleOverlayEnter {
+            0%   { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        #battle-overlay.battle-enter {
+            animation: battleOverlayEnter 0.5s ease forwards;
+        }
+
+        /* ルーン文字背景 */
+        #battle-overlay::before {
+            content: '';
+            position: fixed; inset: 0; z-index: -1; pointer-events: none;
+            background-image:
+                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(180,40,40,0.18) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 40% at 20% 100%, rgba(120,20,20,0.12) 0%, transparent 70%);
+        }
+
+        /* 敵スプライト: 浮遊アニメーション */
+        @keyframes enemyFloat {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50%       { transform: translateY(-8px) scale(1.03); }
+        }
+        .battle-enemy-sprite.floating {
+            animation: enemyFloat 3s ease-in-out infinite;
+        }
+
+        /* 敵登場アニメーション */
+        @keyframes enemyAppear {
+            0%   { opacity: 0; transform: scale(0.3) translateY(30px); filter: blur(8px); }
+            60%  { opacity: 1; transform: scale(1.1) translateY(-6px); filter: blur(0); }
+            100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+        }
+        .battle-enemy-sprite.appearing {
+            animation: enemyAppear 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* 攻撃成功: 敵に強烈なダメージ */
+        @keyframes battleShakeBig {
+            0%,100%{transform:translateX(0) scale(1)}
+            15%{transform:translateX(-12px) scale(0.95)}
+            30%{transform:translateX(12px) scale(1.05)}
+            45%{transform:translateX(-8px) scale(0.97)}
+            60%{transform:translateX(8px) scale(1.03)}
+            75%{transform:translateX(-4px)}
+        }
+        .battle-enemy-sprite.shake {
+            animation: battleShakeBig 0.45s ease !important;
+        }
+
+        /* 攻撃を受けた: プレイヤーへの被弾エフェクト */
+        @keyframes battlePlayerHit {
+            0%,100%{transform:scale(1) rotate(0deg)}
+            25%{transform:scale(1.25) rotate(-8deg)}
+            50%{transform:scale(0.9) rotate(5deg)}
+            75%{transform:scale(1.1) rotate(-3deg)}
+        }
+        .battle-enemy-sprite.playerHit {
+            animation: battlePlayerHit 0.5s ease !important;
+        }
+
+        /* 画面フラッシュエフェクト */
+        .battle-flash-overlay {
+            position: fixed; inset: 0; z-index: 9998; pointer-events: none;
+            animation: battleFlash 0.35s ease forwards;
+        }
+        @keyframes battleFlash {
+            0%   { opacity: 0.7; }
+            100% { opacity: 0; }
+        }
+        .battle-flash-overlay.atk-flash { background: rgba(255, 80, 0, 0.4); }
+        .battle-flash-overlay.hit-flash { background: rgba(60, 100, 255, 0.3); }
+
+        /* カードが飛んでいくアニメーション */
+        @keyframes cardAttack {
+            0%   { transform: translateX(0) translateY(0) scale(1) rotate(0deg); opacity: 1; }
+            50%  { transform: translateX(40px) translateY(-60px) scale(0.85) rotate(-15deg); opacity: 1; }
+            80%  { transform: translateX(80px) translateY(-100px) scale(0.6) rotate(-25deg); opacity: 0.6; }
+            100% { transform: translateX(120px) translateY(-80px) scale(0.3) rotate(-30deg); opacity: 0; }
+        }
+        .battle-current-card.attacking {
+            animation: cardAttack 0.5s ease forwards;
+        }
+
+        /* 敵のオーラ（ダメージ後に赤く光る） */
+        @keyframes enemyDamageGlow {
+            0%,100% { filter: drop-shadow(0 0 0px transparent); }
+            40%     { filter: drop-shadow(0 0 18px rgba(255,80,0,0.9)) drop-shadow(0 0 30px rgba(255,0,0,0.5)); }
+        }
+        .battle-enemy-sprite.glow-damage {
+            animation: enemyDamageGlow 0.6s ease;
+        }
+
+        /* プレイヤーが被弾: 画面が揺れる */
+        @keyframes screenShake {
+            0%,100%{transform:translateX(0)}
+            20%{transform:translateX(-6px)}
+            40%{transform:translateX(6px)}
+            60%{transform:translateX(-4px)}
+            80%{transform:translateX(4px)}
+        }
+        #battle-overlay.screen-shake {
+            animation: screenShake 0.35s ease;
+        }
+
+        /* 勝利 */
+        @keyframes victoryTitle {
+            0%   { opacity: 0; transform: scale(0.5) rotate(-5deg); }
+            60%  { opacity: 1; transform: scale(1.15) rotate(3deg); }
+            100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+        @keyframes victoryPulse {
+            0%, 100% { text-shadow: 0 0 20px gold, 0 0 40px #ff8c00; }
+            50%       { text-shadow: 0 0 40px gold, 0 0 80px #ff4500, 0 0 120px gold; }
+        }
+        .battle-result-title.win {
+            color: #ffd700;
+            animation: victoryTitle 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards,
+                       victoryPulse 2s ease-in-out 0.6s infinite;
+        }
+
+        /* 敗北 */
+        @keyframes defeatTitle {
+            0%   { opacity: 0; transform: translateY(-30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes defeatShimmer {
+            0%, 100% { text-shadow: 0 0 15px #cc4444; }
+            50%       { text-shadow: 0 0 30px #ff2222, 0 0 50px #880000; }
+        }
+        .battle-result-title.lose {
+            color: #cc4444;
+            animation: defeatTitle 0.5s ease forwards,
+                       defeatShimmer 2.5s ease-in-out 0.5s infinite;
+        }
+
+        /* バトル結果オーバーレイの入場 */
+        @keyframes resultOverlayIn {
+            0%   { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        .battle-result-overlay.showing {
+            animation: resultOverlayIn 0.4s ease forwards;
+        }
+
+        /* HPバー低下時のパルス */
+        @keyframes hpBarLowPulse {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.6; }
+        }
+        .battle-hp-bar-fill.low {
+            background: linear-gradient(90deg, #ffaa22, #dd7700);
+            animation: hpBarLowPulse 1s ease-in-out infinite;
+        }
+
         /* ===== GACHA RARITY ANIMATION OVERLAY ===== */
         #gacha-anim-overlay {
             display: none; position: fixed; inset: 0; z-index: 10000;
@@ -758,7 +925,7 @@
             flex-wrap: wrap; max-width: 90%; perspective: 1000px; margin-bottom: 30px;
         }
         .gacha-card {
-            width: 140px; height: 240px; transform-style: preserve-3d;
+            width: 200px; height: 340px; transform-style: preserve-3d;
             transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .gacha-card.do-flip { transform: rotateY(180deg); }
@@ -795,13 +962,19 @@
             z-index: 30; justify-content: center; align-items: center;
         }
         .zoom-box {
-            position: relative; background: linear-gradient(160deg, #f4f0fa 0%, #ede8f8 100%); padding: 15px;
-            border-radius: 20px; width: 85%; max-width: 320px;
-            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.6), 0 0 20px rgba(100,60,180,0.2);
+            position: relative; background: linear-gradient(160deg, #f4f0fa 0%, #ede8f8 100%); padding: 14px;
+            border-radius: 20px; width: 92%; max-width: 520px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6), 0 0 20px rgba(100,60,180,0.2);
             animation: zoomIn 0.25s ease-out; border: 3px solid #9a7a3a;
+            max-height: 90vh; overflow-y: auto;
         }
-        .zoom-box img { width: 100%; height: auto; border-radius: 12px; }
-        .zoom-info { margin-top: 12px; font-size: 18px; font-weight: bold; color: #2a1a50; font-family: 'Noto Serif JP', serif; }
+        .zoom-card-layout {
+            display: flex; gap: 12px; align-items: flex-start;
+        }
+        .zoom-card-img { flex: 0 0 auto; width: 42%; max-width: 160px; }
+        .zoom-card-img img { width: 100%; height: auto; border-radius: 10px; display: block; }
+        .zoom-card-back { flex: 1; min-width: 0; text-align: left; }
+        .zoom-info { font-size: 18px; font-weight: bold; color: #2a1a50; font-family: 'Noto Serif JP', serif; }
         .zoom-close-btn {
             position: absolute; top: -15px; right: -15px;
             width: 36px; height: 36px; background: #8a4040;
@@ -1411,19 +1584,19 @@
 </div>
 
 <div class="action-grid">
-    <button class="action-btn btn-scan" onclick="openCamera()">
-        <span class="btn-icon">📷</span>QRスキャン
-    </button>
     <button class="action-btn btn-gacha" id="gachaBtn" onclick="openGachaChoiceModal()" style="grid-column:span 2;">
         <span class="btn-icon">🎰</span>ガチャ <span id="gachaBtnCount"></span>
+    </button>
+    <button class="action-btn btn-scan" onclick="openCamera()">
+        <span class="btn-icon">📷</span>QRスキャン
     </button>
     <button class="action-btn btn-coupon" onclick="openCouponModal()">
         <span class="btn-icon">🎫</span>クーポン入力
     </button>
-    <button class="action-btn btn-study" onclick="showTrainingModal()">
+    <button class="action-btn btn-study" onclick="showTrainingModal()" style="grid-column:span 2;">
         <span class="btn-icon">🏋</span>トレーニング
     </button>
-    <button class="action-btn btn-battle" onclick="openBattleStageModal()">
+    <button class="action-btn btn-battle" onclick="openBattleStageModal()" style="grid-column:span 2;">
         <span class="btn-icon">⚔️</span>バトル
     </button>
     <button class="action-btn" id="spGachaBtn" onclick="triggerSpecialGacha()"
@@ -1759,10 +1932,10 @@
         3: { meaning: 'あらゆる境遇・職業の人々', answer: 'a walk of life', example: 'Every walk of life had worn this ancient enchanted stone path smooth over centuries of silent journeys.', pos: 'n.phr.' },
         4: { meaning: '捨てる／放棄する', answer: 'abandon', example: 'The enchanted cottage had been abandoned so long that glowing vines had swallowed every wall.', pos: 'v.' },
         5: { meaning: '異常', answer: 'abnormality', example: 'Scientists noticed an abnormality in the field — a single blue flower glowing among thousands of white ones.', pos: 'n.' },
-        6: { meaning: '廃止する', answer: 'abolish', example: 'The ancient enchanted chains on the glowing mossy enchanted ground seemed to abolish all memory of what once bound this place.', pos: 'v.' },
+        6: { meaning: '廃止する', answer: 'abolish', example: 'The townsfolk voted to abolish the old law, and the iron gates that had long blocked the road were finally removed.', pos: 'v.' },
         7: { meaning: '絶対的な', answer: 'absolute', example: 'There was absolute stillness over the ancient enchanted mountain lake, its surface a perfect mirror of the blue sky.', pos: 'adj.' },
         8: { meaning: '吸収する', answer: 'absorb', example: 'The ancient parchment absorbed the silver ink, and glowing spell letters began to form across its surface.', pos: 'v.' },
-        9: { meaning: '豊富な', answer: 'abundant', example: 'The enchanted autumn enchanted harvest was so abundant that the woven magical baskets overflowed with ripe magical fruit in the magical golden light.', pos: 'adj.' },
+        9: { meaning: '豊富な', answer: 'abundant', example: 'The autumn harvest was so abundant that the baskets overflowed with ripe fruit in the warm golden light.', pos: 'adj.' },
         10: { meaning: 'アクセスしやすい', answer: 'accessible', example: 'The ancient wooden bridge made the magically lit clearing on the far bank easily accessible.', pos: 'adj.' },
         11: { meaning: '達成／功績', answer: 'accomplishment', example: 'Reaching the summit felt like a true accomplishment as the enchanted storm clouds rolled below her feet.', pos: 'n.' },
         12: { meaning: '説明する', answer: 'account for', example: 'The mystical river\'s long record of rising could account for all the marks carved into the ancient enchanted stone wall.', pos: 'phr.v.' },
@@ -1771,11 +1944,11 @@
         15: { meaning: '酸', answer: 'acid', example: 'The vivid green liquid bubbling in the flask turned the surrounding stone pale — a powerful acid.', pos: 'n.' },
         16: { meaning: '習得する／入手する', answer: 'acquire', example: 'Over years, the old chest had acquired a remarkable collection of glowing gems.', pos: 'v.' },
         17: { meaning: '適応する', answer: 'adapt', example: 'Like the chameleon-colored lizard blending into enchanted autumn leaves, she learned to adapt to any situation.', pos: 'v.' },
-        18: { meaning: '適応', answer: 'adaptation', example: 'The enchanted cactus\'s adaptation allowed it to magical bloom unexpectedly, even in the heart of a lush green forest.', pos: 'n.' },
+        18: { meaning: '適応', answer: 'adaptation', example: 'The cactus\'s remarkable adaptation allowed it to bloom unexpectedly, even in the heart of a lush green forest.', pos: 'n.' },
         19: { meaning: '〜に加える', answer: 'add to', example: 'Each falling glowing droplet seemed to add to the still pond\'s depth, ring by ring.', pos: 'phr.v.' },
         20: { meaning: 'これに加えて', answer: 'add to this', example: 'Add to this the layers of color settling in the enchanted water, and the picture becomes vivid.', pos: 'phr.v.' },
-        21: { meaning: '住所／取り組む／話しかける', answer: 'address', example: 'The glowing letterbox on the ivy-covered wall address seemed to belong to another world entirely.', pos: 'v.' },
-        22: { meaning: '調整する', answer: 'adjust', example: 'He adjusted his direction the way a compass needle slowly adjusts until it finds due north.', pos: 'v.' },
+        21: { meaning: '住所／取り組む／話しかける', answer: 'address', example: 'She rose to address the crowd gathered in the stone courtyard, her voice steady in the evening air.', pos: 'v.' },
+        22: { meaning: '調整する', answer: 'adjust', example: 'A good navigator must adjust the sails whenever the wind shifts direction without warning.', pos: 'v.' },
         23: { meaning: '管理／行政', answer: 'administration', example: 'The enchanted library\'s careful administration was evident in the rows of perfectly ordered leather-bound books.', pos: 'n.' },
         24: { meaning: '称賛', answer: 'admiration', example: 'She watched the ancient tree with quiet admiration, the lone firefly hovering before its vast trunk.', pos: 'n.' },
         25: { meaning: '確かに', answer: 'admittedly', example: 'Admittedly, the ancient scroll was hard to read, but its message carved into mossy stone was clear.', pos: 'adv.' },
@@ -1794,20 +1967,20 @@
         38: { meaning: '素人っぽい', answer: 'amateurish', example: 'The handmade enchanted wooden birdhouse was charmingly amateurish, its angles uneven, its roof just slightly too small.', pos: 'adj.' },
         39: { meaning: 'アミノ酸', answer: 'amino acid', example: 'The glowing beads of light threaded together in the deep blue, like a string of amino acids.', pos: 'n.' },
         40: { meaning: '楽しませる', answer: 'amuse', example: 'The colorful pinwheels spinning in the enchanted garden breeze seemed to amuse anyone who passed by.', pos: 'v.' },
-        41: { meaning: '釣り人', answer: 'angler', example: 'The enchanted fishing rod leaning against the glowing mossy stone suggested an solitary enchanted angler had been here not long ago.', pos: 'n.' },
-        42: { meaning: '苦悩', answer: 'anguish', example: 'The enchanted wilting enchanted rose on the cracked earth seemed to express the anguish of the long, dry season.', pos: 'n.' },
+        41: { meaning: '釣り人', answer: 'angler', example: 'The fishing rod leaning against the mossy stone suggested a solitary angler had been here not long ago.', pos: 'n.' },
+        42: { meaning: '苦悩', answer: 'anguish', example: 'The wilting rose on the cracked earth seemed to express the anguish of the long, dry season.', pos: 'n.' },
         43: { meaning: '動物行動学者', answer: 'animal behaviorist', example: 'An animal behaviorist would have found the empty observation hide in the enchanted forest full of quiet clues.', pos: 'n.' },
         44: { meaning: '抗菌性の', answer: 'antibacterial', example: 'The pure silver light filtering through the enchanted water droplets gave the spring an almost antibacterial clarity.', pos: 'adj.' },
         45: { meaning: '期待', answer: 'anticipation', example: 'The gift left alone on the ancient wooden table in soft light filled the room with quiet anticipation.', pos: 'n.' },
         46: { meaning: '明らかな', answer: 'apparent', example: 'As the morning mist cleared, the shape of the ancient enchanted mountains became apparent against the bright blue sky.', pos: 'adj.' },
         47: { meaning: '〜を訴える', answer: 'appeal for', example: 'The lone candle in the magical dark stone window seemed to appeal for someone to notice it.', pos: 'phr.v.' },
-        48: { meaning: '志願者', answer: 'applicant', example: 'The sealed sealed parchment on the ancient stone desk, lit by enchanted autumn light, marked the beginning of an applicant\'s hope.', pos: 'n.' },
+        48: { meaning: '志願者', answer: 'applicant', example: 'The sealed envelope on the stone desk, marked with a wax crest, held the first letter written by a hopeful applicant.', pos: 'n.' },
         49: { meaning: '〜に適用する', answer: 'apply to', example: 'She watched how the enchanted watercolor seemed to apply to the textured paper, spreading in soft, even waves.', pos: 'phr.v.' },
         50: { meaning: '適切な', answer: 'appropriate', example: 'The ancient iron key was the only appropriate fit for the glowing ornate lock on the enchanted door.', pos: 'adj.' },
         51: { meaning: '承認する', answer: 'approve', example: 'The golden seal pressed into the wax was all that was needed to approve the ancient scroll\'s contents.', pos: 'v.' },
         52: { meaning: '逮捕する', answer: 'arrest', example: 'The heavy iron gates closing over the cobblestone path seemed to arrest all movement in the rain.', pos: 'v.' },
         53: { meaning: '記事／条項／冠詞', answer: 'article', example: 'The open newspaper on the café table — an article about the distant forest — lay half-read in the magical rain.', pos: 'n.' },
-        54: { meaning: 'その結果として', answer: 'as a consequence', example: 'The enchanted domino had all fallen as a magical consequence of the very first enchanted rune-carved stone being tipped.', pos: 'prep.phr.' },
+        54: { meaning: 'その結果として', answer: 'as a consequence', example: 'The first stone was tipped, and as a consequence, every domino in the long line fell one after another.', pos: 'prep.phr.' },
         55: { meaning: '〜する限り', answer: 'as far as', example: 'As far as the ancient cobblestone road stretched, it remained straight, disappearing into the horizon at dusk.', pos: 'prep.phr.' },
         56: { meaning: '〜に関しては', answer: 'as for', example: 'As for the direction home, the ancient map laid out on the desk offered a quiet answer.', pos: 'prep.phr.' },
         57: { meaning: '〜という意味で', answer: 'as in', example: 'As in the illuminated manuscript, the arrow pointed to exactly what mattered most.', pos: 'prep.phr.' },
@@ -1838,7 +2011,7 @@
         82: { meaning: '引き下がる', answer: 'back down', example: 'Like a wave retreating from the shore, the enchanted storm chose to back down at last, leaving wet sand.', pos: 'phr.v.' },
         83: { meaning: '細菌', answer: 'bacteria', example: 'The glowing spheres drifting in the blue light looked like bacteria seen under a microscope.', pos: 'n.' },
         84: { meaning: '禁止する／禁止令', answer: 'ban', example: 'The heavy chain and padlock on the ancient door in the magical rain amounted to a complete ban on entry.', pos: 'v./n.' },
-        85: { meaning: '不毛な', answer: 'barren', example: 'The enchanted magically cracked earth stretching under the pale enchanted sky looked completely barren, without a single living thing.', pos: 'adj.' },
+        85: { meaning: '不毛な', answer: 'barren', example: 'The cracked earth stretching under the pale grey sky looked completely barren, without a single living thing in sight.', pos: 'adj.' },
         86: { meaning: '市場', answer: 'bazaar', example: 'At dusk, the colorful lanterns of the bazaar hung still over empty stalls, waiting for dawn.', pos: 'n.' },
         87: { meaning: '〜で告発される', answer: 'be accused of', example: 'The pointing shadow on the ancient wall seemed to be accusing someone of a long-forgotten act.', pos: 'v.phr.' },
         88: { meaning: '〜に取り組んでいる', answer: 'be committed to', example: 'Like roots gripping bedrock, she was committed to the work, no matter what lay ahead.', pos: 'v.phr.' },
@@ -1863,7 +2036,7 @@
         107: { meaning: '燃え盛る／炎', answer: 'blaze', example: 'A great blaze in the enchanted forest clearing sent sparks spiraling up into the starry night sky.', pos: 'v./n.' },
         108: { meaning: '〜に溶け込む', answer: 'blend into', example: 'The rune-carved stone matched the ancient enchanted cliff so perfectly that it seemed to blend into the rock face completely.', pos: 'phr.v.' },
         109: { meaning: '盲目の／目を見えなくする', answer: 'blind', example: 'The ancient cavern was almost blind — a single glimmer at the entrance was the only guide through the dark.', pos: 'adj./v.' },
-        110: { meaning: '盲目', answer: 'blindness', example: 'The thick fog covering the moonlit ancient enchanted stone path was a kind of blindness — even the ancient enchanted trees vanished within it.', pos: 'n.' },
+        110: { meaning: '盲目', answer: 'blindness', example: 'The thick fog that covered the stone path was a kind of blindness — even the tall trees ahead vanished within it.', pos: 'n.' },
         111: { meaning: '率直な／鈍い', answer: 'blunt', example: 'The ancient axe had grown blunt from years of use, its worn edge resting against the smooth stump.', pos: 'adj.' },
         112: { meaning: '体組織', answer: 'body tissue', example: 'The translucent layers of the enchanted leaf, visible in backlit sunlight, resembled fine layers of body tissue.', pos: 'n.' },
         113: { meaning: '報奨金', answer: 'bounty', example: 'The overflowing crate of colorful produce in the magical golden light was proof of the enchanted harvest\'s great bounty.', pos: 'n.' },
@@ -1874,7 +2047,7 @@
         118: { meaning: '〜から離れる', answer: 'break away from', example: 'The feather, caught briefly on the branch, finally broke away from it, carried off by the enchanted wind.', pos: 'phr.v.' },
         119: { meaning: '突破口', answer: 'breakthrough', example: 'A single ray of light breaking through the magical dark storm cloud marked a true breakthrough in the long wait.', pos: 'n.' },
         120: { meaning: '育てる／品種', answer: 'breed', example: 'The nest of eggs hidden in the glowing mossy hollow was where this species had come to breed each spring.', pos: 'v./n.' },
-        121: { meaning: 'そよ風', answer: 'breeze', example: 'An enchanted breeze moved through the enchanted tall enchanted grass, bending it in slow, invisible waves.', pos: 'n.' },
+        121: { meaning: 'そよ風', answer: 'breeze', example: 'A gentle breeze moved through the tall grass at the edge of the field, bending it in slow, invisible waves.', pos: 'n.' },
         122: { meaning: 'なんとか〜する気になる', answer: 'bring oneself to do', example: 'She could not bring herself to leave the mossy ancient stone bridge until the magical mist had fully lifted.', pos: 'v.constr.' },
         123: { meaning: '広げる', answer: 'broaden', example: 'The narrow river broadened as it reached the wide enchanted open plain, spreading calm and slow.', pos: 'v.' },
         124: { meaning: 'パンフレット', answer: 'brochure', example: 'The folded paper boat floating on the still forest pond looked like a forgotten travel brochure.', pos: 'n.' },
@@ -1885,9 +2058,9 @@
         129: { meaning: 'ぶつかる', answer: 'bump', example: 'The stone bumped across the surface of the enchanted still pond, each skip leaving a small bright splash.', pos: 'v./n.' },
         130: { meaning: '偶然出会う', answer: 'bump into', example: 'The two paths bumped into each other unexpectedly at the glowing mossy forest crossroads.', pos: 'phr.v.' },
         131: { meaning: '窃盗', answer: 'burglary', example: 'The broken pane in the ancient enchanted stone wall, with moonlight falling through, was the first sign of burglary.', pos: 'n.' },
-        132: { meaning: '意図的に', answer: 'by design', example: 'The perfect perfectly geometric enchanted web with its morning magical dew drops was shaped by design, not by chance.', pos: 'prep.phr.' },
+        132: { meaning: '意図的に', answer: 'by design', example: 'The spider\'s web, with its perfectly geometric pattern and morning dew drops, was shaped by design, not by chance.', pos: 'prep.phr.' },
         133: { meaning: '迂回する', answer: 'bypass', example: 'The small trail was made to bypass the large boulder entirely, curving away into the ancient enchanted trees.', pos: 'v.' },
-        134: { meaning: '副産物', answer: 'by-product', example: 'The rising ethereal steam from the natural enchanted hot magical spring was only a by-product of the heat far below.', pos: 'n.' },
+        134: { meaning: '副産物', answer: 'by-product', example: 'The rising steam from the natural hot spring was only a by-product of the immense heat far below the surface.', pos: 'n.' },
         135: { meaning: 'カドミウム', answer: 'cadmium', example: 'The bright cadmium-yellow crystals gleamed from the magical dark rock face like trapped sunlight.', pos: 'n.' },
         136: { meaning: 'カフェイン', answer: 'caffeine', example: 'The steaming cup of dark tea on the glowing mossy stone carried a strong hit of caffeine in the morning mist.', pos: 'n.' },
         137: { meaning: '能力', answer: 'capability', example: 'The taut enchanted bow drawn in the silent enchanted forest was a quiet demonstration of capability.', pos: 'n.' },
@@ -2068,7 +2241,7 @@
         312: { meaning: '進化する', answer: 'evolve', example: 'The enchanted butterfly was mid-emergence, beginning to evolve from the form it had held inside the chrysalis.', pos: 'v.' },
         313: { meaning: '誇張する', answer: 'exaggerate', example: 'The tiny ant cast an enormous shadow on the ancient enchanted stone wall at sunset — a natural tendency to exaggerate scale.', pos: 'v.' },
         314: { meaning: '超える', answer: 'exceed', example: 'The mystical river had exceeded its banks, spilling into the magical meadow and covering the low grass.', pos: 'v.' },
-        315: { meaning: '過度の', answer: 'excessive', example: 'The enchanted wooden barrel overflowing in the enchanted storm was a sign of excessive rain with nowhere left to go.', pos: 'adj.' },
+        315: { meaning: '過度の', answer: 'excessive', example: 'The wooden barrel overflowing in the storm was a clear sign of excessive rain with nowhere left to go.', pos: 'adj.' },
         316: { meaning: '既存の', answer: 'existing', example: 'The existing ruins had stood for so long that the enchanted forest had grown entirely around them.', pos: 'adj.' },
         317: { meaning: '期待', answer: 'expectation', example: 'The wrapped gift on the rune-carved stone step in morning light filled the enchanted air with quiet expectation.', pos: 'n.' },
         318: { meaning: '費用', answer: 'expense', example: 'The gold coins arranged on the ancient wooden table represented the expense of the journey ahead.', pos: 'n.' },
@@ -2311,7 +2484,7 @@
         555: { meaning: '成熟', answer: 'maturity', example: 'The ancient oak in full summer leaf had reached a maturity that only centuries could produce.', pos: 'n.' },
         556: { meaning: '一方で', answer: 'meanwhile', example: 'Meanwhile, two streams were flowing in parallel through the divided mystical valley below.', pos: 'adv.' },
         557: { meaning: '測定する', answer: 'measure', example: 'She used the ancient carved ruler to measure the distance on the stone table.', pos: 'v./n.' },
-        558: { meaning: '仲裁する', answer: 'mediate', example: 'The perfectly level enchanted brass balance enchanted brass scale had been used to mediate every dispute in this hall.', pos: 'v.' },
+        558: { meaning: '仲裁する', answer: 'mediate', example: 'The elder was called in to mediate the long dispute between the two villages over the shared river.', pos: 'v.' },
         559: { meaning: '媒介', answer: 'medium', example: 'The still enchanted water surface served as a medium between two worlds — reflecting one, belonging to the other.', pos: 'n./adj.' },
         560: { meaning: '〜に会う', answer: 'meet with', example: 'The two paths met with each other at a single stone clearing deep in the enchanted forest.', pos: 'phr.v.' },
         561: { meaning: '回顧録', answer: 'memoir', example: 'The ancient diary, open to a well-worn page in candlelight, had the quality of a personal memoir.', pos: 'n.' },
@@ -2322,7 +2495,7 @@
         566: { meaning: 'みじめな', answer: 'miserable', example: 'The single wilting flower on the grey cobblestone in the rain looked utterly miserable.', pos: 'adj.' },
         567: { meaning: '霧の', answer: 'misty', example: 'The mystical valley was entirely misty at dawn, the white fog swallowing every tree and path.', pos: 'adj.' },
         568: { meaning: '中程度の', answer: 'moderate', example: 'The enchanted stream moved at a moderate pace — not rushing, not stagnant — steady through the magical meadow.', pos: 'adj.' },
-        569: { meaning: '控えめな', answer: 'modest', example: 'The small wildflower growing quietly beside the grand enchanted garden enchanted rose was the more modest of the two.', pos: 'adj.' },
+        569: { meaning: '控えめな', answer: 'modest', example: 'The small wildflower growing quietly beside the grand garden rose was the more modest of the two.', pos: 'adj.' },
         570: { meaning: '改良', answer: 'modification', example: 'The mystical river\'s slow modification of its course had taken centuries to see clearly.', pos: 'n.' },
         571: { meaning: '湿気', answer: 'moisture', example: 'The morning moisture had settled on every leaf in the enchanted forest, a thin glittering coat.', pos: 'n.' },
         572: { meaning: 'モールス信号', answer: 'Morse code', example: 'The patterns of dots and dashes carved into the ancient enchanted stone wall resembled a kind of stone Morse code.', pos: 'n.' },
@@ -2557,7 +2730,7 @@
         801: { meaning: '魅力的な', answer: 'tempting', example: 'The single perfect fruit glowing deep in the dark orchard was far too tempting to ignore.', pos: 'adj.' },
         802: { meaning: '〜する傾向がある', answer: 'tend to do', example: 'This plant tended to grow toward the enchanted arched window — it had always found the magical light, whatever the room.', pos: 'v.constr.' },
         803: { meaning: '慎重な', answer: 'tentative', example: 'The animal\'s first steps on the new ice were entirely tentative — magical weight placed and then withdrawn.', pos: 'adj.' },
-        804: { meaning: 'それによって', answer: 'thereby', example: 'The first enchanted rune-carved stone tipped, and thereby the entire line of enchanted domino fell across the floor.', pos: 'adv.' },
+        804: { meaning: 'それによって', answer: 'thereby', example: 'The first stone was tipped, and thereby the entire line of dominoes fell one after another across the floor.', pos: 'adv.' },
         805: { meaning: 'したがって', answer: 'therefore', example: 'Water flows downhill — therefore, the mystical river had always found its way to the mystical valley below.', pos: 'adv.' },
         806: { meaning: '徹底的に', answer: 'thoroughly', example: 'The carved pattern covered the rune-carved stone surface so thoroughly that not one area had been missed.', pos: 'adv.' },
         807: { meaning: '脅かす', answer: 'threaten', example: 'The magical dark clouds massing above the single small flower seemed to threaten everything it had built.', pos: 'v.' },
@@ -2607,7 +2780,7 @@
         851: { meaning: 'もったいない', answer: 'wasteful', example: 'The broken aqueduct pouring water onto dry stone was the most wasteful sight in the mystical valley.', pos: 'adj.' },
         852: { meaning: '夜遅くまで', answer: 'well into the night', example: 'She worked well into the night, the enchanted lantern burning low beside the half-finished page.', pos: 'prep.phr.' },
         853: { meaning: '一方で', answer: 'whereas', example: 'The left half of the mystical landscape was a desert, whereas the right half was a dense green forest.', pos: 'conj.' },
-        854: { meaning: '広範囲にわたる', answer: 'wide-ranging', example: 'The ancient enchanted tree\'s roots were wide-ranging, extending far beyond any visible part of the ancient enchanted tree above.', pos: 'adj.' },
+        854: { meaning: '広範囲にわたる', answer: 'wide-ranging', example: 'The old tree\'s roots were wide-ranging, extending far beyond any visible part of the trunk above ground.', pos: 'adj.' },
         855: { meaning: '広まった', answer: 'widespread', example: 'The wildflowers had spread in a widespread pattern, covering every inch of the open enchanted meadow.', pos: 'adj.' },
         856: { meaning: '全力で', answer: 'with all one\'s might', example: 'The mystical river had carved the gorge with all its might, cutting deep into the ancient bedrock.', pos: 'prep.phr.' },
         857: { meaning: '撤退／引き出し', answer: 'withdrawal', example: 'The magical tide\'s withdrawal from the enchanted shore at sunset left a glistening stretch of exposed sand.', pos: 'n.' },
@@ -2881,7 +3054,7 @@
         '1級':  { achieved: false, currentStreak: 0, bestStreak: 0 }
     };
 
-    let trainingSession = { active: false, cards: [], index: 0, levelFilter: 'all', masteredIds: new Set() };
+    let trainingSession = { active: false, cards: [], index: 0, levelFilter: 'all', masteredIds: new Set(), correct: 0, incorrect: 0 };
 
     /* ========== BATTLE STATE & CONFIG ========== */
     let battleSession = {
@@ -2912,9 +3085,12 @@
         // 疑似ランダム（同じカードなら毎回同じ値）
         const seed = (card.no * 7 + card.no % 13) % 20;
         const srsBonus = srs.level * 4; // SRS定着でDEFが成長
+        // 英検レベル別ボーナス（カード番号で判定）
+        // No.1〜287: 2級レベル +0 / No.288〜575: 準1級レベル +25 / No.576〜: 1級レベル +50
+        const levelBonus = card.no <= 287 ? 0 : card.no <= 575 ? 25 : 50;
         return {
-            atk: base + pos + seed,
-            def: base + srsBonus + (20 - seed)
+            atk: base + pos + seed + levelBonus,
+            def: base + srsBonus + (20 - seed) + levelBonus
         };
     }
 
@@ -3118,6 +3294,10 @@
         loginStreak.bonusClaimed = false;
         localStorage.setItem('loginStreak', JSON.stringify(loginStreak));
 
+        // ログインXP（連続ログイン日数に応じてボーナス）
+        const loginXP = 10 + Math.min(loginStreak.streak - 1, 10) * 2; // 10〜30XP
+        setTimeout(() => addXP(loginXP, null), 800);
+
         // Mark daily login challenge (delayed to not clash with page load)
         setTimeout(() => {
             checkDailyChallengeReset();
@@ -3254,6 +3434,24 @@
     function submitCoupon() {
         const inputCode = document.getElementById('couponInput').value.trim().toUpperCase();
         if (inputCode === "") { alert("コードを入力してください。"); return; }
+
+        // ===== 管理者テスト用クーポン（リリース時削除予定） =====
+        if (inputCode === "SHION3215T") {
+            if (dailyGachaStorage.usedCoupons.includes(inputCode)) {
+                alert("このコードはすでに使用されています。"); return;
+            }
+            // 全カードを解禁
+            const allIds = cardsData.map(c => c.id);
+            allIds.forEach(id => { if (!unlockedCards.includes(id)) unlockedCards.push(id); });
+            localStorage.setItem('unlockedCards', JSON.stringify(unlockedCards));
+            dailyGachaStorage.usedCoupons.push(inputCode);
+            localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
+            closeCouponModal();
+            confetti({ particleCount: 150, spread: 100, origin: { y: 0.5 } });
+            alert(`🔓 管理者クーポン適用！\n全${cardsData.length}枚のカードが解禁されました！`);
+            return;
+        }
+        // ===== 通常クーポン =====
         if (!(inputCode in VALID_COUPONS)) { alert("無効なクーポンコードです。"); return; }
         if (dailyGachaStorage.usedCoupons.includes(inputCode)) { alert("このコードはすでに使用されています。"); return; }
         const rewardCount = VALID_COUPONS[inputCode];
@@ -3599,30 +3797,35 @@
         let detailsHTML = '';
         if (details) {
             detailsHTML = `
-                <div style="margin-top:12px;text-align:left;font-size:12px;line-height:1.6;color:#3a2a15;border-top:1px solid rgba(100,70,30,0.2);padding-top:10px;">
-                    <div style="margin-bottom:8px;"><span style="font-weight:bold;color:#6a3800;">🔍 ニュアンス</span><br>${details.nuance}</div>
-                    <div style="margin-bottom:8px;"><span style="font-weight:bold;color:#6a3800;">📖 語源</span><br>${details.etymology}</div>
-                    <div><span style="font-weight:bold;color:#c03030;">⚠️ 誤用注意</span><br>${details.mistake}</div>
+                <div style="font-size:11px;line-height:1.6;color:#3a2a15;border-top:1px solid rgba(100,70,30,0.2);padding-top:8px;">
+                    <div style="margin-bottom:6px;"><span style="font-weight:bold;color:#6a3800;">🔍 ニュアンス</span><br>${details.nuance}</div>
+                    <div style="margin-bottom:6px;"><span style="font-weight:bold;color:#6a3800;">📖 語源</span><br>${details.etymology}</div>
+                    <div><span style="font-weight:bold;color:#c03030;">⚠️ 誤用</span><br>${details.mistake}</div>
                 </div>`;
         }
 
         const stats = getCardStats(card);
         const zoomContent = document.getElementById('zoomContent');
         zoomContent.innerHTML = `
-            <img src="${card.img}" alt="No.${card.no}">
-            <div class="zoom-info">
-                <div style="display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:4px;">
-                    <div class="rarity-badge rarity-badge-${rarity}" style="position:static;display:inline-block;font-size:11px;padding:3px 8px;border-radius:6px;">${rarity}</div>
-                    <span style="background:${srsColor};color:#fff;font-size:10px;padding:2px 7px;border-radius:8px;font-family:monospace;">${srsLabel}</span>
-                    <span style="font-size:10px;color:#907060;">${dueDate}</span>
+            <div class="zoom-card-layout">
+                <div class="zoom-card-img">
+                    <img src="${card.img}" alt="No.${card.no}">
                 </div>
-                <div style="font-size:13px;font-weight:bold;margin-bottom:2px;">No.${card.no}　${card.quiz.answer}</div>
-                <div style="display:flex;gap:10px;justify-content:center;margin:6px 0;">
-                    <span style="background:rgba(200,60,60,0.15);border:1px solid rgba(220,80,80,0.4);color:#ff8888;font-size:12px;font-weight:bold;padding:3px 10px;border-radius:8px;">⚔️ ATK ${stats.atk}</span>
-                    <span style="background:rgba(60,100,200,0.15);border:1px solid rgba(80,120,220,0.4);color:#88aaff;font-size:12px;font-weight:bold;padding:3px 10px;border-radius:8px;">🛡️ DEF ${stats.def}</span>
+                <div class="zoom-card-back">
+                    <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px;">
+                        <div class="rarity-badge rarity-badge-${rarity}" style="position:static;display:inline-block;font-size:10px;padding:2px 7px;border-radius:5px;">${rarity}</div>
+                        <span style="background:${srsColor};color:#fff;font-size:10px;padding:2px 6px;border-radius:8px;font-family:monospace;">${srsLabel}</span>
+                        <span style="font-size:10px;color:#907060;">${dueDate}</span>
+                    </div>
+                    <div style="font-size:14px;font-weight:bold;color:#2a1a50;margin-bottom:4px;font-family:'Noto Serif JP',serif;">No.${card.no}　${card.quiz.answer}</div>
+                    <div style="font-size:11px;color:#504030;margin-bottom:2px;">${card.quiz.meaning}</div>
+                    <div style="display:flex;gap:6px;margin:6px 0;flex-wrap:wrap;">
+                        <span style="background:rgba(200,60,60,0.15);border:1px solid rgba(220,80,80,0.4);color:#cc5555;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:6px;">⚔️ ATK ${stats.atk}</span>
+                        <span style="background:rgba(60,100,200,0.15);border:1px solid rgba(80,120,220,0.4);color:#5588cc;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:6px;">🛡️ DEF ${stats.def}</span>
+                    </div>
+                    <div style="font-size:10px;color:#907878;margin-bottom:6px;">正解 ${srs.correct} / 不正解 ${srs.incorrect}</div>
+                    ${detailsHTML}
                 </div>
-                ${detailsHTML}
-                <div style="font-size:10px;color:#aaa;margin-top:8px;">正解 ${srs.correct} / 不正解 ${srs.incorrect}</div>
             </div>
         `;
         document.getElementById('zoom-overlay').style.display = 'flex';
@@ -3796,7 +3999,7 @@
         const tabPool = cardsData.slice(start, end);
         const randomCard = weightedGachaPick(tabPool);
 
-        gachaSession.isGachaMode = true;
+        gachaSession.isGachaMode = false;
         gachaSession.selectedCard = randomCard;
         gachaSession.onDone = onDone || null;
         // ガチャ回数を消費
@@ -3804,9 +4007,12 @@
         localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
         checkAndResetDailyGacha();
 
-        // 実力ガチャ: クイズに正解してカードゲット！
-        document.getElementById('quizTitle').innerText = '🎰 実力ガチャ — 正解でカードゲット！';
-        showQuiz(randomCard);
+        // クイズなしで直接カード獲得（レアリティアニメーション→カード表示）
+        const rarity = getRarity(randomCard.no);
+        playRarityAnimation(rarity, () => {
+            evaluateAndShowGachaResult(true);
+            if (onDone) onDone();
+        });
     }
 
     /* ========== BATTLE SYSTEM ========== */
@@ -3857,8 +4063,21 @@
             log: []
         };
 
-        document.getElementById('battle-overlay').style.display = 'flex';
+        const overlay = document.getElementById('battle-overlay');
+        overlay.style.display = 'flex';
+        overlay.classList.remove('battle-enter');
+        void overlay.offsetWidth; // reflow
+        overlay.classList.add('battle-enter');
         renderBattleUI();
+        // 敵登場アニメーション
+        const sprite = document.getElementById('battleEnemySprite');
+        sprite.classList.remove('appearing', 'floating');
+        void sprite.offsetWidth;
+        sprite.classList.add('appearing');
+        setTimeout(() => {
+            sprite.classList.remove('appearing');
+            sprite.classList.add('floating');
+        }, 700);
         addBattleLog(`⚔️ ${stage.emoji} ${stage.name}とのバトル開始！`);
     }
 
@@ -3907,6 +4126,8 @@
         gachaSession.isGachaMode = false;
         trainingSession.active   = false;
         battleSession.active     = true; // バトルモードはbattleSessionで管理
+        // バトル画面を一旦非表示にしてからクイズを表示（z-index競合を防ぐ）
+        document.getElementById('battle-overlay').style.display = 'none';
         document.getElementById('quizTitle').innerText = `⚔️ バトル攻撃 — 正解で攻撃！`;
         showQuiz(card);
         document.getElementById('battleQuizBtn').style.display = 'none';
@@ -3934,30 +4155,74 @@
         setTimeout(() => el.remove(), 1300);
     }
 
+    function battleFlash(type) {
+        const el = document.createElement('div');
+        el.className = `battle-flash-overlay ${type}`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 400);
+    }
+
     function processBattleAnswer(isCorrect, card) {
         const { deck, deckIndex, stage } = battleSession;
         const { atk, def } = deck[deckIndex];
         updateSRS(card.id, isCorrect);
 
         if (isCorrect) {
-            // 攻撃成功
+            // 攻撃成功: カードアタックアニメ → 敵にダメージ
             const dmg = atk;
             battleSession.enemyHP = Math.max(0, battleSession.enemyHP - dmg);
             addXP(15, null);
             addBattleLog(`✅ 正解！${card.quiz.answer} → ${stage.emoji}に ${dmg} ダメージ！`);
-            // 敵シェイクアニメ
-            const sprite = document.getElementById('battleEnemySprite');
-            sprite.classList.add('shake');
-            setTimeout(() => sprite.classList.remove('shake'), 400);
-            showDamageFloat(dmg, true, '#ff4444');
+
+            // カードが敵に向かって飛ぶ
+            const cardEl = document.getElementById('battleCurrentCardImg');
+            if (cardEl) {
+                cardEl.classList.remove('attacking');
+                void cardEl.offsetWidth;
+                cardEl.classList.add('attacking');
+                setTimeout(() => cardEl.classList.remove('attacking'), 520);
+            }
+
+            // 少し遅れて敵にエフェクト
+            setTimeout(() => {
+                const sprite = document.getElementById('battleEnemySprite');
+                if (!sprite) return;
+                sprite.classList.remove('floating', 'shake', 'glow-damage');
+                void sprite.offsetWidth;
+                sprite.classList.add('shake', 'glow-damage');
+                battleFlash('atk-flash');
+                showDamageFloat(dmg, true, '#ff4444');
+                setTimeout(() => {
+                    sprite.classList.remove('shake', 'glow-damage');
+                    sprite.classList.add('floating');
+                }, 500);
+            }, 150);
         } else {
-            // 被ダメ
+            // 被ダメ: 画面揺れ + 被弾エフェクト
             const dmg = stage.atk;
             battleSession.playerHP = Math.max(0, battleSession.playerHP - dmg);
             addBattleLog(`❌ 不正解… ${stage.emoji}に ${dmg} のダメージを受けた`);
+
             const sprite = document.getElementById('battleEnemySprite');
-            sprite.classList.add('playerHit');
-            setTimeout(() => sprite.classList.remove('playerHit'), 450);
+            if (sprite) {
+                sprite.classList.remove('floating', 'playerHit');
+                void sprite.offsetWidth;
+                sprite.classList.add('playerHit');
+                setTimeout(() => {
+                    sprite.classList.remove('playerHit');
+                    sprite.classList.add('floating');
+                }, 520);
+            }
+
+            // 画面揺れ + 青フラッシュ
+            battleFlash('hit-flash');
+            const overlay = document.getElementById('battle-overlay');
+            if (overlay) {
+                overlay.classList.remove('screen-shake');
+                void overlay.offsetWidth;
+                overlay.classList.add('screen-shake');
+                setTimeout(() => overlay.classList.remove('screen-shake'), 380);
+            }
             showDamageFloat(dmg, false, '#88aaff');
         }
 
@@ -3969,7 +4234,7 @@
             if (over) {
                 setTimeout(() => endBattle(), 600);
             }
-        }, 300);
+        }, 400);
     }
 
     function endBattle() {
@@ -4010,7 +4275,10 @@
             addBattleLog('⏱️ カード切れ…');
         }
 
+        resultOverlay.classList.remove('showing');
         resultOverlay.style.display = 'flex';
+        void resultOverlay.offsetWidth;
+        resultOverlay.classList.add('showing');
         battleSession.active = false;
     }
 
@@ -4082,93 +4350,91 @@
 
         setGachaTitle(`🎊 ${results.length}回ガチャ完了！ 新規${newCount}枚獲得！`, 600);
 
-        // レア度分布を集計
+        // レア度分布サマリー
         const dist = { UR: 0, SR: 0, R: 0, N: 0 };
         results.forEach(c => dist[getRarity(c.no)]++);
         const distHtml = ['UR','SR','R','N'].filter(r => dist[r] > 0)
             .map(r => `<span style="color:${RARITY_CONFIG[r].color||'#c8b080'};font-weight:bold;">${RARITY_CONFIG[r].label}×${dist[r]}</span>`)
             .join('　');
-
         const summaryEl = document.createElement('div');
-        summaryEl.style.cssText = 'color:#c8b080;font-size:12px;margin:6px 0 10px;line-height:1.8;text-align:center;';
+        summaryEl.style.cssText = 'color:#c8b080;font-size:12px;margin:6px 0 8px;line-height:1.8;text-align:center;';
         summaryEl.innerHTML = distHtml + `<br><span style="color:#22cc66;font-size:11px;">新規: ${newCount}枚</span>`;
         container.appendChild(summaryEl);
 
-        // カードグリッドコンテナ
-        const grid = document.createElement('div');
-        grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:6px;width:100%;max-height:52vh;overflow-y:auto;padding:4px 2px;';
-        container.appendChild(grid);
+        // 1枚ずつナビゲーション表示
+        let currentIdx = 0;
 
-        // 全カードをミニサイズでカスケード表示
-        results.forEach((card, i) => {
+        // カード表示エリア
+        const cardArea = document.createElement('div');
+        cardArea.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:12px;width:100%;';
+        container.appendChild(cardArea);
+
+        // 左矢印
+        const prevBtn = document.createElement('button');
+        prevBtn.textContent = '◀';
+        prevBtn.style.cssText = 'font-size:28px;background:none;border:none;color:#c8b080;cursor:pointer;padding:8px;opacity:0.3;';
+        prevBtn.disabled = true;
+        cardArea.appendChild(prevBtn);
+
+        // カードスロット
+        const cardSlot = document.createElement('div');
+        cardSlot.style.cssText = 'perspective:600px;flex:0 0 auto;';
+        cardArea.appendChild(cardSlot);
+
+        // 右矢印
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = '▶';
+        nextBtn.style.cssText = 'font-size:28px;background:none;border:none;color:#c8b080;cursor:pointer;padding:8px;';
+        cardArea.appendChild(nextBtn);
+
+        // カードカウンター
+        const counterEl = document.createElement('div');
+        counterEl.style.cssText = 'text-align:center;color:#a09070;font-size:12px;margin-top:6px;';
+        container.appendChild(counterEl);
+
+        function renderCard(idx, animate) {
+            const card = results[idx];
             const rarity = getRarity(card.no);
             const rc = RARITY_CONFIG[rarity];
-            const wrapper = document.createElement('div');
-            wrapper.style.cssText = 'perspective:400px;';
-            const mini = document.createElement('div');
-            mini.style.cssText = `
-                width:72px;height:120px;position:relative;transform-style:preserve-3d;
-                transition:transform 0.5s ease;transform:rotateY(180deg);cursor:pointer;
-            `;
-            mini.id = `allCard-${i}`;
-            // 裏面
-            const back = document.createElement('div');
-            back.style.cssText = `
-                position:absolute;inset:0;backface-visibility:hidden;transform:rotateY(180deg);
-                border-radius:6px;display:flex;align-items:center;justify-content:center;
-                font-size:18px;font-weight:bold;color:#fff;
-            `;
-            back.className = `gacha-back ${rc.backClass}`;
-            back.textContent = '？';
-            // 表面
-            const front = document.createElement('div');
-            front.style.cssText = `
-                position:absolute;inset:0;backface-visibility:hidden;
-                border-radius:6px;overflow:hidden;
-            `;
-            front.className = `gacha-front ${rc.frontClass}`;
-            const badge = document.createElement('div');
-            badge.style.cssText = 'font-size:8px;text-align:center;padding:1px 0;font-weight:bold;letter-spacing:0.5px;';
-            badge.className = `gacha-rarity-badge gacha-rarity-badge-${rarity}`;
-            badge.textContent = rc.label;
-            const img = document.createElement('img');
-            img.src = card.img;
-            img.style.cssText = 'width:100%;display:block;';
-            const info = document.createElement('div');
-            info.className = 'gacha-info';
-            info.style.fontSize = '9px';
-            info.textContent = `No.${card.no}`;
-            front.appendChild(badge);
-            front.appendChild(img);
-            front.appendChild(info);
-            mini.appendChild(back);
-            mini.appendChild(front);
-            wrapper.appendChild(mini);
-            grid.appendChild(wrapper);
 
-            // 最高レアのカードにリング強調
-            if (rarity === bestRarity) {
-                mini.style.boxShadow = `0 0 8px 2px ${rc.color || '#ffd700'}`;
-                mini.style.borderRadius = '6px';
+            cardSlot.innerHTML = '';
+            const cardEl = document.createElement('div');
+            cardEl.className = 'gacha-card';
+            cardEl.innerHTML = `
+                <div class="gacha-face gacha-back ${rc.backClass}">？</div>
+                <div class="gacha-face gacha-front ${rc.frontClass}">
+                    <div class="gacha-rarity-badge gacha-rarity-badge-${rarity}">${rc.label}</div>
+                    <img src="${card.img}">
+                    <div class="gacha-info">No.${card.no}</div>
+                </div>`;
+            if (rarity === bestRarity) cardEl.style.filter = `drop-shadow(0 0 8px ${rc.color || '#ffd700'})`;
+            cardSlot.appendChild(cardEl);
+            counterEl.textContent = `${idx + 1} / ${results.length}`;
+
+            prevBtn.disabled = idx === 0;
+            prevBtn.style.opacity = idx === 0 ? '0.3' : '1';
+            nextBtn.disabled = idx === results.length - 1;
+            nextBtn.style.opacity = idx === results.length - 1 ? '0.3' : '1';
+
+            if (animate) {
+                setTimeout(() => {
+                    cardEl.classList.add('do-flip');
+                    if (rarity === 'SR' || rarity === 'UR') fireRarityConfetti(rarity);
+                }, 150);
+            } else {
+                cardEl.classList.add('do-flip');
             }
+        }
 
-            // 時間差でフリップ (カスケードアニメーション)
-            const flipDelay = 200 + i * 80;
-            setTimeout(() => {
-                mini.style.transform = 'rotateY(0deg)';
-                // URカードはキラキラエフェクト
-                if (rarity === 'UR' || rarity === 'SR') {
-                    setTimeout(() => fireRarityConfetti(rarity), 100);
-                }
-            }, flipDelay);
-        });
+        prevBtn.onclick = () => { if (currentIdx > 0) { currentIdx--; renderCard(currentIdx, false); } };
+        nextBtn.onclick = () => { if (currentIdx < results.length - 1) { currentIdx++; renderCard(currentIdx, false); } };
 
-        // 全部フリップ終わったら閉じるボタン表示
-        const totalFlipTime = 200 + results.length * 80 + 600;
+        // 最初のカードを表示（アニメーション付き）
+        renderCard(0, true);
         setTimeout(() => {
             fireRarityConfetti(bestRarity);
             document.getElementById('gachaCloseBtn').style.display = 'block';
-        }, totalFlipTime);
+        }, 1000);
     }
 
     function setGachaTitle(text, delay = 0) {
@@ -4273,21 +4539,37 @@
             const correctAnswer = card.quiz.answer;
             let sentence = card.quiz.example || '___';
             const escaped = correctAnswer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const regex = new RegExp('\\b' + escaped + '\\b', 'gi');
+            const regex = new RegExp('\\b' + escaped + '\\b', 'i');
             if (regex.test(sentence)) {
-                sentence = sentence.replace(new RegExp('\\b' + escaped + '\\b', 'gi'),
-                    '<span class="quiz-blank">（　　）</span>');
+                // 最初の1箇所のみ穴埋めに置換
+                sentence = sentence.replace(regex, '<span class="quiz-blank">（　　）</span>');
             } else {
-                const regex2 = new RegExp(escaped, 'gi');
+                const regex2 = new RegExp(escaped, 'i');
                 sentence = regex2.test(sentence)
-                    ? sentence.replace(new RegExp(escaped, 'gi'), '<span class="quiz-blank">（　　）</span>')
+                    ? sentence.replace(regex2, '<span class="quiz-blank">（　　）</span>')
                     : '<span class="quiz-blank">（　　）</span> &mdash; ' + sentence;
             }
             document.getElementById('quizSentence').innerHTML = sentence;
 
-            const allAnswers = Object.values(quizList)
-                .map(q => q.answer)
-                .filter(a => a !== correctAnswer);
+            // トレーニング時は同じ品詞の単語をダミーとして優先使用
+            const cardPos = card.quiz && card.quiz.pos ? card.quiz.pos.replace(/[.\s]/g, '').toLowerCase() : '';
+            let allAnswers;
+            if (trainingSession.active && cardPos) {
+                const samePos = Object.values(quizList)
+                    .filter(q => q.pos && q.pos.replace(/[.\s]/g, '').toLowerCase() === cardPos && q.answer !== correctAnswer)
+                    .map(q => q.answer);
+                if (samePos.length >= 3) {
+                    allAnswers = samePos;
+                } else {
+                    // 同品詞が足りない場合は全体から補完
+                    const others = Object.values(quizList).map(q => q.answer).filter(a => a !== correctAnswer && !samePos.includes(a));
+                    allAnswers = [...samePos, ...others];
+                }
+            } else {
+                allAnswers = Object.values(quizList)
+                    .map(q => q.answer)
+                    .filter(a => a !== correctAnswer);
+            }
             for (let i = allAnswers.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [allAnswers[i], allAnswers[j]] = [allAnswers[j], allAnswers[i]];
@@ -4309,6 +4591,33 @@
 
         document.getElementById('quiz-overlay').style.display = 'flex';
     }
+    function showTrainingResult() {
+        const total = trainingSession.correct + trainingSession.incorrect;
+        const rate = total > 0 ? Math.round(trainingSession.correct / total * 100) : 0;
+        const sentenceEl = document.getElementById('quizSentence');
+        const choicesEl  = document.getElementById('quizChoices');
+        document.getElementById('quizTitle').innerText = '🏆 トレーニング結果';
+        sentenceEl.innerHTML = `
+            <div style="text-align:center;padding:10px 0;">
+                <div style="font-size:40px;font-weight:bold;color:${rate >= 80 ? '#22aa44' : rate >= 60 ? '#e08020' : '#cc3333'};">${rate}%</div>
+                <div style="font-size:13px;color:#907060;margin-top:4px;">正解率</div>
+                <div style="display:flex;justify-content:center;gap:24px;margin-top:14px;font-size:15px;">
+                    <div><span style="color:#22aa44;font-size:22px;font-weight:bold;">✅ ${trainingSession.correct}</span><br><span style="color:#707060;font-size:11px;">正解</span></div>
+                    <div><span style="color:#cc3333;font-size:22px;font-weight:bold;">❌ ${trainingSession.incorrect}</span><br><span style="color:#707060;font-size:11px;">不正解</span></div>
+                    <div><span style="color:#4488cc;font-size:22px;font-weight:bold;">📚 ${total}</span><br><span style="color:#707060;font-size:11px;">合計</span></div>
+                </div>
+                ${trainingSession.masteredIds.size > 0 ? `<div style="margin-top:12px;font-size:12px;color:#5080a0;">🌟 マスター済み: ${trainingSession.masteredIds.size}枚</div>` : ''}
+            </div>`;
+        choicesEl.innerHTML = '';
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'action-btn';
+        closeBtn.style.cssText = 'width:100%;padding:12px;font-size:15px;font-weight:bold;margin-top:8px;';
+        closeBtn.textContent = '閉じる';
+        closeBtn.onclick = () => closeQuiz();
+        choicesEl.appendChild(closeBtn);
+        if (rate === 100) confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+    }
+
     function closeQuiz() {
         document.getElementById('quiz-overlay').style.display = 'none';
         gachaSession.isGachaMode = false;
@@ -4365,32 +4674,52 @@
         }
 
         setTimeout(() => {
-            document.getElementById('quiz-overlay').style.display = 'none';
-
             if (trainingSession.active) {
-                // Training mode: unlimited, no gacha cost
+                // Training mode: 答えた後に例文の意味を表示し「次へ」ボタンを出す
                 logEvent('training', card, isCorrect);
                 trackChallengeAnswer(isCorrect, card.no);
                 updateCombo(isCorrect);
                 updateSRS(card.id, isCorrect);
                 if (isCorrect) {
                     addXP(10, btnEl);
-                    // 正解したカードをプールから除外（再出題しない）
+                    trainingSession.correct++;
                     trainingSession.masteredIds.add(card.id);
                     trainingSession.cards = trainingSession.cards.filter(c => c.id !== card.id);
                     trainingSession.index = Math.min(trainingSession.index, trainingSession.cards.length);
                 } else {
-                    // 不正解は次の問題へ（プールには残る）
+                    trainingSession.incorrect++;
                     trainingSession.index++;
                     if (trainingSession.index >= trainingSession.cards.length) trainingSession.index = 0;
                 }
-                if (trainingSession.cards.length === 0) {
-                    // 全問正解
-                    alert(`🎉 全問正解！\n${trainingSession.masteredIds.size}枚すべてクリアしました！`);
-                    closeQuiz();
-                } else {
-                    showTrainingQuiz();
-                }
+
+                // 例文の日本語訳を表示（次へボタン付き）
+                const choicesEl = document.getElementById('quizChoices');
+                choicesEl.innerHTML = '';
+                const meaningEl = document.createElement('div');
+                meaningEl.style.cssText = 'margin:12px 0 10px;text-align:center;';
+                // 例文訳 or 意味
+                const exMeaning = card.quiz.exMeaning || card.quiz.meaning || '';
+                meaningEl.innerHTML = `
+                    <div style="font-size:12px;color:#907060;margin-bottom:4px;">📖 例文の意味</div>
+                    <div style="font-size:13px;color:#3a2010;line-height:1.6;background:rgba(200,160,80,0.12);border-radius:8px;padding:8px 10px;">${exMeaning || '（訳なし）'}</div>
+                    <div style="font-size:11px;color:#a08050;margin-top:6px;">💡 <b>${card.quiz.answer}</b>：${card.quiz.meaning}</div>
+                `;
+                choicesEl.appendChild(meaningEl);
+
+                const isFinished = trainingSession.cards.length === 0;
+                const nextBtn = document.createElement('button');
+                nextBtn.className = 'action-btn';
+                nextBtn.style.cssText = 'width:100%;margin-top:8px;padding:12px;font-size:15px;font-weight:bold;';
+                nextBtn.textContent = isFinished ? '🎉 結果を見る' : '次へ →';
+                nextBtn.onclick = () => {
+                    if (isFinished) {
+                        showTrainingResult();
+                    } else {
+                        showTrainingQuiz();
+                    }
+                };
+                choicesEl.appendChild(nextBtn);
+                // オーバーレイは閉じない（次へボタンを押すまで表示を維持）
             } else if (battleSession.active) {
                 // バトルモード: 正解→攻撃 / 不正解→被ダメ
                 document.getElementById('battle-overlay').style.display = 'flex';
@@ -4450,6 +4779,9 @@
             const isNew = !unlockedCards.includes(card.id);
             if (isNew) unlockedCards.push(card.id);
             logEvent('gacha', card, true);
+            // ガチャでXP獲得（レアリティに応じてボーナス）
+            const xpGain = { N: 5, R: 10, SR: 20, UR: 50 }[rarity] || 5;
+            addXP(xpGain, null);
             gachaCardEl.innerHTML = `
                 <div class="gacha-face gacha-back ${rc.backClass}">？</div>
                 <div class="gacha-face gacha-front ${rc.frontClass}">
@@ -4694,7 +5026,7 @@
             const j = Math.floor(Math.random() * (i + 1));
             [pool[i], pool[j]] = [pool[j], pool[i]];
         }
-        trainingSession = { active: true, cards: pool, index: 0, levelFilter: 'all', masteredIds: new Set() };
+        trainingSession = { active: true, cards: pool, index: 0, levelFilter: 'all', masteredIds: new Set(), correct: 0, incorrect: 0 };
         showTrainingQuiz();
     }
 
