@@ -4026,30 +4026,6 @@
         el.innerHTML = `
             <div class="challenge-section">
                 <div class="challenge-section-title">
-                    <span>📅 デイリーチャレンジ</span>
-                    <span style="font-size:11px;color:#a090c0;">${dailyDone}/5 完了</span>
-                </div>
-                ${ciCheck(dc.completed.login,  'ログイン',          0, 0, '+1回')}
-                ${ciCheck(dc.completed.train10,'10枚トレーニング', dc.progress.trainCount, 10, '+1回')}
-                ${ciCheck(dc.completed.quiz5,  'クイズ5問正解',    dc.progress.quizCorrect, 5, '+1回')}
-
-                ${ciCheck(dc.completed.combo3, '3連続コンボ',      dc.progress.currentCombo, 3, '+1回')}
-            </div>
-            <div class="challenge-section">
-                <div class="challenge-section-title">
-                    <span>📆 ウィークリーチャレンジ</span>
-                    <span style="font-size:11px;color:#a090c0;">${weeklyDone}/3 完了</span>
-                </div>
-                ${ciCheck(wc.completed.train50,'50枚学習',       wc.progress.trainCount, 50, '+3回')}
-                ${ciCheck(wc.completed.quiz30, 'クイズ30問正解', wc.progress.quizCorrect, 30, '+2回')}
-                <div class="challenge-item">
-                    <span class="challenge-check">${wkDone ? '✅' : '☐'}</span>
-                    <span class="challenge-label${wkDone ? ' done' : ''}">7日連続ログイン${wkPText}</span>
-                    <span class="challenge-reward">+5回</span>
-                </div>
-            </div>
-            <div class="challenge-section">
-                <div class="challenge-section-title">
                     <span>📒 金の手帖</span>
                     <span style="font-size:10px;color:#a090c0;">100問連続正解</span>
                 </div>
