@@ -1632,6 +1632,31 @@
         }
         .battle-unit-card.active-unit { border-color: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.4); }
         .battle-unit-card.defeated { opacity: 0.3; filter: grayscale(1); }
+        .battle-unit-card.unit-attack-anim { animation: unitAttackSlide 0.45s ease forwards; }
+        @keyframes unitAttackSlide {
+            0%   { transform: translateX(0) scale(1); }
+            35%  { transform: translateX(28px) scale(1.12); }
+            65%  { transform: translateX(18px) scale(1.06); }
+            100% { transform: translateX(0) scale(1); }
+        }
+        .battle-enemy-sprite.boss-attack-anim,
+        #battleEnemyImg.boss-attack-anim {
+            animation: bossAttackSlide 0.45s ease forwards;
+        }
+        @keyframes bossAttackSlide {
+            0%   { transform: translateX(0) scale(1); }
+            35%  { transform: translateX(-32px) scale(1.1); }
+            65%  { transform: translateX(-18px) scale(1.05); }
+            100% { transform: translateX(0) scale(1); }
+        }
+        .battle-unit-card.unit-hit-anim { animation: unitHitShake 0.35s ease; }
+        @keyframes unitHitShake {
+            0%,100%{ transform:translateX(0); }
+            20%{ transform:translateX(-6px); }
+            40%{ transform:translateX(6px); }
+            60%{ transform:translateX(-4px); }
+            80%{ transform:translateX(4px); }
+        }
         .battle-unit-card img { width: 100%; border-radius: 6px; display: block; margin-bottom: 3px; }
         .battle-unit-pos-label { font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 8px; display: inline-block; margin-bottom: 3px; }
         .battle-unit-pos-label.front { background: rgba(255,80,80,0.3); color: #ff8888; }
@@ -5110,6 +5135,48 @@
         box.style.display = 'block';
     }
 
+    function playPunchSE() {
+        if (!bgmOn) return;
+        try {
+            const se = new Audio('./bgm/punch.mp3');
+            se.volume = 0.7;
+            se.play().catch(() => {});
+        } catch(e) {}
+    }
+
+    function animateUnitAttack(cb) {
+        const row = document.getElementById('battleUnitsRow');
+        if (!row) { cb && cb(); return; }
+        const active = row.querySelector('.battle-unit-card.active-unit');
+        if (!active) { cb && cb(); return; }
+        active.classList.remove('unit-attack-anim');
+        void active.offsetWidth;
+        active.classList.add('unit-attack-anim');
+        setTimeout(() => { active.classList.remove('unit-attack-anim'); cb && cb(); }, 450);
+    }
+
+    function animateBossAttack(cb) {
+        const img = document.getElementById('battleEnemyImg');
+        const sp  = document.getElementById('battleEnemySprite');
+        const target = (img && img.style.display !== 'none') ? img : sp;
+        if (!target) { cb && cb(); return; }
+        target.classList.remove('boss-attack-anim');
+        void target.offsetWidth;
+        target.classList.add('boss-attack-anim');
+        setTimeout(() => { target.classList.remove('boss-attack-anim'); cb && cb(); }, 450);
+    }
+
+    function animateUnitsHit() {
+        const row = document.getElementById('battleUnitsRow');
+        if (!row) return;
+        row.querySelectorAll('.battle-unit-card:not(.defeated)').forEach(card => {
+            card.classList.remove('unit-hit-anim');
+            void card.offsetWidth;
+            card.classList.add('unit-hit-anim');
+            setTimeout(() => card.classList.remove('unit-hit-anim'), 350);
+        });
+    }
+
     function addBattleLog(msg) {
         battleSession.log.push(msg);
         const el = document.getElementById('battleLog');
@@ -5159,19 +5226,24 @@
             }
             battleSession.playerHP = Math.max(0, battleSession.playerHP - dmg);
             addBattleLog(`${stage.emoji} ${stage.name}の攻撃！ ${dmg} ダメージ`);
-            battleFlash('hit-flash');
-            const overlay = document.getElementById('battle-overlay');
-            if (overlay) {
-                overlay.classList.remove('screen-shake');
-                // rAFでアニメーション再開始（offsetWidthリフロー不要）
-                requestAnimationFrame(() => {
+
+            // ボス前進アニメ → SE → ユニットshake + 画面揺れ
+            animateBossAttack(() => {
+                playPunchSE();
+                battleFlash('hit-flash');
+                animateUnitsHit();
+                const overlay = document.getElementById('battle-overlay');
+                if (overlay) {
+                    overlay.classList.remove('screen-shake');
                     requestAnimationFrame(() => {
-                        overlay.classList.add('screen-shake');
-                        setTimeout(() => overlay.classList.remove('screen-shake'), 380);
+                        requestAnimationFrame(() => {
+                            overlay.classList.add('screen-shake');
+                            setTimeout(() => overlay.classList.remove('screen-shake'), 380);
+                        });
                     });
-                });
-            }
-            showDamageFloat(dmg, false, '#88aaff');
+                }
+                showDamageFloat(dmg, false, '#88aaff');
+            });
 
             battleSession.turnCount++;
             // 次ターン前にバフリセット（1ターン限り）
@@ -5186,7 +5258,7 @@
                     battleSession.currentUnitIdx = (battleSession.currentUnitIdx + 1) % battleSession.units.length;
                     renderBattleUI();
                 }
-            }, 600);
+            }, 900);
         }, 800);
     }
 
@@ -5203,31 +5275,48 @@
             addXP(15, null);
             addBattleLog(`✅ 正解！${card.quiz ? card.quiz.answer : card.word} → ${stage.emoji}に ${dmg} ダメージ！`);
 
-            const sprite = document.getElementById('battleEnemySprite');
-            if (sprite) {
-                sprite.classList.remove('floating','shake','glow-damage');
-                void sprite.offsetWidth;
-                sprite.classList.add('shake','glow-damage');
+            // 攻撃アニメ：ユニット前進 → SE → ボスshake
+            animateUnitAttack(() => {
+                playPunchSE();
+                const sprite = document.getElementById('battleEnemySprite');
+                const bossImg = document.getElementById('battleEnemyImg');
+                if (sprite) {
+                    sprite.classList.remove('floating','shake','glow-damage');
+                    void sprite.offsetWidth;
+                    sprite.classList.add('shake','glow-damage');
+                    setTimeout(() => { sprite.classList.remove('shake','glow-damage'); sprite.classList.add('floating'); }, 500);
+                }
+                if (bossImg && bossImg.style.display !== 'none') {
+                    bossImg.classList.remove('shake','glow-damage');
+                    void bossImg.offsetWidth;
+                    bossImg.classList.add('shake','glow-damage');
+                    setTimeout(() => bossImg.classList.remove('shake','glow-damage'), 500);
+                }
                 battleFlash('atk-flash');
                 showDamageFloat(dmg, true, '#ff4444');
-                setTimeout(() => { sprite.classList.remove('shake','glow-damage'); sprite.classList.add('floating'); }, 500);
-            }
+            });
         } else {
             const dmg = stage.atk;
             battleSession.playerHP = Math.max(0, battleSession.playerHP - dmg);
             addBattleLog(`❌ 不正解… ${stage.emoji}に ${dmg} のダメージを受けた`);
-            battleFlash('hit-flash');
-            const overlay = document.getElementById('battle-overlay');
-            if (overlay) {
-                overlay.classList.remove('screen-shake');
-                requestAnimationFrame(() => {
+
+            // 敵が即攻撃：ボス前進モーション → SE → ユニットshake
+            animateBossAttack(() => {
+                playPunchSE();
+                battleFlash('hit-flash');
+                animateUnitsHit();
+                const overlay = document.getElementById('battle-overlay');
+                if (overlay) {
+                    overlay.classList.remove('screen-shake');
                     requestAnimationFrame(() => {
-                        overlay.classList.add('screen-shake');
-                        setTimeout(() => overlay.classList.remove('screen-shake'), 380);
+                        requestAnimationFrame(() => {
+                            overlay.classList.add('screen-shake');
+                            setTimeout(() => overlay.classList.remove('screen-shake'), 380);
+                        });
                     });
-                });
-            }
-            showDamageFloat(dmg, false, '#88aaff');
+                }
+                showDamageFloat(dmg, false, '#88aaff');
+            });
         }
 
         setTimeout(() => {
@@ -5237,7 +5326,7 @@
                 battleSession.turn = 'enemy';
                 battleEnemyTurn();
             }
-        }, 600);
+        }, 900);
     }
 
     function processGrammarAnswer(isCorrect) {
