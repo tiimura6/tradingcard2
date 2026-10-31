@@ -4172,19 +4172,19 @@
                 return `
             <div style="background:rgba(10,5,30,0.7);border:1px solid rgba(80,120,200,0.25);border-radius:10px;padding:12px;margin-bottom:12px;">
                 <div style="color:#88aaff;font-size:12px;font-weight:bold;margin-bottom:8px;">📅 デイリーチャレンジ <span style="color:#a090c0;font-weight:normal;">${dailyDone}/5</span></div>
-                ${ciRow(dc.completed.login,  'ログイン',                   0, 0, '+1回')}
-                ${ciRow(dc.completed.train10,'10枚冒険',       dc.progress.trainCount, 10, '+1回')}
-                ${ciRow(dc.completed.quiz5,  '5問正解（累計）', dc.progress.quizCorrect, 5, '+1回')}
-                ${ciRow(dc.completed.quiz20, '20問正解（累計）',dc.progress.quizCorrect, 20, '+2回')}
-                ${ciRow(dc.completed.combo3, '3連続コンボ',    dc.progress.currentCombo, 3, '+1回')}
+                ${ciRow(dc.completed.login,   'ログイン',               0, 0, '+1回')}
+                ${ciRow(dc.completed.train20, '20枚冒険',   dc.progress.trainCount,  20, '+1回')}
+                ${ciRow(dc.completed.quiz15,  '15問正解',   dc.progress.quizCorrect, 15, '+1回')}
+                ${ciRow(dc.completed.quiz30,  '30問正解',   dc.progress.quizCorrect, 30, '+2回')}
+                ${ciRow(dc.completed.combo5,  '5連続コンボ',dc.progress.currentCombo, 5, '+1回')}
             </div>
             <div style="background:rgba(10,5,30,0.7);border:1px solid rgba(80,180,120,0.25);border-radius:10px;padding:12px;margin-bottom:12px;">
                 <div style="color:#80d0a0;font-size:12px;font-weight:bold;margin-bottom:8px;">📆 ウィークリーチャレンジ <span style="color:#a090c0;font-weight:normal;">${weeklyDone}/6</span></div>
-                ${ciRow(wc.completed.train50,  '50枚学習',           wc.progress.trainCount, 50, '+3回')}
-                ${ciRow(wc.completed.train150, '150枚学習',          wc.progress.trainCount, 150, '+5回')}
-                ${ciRow(wc.completed.quiz30,   '30問正解（累計）',   wc.progress.quizCorrect, 30, '+2回')}
-                ${ciRow(wc.completed.quiz100,  '100問正解（累計）',  wc.progress.quizCorrect, 100, '+5回')}
-                ${ciRow(wc.completed.combo10,  '10連続コンボ',       wc.progress.currentCombo||0, 10, '+3回')}
+                ${ciRow(wc.completed.train200,  '200枚学習（4日分）',        wc.progress.trainCount,  200, '+3回')}
+                ${ciRow(wc.completed.train350,  '350枚学習（フル週）',       wc.progress.trainCount,  350, '+6回')}
+                ${ciRow(wc.completed.quiz150,   '150問正解（5日分）',        wc.progress.quizCorrect, 150, '+4回')}
+                ${ciRow(wc.completed.quiz210,   '210問正解（フル週）',       wc.progress.quizCorrect, 210, '+6回')}
+                ${ciRow(wc.completed.combo15,   '15連続コンボ',              wc.progress.currentCombo||0, 15, '+4回')}
                 ${ciRow(wkDone,'7日連続ログイン'+wkP,0,0,'+5回')}
             </div>
             `;
@@ -5954,16 +5954,19 @@
         if (dailyChallenges.date !== today) {
             dailyChallenges = {
                 date: today,
-                completed: { login: false, train10: false, quiz5: false, quiz20: false, combo3: false },
+                // 50枚/日想定: 序盤・中盤・終盤・コンボの4段階 + ログイン
+                completed: { login: false, train20: false, quiz15: false, quiz30: false, combo5: false },
                 progress: { trainCount: 0, quizCorrect: 0, currentCombo: 0 }
             };
             localStorage.setItem('dailyChallenges', JSON.stringify(dailyChallenges));
         }
-        // 旧データに quiz20 がない場合は補完
-        if (!('quiz20' in dailyChallenges.completed)) {
-            dailyChallenges.completed.quiz20 = false;
-            localStorage.setItem('dailyChallenges', JSON.stringify(dailyChallenges));
-        }
+        // 旧データ移行: 旧キーを新キーに補完
+        const needed = { login: false, train20: false, quiz15: false, quiz30: false, combo5: false };
+        let changed = false;
+        Object.keys(needed).forEach(k => {
+            if (!(k in dailyChallenges.completed)) { dailyChallenges.completed[k] = false; changed = true; }
+        });
+        if (changed) localStorage.setItem('dailyChallenges', JSON.stringify(dailyChallenges));
     }
 
     function checkWeeklyChallengeReset() {
@@ -5971,24 +5974,21 @@
         if (weeklyChallenges.weekStart !== weekStart) {
             weeklyChallenges = {
                 weekStart: weekStart,
-                completed: { train50: false, quiz30: false, quiz100: false, train150: false, combo10: false, streak7: false },
+                // 50枚/日 × 7日 = 350枚想定。週を通じて達成できる難度
+                completed: { train200: false, train350: false, quiz150: false, quiz210: false, combo15: false, streak7: false },
                 progress: { trainCount: 0, quizCorrect: 0, currentCombo: 0 }
             };
             localStorage.setItem('weeklyChallenges', JSON.stringify(weeklyChallenges));
         }
-        // 旧データに新キーがない場合は補完
-        ['quiz100','train150','combo10'].forEach(k => {
-            if (!(k in weeklyChallenges.completed)) {
-                weeklyChallenges.completed[k] = false;
-                if (!weeklyChallenges.progress) weeklyChallenges.progress = {};
-                if (k === 'combo10' && !('currentCombo' in weeklyChallenges.progress))
-                    weeklyChallenges.progress.currentCombo = 0;
-            }
+        // 旧データ移行
+        const needed = { train200: false, train350: false, quiz150: false, quiz210: false, combo15: false, streak7: false };
+        let changed = false;
+        Object.keys(needed).forEach(k => {
+            if (!(k in weeklyChallenges.completed)) { weeklyChallenges.completed[k] = false; changed = true; }
         });
-        if (!('currentCombo' in (weeklyChallenges.progress||{}))) {
-            weeklyChallenges.progress.currentCombo = 0;
-        }
-        localStorage.setItem('weeklyChallenges', JSON.stringify(weeklyChallenges));
+        if (!weeklyChallenges.progress) weeklyChallenges.progress = {};
+        if (!('currentCombo' in weeklyChallenges.progress)) { weeklyChallenges.progress.currentCombo = 0; changed = true; }
+        if (changed) localStorage.setItem('weeklyChallenges', JSON.stringify(weeklyChallenges));
     }
 
     function showChallengeToast(msg) {
@@ -6109,10 +6109,14 @@
         dailyChallenges.progress.trainCount++;
         weeklyChallenges.progress.trainCount++;
 
-        if (!dailyChallenges.completed.train10 && dailyChallenges.progress.trainCount >= 10)
-            completeDailyChallenge('train10', 1, '10枚冒険', !isCorrect);
-        if (!weeklyChallenges.completed.train50 && weeklyChallenges.progress.trainCount >= 50)
-            completeWeeklyChallenge('train50', 3, '50枚学習', !isCorrect);
+        // デイリー: 20枚冒険（序盤達成）
+        if (!dailyChallenges.completed.train20 && dailyChallenges.progress.trainCount >= 20)
+            completeDailyChallenge('train20', 1, '20枚冒険', !isCorrect);
+        // ウィークリー: 200枚（4日分）・350枚（フル週）
+        if (!weeklyChallenges.completed.train200 && weeklyChallenges.progress.trainCount >= 200)
+            completeWeeklyChallenge('train200', 3, '200枚学習', !isCorrect);
+        if (!weeklyChallenges.completed.train350 && weeklyChallenges.progress.trainCount >= 350)
+            completeWeeklyChallenge('train350', 6, '350枚学習', !isCorrect);
 
         if (isCorrect) {
             dailyChallenges.progress.quizCorrect++;
@@ -6121,26 +6125,26 @@
             if (!weeklyChallenges.progress.currentCombo) weeklyChallenges.progress.currentCombo = 0;
             weeklyChallenges.progress.currentCombo++;
 
-            if (!dailyChallenges.completed.quiz5 && dailyChallenges.progress.quizCorrect >= 5)
-                completeDailyChallenge('quiz5', 1, 'クイズ5問正解');
-            if (!dailyChallenges.completed.quiz20 && dailyChallenges.progress.quizCorrect >= 20)
-                completeDailyChallenge('quiz20', 2, '20問正解');
-            if (!weeklyChallenges.completed.quiz30 && weeklyChallenges.progress.quizCorrect >= 30)
-                completeWeeklyChallenge('quiz30', 2, 'クイズ30問正解');
-            if (!weeklyChallenges.completed.quiz100 && weeklyChallenges.progress.quizCorrect >= 100)
-                completeWeeklyChallenge('quiz100', 5, 'クイズ100問正解');
-            if (!dailyChallenges.completed.combo3 && dailyChallenges.progress.currentCombo >= 3)
-                completeDailyChallenge('combo3', 1, '3連続コンボ');
-            if (!weeklyChallenges.completed.combo10 && weeklyChallenges.progress.currentCombo >= 10)
-                completeWeeklyChallenge('combo10', 3, '10連続コンボ');
+            // デイリー正解マイルストーン: 15問（中盤）・30問（1日フル）
+            if (!dailyChallenges.completed.quiz15 && dailyChallenges.progress.quizCorrect >= 15)
+                completeDailyChallenge('quiz15', 1, '15問正解');
+            if (!dailyChallenges.completed.quiz30 && dailyChallenges.progress.quizCorrect >= 30)
+                completeDailyChallenge('quiz30', 2, '30問正解');
+            // ウィークリー正解マイルストーン: 150問（5日）・210問（フル週）
+            if (!weeklyChallenges.completed.quiz150 && weeklyChallenges.progress.quizCorrect >= 150)
+                completeWeeklyChallenge('quiz150', 4, '150問正解');
+            if (!weeklyChallenges.completed.quiz210 && weeklyChallenges.progress.quizCorrect >= 210)
+                completeWeeklyChallenge('quiz210', 6, '210問正解');
+            // コンボ
+            if (!dailyChallenges.completed.combo5 && dailyChallenges.progress.currentCombo >= 5)
+                completeDailyChallenge('combo5', 1, '5連続コンボ');
+            if (!weeklyChallenges.completed.combo15 && weeklyChallenges.progress.currentCombo >= 15)
+                completeWeeklyChallenge('combo15', 4, '15連続コンボ');
 
         } else {
             dailyChallenges.progress.currentCombo = 0;
             if (weeklyChallenges.progress) weeklyChallenges.progress.currentCombo = 0;
         }
-
-        if (!weeklyChallenges.completed.train150 && weeklyChallenges.progress.trainCount >= 150)
-            completeWeeklyChallenge('train150', 5, '150枚学習', !isCorrect);
 
         localStorage.setItem('dailyChallenges', JSON.stringify(dailyChallenges));
         localStorage.setItem('weeklyChallenges', JSON.stringify(weeklyChallenges));
@@ -6229,22 +6233,22 @@
                     <span>📅 デイリーチャレンジ</span>
                     <span style="font-size:12px;color:#a090c0;">${dailyDone}/5 完了</span>
                 </div>
-                ${ciCheck(dc.completed.login,  'ログイン',                    0, 0, '+1回')}
-                ${ciCheck(dc.completed.train10,'10枚冒険',        dc.progress.trainCount, 10, '+1回')}
-                ${ciCheck(dc.completed.quiz5,  '5問正解（累計）',  dc.progress.quizCorrect, 5, '+1回')}
-                ${ciCheck(dc.completed.quiz20, '20問正解（累計）', dc.progress.quizCorrect, 20, '+2回')}
-                ${ciCheck(dc.completed.combo3, '3連続コンボ',     dc.progress.currentCombo, 3, '+1回')}
+                ${ciCheck(dc.completed.login,   'ログイン',               0, 0, '+1回')}
+                ${ciCheck(dc.completed.train20, '20枚冒険',   dc.progress.trainCount,  20, '+1回')}
+                ${ciCheck(dc.completed.quiz15,  '15問正解',   dc.progress.quizCorrect, 15, '+1回')}
+                ${ciCheck(dc.completed.quiz30,  '30問正解',   dc.progress.quizCorrect, 30, '+2回')}
+                ${ciCheck(dc.completed.combo5,  '5連続コンボ',dc.progress.currentCombo, 5, '+1回')}
             </div>
             <div class="challenge-section">
                 <div class="challenge-section-title">
                     <span>📆 ウィークリーチャレンジ</span>
                     <span style="font-size:12px;color:#a090c0;">${weeklyDone}/6 完了</span>
                 </div>
-                ${ciCheck(wc.completed.train50,  '50枚学習',          wc.progress.trainCount, 50, '+3回')}
-                ${ciCheck(wc.completed.train150, '150枚学習',         wc.progress.trainCount, 150, '+5回')}
-                ${ciCheck(wc.completed.quiz30,   '30問正解（累計）',  wc.progress.quizCorrect, 30, '+2回')}
-                ${ciCheck(wc.completed.quiz100,  '100問正解（累計）', wc.progress.quizCorrect, 100, '+5回')}
-                ${ciCheck(wc.completed.combo10,  '10連続コンボ',      wc.progress.currentCombo||0, 10, '+3回')}
+                ${ciCheck(wc.completed.train200,  '200枚学習（4日分）',  wc.progress.trainCount,  200, '+3回')}
+                ${ciCheck(wc.completed.train350,  '350枚学習（フル週）', wc.progress.trainCount,  350, '+6回')}
+                ${ciCheck(wc.completed.quiz150,   '150問正解（5日分）',  wc.progress.quizCorrect, 150, '+4回')}
+                ${ciCheck(wc.completed.quiz210,   '210問正解（フル週）', wc.progress.quizCorrect, 210, '+6回')}
+                ${ciCheck(wc.completed.combo15,   '15連続コンボ',        wc.progress.currentCombo||0, 15, '+4回')}
                 <div class="challenge-item">
                     <span class="challenge-check">${wkStreakDone ? '✅' : '☐'}</span>
                     <span class="challenge-label${wkStreakDone ? ' done' : ''}">7日連続ログイン${wkStreakPText}</span>
