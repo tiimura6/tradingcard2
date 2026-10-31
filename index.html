@@ -3331,7 +3331,9 @@
         const hofBtn = document.getElementById('hofBtn');
         if (hofBtn) {
             const allComplete = acquired >= total;
+            const wasLocked = hofBtn.style.opacity !== '1';
             if (allComplete) {
+                if (wasLocked) playSE('hof'); // 解禁瞬間にSE
                 hofBtn.style.opacity = '1';
                 hofBtn.style.background = 'linear-gradient(150deg,#6a4010,#3a2000)';
                 hofBtn.innerHTML = '<span class="btn-icon">🏆</span>殿堂入りへの道';
@@ -3550,8 +3552,9 @@
         const seed = (card.no * 7 + card.no % 13) % 20;
         const srsBonus = srs.level * 4; // SRS定着でDEFが成長
         // 英検レベル別ボーナス（カード番号で判定）
-        // No.1〜287: 2級レベル +0 / No.288〜575: 準1級レベル +25 / No.576〜: 1級レベル +50
-        const levelBonus = card.no <= 287 ? 0 : card.no <= 575 ? 25 : 50;
+        // タブ1段上がるごとに+50（タブ0=0, タブ1=50, タブ2=100, ...）
+        const tabIndex = Math.floor((card.no - 1) / COLLECTION_PAGE_SIZE);
+        const levelBonus = tabIndex * 50;
         // プレイヤーレベルボーナス（レアリティに応じた成長率）
         // N: 0.5/Lv, R: 1.0/Lv, SR: 1.5/Lv, UR: 2.5/Lv
         const rarityGrowth = { N: 0.5, R: 1.0, SR: 1.5, UR: 2.5 };
@@ -4045,8 +4048,7 @@
     /* ========== 殿堂入りへの道 ========== */
     function showHallOfFameModal() {
         const allComplete = unlockedCards.length >= TOTAL_CARDS;
-        if (allComplete) playSE('hof');
-        // locked SE removed
+        // SE はボタン押下では流れない（コンプ解禁時・ボスラッシュクリア時のみ）
         if (!allComplete) {
             // 未コンプリートならロック画面を表示
             const remaining = TOTAL_CARDS - unlockedCards.length;
@@ -4093,16 +4095,17 @@
                 <span class="challenge-reward">${reward}</span></div>`;
         }
         function hofRow(level, data) {
-            const pct = Math.min(100, (data.currentStreak / 100) * 100);
+            const totalBosses = getBattleStages().filter(s => s.type === 'final').length;
+            const beaten = data.currentStreak || 0;
+            const pct = data.achieved ? 100 : Math.min(100, (beaten / Math.max(1, totalBosses)) * 100);
             const sl = data.achieved
                 ? '<span style="color:#f0c840;font-size:10px;margin-left:4px;">殿堂入り！</span>'
-                : ` ${data.currentStreak}/100`;
+                : ` ボス${beaten}/${totalBosses}`;
             return `<div class="hof-item">
                 <span class="challenge-check">${data.achieved ? '🏆' : '☐'}</span>
                 <span class="hof-label">${level}${sl}</span>
                 <div class="hof-streak-bar"><div class="hof-streak-fill" style="width:${pct}%"></div></div>
-                <div style="font-size:10px;color:#907080;flex-shrink:0;">最高${data.bestStreak}</div>
-                ${!data.achieved ? `<button class="hof-challenge-btn" onclick="closeChallengeModal();openTrainingMode('all')">挑戦</button>` : ''}
+                ${!data.achieved ? `<button class="hof-challenge-btn" onclick="startHofBossRush()">挑戦</button>` : ''}
             </div>`;
         }
         const ws = loginStreak.streak, wkDone = wc.completed.streak7;
@@ -4111,11 +4114,11 @@
             <div class="challenge-section">
                 <div class="challenge-section-title">
                     <span>📒 金の手帖</span>
-                    <span style="font-size:10px;color:#a090c0;">100問連続正解</span>
+                    <span style="font-size:10px;color:#a090c0;">歴代ボスラッシュ（強化版）</span>
                 </div>
                 ${hofRow('金の手帖', hof['金の手帖'])}
                 <div style="font-size:10px;color:#706060;margin-top:6px;">
-                    報酬: ガチャ+30回 / 金の手帖バッジ＋称号
+                    歴代の最終ボス全員を2倍強化で連続撃破<br>報酬: ガチャ+30回 / 金の手帖バッジ＋称号
                 </div>
             </div>
             <div style="text-align:center;color:#706080;font-size:10px;padding:6px 0 2px;">
@@ -4683,15 +4686,20 @@
         pendingAttack: null, log: [], turnCount: 1
     };
 
-    function getBoardPieceStats(rarity, posType) {
-        // レアリティ基礎ステータス
-        const base = { N:{hp:3,atk:1,move:1,range:1}, R:{hp:4,atk:1,move:1,range:1}, SR:{hp:5,atk:2,move:1,range:1}, UR:{hp:6,atk:2,move:2,range:2} }[rarity] || {hp:3,atk:1,move:1,range:1};
-        let {hp, atk, move, range} = base;
+    function getBoardPieceStats(card) {
+        const rarity  = getRarity(card.no);
+        const posType = (card.quiz && card.quiz.pos) || 'n';
+        const cStats  = getCardStats(card);
+        // カードのP/G値をボードステータスに変換
+        let hp    = Math.max(2, Math.round(cStats.def / 15));
+        let atk   = Math.max(1, Math.round(cStats.atk / 20));
+        let move  = { N:1, R:1, SR:1, UR:2 }[rarity] || 1;
+        let range = { N:1, R:1, SR:1, UR:2 }[rarity] || 1;
         // 品詞ボーナス（タクティクスRPG要素）
-        if (posType === 'v')   atk   += 1;   // 動詞: 攻撃力↑
-        if (posType === 'adv') range += 1;   // 副詞: 射程↑（遠距離攻撃）
-        if (posType === 'adj') move  += 1;   // 形容詞: 移動力↑
-        if (posType === 'n')   hp    += 1;   // 名詞: HP↑
+        if (posType === 'v')   atk   = Math.round(atk * 1.3); // 動詞: 攻撃力↑
+        if (posType === 'adv') range += 1;                      // 副詞: 射程↑
+        if (posType === 'adj') move  += 1;                      // 形容詞: 移動力↑
+        if (posType === 'n')   hp    = Math.round(hp  * 1.2);  // 名詞: HP↑
         return { hp, maxHp: hp, atk, move, range };
     }
 
@@ -4711,14 +4719,17 @@
             if (!card) return;
             const rarity = getRarity(card.no);
             const posType = (card.quiz && card.quiz.pos) || 'n';
-            const stats = getBoardPieceStats(rarity, posType);
+            const stats = getBoardPieceStats(card);
             board[4][playerCols[i]] = { owner:'player', card, rarity, posType, ...stats };
         });
 
-        // 敵配置
-        const mHp = Math.round(3 * eScale), mAtk = Math.round(1 * eScale);
-        const sHp = Math.round(5 * eScale), sAtk = Math.round(2 * eScale);
-        const bHp = Math.round(8 * eScale), bAtk = Math.round(2 * eScale);
+        // 敵配置: カードのP/G水準に合わせてスケール
+        const avgDef = 60 + stage.tabIdx * 50; // タブ平均DEF
+        const eHpUnit  = Math.max(2, Math.round(avgDef / 15));
+        const eAtkUnit = Math.max(1, Math.round(avgDef / 20));
+        const mHp = Math.round(eHpUnit * 0.8),  mAtk = Math.max(1, Math.round(eAtkUnit * 0.5));
+        const sHp = Math.round(eHpUnit * 1.2),  sAtk = Math.max(1, Math.round(eAtkUnit * 0.7));
+        const bHp = Math.round(eHpUnit * 2.5),  bAtk = Math.max(1, Math.round(eAtkUnit * 1.0));
         board[0][0] = makeEnemyBoardPiece('👾','雑魚', mHp, mAtk);
         board[0][4] = makeEnemyBoardPiece('👾','雑魚', mHp, mAtk);
         board[0][1] = makeEnemyBoardPiece('😈','副官', sHp, sAtk);
@@ -5431,6 +5442,36 @@
         const descEl  = document.getElementById('battleResultDesc');
 
         if (win) {
+            // 殿堂入りボスラッシュ中の勝利
+            if (hofBossRush.active && stage.type === 'hof') {
+                titleEl.className = 'battle-result-title win';
+                const remaining = hofBossRush.bosses.length - hofBossRush.bossIndex - 1;
+                titleEl.textContent = '🎉 撃破！';
+                if (remaining > 0) {
+                    descEl.innerHTML = `${stage.emoji} ${stage.name}を撃破！<br><span style="color:#f9ca24;">残り ${remaining} ボス</span>`;
+                    document.querySelector('#battle-result-overlay .action-btn').onclick = function() {
+                        document.getElementById('battle-result-overlay').style.display = 'none';
+                        document.getElementById('battle-overlay').style.display = 'none';
+                        advanceHofBossRush();
+                    };
+                } else {
+                    descEl.innerHTML = `${stage.emoji} ${stage.name}を撃破！`;
+                    document.querySelector('#battle-result-overlay .action-btn').onclick = function() {
+                        document.getElementById('battle-result-overlay').style.display = 'none';
+                        document.getElementById('battle-overlay').style.display = 'none';
+                        advanceHofBossRush();
+                        // reset button
+                        document.querySelector('#battle-result-overlay .action-btn').onclick = function() { closeBattleResult(); };
+                    };
+                }
+                resultOverlay.classList.remove('showing');
+                resultOverlay.style.display = 'flex';
+                void resultOverlay.offsetWidth;
+                resultOverlay.classList.add('showing');
+                battleSession.active = false;
+                return;
+            }
+
             // 勝利記録
             if (!battleProgress.defeated.includes(stage.id)) {
                 battleProgress.defeated.push(stage.id);
@@ -5474,7 +5515,12 @@
         } else if (playerHP <= 0) {
             titleEl.className = 'battle-result-title lose';
             titleEl.textContent = '💀 敗北…';
-            descEl.innerHTML = `${stage.emoji} ${stage.name}に敗れた…<br>もっとカードを集めて再挑戦！`;
+            if (hofBossRush.active) {
+                hofBossRush.active = false;
+                descEl.innerHTML = `${stage.emoji} ${stage.name}に敗れた…<br>ボスラッシュ失敗！もう一度挑戦してください。`;
+            } else {
+                descEl.innerHTML = `${stage.emoji} ${stage.name}に敗れた…<br>もっとカードを集めて再挑戦！`;
+            }
             addBattleLog('💀 戦闘不能…');
         } else {
             titleEl.className = 'battle-result-title lose';
@@ -6114,23 +6160,72 @@
         '金の手帖': { gacha: 30, badge: '金の手帖バッジ＋称号' }
     };
 
+    // ===== 殿堂入りボスラッシュ =====
+    const hofBossRush = { active: false, bossIndex: 0, bosses: [] };
+
+    function startHofBossRush() {
+        closeChallengeModal();
+        if (hallOfFame['金の手帖'] && hallOfFame['金の手帖'].achieved) {
+            alert('すでに殿堂入り達成済みです！');
+            return;
+        }
+        // 歴代最終ボス（撃破済みのもの）を2倍強化で並べる
+        const allStages = getBattleStages();
+        const finalBosses = allStages.filter(s => s.type === 'final');
+        // 撃破済み最終ボスのみ（未撃破なら全最終ボスを対象）
+        const defeated = finalBosses.filter(s => battleProgress.defeated.has(s.id));
+        const bossPool = defeated.length > 0 ? defeated : finalBosses.slice(0, 1);
+        hofBossRush.bosses = bossPool.map(s => ({
+            ...s,
+            id: `hof_${s.id}`,
+            hp:  Math.round(s.hp  * 2.0),
+            atk: Math.round(s.atk * 2.0),
+            type: 'hof',
+            tabUnlock: null,
+            reward: { type: 'gacha', amount: 0 }
+        }));
+        hofBossRush.bossIndex = 0;
+        hofBossRush.active = true;
+        // フォーメーション選択から開始
+        showFormationModal(hofBossRush.bosses[0]);
+    }
+
+    function advanceHofBossRush() {
+        hofBossRush.bossIndex++;
+        if (hofBossRush.bossIndex >= hofBossRush.bosses.length) {
+            // 全ボス撃破 → 殿堂入り達成
+            hofBossRush.active = false;
+            const level = '金の手帖';
+            hallOfFame[level].achieved = true;
+            hallOfFame[level].currentStreak = hofBossRush.bosses.length;
+            hallOfFame[level].bestStreak   = hofBossRush.bosses.length;
+            localStorage.setItem('hallOfFame', JSON.stringify(hallOfFame));
+            const r = HOF_REWARDS[level];
+            addGachaFromChallenge(r.gacha, `🏆 ${level} 殿堂入り！ ${r.badge} ガチャ+${r.gacha}回！`);
+            playSE('hof');
+            // 結果オーバーレイを更新
+            document.getElementById('battleResultTitle').className = 'battle-result-title win';
+            document.getElementById('battleResultTitle').textContent = '🏆 殿堂入り！';
+            document.getElementById('battleResultDesc').innerHTML =
+                `全ボスラッシュ制覇！<br>🎖️ 金の手帖バッジ取得！<br>🎰 ガチャ+${r.gacha}回！`;
+            document.getElementById('battle-result-overlay').style.display = 'flex';
+        } else {
+            // 次のボスへ
+            const nextBoss = hofBossRush.bosses[hofBossRush.bossIndex];
+            showFormationModal(nextBoss);
+        }
+    }
+
     function checkHallOfFame(level, isCorrect) {
+        // 旧ストリーク方式（後方互換 / トレーニングモード中参照用）
         if (!hallOfFame[level] || hallOfFame[level].achieved) return;
         if (isCorrect) {
             hallOfFame[level].currentStreak++;
             if (hallOfFame[level].currentStreak > hallOfFame[level].bestStreak) {
                 hallOfFame[level].bestStreak = hallOfFame[level].currentStreak;
             }
-            if (hallOfFame[level].currentStreak >= 100) {
-                hallOfFame[level].achieved = true;
-                hallOfFame[level].currentStreak = 100;
-                localStorage.setItem('hallOfFame', JSON.stringify(hallOfFame));
-                const r = HOF_REWARDS[level];
-                addGachaFromChallenge(r.gacha, `🏆 ${level} 殿堂入り！ ${r.badge} ガチャ+${r.gacha}回！`);
-                return;
-            }
         } else {
-            hallOfFame[level].currentStreak = 0; // reset on wrong
+            hallOfFame[level].currentStreak = 0;
         }
         localStorage.setItem('hallOfFame', JSON.stringify(hallOfFame));
         if (document.getElementById('challenge-modal').style.display !== 'none') renderChallengeModal();
@@ -6322,6 +6417,20 @@
     /* ========== BGM / SE ========== */
     // MP3ファイル使用（./bgm/main.mp3）/ なければWeb Audio APIフォールバック
     let bgmAudio = null, bgmCtx = null, bgmNodes = [], bgmOn = false;
+    let bgmMasterGain = null, bgmDuckCount = 0;
+
+    function duckBGM() {
+        bgmDuckCount++;
+        if (bgmDuckCount > 1) return; // already ducked
+        if (bgmAudio) bgmAudio.volume = 0.07;
+        if (bgmMasterGain) bgmMasterGain.gain.value = 0.04;
+    }
+    function unduckBGM() {
+        bgmDuckCount = Math.max(0, bgmDuckCount - 1);
+        if (bgmDuckCount > 0) return; // other SE still playing
+        if (bgmAudio) bgmAudio.volume = 0.35;
+        if (bgmMasterGain) bgmMasterGain.gain.value = 0.18;
+    }
 
     // SE プリロード
     const SE = {};
@@ -6351,7 +6460,11 @@
         const a = SE[key];
         if (!a) return;
         a.currentTime = 0;
-        a.play().catch(() => {});
+        duckBGM();
+        const onEnd = () => { unduckBGM(); a.removeEventListener('ended', onEnd); a.removeEventListener('error', onEnd); };
+        a.addEventListener('ended', onEnd);
+        a.addEventListener('error', onEnd);
+        a.play().catch(() => { unduckBGM(); });
     }
 
     function buildBGM() {
@@ -6377,6 +6490,7 @@
         bgmCtx = new (window.AudioContext || window.webkitAudioContext)();
         const master = bgmCtx.createGain();
         master.gain.value = 0.18;
+        bgmMasterGain = master;
         master.connect(bgmCtx.destination);
         bgmNodes.push(master);
 
