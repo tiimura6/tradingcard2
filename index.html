@@ -379,6 +379,11 @@
             background-size: cover !important;
             background-position: center center !important;
         }
+        body.battle-mode #bg-layer {
+            background-image: url('./bgm/boss-bg.jpg') !important;
+            background-size: cover !important;
+            background-position: center center !important;
+        }
         /* 冒険モード中のモーダルに自然な半透明感 */
         body.adventure-mode .custom-box {
             background: rgba(10, 25, 8, 0.82) !important;
@@ -4824,7 +4829,8 @@
         renderBattleUI();
         addBattleLog(`⚔️ ${stage.emoji} ${stage.name}とのバトル開始！`);
 
-        // ボスBGM開始
+        // ボスバトル背景・BGM開始
+        document.body.classList.add('battle-mode');
         if (bgmOn) {
             if (bgmAudio) bgmAudio.pause();
             if (bgmCtx && bgmCtx.state !== 'suspended') bgmCtx.suspend();
@@ -5268,6 +5274,7 @@
     }
 
     function stopBossBGM() {
+        document.body.classList.remove('battle-mode');
         if (window.bossBGM) { window.bossBGM.pause(); window.bossBGM.currentTime = 0; }
         if (!bgmOn) return;
         // 冒険モード中なら冒険BGMへ、それ以外はメインBGMへ戻す
