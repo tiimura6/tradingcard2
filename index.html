@@ -3280,51 +3280,101 @@
     // バトル勝利記録 (defeated: [tabIndex, ...]) — 倒した敵のタブインデックス
     let battleProgress = JSON.parse(localStorage.getItem('battleProgress') || '{"defeated":[]}');
 
-    // 動的敵生成: タブ数に応じてタブ1〜(totalTabs-1)を解禁する敵を生成
-    // 敵i (0-indexed) はタブ(i+1)を解禁する。クイズはタブ0〜i+1のカードから出題
-    const ENEMY_TEMPLATES = [
-        { name: 'スライム',        emoji: '🟢', hpBase: 100, atkBase: 15 },
-        { name: 'ゴブリン',        emoji: '👺', hpBase: 160, atkBase: 25 },
-        { name: 'オーク戦士',      emoji: '🪓', hpBase: 240, atkBase: 38 },
-        { name: 'ダークエルフ',    emoji: '🧝', hpBase: 330, atkBase: 52 },
-        { name: 'ワイバーン',      emoji: '🐉', hpBase: 430, atkBase: 67 },
-        { name: 'ドラゴン',        emoji: '🔥', hpBase: 550, atkBase: 83 },
-        { name: 'リッチ',          emoji: '💀', hpBase: 690, atkBase: 99 },
-        { name: '魔将軍',          emoji: '⚔️', hpBase: 850, atkBase: 115 },
-        { name: '魔王',            emoji: '👿', hpBase: 1050, atkBase: 130 },
-        { name: '大魔王',          emoji: '🌑', hpBase: 1300, atkBase: 148 },
+    // タブごとに中間ボス＋最終ボスの2体構成
+    // 中間ボス: タブ内カードを半分以上収集で解禁
+    // 最終ボス: タブ内カードを全収集 & 中間ボス撃破で解禁 → 倒すと次タブ開放
+    const MID_BOSS_TEMPLATES = [
+        { name: 'スライム将軍', emoji: '🟢', hpBase: 80,  atkBase: 12 },
+        { name: 'ゴブリン長',   emoji: '👺', hpBase: 130, atkBase: 20 },
+        { name: 'オーク隊長',   emoji: '🪓', hpBase: 190, atkBase: 30 },
+        { name: 'ダークナイト', emoji: '🗡️', hpBase: 260, atkBase: 41 },
+        { name: 'ワイバーン',   emoji: '🐲', hpBase: 340, atkBase: 53 },
+        { name: '炎の竜騎士',   emoji: '🔥', hpBase: 430, atkBase: 65 },
+        { name: 'デスナイト',   emoji: '💀', hpBase: 540, atkBase: 78 },
+        { name: '冥府の将',     emoji: '⚔️', hpBase: 670, atkBase: 91 },
+        { name: '魔将軍',       emoji: '👿', hpBase: 820, atkBase: 103 },
+        { name: '冥王',         emoji: '🌑', hpBase: 1000, atkBase: 116 },
+    ];
+    const FINAL_BOSS_TEMPLATES = [
+        { name: 'スライム王',   emoji: '👑', hpBase: 150, atkBase: 20 },
+        { name: 'ゴブリン王',   emoji: '🏰', hpBase: 240, atkBase: 33 },
+        { name: 'オーク覇王',   emoji: '⚔️', hpBase: 360, atkBase: 50 },
+        { name: 'ダークエルフ女王', emoji: '🧝', hpBase: 500, atkBase: 68 },
+        { name: 'ドラゴンロード', emoji: '🐉', hpBase: 660, atkBase: 88 },
+        { name: 'ドラゴン皇帝', emoji: '🔥', hpBase: 840, atkBase: 108 },
+        { name: 'リッチキング', emoji: '☠️', hpBase: 1050, atkBase: 128 },
+        { name: '魔将',         emoji: '🌙', hpBase: 1300, atkBase: 148 },
+        { name: '魔王',         emoji: '👿', hpBase: 1600, atkBase: 168 },
+        { name: '大魔王',       emoji: '🌑', hpBase: 2000, atkBase: 190 },
     ];
 
     function getBattleStages() {
         const totalTabs = Math.ceil(cardsData.length / COLLECTION_PAGE_SIZE);
         const stages = [];
-        for (let i = 0; i < totalTabs - 1; i++) {
-            const t = ENEMY_TEMPLATES[i] || ENEMY_TEMPLATES[ENEMY_TEMPLATES.length - 1];
-            const scale = 1 + i * 0.08;
+        for (let tabIdx = 0; tabIdx < totalTabs; tabIdx++) {
+            const scale = 1 + tabIdx * 0.12;
+            const tMid   = MID_BOSS_TEMPLATES[tabIdx % MID_BOSS_TEMPLATES.length];
+            const tFinal = FINAL_BOSS_TEMPLATES[tabIdx % FINAL_BOSS_TEMPLATES.length];
+            const isLastTab = tabIdx === totalTabs - 1;
             stages.push({
-                id: i + 1,
-                tabUnlock: i + 1,       // 解禁するタブindex
-                name: t.name,
-                emoji: t.emoji,
-                hp:  Math.round(t.hpBase * scale),
-                atk: Math.round(t.atkBase * scale),
-                reward: i < totalTabs - 3
-                    ? { type: 'gacha', amount: Math.max(1, i + 1) }
-                    : { type: 'sp',    amount: Math.floor((i - totalTabs + 4) + 1) }
+                id: `tab${tabIdx}_mid`,
+                tabIdx,
+                type: 'mid',
+                name: tMid.name,
+                emoji: tMid.emoji,
+                hp:  Math.round(tMid.hpBase * scale),
+                atk: Math.round(tMid.atkBase * scale),
+                tabUnlock: null,   // 中間ボスは次タブを開放しない
+                reward: { type: 'gacha', amount: Math.max(1, tabIdx + 1) }
+            });
+            stages.push({
+                id: `tab${tabIdx}_final`,
+                tabIdx,
+                type: 'final',
+                name: tFinal.name,
+                emoji: tFinal.emoji,
+                hp:  Math.round(tFinal.hpBase * scale),
+                atk: Math.round(tFinal.atkBase * scale),
+                tabUnlock: isLastTab ? null : tabIdx + 1, // 最終ボスが次タブを開放
+                reward: isLastTab
+                    ? { type: 'sp', amount: 3 }
+                    : tabIdx >= totalTabs - 3
+                        ? { type: 'sp', amount: tabIdx - totalTabs + 4 }
+                        : { type: 'gacha', amount: tabIdx + 2 }
             });
         }
         return stages;
     }
 
-    // バトル済みタブ数（0=タブ0のみ解禁済み）
+    // タブ解禁判定: タブNの最終ボスを倒すとタブN+1が解禁
     function getUnlockedTabCount() {
-        const stages = getBattleStages();
+        const totalTabs = Math.ceil(cardsData.length / COLLECTION_PAGE_SIZE);
         let count = 1; // タブ0は常に解禁
-        for (let i = 0; i < stages.length; i++) {
-            if (battleProgress.defeated.includes(stages[i].id)) count++;
-            else break; // 順番に解禁
+        for (let i = 0; i < totalTabs - 1; i++) {
+            if (battleProgress.defeated.includes(`tab${i}_final`)) count++;
+            else break;
         }
-        return Math.min(count, Math.ceil(cardsData.length / COLLECTION_PAGE_SIZE));
+        return Math.min(count, totalTabs);
+    }
+
+    // タブ内の収集枚数を返す
+    function getTabCollectedCount(tabIdx) {
+        const start = tabIdx * COLLECTION_PAGE_SIZE;
+        const end   = Math.min((tabIdx + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
+        const tabCards = cardsData.slice(start, end);
+        return { collected: tabCards.filter(c => unlockedCards.includes(c.id)).length, total: tabCards.length };
+    }
+
+    // ステージ解禁条件チェック
+    function isBattleStageUnlocked(stage) {
+        const { tabIdx, type } = stage;
+        const { collected, total } = getTabCollectedCount(tabIdx);
+        const half = Math.ceil(total / 2);
+        if (type === 'mid') {
+            return collected >= half;
+        } else { // final
+            return collected >= total && battleProgress.defeated.includes(`tab${tabIdx}_mid`);
+        }
     }
 
     /* ========== ATK/DEF CALCULATION ========== */
@@ -3993,8 +4043,8 @@
     /* 前のタブのカードが全部揃っていれば解禁 */
     function isTabUnlocked(tabIndex) {
         if (tabIndex === 0) return true;  // タブ0は常に解禁
-        // タブiはバトルID=iを倒すと解禁（getBattleStagesのstage.tabUnlock === i）
-        return battleProgress.defeated.includes(tabIndex);
+        // タブNはタブN-1の最終ボス（tab{N-1}_final）を倒すと解禁
+        return battleProgress.defeated.includes(`tab${tabIndex - 1}_final`);
     }
 
     function renderCollectionTabs() {
@@ -4307,29 +4357,54 @@
             return;
         }
 
-        stages.forEach((stage, i) => {
-            const alreadyDefeated = battleProgress.defeated.includes(stage.id);
-            const isUnlocked = i === 0 || battleProgress.defeated.includes(stages[i - 1].id);
-            const div = document.createElement('div');
-            div.className = 'battle-stage-item' + (isUnlocked ? '' : ' locked');
-            const rewardLabel = stage.reward.type === 'sp'
-                ? `✨SPチケット×${stage.reward.amount}`
-                : `🎰ガチャ回数+${stage.reward.amount}`;
-            const statusBadge = alreadyDefeated
-                ? '<span style="color:#2ecc71;font-weight:bold;font-size:13px">✅ 撃破済</span>'
-                : isUnlocked
-                    ? '<span style="color:#e74c3c;font-size:13px">⚔️ 挑戦可</span>'
-                    : '<span style="color:#aaa;font-size:13px">🔒 解禁待ち</span>';
-            div.innerHTML = `
-                <span class="battle-stage-emoji">${stage.emoji}</span>
-                <div class="battle-stage-info">
-                    <div class="battle-stage-item-name">${stage.name}</div>
-                    <div class="battle-stage-item-sub">HP:${stage.hp} / ATK:${stage.atk} | タブ${stage.tabUnlock}を解禁 ${statusBadge}</div>
-                </div>
-                <span class="battle-stage-item-badge">${rewardLabel}</span>`;
-            if (isUnlocked) div.onclick = () => { closeBattleStageModal(); openBattleFormationModal(stage); };
-            listEl.appendChild(div);
-        });
+        // タブごとにグループ表示
+        const totalTabs = Math.ceil(cardsData.length / COLLECTION_PAGE_SIZE);
+        for (let tabIdx = 0; tabIdx < totalTabs; tabIdx++) {
+            const tabStages = stages.filter(s => s.tabIdx === tabIdx);
+            if (tabStages.length === 0) continue;
+
+            // タブ収集状況
+            const { collected, total } = getTabCollectedCount(tabIdx);
+            const half = Math.ceil(total / 2);
+
+            // タブヘッダー
+            const header = document.createElement('div');
+            header.style.cssText = 'font-size:12px;color:#f0d080;font-weight:bold;padding:8px 4px 4px;border-top:1px solid #333;';
+            header.textContent = `📖 タブ${tabIdx + 1}　収集: ${collected}/${total}枚`;
+            listEl.appendChild(header);
+
+            tabStages.forEach(stage => {
+                const alreadyDefeated = battleProgress.defeated.includes(stage.id);
+                const isUnlocked = isBattleStageUnlocked(stage);
+                const div = document.createElement('div');
+                div.className = 'battle-stage-item' + (isUnlocked ? '' : ' locked');
+                const rewardLabel = stage.reward.type === 'sp'
+                    ? `✨SPチケット×${stage.reward.amount}`
+                    : `🎰ガチャ+${stage.reward.amount}`;
+                const unlockHint = stage.type === 'mid'
+                    ? `${collected}/${half}枚収集`
+                    : `${collected}/${total}枚＋中間撃破`;
+                const statusBadge = alreadyDefeated
+                    ? '<span style="color:#2ecc71;font-weight:bold;font-size:13px">✅ 撃破済</span>'
+                    : isUnlocked
+                        ? '<span style="color:#e74c3c;font-size:13px">⚔️ 挑戦可</span>'
+                        : `<span style="color:#aaa;font-size:11px">🔒 ${unlockHint}</span>`;
+                const typeLabel = stage.type === 'mid' ? '中間ボス' : '🏆最終ボス';
+                const tabUnlockNote = stage.tabUnlock != null ? ` → タブ${stage.tabUnlock + 1}解放` : '';
+                div.innerHTML = `
+                    <span class="battle-stage-emoji">${stage.emoji}</span>
+                    <div class="battle-stage-info">
+                        <div class="battle-stage-item-name">[${typeLabel}] ${stage.name}</div>
+                        <div class="battle-stage-item-sub">HP:${stage.hp} / ATK:${stage.atk}${tabUnlockNote} ${statusBadge}</div>
+                    </div>
+                    <span class="battle-stage-item-badge">${rewardLabel}</span>`;
+                if (isUnlocked && !alreadyDefeated)
+                    div.onclick = () => { closeBattleStageModal(); openBattleFormationModal(stage); };
+                else if (alreadyDefeated)
+                    div.style.opacity = '0.6';
+                listEl.appendChild(div);
+            });
+        }
         document.getElementById('battle-stage-modal').style.display = 'flex';
     }
     function closeBattleStageModal() {
@@ -4464,7 +4539,9 @@
         });
 
         const playerMaxHP = units.reduce((s, u) => s + u.maxHp, 0);
-        const poolEnd = Math.min((stage.tabUnlock + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
+        // クイズプール: タブidxまでのカード（最終ボスはそのタブのカードも含む）
+        const poolTabEnd = stage.tabUnlock != null ? stage.tabUnlock : stage.tabIdx;
+        const poolEnd = Math.min((poolTabEnd + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
         const questionPool = cardsData.slice(0, poolEnd);
 
         battleSession = {
@@ -4820,7 +4897,7 @@
         const descEl  = document.getElementById('battleResultDesc');
 
         if (win) {
-            // 勝利記録: battleProgressに追加してタブを解禁
+            // 勝利記録
             if (!battleProgress.defeated.includes(stage.id)) {
                 battleProgress.defeated.push(stage.id);
                 localStorage.setItem('battleProgress', JSON.stringify(battleProgress));
@@ -4840,14 +4917,26 @@
             const rewardMsg = stage.reward.type === 'sp'
                 ? `✨ SPチケット×${stage.reward.amount} 獲得！`
                 : `🎰 ガチャ回数+${stage.reward.amount} 獲得！`;
-            const unlockedTabMsg = `📖 タブ${stage.tabUnlock}が解禁されました！`;
+
             titleEl.className = 'battle-result-title win';
             titleEl.textContent = '🎉 勝利！';
-            descEl.innerHTML = `${stage.emoji} ${stage.name}を倒した！<br>${rewardMsg}<br><span style="color:#2ecc71">${unlockedTabMsg}</span>`;
-            addBattleLog(`🎉 ${stage.name}に勝利！タブ${stage.tabUnlock}解禁！`);
 
-            // コレクションタブ表示を更新
-            renderCollectionTabs();
+            if (stage.type === 'final' && stage.tabUnlock != null) {
+                // 最終ボス撃破 → 次タブ解放
+                const nextTabNo = stage.tabUnlock + 1;
+                descEl.innerHTML = `${stage.emoji} ${stage.name}を撃破！<br>${rewardMsg}<br><span style="color:#2ecc71;font-weight:bold">🎊 タブ${nextTabNo}が解放されました！</span>`;
+                addBattleLog(`🎉 ${stage.name}撃破！タブ${nextTabNo}解放！`);
+                renderCollectionTabs();
+            } else if (stage.type === 'final') {
+                // 最終タブの最終ボス
+                descEl.innerHTML = `${stage.emoji} ${stage.name}を撃破！<br>${rewardMsg}<br><span style="color:#f9ca24;font-weight:bold">🏆 全タブ制覇！マスター達成！</span>`;
+                addBattleLog(`🏆 ${stage.name}撃破！全タブ制覇！`);
+            } else {
+                // 中間ボス撃破
+                const { total } = getTabCollectedCount(stage.tabIdx);
+                descEl.innerHTML = `${stage.emoji} ${stage.name}を撃破！<br>${rewardMsg}<br><span style="color:#88aaff">📌 タブ${stage.tabIdx + 1}のカード${total}枚を全収集すると最終ボスに挑戦可！</span>`;
+                addBattleLog(`⚡ 中間ボス ${stage.name}撃破！`);
+            }
         } else if (playerHP <= 0) {
             titleEl.className = 'battle-result-title lose';
             titleEl.textContent = '💀 敗北…';
