@@ -6070,20 +6070,7 @@
     /* ========== BGM / SE ========== */
     // MP3ファイル使用（./bgm/main.mp3）/ なければWeb Audio APIフォールバック
     let bgmAudio = null, bgmCtx = null, bgmNodes = [], bgmOn = false;
-    let bgmMasterGain = null, bgmDuckCount = 0;
-
-    function duckBGM() {
-        bgmDuckCount++;
-        if (bgmDuckCount > 1) return; // already ducked
-        if (bgmAudio) bgmAudio.volume = 0.07;
-        if (bgmMasterGain) bgmMasterGain.gain.value = 0.04;
-    }
-    function unduckBGM() {
-        bgmDuckCount = Math.max(0, bgmDuckCount - 1);
-        if (bgmDuckCount > 0) return; // other SE still playing
-        if (bgmAudio) bgmAudio.volume = 0.35;
-        if (bgmMasterGain) bgmMasterGain.gain.value = 0.18;
-    }
+    let bgmMasterGain = null;
 
     // SE プリロード
     const SE = {};
@@ -6113,11 +6100,7 @@
         const a = SE[key];
         if (!a) return;
         a.currentTime = 0;
-        duckBGM();
-        const onEnd = () => { unduckBGM(); a.removeEventListener('ended', onEnd); a.removeEventListener('error', onEnd); };
-        a.addEventListener('ended', onEnd);
-        a.addEventListener('error', onEnd);
-        a.play().catch(() => { unduckBGM(); });
+        a.play().catch(() => {});
     }
 
     function buildBGM() {
