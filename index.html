@@ -357,7 +357,7 @@
             transition: opacity 0.6s ease;
         }
         body.adventure-mode {
-            background-color: #0a1a08;
+            background-color: #1a2e14;
         }
         body.adventure-mode .stars-layer { display: none; }
         body.adventure-mode .particles  { display: none; }
@@ -366,20 +366,14 @@
             inset: 0;
             z-index: -1;
             display: none;
-            background:
-                radial-gradient(ellipse at 20% 80%, rgba(20,60,10,0.95) 0%, transparent 55%),
-                radial-gradient(ellipse at 80% 20%, rgba(10,40,5,0.9) 0%, transparent 55%),
-                radial-gradient(ellipse at 50% 50%, rgba(5,25,3,1) 0%, #050f03 100%);
+            background: url('./bgm/adventure-bg.jpg') center center / cover no-repeat;
             overflow: hidden;
         }
         #adventure-bg::before {
             content: '';
             position: absolute;
             inset: 0;
-            background-image:
-                radial-gradient(circle at 15% 60%, rgba(60,120,20,0.25) 0%, transparent 30%),
-                radial-gradient(circle at 85% 40%, rgba(40,100,15,0.2) 0%, transparent 25%),
-                radial-gradient(circle at 50% 90%, rgba(80,140,30,0.15) 0%, transparent 40%);
+            background: rgba(0,0,0,0.08);
         }
         /* 木漏れ日パーティクル */
         @keyframes adv-float {
