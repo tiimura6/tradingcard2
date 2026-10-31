@@ -1759,19 +1759,19 @@
         <div class="formation-grid">
             <div class="formation-slot" id="fslot-front" onclick="selectFormationSlot('front')">
                 <div class="formation-slot-label front">前衛</div>
-                <div class="formation-slot-bonus">ATK+30% / HP-20%</div>
+                <div class="formation-slot-bonus">Power+30% / HP-20%</div>
                 <div class="formation-slot-empty" id="fslot-front-empty">＋</div>
                 <div id="fslot-front-content" style="display:none"></div>
             </div>
             <div class="formation-slot" id="fslot-mid" onclick="selectFormationSlot('mid')">
                 <div class="formation-slot-label mid">中衛</div>
-                <div class="formation-slot-bonus">ATK+0% / HP+0%</div>
+                <div class="formation-slot-bonus">Power+0% / HP+0%</div>
                 <div class="formation-slot-empty" id="fslot-mid-empty">＋</div>
                 <div id="fslot-mid-content" style="display:none"></div>
             </div>
             <div class="formation-slot" id="fslot-rear" onclick="selectFormationSlot('rear')">
                 <div class="formation-slot-label rear">後衛</div>
-                <div class="formation-slot-bonus">ATK-30% / HP+30%</div>
+                <div class="formation-slot-bonus">Power-30% / HP+30%</div>
                 <div class="formation-slot-empty" id="fslot-rear-empty">＋</div>
                 <div id="fslot-rear-content" style="display:none"></div>
             </div>
@@ -1790,7 +1790,7 @@
 <div id="battle-stage-modal" class="modal-overlay" style="display:none;">
     <div class="custom-box" style="width:92%;max-width:360px;">
         <h3 style="margin:0 0 4px;color:#ff8888;font-family:'Noto Serif JP',serif;">⚔️ バトルステージ</h3>
-        <p style="font-size:12px;color:#aa7070;margin:0 0 14px;">デッキは所持カードから自動選出（ATK上位3枚）</p>
+        <p style="font-size:12px;color:#aa7070;margin:0 0 14px;">デッキは所持カードから自動選出（Power上位3枚）</p>
         <div class="battle-stage-list" id="battleStageList"></div>
         <button class="modal-cancel-btn" onclick="closeBattleStageModal()" style="margin-top:14px;">キャンセル</button>
     </div>
@@ -3265,9 +3265,9 @@
     const UNIT_SKILLS = {
         N:   { name: '応急処置',  icon: '💊', desc: '回復 +15%HP',  type: 'heal',    power: 0.15 },
         C:   { name: '連続攻撃',  icon: '⚡', desc: '2回攻撃',      type: 'double',  power: 1    },
-        R:   { name: '貫通攻撃',  icon: '🏹', desc: 'ATK×1.5',     type: 'pierce',  power: 1.5  },
-        SR:  { name: '全体強化',  icon: '✨', desc: '次ターンATK×2',type: 'buff',    power: 2    },
-        SSR: { name: '究極奥義',  icon: '💥', desc: 'ATK×3',       type: 'ultimate', power: 3   },
+        R:   { name: '貫通攻撃',  icon: '🏹', desc: 'Power×1.5',     type: 'pierce',  power: 1.5  },
+        SR:  { name: '全体強化',  icon: '✨', desc: '次ターンPower×2',type: 'buff',    power: 2    },
+        SSR: { name: '究極奥義',  icon: '💥', desc: 'Power×3',       type: 'ultimate', power: 3   },
     };
 
     // 編成作業中の状態
@@ -4160,8 +4160,8 @@
                     </div>
                     <div style="font-size:10px;color:#907060;margin-bottom:8px;">${dueDate}　正解${srs.correct}/不正解${srs.incorrect}</div>
                     <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                        <span style="background:rgba(200,60,60,0.15);border:1px solid rgba(220,80,80,0.4);color:#cc5555;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:5px;">⚔️${stats.atk}</span>
-                        <span style="background:rgba(60,100,200,0.15);border:1px solid rgba(80,120,220,0.4);color:#5588cc;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:5px;">🛡️${stats.def}</span>
+                        <span style="background:rgba(200,60,60,0.15);border:1px solid rgba(220,80,80,0.4);color:#cc5555;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:5px;">⚔️ Power:${stats.atk}</span>
+                        <span style="background:rgba(60,100,200,0.15);border:1px solid rgba(80,120,220,0.4);color:#5588cc;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:5px;">🛡️ Guard:${stats.def}</span>
                     </div>
                 </div>
             </div>
@@ -4396,7 +4396,7 @@
                     <span class="battle-stage-emoji">${stage.emoji}</span>
                     <div class="battle-stage-info">
                         <div class="battle-stage-item-name">[${typeLabel}] ${stage.name}</div>
-                        <div class="battle-stage-item-sub">HP:${stage.hp} / ATK:${stage.atk}${tabUnlockNote} ${statusBadge}</div>
+                        <div class="battle-stage-item-sub">HP:${stage.hp} / Power:${stage.atk}${tabUnlockNote} ${statusBadge}</div>
                     </div>
                     <span class="battle-stage-item-badge">${rewardLabel}</span>`;
                 if (isUnlocked && !alreadyDefeated)
@@ -4445,7 +4445,7 @@
                     <div class="formation-slot-label ${pos}">${bonus.label}</div>
                     <div style="font-size:22px">${card.emoji || '🃏'}</div>
                     <div style="font-size:11px;font-weight:bold;color:#fff">${card.name || card.word}</div>
-                    <div style="font-size:10px;color:#aaa">ATK${Math.round(stats.atk*bonus.atkMult)} HP${Math.round(stats.def*bonus.hpMult*3)}</div>
+                    <div style="font-size:10px;color:#aaa">Power:${Math.round(stats.atk*bonus.atkMult)} Guard:${Math.round(stats.def*bonus.hpMult*3)}</div>
                     <div style="font-size:10px;color:#f9ca24">${skill.icon}${skill.name}</div>
                     <div style="font-size:10px;color:#aaa;cursor:pointer;margin-top:2px" onclick="removeFormationCard('${pos}')">✕ 外す</div>`;
             } else {
@@ -4487,7 +4487,7 @@
         renderFormationSlots();
         const bonus = POSITION_BONUS[pos];
         document.getElementById('formationSelectedSlotLabel').textContent =
-            `${bonus.label}にカードを配置 (ATK${bonus.atkMult>=1?'+':''}${Math.round((bonus.atkMult-1)*100)}% / HP${bonus.hpMult>=1?'+':''}${Math.round((bonus.hpMult-1)*100)}%)`;
+            `${bonus.label}にカードを配置 (Power${bonus.atkMult>=1?'+':''}${Math.round((bonus.atkMult-1)*100)}% / HP${bonus.hpMult>=1?'+':''}${Math.round((bonus.hpMult-1)*100)}%)`;
     }
 
     function addCardToFormation(card) {
@@ -4863,7 +4863,7 @@
                 showDamageFloat(dmg, true, '#ff8c00');
             } else if (skill.type === 'buff') {
                 battleSession.buffActive = true;
-                addBattleLog(`✨ 次ターンATK×2バフ付与！`);
+                addBattleLog(`✨ 次ターンPower×2バフ付与！`);
             } else if (skill.type === 'ultimate') {
                 const dmg = Math.round(unit.atk * skill.power);
                 battleSession.enemyHP = Math.max(0, battleSession.enemyHP - dmg);
@@ -5082,7 +5082,7 @@
                     <div class="gacha-rarity-badge gacha-rarity-badge-${rarity}">${rc.label}</div>
                     <img src="${card.img}">
                     <div class="gacha-info">No.${card.no}　${card.quiz.answer}<br><span style="font-size:10px;font-weight:normal;color:#d0c090;">${card.quiz.meaning}</span></div>
-                    <div class="gacha-stats"><span>⚔️ ${st.atk}</span><span>🛡️ ${st.def}</span></div>
+                    <div class="gacha-stats"><span>⚔️ Power:${st.atk}</span><span>🛡️ Guard:${st.def}</span></div>
                 </div>`;
             if (rarity === bestRarity) cardEl.style.filter = `drop-shadow(0 0 8px ${rc.color || '#ffd700'})`;
             cardSlot.appendChild(cardEl);
@@ -5492,7 +5492,7 @@
                     <div class="gacha-rarity-badge gacha-rarity-badge-${rarity}">${rc.label}</div>
                     <img src="${card.img}">
                     <div class="gacha-info">No.${card.no}　${card.quiz.answer}${isNew ? '' : '　<span style="font-size:10px;opacity:0.75;">✔ 取得済み</span>'}<br><span style="font-size:10px;font-weight:normal;color:#d0c090;">${card.quiz.meaning}</span></div>
-                    <div class="gacha-stats"><span>⚔️ ${st.atk}</span><span>🛡️ ${st.def}</span></div>
+                    <div class="gacha-stats"><span>⚔️ Power:${st.atk}</span><span>🛡️ Guard:${st.def}</span></div>
                 </div>
             `;
             // タブ解禁チェック：カード取得後に次タブが解禁されたか確認
@@ -5561,7 +5561,7 @@
                 <div class="gacha-rarity-badge gacha-rarity-badge-${rarity}">${rc.label}</div>
                 <img src="${card.img}">
                 <div class="gacha-info">No.${card.no}　${card.quiz.answer}<br><span style="font-size:10px;font-weight:normal;color:#d0c090;">${card.quiz.meaning}</span></div>
-                <div class="gacha-stats"><span>⚔️ ${st2.atk}</span><span>🛡️ ${st2.def}</span></div>
+                <div class="gacha-stats"><span>⚔️ Power:${st2.atk}</span><span>🛡️ Guard:${st2.def}</span></div>
             </div>
         `;
         container.appendChild(gachaCardEl);
