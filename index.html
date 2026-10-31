@@ -4213,7 +4213,7 @@
         zoomContent.innerHTML = `
             <div style="position:relative;">
                 <img src="${card.img}" alt="No.${card.no}" style="width:100%;height:auto;border-radius:14px;display:block;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
-                <button class="zoom-info-btn" onclick="event.stopPropagation();showZoomInfoPanel(${card.no})">📖</button>
+                <button class="zoom-info-btn" onclick="event.stopPropagation();document.getElementById('zoom-info-panel').classList.contains('open')?closeZoomInfoPanel():showZoomInfoPanel(${card.no})">📖</button>
             </div>
             <div style="display:flex;justify-content:center;gap:10px;margin-top:10px;">
                 <span style="background:rgba(30,10,10,0.72);border:1px solid rgba(220,80,80,0.5);color:#ff9999;font-size:13px;font-weight:bold;padding:5px 16px;border-radius:20px;backdrop-filter:blur(4px);">⚔️ Power ${stats.atk}</span>
