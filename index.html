@@ -3396,7 +3396,7 @@
         const totalTabs = Math.ceil(cardsData.length / COLLECTION_PAGE_SIZE);
         const stages = [];
         for (let tabIdx = 0; tabIdx < totalTabs; tabIdx++) {
-            const scale = 1 + tabIdx * 0.12;
+            const scale = 1 + tabIdx * 0.35; // タブが上がるほどボスが大幅強化
             const tMid   = MID_BOSS_TEMPLATES[tabIdx % MID_BOSS_TEMPLATES.length];
             const tFinal = FINAL_BOSS_TEMPLATES[tabIdx % FINAL_BOSS_TEMPLATES.length];
             const isLastTab = tabIdx === totalTabs - 1;
@@ -4490,6 +4490,8 @@
     }
 
     function renderFormationSlots() {
+        const tabIdx = formationState.stage ? formationState.stage.tabIdx : 0;
+        const tabScale = 1 + tabIdx * 0.2; // タブ上昇でプレイヤーユニット強化
         ['front','mid','rear'].forEach(pos => {
             const slot = document.getElementById(`fslot-${pos}`);
             const bonus = POSITION_BONUS[pos];
@@ -4500,11 +4502,13 @@
                 const stats = getCardStats(card);
                 const cardRarity = getRarity(card.no);
                 const skill = UNIT_SKILLS[cardRarity] || UNIT_SKILLS['N'];
+                const power = Math.round(stats.atk * bonus.atkMult * tabScale);
+                const guard = Math.round(stats.def * bonus.hpMult * 3 * tabScale);
                 slot.innerHTML = `
                     <div class="formation-slot-label ${pos}">${bonus.label}</div>
                     <div style="font-size:22px">🃏</div>
                     <div style="font-size:11px;font-weight:bold;color:#fff">${card.quiz.answer}</div>
-                    <div style="font-size:10px;color:#aaa">Power:${Math.round(stats.atk*bonus.atkMult)} Guard:${Math.round(stats.def*bonus.hpMult*3)}</div>
+                    <div style="font-size:10px;color:#aaa">Power:${power} Guard:${guard}</div>
                     <div style="font-size:10px;color:#f9ca24">${skill.icon}${skill.name}</div>
                     <div style="font-size:10px;color:#aaa;cursor:pointer;margin-top:2px" onclick="removeFormationCard('${pos}')">✕ 外す</div>`;
             } else {
@@ -4584,6 +4588,8 @@
     }
 
     function startBattle(stage) {
+        // タブが上がるほどユニットも強化（tabIdx=0で等倍、タブ10で約3倍）
+        const tabScale = 1 + stage.tabIdx * 0.2;
         // 編成からユニット構築
         const positions = ['front','mid','rear'];
         const units = positions.map(pos => {
@@ -4591,9 +4597,9 @@
             const stats = getCardStats(card);
             const bonus = POSITION_BONUS[pos];
             const skill = UNIT_SKILLS[getRarity(card.no)] || UNIT_SKILLS['N'];
-            const maxHp = Math.round(stats.def * bonus.hpMult * 3);
+            const maxHp = Math.round(stats.def * bonus.hpMult * 3 * tabScale);
             return { card, pos, bonus,
-                     atk: Math.round(stats.atk * bonus.atkMult),
+                     atk: Math.round(stats.atk * bonus.atkMult * tabScale),
                      maxHp, hp: maxHp, skill,
                      buffActive: false };
         });
