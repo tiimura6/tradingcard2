@@ -391,6 +391,8 @@
         #adventure-bg { display: none; }
         #main-page {
             width: 100%;
+            min-width: 0;
+            flex-shrink: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -2143,7 +2145,7 @@
 
 <div class="collection-page-tabs" id="collectionPageTabs"></div>
 <div class="collection-grid" id="collectionGrid"></div>
-</div><!-- /#main-page -->
+</div><!-- /#main-page (end) -->
 
 <script>
     /* ========== CONSTANTS ========== */
