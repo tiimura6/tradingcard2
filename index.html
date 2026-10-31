@@ -976,8 +976,8 @@
         .zoom-card-img { flex: 0 0 auto; width: 42%; max-width: 160px; }
         .zoom-card-img img { width: 100%; height: auto; border-radius: 10px; display: block; }
         .zoom-card-back { flex: 1; min-width: 0; text-align: left; }
-        .zoom-info { font-size: 13px; color: #2a1a50; font-family: 'Noto Serif JP', serif; text-align: center; padding-top: 8px; }
-        .zoom-box img { width: 100%; max-width: 220px; height: auto; border-radius: 12px; display: block; margin: 0 auto 4px; }
+        .zoom-info { font-size: 13px; color: #2a1a50; font-family: 'Noto Serif JP', serif; text-align: center; padding-top: 6px; }
+        .zoom-box img { width: 100%; max-width: 320px; height: auto; border-radius: 12px; display: block; margin: 0 auto 6px; }
         .zoom-close-btn {
             position: absolute; top: -15px; right: -15px;
             width: 36px; height: 36px; background: #8a4040;
@@ -3052,10 +3052,10 @@
     };
 
     let hallOfFame = JSON.parse(localStorage.getItem('hallOfFame')) || {
-        '2級':  { achieved: false, currentStreak: 0, bestStreak: 0 },
-        '準1級': { achieved: false, currentStreak: 0, bestStreak: 0 },
-        '1級':  { achieved: false, currentStreak: 0, bestStreak: 0 }
+        '金の手帖': { achieved: false, currentStreak: 0, bestStreak: 0 }
     };
+    // 旧データ互換: 金の手帖エントリが無ければ追加
+    if (!hallOfFame['金の手帖']) hallOfFame['金の手帖'] = { achieved: false, currentStreak: 0, bestStreak: 0 };
 
     let trainingSession = { active: false, cards: [], index: 0, levelFilter: 'all', masteredIds: new Set(), correct: 0, incorrect: 0 };
 
@@ -3066,17 +3066,60 @@
         deckIndex: 0,       // 現在のカードインデックス
         playerHP: 0, playerMaxHP: 0,
         enemyHP: 0, enemyMaxHP: 0,
+        questionPool: [],   // 敵が出題するカードプール
+        questionCard: null, // 現在の問題カード
         log: []
     };
 
-    const BATTLE_STAGES = [
-        { id: 1, name: 'スライム',      emoji: '🟢', hp: 120, atk: 20, minCards: 1,  reward: { type: 'gacha', amount: 1 } },
-        { id: 2, name: 'ゴブリン',      emoji: '👺', hp: 200, atk: 35, minCards: 3,  reward: { type: 'gacha', amount: 1 } },
-        { id: 3, name: 'オーク戦士',    emoji: '🪓', hp: 300, atk: 50, minCards: 5,  reward: { type: 'gacha', amount: 2 } },
-        { id: 4, name: 'ダークエルフ',  emoji: '🧝', hp: 420, atk: 65, minCards: 10, reward: { type: 'gacha', amount: 2 } },
-        { id: 5, name: 'ワイバーン',    emoji: '🐉', hp: 580, atk: 80, minCards: 20, reward: { type: 'sp',    amount: 1 } },
-        { id: 6, name: '魔王',          emoji: '👿', hp: 800, atk: 100, minCards: 40, reward: { type: 'sp',   amount: 2 } },
+    // バトル勝利記録 (defeated: [tabIndex, ...]) — 倒した敵のタブインデックス
+    let battleProgress = JSON.parse(localStorage.getItem('battleProgress') || '{"defeated":[]}');
+
+    // 動的敵生成: タブ数に応じてタブ1〜(totalTabs-1)を解禁する敵を生成
+    // 敵i (0-indexed) はタブ(i+1)を解禁する。クイズはタブ0〜i+1のカードから出題
+    const ENEMY_TEMPLATES = [
+        { name: 'スライム',        emoji: '🟢', hpBase: 100, atkBase: 15 },
+        { name: 'ゴブリン',        emoji: '👺', hpBase: 160, atkBase: 25 },
+        { name: 'オーク戦士',      emoji: '🪓', hpBase: 240, atkBase: 38 },
+        { name: 'ダークエルフ',    emoji: '🧝', hpBase: 330, atkBase: 52 },
+        { name: 'ワイバーン',      emoji: '🐉', hpBase: 430, atkBase: 67 },
+        { name: 'ドラゴン',        emoji: '🔥', hpBase: 550, atkBase: 83 },
+        { name: 'リッチ',          emoji: '💀', hpBase: 690, atkBase: 99 },
+        { name: '魔将軍',          emoji: '⚔️', hpBase: 850, atkBase: 115 },
+        { name: '魔王',            emoji: '👿', hpBase: 1050, atkBase: 130 },
+        { name: '大魔王',          emoji: '🌑', hpBase: 1300, atkBase: 148 },
     ];
+
+    function getBattleStages() {
+        const totalTabs = Math.ceil(cardsData.length / COLLECTION_PAGE_SIZE);
+        const stages = [];
+        for (let i = 0; i < totalTabs - 1; i++) {
+            const t = ENEMY_TEMPLATES[i] || ENEMY_TEMPLATES[ENEMY_TEMPLATES.length - 1];
+            const scale = 1 + i * 0.08;
+            stages.push({
+                id: i + 1,
+                tabUnlock: i + 1,       // 解禁するタブindex
+                name: t.name,
+                emoji: t.emoji,
+                hp:  Math.round(t.hpBase * scale),
+                atk: Math.round(t.atkBase * scale),
+                reward: i < totalTabs - 3
+                    ? { type: 'gacha', amount: Math.max(1, i + 1) }
+                    : { type: 'sp',    amount: Math.floor((i - totalTabs + 4) + 1) }
+            });
+        }
+        return stages;
+    }
+
+    // バトル済みタブ数（0=タブ0のみ解禁済み）
+    function getUnlockedTabCount() {
+        const stages = getBattleStages();
+        let count = 1; // タブ0は常に解禁
+        for (let i = 0; i < stages.length; i++) {
+            if (battleProgress.defeated.includes(stages[i].id)) count++;
+            else break; // 順番に解禁
+        }
+        return Math.min(count, Math.ceil(cardsData.length / COLLECTION_PAGE_SIZE));
+    }
 
     /* ========== ATK/DEF CALCULATION ========== */
     function getCardStats(card) {
@@ -3532,7 +3575,7 @@
             <div style="color:#a090c0;font-size:12px;margin-bottom:2px;">解禁タブ内 <strong style="color:#f0c840;">${poolSize}</strong> 枚の単語からランダム出題</div>
             <div style="color:#807090;font-size:11px;margin-bottom:12px;">例文中の（　　）に入る単語を選ぼう</div>
 
-            <div style="background:rgba(10,5,30,0.7);border:1px solid rgba(180,150,60,0.2);border-radius:10px;padding:12px;margin-bottom:14px;">
+            <div style="background:rgba(10,5,30,0.7);border:1px solid rgba(180,150,60,0.2);border-radius:10px;padding:12px;margin-bottom:12px;">
                 <div style="color:#e8a020;font-size:12px;font-weight:bold;margin-bottom:8px;letter-spacing:0.05em;">📋 トレーニングタスク</div>
                 ${taskRow('🔥','3連続正解', combo, 3, 'ガチャ+1', combo>=3)}
                 ${taskRow('⚡','5連続正解', combo, 5, 'ガチャ+1', combo>=5)}
@@ -3542,6 +3585,46 @@
                 ${timeRow(4, '4時間後トレーニング')}
                 ${timeRow(8, '8時間後トレーニング')}
             </div>
+
+            ${(()=>{
+                checkDailyChallengeReset(); checkWeeklyChallengeReset();
+                const dc = dailyChallenges, wc = weeklyChallenges;
+                const hof = hallOfFame;
+                const dailyDone = Object.values(dc.completed).filter(Boolean).length;
+                const weeklyDone = Object.values(wc.completed).filter(Boolean).length;
+                function ciRow(done, label, cur, target, reward) {
+                    const pText = (!done && target>0) ? ` (${Math.min(cur,target)}/${target})` : '';
+                    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+                        <span style="font-size:13px;">${done?'✅':'☐'}</span>
+                        <span style="flex:1;font-size:11px;color:${done?'#706080':'#c8b8e8'};${done?'text-decoration:line-through;':''}">${label}${pText}</span>
+                        <span style="font-size:10px;color:#e8a020;font-weight:bold;">${reward}</span></div>`;
+                }
+                const wkDone = wc.completed.streak7, ws = loginStreak.streak;
+                const wkP = !wkDone ? ` (${Math.min(ws,7)}/7)` : '';
+                const hofData = hof['金の手帖'];
+                const hofPct = Math.min(100,(hofData.currentStreak/100)*100);
+                return `
+            <div style="background:rgba(10,5,30,0.7);border:1px solid rgba(80,120,200,0.25);border-radius:10px;padding:12px;margin-bottom:12px;">
+                <div style="color:#88aaff;font-size:12px;font-weight:bold;margin-bottom:8px;">📅 デイリーチャレンジ <span style="color:#a090c0;font-weight:normal;">${dailyDone}/5</span></div>
+                ${ciRow(dc.completed.login,'ログイン',0,0,'+1回')}
+                ${ciRow(dc.completed.train10,'10枚トレーニング',dc.progress.trainCount,10,'+1回')}
+                ${ciRow(dc.completed.quiz5,'クイズ5問正解',dc.progress.quizCorrect,5,'+1回')}
+                ${ciRow(dc.completed.combo3,'3連続コンボ',dc.progress.currentCombo,3,'+1回')}
+            </div>
+            <div style="background:rgba(10,5,30,0.7);border:1px solid rgba(80,180,120,0.25);border-radius:10px;padding:12px;margin-bottom:12px;">
+                <div style="color:#80d0a0;font-size:12px;font-weight:bold;margin-bottom:8px;">📆 ウィークリーチャレンジ <span style="color:#a090c0;font-weight:normal;">${weeklyDone}/3</span></div>
+                ${ciRow(wc.completed.train50,'50枚学習',wc.progress.trainCount,50,'+3回')}
+                ${ciRow(wc.completed.quiz30,'クイズ30問正解',wc.progress.quizCorrect,30,'+2回')}
+                ${ciRow(wkDone,'7日連続ログイン'+wkP,0,0,'+5回')}
+            </div>
+            <div style="background:rgba(10,5,30,0.7);border:1px solid rgba(200,170,50,0.3);border-radius:10px;padding:12px;margin-bottom:12px;">
+                <div style="color:#e8d070;font-size:12px;font-weight:bold;margin-bottom:6px;">📒 金の手帖 ${hofData.achieved?'<span style="color:#f0c840;">殿堂入り！</span>':`<span style="color:#a090c0;">${hofData.currentStreak}/100</span>`}</div>
+                <div style="height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;margin-bottom:4px;">
+                    <div style="height:100%;width:${hofPct}%;background:${hofData.achieved?'#f0c840':'#c09020'};border-radius:3px;transition:width 0.4s;"></div>
+                </div>
+                <div style="color:#807090;font-size:10px;">最高連続正解: ${hofData.bestStreak} 問 | 報酬: ガチャ+30回</div>
+            </div>`;
+            })()}
 
             <button class="training-start-btn" onclick="openTrainingMode()">✏️ トレーニング開始</button>`;
         document.getElementById('training-modal').style.display = 'flex';
@@ -3610,7 +3693,7 @@
                 <span class="hof-label">${level}${sl}</span>
                 <div class="hof-streak-bar"><div class="hof-streak-fill" style="width:${pct}%"></div></div>
                 <div style="font-size:10px;color:#907080;flex-shrink:0;">最高${data.bestStreak}</div>
-                ${!data.achieved ? `<button class="hof-challenge-btn" onclick="closeChallengeModal();openTrainingMode('${level}')">挑戦</button>` : ''}
+                ${!data.achieved ? `<button class="hof-challenge-btn" onclick="closeChallengeModal();openTrainingMode('all')">挑戦</button>` : ''}
             </div>`;
         }
         const ws = loginStreak.streak, wkDone = wc.completed.streak7;
@@ -3642,14 +3725,12 @@
             </div>
             <div class="challenge-section">
                 <div class="challenge-section-title">
-                    <span>🏆 殿堂入り</span>
+                    <span>📒 金の手帖</span>
                     <span style="font-size:10px;color:#a090c0;">100問連続正解</span>
                 </div>
-                ${hofRow('2級',  hof['2級'])}
-                ${hofRow('準1級', hof['準1級'])}
-                ${hofRow('1級',  hof['1級'])}
+                ${hofRow('金の手帖', hof['金の手帖'])}
                 <div style="font-size:10px;color:#706060;margin-top:6px;">
-                    報酬: 2級 +10回 / 準1級 +20回 / 1級 +30回
+                    報酬: ガチャ+30回 / 金の手帖バッジ＋称号
                 </div>
             </div>
             <div style="text-align:center;color:#706080;font-size:10px;padding:6px 0 2px;">
@@ -3705,14 +3786,9 @@
     /* ========== COLLECTION RENDER ========== */
     /* 前のタブのカードが全部揃っていれば解禁 */
     function isTabUnlocked(tabIndex) {
-        if (tabIndex === 0) return true;  // Tab1は常に解禁
-        for (let t = 0; t < tabIndex; t++) {
-            const s = t * COLLECTION_PAGE_SIZE;
-            const e = Math.min((t + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
-            const allDone = cardsData.slice(s, e).every(c => unlockedCards.includes(c.id));
-            if (!allDone) return false;   // 前タブが未完 → ロック
-        }
-        return true;
+        if (tabIndex === 0) return true;  // タブ0は常に解禁
+        // タブiはバトルID=iを倒すと解禁（getBattleStagesのstage.tabUnlock === i）
+        return battleProgress.defeated.includes(tabIndex);
     }
 
     function renderCollectionTabs() {
@@ -3730,7 +3806,7 @@
             const isActive = (i === currentCollectionPage);
 
             const btn = document.createElement('button');
-            btn.title = unlocked ? `No.${start}〜${end}` : `🔒 前のタブをコンプリートすると解禁`;
+            btn.title = unlocked ? `No.${start}〜${end}` : `🔒 バトルで敵を倒すと解禁`;
 
             // クラス設定
             let cls = 'cpt-btn';
@@ -3910,19 +3986,12 @@
     }
     /* ---- タブ解禁ロジック ----
      * Tab 0 = cards 1〜100, Tab 1 = 101〜200 …
-     * 現在のタブのカードがすべて揃ったら次のタブが解禁される。
-     * ガチャは「現在解禁中の最も若いタブ」からのみ引く。
+     * バトルに勝利するごとに次のタブが解禁される。
+     * ガチャは解禁済みタブのカードから引く。
      */
     function getCurrentGachaTabIndex() {
         const totalTabs = Math.ceil(cardsData.length / COLLECTION_PAGE_SIZE);
-        for (let t = 0; t < totalTabs; t++) {
-            const start = t * COLLECTION_PAGE_SIZE;
-            const end   = Math.min((t + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
-            const tabCards = cardsData.slice(start, end);
-            const allCollected = tabCards.every(c => unlockedCards.includes(c.id));
-            if (!allCollected) return t;   // このタブが未完 → ここから引く
-        }
-        return totalTabs - 1;             // 全タブ完了 → 最終タブ
+        return Math.min(getUnlockedTabCount() - 1, totalTabs - 1);
     }
 
     /* ========== SRS (忘却曲線) FUNCTIONS ========== */
@@ -3998,11 +4067,10 @@
     function triggerGachaCore(onDone) {
         if (cardsData.length === 0) { alert("カードデータがありません。"); return; }
 
-        // 現在解禁中のタブのカードプールから重み付き抽選
-        const tabIdx  = getCurrentGachaTabIndex();
-        const start   = tabIdx * COLLECTION_PAGE_SIZE;
-        const end     = Math.min((tabIdx + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
-        const tabPool = cardsData.slice(start, end);
+        // 解禁済みタブのカードプールから重み付き抽選
+        const unlockedCount = getUnlockedTabCount();
+        const end     = Math.min(unlockedCount * COLLECTION_PAGE_SIZE, cardsData.length);
+        const tabPool = cardsData.slice(0, end);
         const randomCard = weightedGachaPick(tabPool);
 
         gachaSession.isGachaMode = false;
@@ -4023,24 +4091,38 @@
 
     /* ========== BATTLE SYSTEM ========== */
     function openBattleStageModal() {
-        const myCount = unlockedCards.length;
+        const stages = getBattleStages();
         const listEl = document.getElementById('battleStageList');
         listEl.innerHTML = '';
-        BATTLE_STAGES.forEach(stage => {
-            const unlocked = myCount >= stage.minCards;
+
+        if (stages.length === 0) {
+            listEl.innerHTML = '<div style="padding:16px;color:#888">カードデータを読み込み中…</div>';
+            document.getElementById('battle-stage-modal').style.display = 'flex';
+            return;
+        }
+
+        stages.forEach((stage, i) => {
+            const alreadyDefeated = battleProgress.defeated.includes(stage.id);
+            // 最初の敵は常に挑戦可能。以降は前の敵を倒してから解禁
+            const isUnlocked = i === 0 || battleProgress.defeated.includes(stages[i - 1].id);
             const div = document.createElement('div');
-            div.className = 'battle-stage-item' + (unlocked ? '' : ' locked');
+            div.className = 'battle-stage-item' + (isUnlocked ? '' : ' locked');
             const rewardLabel = stage.reward.type === 'sp'
                 ? `✨SPチケット×${stage.reward.amount}`
                 : `🎰ガチャ回数+${stage.reward.amount}`;
+            const statusBadge = alreadyDefeated
+                ? '<span style="color:#2ecc71;font-weight:bold;font-size:13px">✅ 撃破済</span>'
+                : isUnlocked
+                    ? '<span style="color:#e74c3c;font-size:13px">⚔️ 挑戦可</span>'
+                    : '<span style="color:#aaa;font-size:13px">🔒 解禁待ち</span>';
             div.innerHTML = `
                 <span class="battle-stage-emoji">${stage.emoji}</span>
                 <div class="battle-stage-info">
                     <div class="battle-stage-item-name">${stage.name}</div>
-                    <div class="battle-stage-item-sub">HP:${stage.hp} / ATK:${stage.atk} | 必要:${stage.minCards}枚以上</div>
+                    <div class="battle-stage-item-sub">HP:${stage.hp} / ATK:${stage.atk} | タブ${stage.tabUnlock}を解禁 ${statusBadge}</div>
                 </div>
                 <span class="battle-stage-item-badge">${rewardLabel}</span>`;
-            if (unlocked) div.onclick = () => { closeBattleStageModal(); startBattle(stage); };
+            if (isUnlocked) div.onclick = () => { closeBattleStageModal(); startBattle(stage); };
             listEl.appendChild(div);
         });
         document.getElementById('battle-stage-modal').style.display = 'flex';
@@ -4057,15 +4139,23 @@
         const withStats = myCards.map(c => ({ card: c, ...getCardStats(c) }));
         withStats.sort((a, b) => b.atk - a.atk);
         const deck = withStats.slice(0, 3);
-        if (deck.length === 0) { alert('カードがありません！'); return; }
+        if (deck.length === 0) { alert('カードがありません！まずガチャでカードをゲットしよう！'); return; }
 
         const playerMaxHP = deck.reduce((s, d) => s + d.def, 0);
+
+        // クイズプール: 現在解禁済みタブ + この敵が解禁するタブ(次タブ) のカード
+        const unlockedTabCount = getUnlockedTabCount();
+        const poolEndTab = stage.tabUnlock; // 次に解禁されるタブindex
+        const poolEnd = Math.min((poolEndTab + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
+        const questionPool = cardsData.slice(0, poolEnd);
 
         battleSession = {
             active: true, stage,
             deck, deckIndex: 0,
             playerHP: playerMaxHP, playerMaxHP,
             enemyHP: stage.hp, enemyMaxHP: stage.hp,
+            questionPool,
+            questionCard: null,
             log: []
         };
 
@@ -4127,7 +4217,10 @@
 
     function battleStartQuiz() {
         if (!battleSession.active || battleSession.deckIndex >= battleSession.deck.length) return;
-        const { card } = battleSession.deck[battleSession.deckIndex];
+        // 敵が出題するクイズカードをプールからランダムに選ぶ（デッキカードとは別）
+        const pool = battleSession.questionPool;
+        const questionCard = pool[Math.floor(Math.random() * pool.length)];
+        battleSession.questionCard = questionCard;
         // クイズオーバーレイを流用（バトルモードとして）
         gachaSession.isGachaMode = false;
         trainingSession.active   = false;
@@ -4135,7 +4228,7 @@
         // バトル画面を一旦非表示にしてからクイズを表示（z-index競合を防ぐ）
         document.getElementById('battle-overlay').style.display = 'none';
         document.getElementById('quizTitle').innerText = `⚔️ バトル攻撃 — 正解で攻撃！`;
-        showQuiz(card);
+        showQuiz(questionCard);
         document.getElementById('battleQuizBtn').style.display = 'none';
     }
 
@@ -4251,6 +4344,12 @@
         const descEl  = document.getElementById('battleResultDesc');
 
         if (win) {
+            // 勝利記録: battleProgressに追加してタブを解禁
+            if (!battleProgress.defeated.includes(stage.id)) {
+                battleProgress.defeated.push(stage.id);
+                localStorage.setItem('battleProgress', JSON.stringify(battleProgress));
+            }
+
             // 報酬付与
             if (stage.reward.type === 'gacha') {
                 dailyGachaStorage.count = (dailyGachaStorage.count || 0) + stage.reward.amount;
@@ -4265,10 +4364,14 @@
             const rewardMsg = stage.reward.type === 'sp'
                 ? `✨ SPチケット×${stage.reward.amount} 獲得！`
                 : `🎰 ガチャ回数+${stage.reward.amount} 獲得！`;
+            const unlockedTabMsg = `📖 タブ${stage.tabUnlock}が解禁されました！`;
             titleEl.className = 'battle-result-title win';
             titleEl.textContent = '🎉 勝利！';
-            descEl.innerHTML = `${stage.emoji} ${stage.name}を倒した！<br>${rewardMsg}`;
-            addBattleLog(`🎉 ${stage.name}に勝利！`);
+            descEl.innerHTML = `${stage.emoji} ${stage.name}を倒した！<br>${rewardMsg}<br><span style="color:#2ecc71">${unlockedTabMsg}</span>`;
+            addBattleLog(`🎉 ${stage.name}に勝利！タブ${stage.tabUnlock}解禁！`);
+
+            // コレクションタブ表示を更新
+            renderCollectionTabs();
         } else if (playerHP <= 0) {
             titleEl.className = 'battle-result-title lose';
             titleEl.textContent = '💀 敗北…';
@@ -4978,9 +5081,7 @@
     }
 
     const HOF_REWARDS = {
-        '2級':  { gacha: 10, badge: '2級殿堂バッジ' },
-        '準1級': { gacha: 20, badge: '準1級殿堂バッジ' },
-        '1級':  { gacha: 30, badge: '1級殿堂バッジ＋称号' }
+        '金の手帖': { gacha: 30, badge: '金の手帖バッジ＋称号' }
     };
 
     function checkHallOfFame(level, isCorrect) {
@@ -5038,9 +5139,9 @@
         localStorage.setItem('dailyChallenges', JSON.stringify(dailyChallenges));
         localStorage.setItem('weeklyChallenges', JSON.stringify(weeklyChallenges));
 
-        // Hall of Fame tracking (only during level-specific training)
-        if (trainingSession.active && trainingSession.levelFilter !== 'all') {
-            checkHallOfFame(trainingSession.levelFilter, isCorrect);
+        // Hall of Fame tracking (金の手帖: 全トレーニング対象)
+        if (trainingSession.active) {
+            checkHallOfFame('金の手帖', isCorrect);
         }
     }
 
@@ -5108,7 +5209,7 @@
                 <span class="hof-label">${level}${streakLabel}</span>
                 <div class="hof-streak-bar"><div class="hof-streak-fill" style="width:${pct}%"></div></div>
                 <div style="font-size:10px;color:#907080;flex-shrink:0;">最高${data.bestStreak}</div>
-                ${!data.achieved ? `<button class="hof-challenge-btn" onclick="openTrainingMode('${level}')">挑戦</button>` : ''}
+                ${!data.achieved ? `<button class="hof-challenge-btn" onclick="openTrainingMode('all')">挑戦</button>` : ''}
             </div>`;
         }
 
@@ -5143,18 +5244,16 @@
             </div>
             <div class="challenge-section">
                 <div class="challenge-section-title">
-                    <span>🏆 殿堂入りチャレンジ</span>
+                    <span>📒 金の手帖チャレンジ</span>
                     <span style="font-size:11px;color:#a090c0;">100問連続正解</span>
                 </div>
                 <div style="font-size:11px;color:#807090;margin-bottom:8px;line-height:1.6;">
-                    レベル別トレーニングで100問連続正解すると殿堂入り<br>
+                    トレーニングで100問連続正解すると金の手帖に殿堂入り！<br>
                     ※1問でも不正解でカウンターリセット
                 </div>
-                ${hofRow('2級',  hof['2級'])}
-                ${hofRow('準1級', hof['準1級'])}
-                ${hofRow('1級',  hof['1級'])}
+                ${hofRow('金の手帖', hof['金の手帖'])}
                 <div style="font-size:11px;color:#706060;margin-top:8px;">
-                    報酬: 2級 ガチャ+10回 / 準1級 +20回 / 1級 +30回
+                    報酬: ガチャ+30回 / 金の手帖バッジ＋称号
                 </div>
             </div>
             <div style="text-align:center;color:#706080;font-size:11px;padding:8px 0 16px;">
@@ -5174,27 +5273,12 @@
 
             <button class="training-start-btn" onclick="openTrainingMode('all')">🎯 全カードで練習</button>
 
-            <div style="margin:16px 0 8px;color:#807090;font-size:12px;">── 殿堂入り挑戦 (レベル別) ──</div>
-
-            <button class="training-start-btn" onclick="openTrainingMode('2級')"
-                style="background:linear-gradient(#2a4818,#142808);border-color:rgba(80,160,50,0.4);">
-                📗 2級 (No.1〜20)
-            </button>
-            <button class="training-start-btn" onclick="openTrainingMode('準1級')"
-                style="background:linear-gradient(#183848,#081820);border-color:rgba(50,140,180,0.4);">
-                📘 準1級 (No.21〜40)
-            </button>
-            <button class="training-start-btn" onclick="openTrainingMode('1級')"
-                style="background:linear-gradient(#481820,#280808);border-color:rgba(180,60,50,0.4);">
-                📕 1級 (No.41〜50)
-            </button>
-
-            <div style="margin-top:22px;padding:14px;background:rgba(20,10,40,0.65);border:1px solid rgba(180,150,80,0.2);border-radius:10px;text-align:left;">
-                <div style="color:#e8d070;font-size:13px;margin-bottom:8px;font-family:'Noto Serif JP',serif;">🏆 殿堂入り条件</div>
+            <div style="margin-top:22px;padding:14px;background:rgba(20,10,40,0.65);border:1px solid rgba(200,170,50,0.35);border-radius:10px;text-align:left;">
+                <div style="color:#e8d070;font-size:13px;margin-bottom:8px;font-family:'Noto Serif JP',serif;">📒 金の手帖チャレンジ</div>
                 <div style="color:#a090c0;font-size:12px;line-height:1.9;">
-                    • レベル別トレーニングで <strong style="color:#f0c840;">100問連続正解</strong> → 殿堂入り<br>
+                    • トレーニングで <strong style="color:#f0c840;">100問連続正解</strong> → 金の手帖殿堂入り！<br>
                     • 1問でも不正解でカウンターリセット<br>
-                    • 2級: ガチャ+10回 &nbsp;準1級: +20回 &nbsp;1級: +30回<br>
+                    • 報酬: ガチャ+30回 / 金の手帖バッジ＋称号<br>
                     • 進捗は「チャレンジ」タブで確認
                 </div>
             </div>
