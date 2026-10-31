@@ -4083,9 +4083,9 @@
             <button class="training-start-btn" onclick="openTrainingMode()">⚔️ 冒険を始める</button>`;
         document.getElementById('training-modal').style.display = 'flex';
     }
-    function closeTrainingModal() {
+    function closeTrainingModal(exitAdventure = true) {
         document.getElementById('training-modal').style.display = 'none';
-        exitAdventureMode();
+        if (exitAdventure) exitAdventureMode();
     }
 
     /* ========== 殿堂入りへの道 ========== */
@@ -5925,7 +5925,7 @@
 
     /* ========== TRAINING MODE ========== */
     function openTrainingMode() {
-        closeTrainingModal();
+        closeTrainingModal(false); // 冒険モードは維持したまま閉じる
         recordTrainingStart(); // 初回トレーニング時刻を記録
         startTrainingTimer(); // 時間ボーナス自動チェック開始
         // 解禁済みタブ（0〜currentGachaTab）内の全カードをプールに
