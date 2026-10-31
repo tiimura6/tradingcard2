@@ -2841,7 +2841,7 @@
                 dailyGachaStorage.count += milestone.count;
                 localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
                 checkAndResetDailyGacha();
-                setTimeout(() => showComboBonusNotice(milestone.msg, milestone.count), 1300);
+                setTimeout(() => { playSE('combo'); showComboBonusNotice(milestone.msg, milestone.count); }, 1300);
             }
         } else {
             comboCount = 0;
@@ -3004,6 +3004,7 @@
     /* ========== 殿堂入りへの道 ========== */
     function showHallOfFameModal() {
         const allComplete = unlockedCards.length >= TOTAL_CARDS;
+        if (allComplete) playSE('hof');
         if (!allComplete) {
             // 未コンプリートならロック画面を表示
             const remaining = TOTAL_CARDS - unlockedCards.length;
@@ -3448,6 +3449,10 @@
         const cls = classMap[rarity] || 'gacha-anim-n';
         const dur = durMap[rarity] || 1100;
 
+        // レアリティSE
+        if (rarity === 'UR') playSE('gacha_ur');
+        else if (rarity === 'SR') playSE('gacha_sr');
+
         ov.innerHTML = `<div class="${cls}"></div>`;
         ov.style.display = 'flex';
         setTimeout(() => {
@@ -3562,6 +3567,7 @@
     function showJudgeEffect(isCorrect) {
         const ov = document.getElementById('quiz-judge-overlay');
         if (!ov) return;
+        playSE(isCorrect ? 'correct' : 'wrong');
         ov.innerHTML = `<span class="${isCorrect ? 'judge-circle' : 'judge-cross'}">${isCorrect ? '○' : '✕'}</span>`;
         ov.style.display = 'flex';
         setTimeout(() => { ov.style.display = 'none'; ov.innerHTML = ''; }, 600);
@@ -3656,9 +3662,11 @@
             // タブ解禁チェック：カード取得後に次タブが解禁されたか確認
             const tabBefore = getCurrentGachaTabIndex();
             if (isNew) {
+                playSE('unlock');
                 const tabAfter = getCurrentGachaTabIndex();
                 if (tabAfter > tabBefore) {
                     // 次タブ解禁！
+                    playSE('unlock');
                     const nextStart = tabAfter * COLLECTION_PAGE_SIZE + 1;
                     const nextEnd   = Math.min((tabAfter + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
                     document.getElementById('gachaResultTitle').innerText =
@@ -4025,9 +4033,37 @@
     // (answerInput removed — quiz now uses 4-choice buttons)
     document.getElementById('couponInput').addEventListener('keypress', e => { if (e.key === 'Enter') submitCoupon(); });
 
-    /* ========== BGM ========== */
+    /* ========== BGM / SE ========== */
     // MP3ファイル使用（./bgm/main.mp3）/ なければWeb Audio APIフォールバック
     let bgmAudio = null, bgmCtx = null, bgmNodes = [], bgmOn = false;
+
+    // SE プリロード
+    const SE = {};
+    (function preloadSE() {
+        const files = {
+            correct:  './se/correct.mp3',
+            wrong:    './se/wrong.mp3',
+            combo:    './se/combo.mp3',
+            gacha_ur: './se/gacha_ur.mp3',
+            gacha_sr: './se/gacha_sr.mp3',
+            unlock:   './se/unlock.mp3',
+            hof:      './se/hof.mp3',
+            gacha_bgm:'./bgm/gacha.mp3',
+        };
+        Object.entries(files).forEach(([key, src]) => {
+            const a = new Audio(src);
+            a.preload = 'auto';
+            a.volume = key === 'gacha_bgm' ? 0.5 : 0.6;
+            SE[key] = a;
+        });
+    })();
+
+    function playSE(key) {
+        const a = SE[key];
+        if (!a) return;
+        a.currentTime = 0;
+        a.play().catch(() => {});
+    }
 
     function buildBGM() {
         if (bgmAudio || bgmCtx) return;
