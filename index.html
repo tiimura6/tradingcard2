@@ -333,7 +333,7 @@
             border-color: rgba(100,90,80,0.3); color: #a09888;
             cursor: not-allowed; box-shadow: none; animation: none;
         }
-        /* クーポン */
+        /* 秘密の鍵 */
         .btn-coupon {
             background: linear-gradient(150deg, #2a5840, #18382a);
             color: #c8f0d8; border: 1px solid rgba(60,160,100,0.35);
@@ -1889,7 +1889,7 @@
         <span class="btn-icon">📷</span>QRスキャン
     </button>
     <button class="action-btn btn-coupon" onclick="openCouponModal()">
-        <span class="btn-icon">🎫</span>クーポン入力
+        <span class="btn-icon">🗝️</span>秘密の鍵
     </button>
     <button class="action-btn btn-study" id="adventureBattleBtn" onclick="adventureOrBattle()" style="grid-column:span 2;">
         <span class="btn-icon" id="adventureBattleBtnIcon">🗺️</span><span id="adventureBattleBtnLabel">冒険</span>
@@ -2072,8 +2072,8 @@
 
 <div id="coupon-overlay" class="modal-overlay">
     <div class="custom-box">
-        <h3>🎫 クーポンコード入力</h3>
-        <p style="font-size:13px;color:#555;margin:0 0 15px 0;">コードを入力すると、ガチャを引ける回数が増えます！</p>
+        <h3>🗝️ 秘密の鍵</h3>
+        <p style="font-size:13px;color:#555;margin:0 0 15px 0;">鍵のコードを入力すると、ガチャを引ける回数が増えます！</p>
         <input type="text" id="couponInput" class="modal-input" placeholder="コードを入力" autocomplete="off">
         <button class="modal-btn" style="background:#3a6850;" onclick="submitCoupon()">コードを適用する</button><br>
         <button class="modal-cancel-btn" onclick="closeCouponModal()">閉じる</button>
@@ -3962,12 +3962,12 @@
             localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
             closeCouponModal();
             confetti({ particleCount: 150, spread: 100, origin: { y: 0.5 } });
-            alert(`🔓 管理者クーポン適用！\n全${cardsData.length}枚のカードが解禁されました！`);
+            alert(`🔓 マスターキー解錠！\n全${cardsData.length}枚のカードが解禁されました！`);
             return;
         }
-        // ===== 通常クーポン =====
-        if (!(inputCode in VALID_COUPONS)) { alert("無効なクーポンコードです。"); return; }
-        if (dailyGachaStorage.usedCoupons.includes(inputCode)) { alert("このコードはすでに使用されています。"); return; }
+        // ===== 通常の秘密の鍵 =====
+        if (!(inputCode in VALID_COUPONS)) { alert("無効な鍵コードです。"); return; }
+        if (dailyGachaStorage.usedCoupons.includes(inputCode)) { alert("この鍵はすでに使用されています。"); return; }
         const rewardCount = VALID_COUPONS[inputCode];
         dailyGachaStorage.count += rewardCount;
         dailyGachaStorage.usedCoupons.push(inputCode);
@@ -3975,7 +3975,7 @@
         closeCouponModal();
         checkAndResetDailyGacha();
         confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
-        alert("クーポン適用成功！🎉");
+        alert("🗝️ 秘密の鍵が開錠されました！🎉");
     }
 
     /* ========== 冒険/バトル ボタン判定 ========== */
