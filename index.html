@@ -5342,24 +5342,25 @@
                     if (trainingSession.index >= trainingSession.cards.length) trainingSession.index = 0;
                 }
 
-                // 例文の日本語訳を表示（次へボタン付き）
+                // 選択肢を消去して解説のみ表示
                 const choicesEl = document.getElementById('quizChoices');
-                // 選択肢ボタンはそのまま残す（正解/不正解の色表示を維持）
-                // 例文訳ブロックを選択肢の上に挿入
-                const meaningEl = document.createElement('div');
-                meaningEl.style.cssText = 'margin:10px 0 8px;';
+                choicesEl.innerHTML = '';
                 const exMeaning = card.quiz.exMeaning || card.quiz.meaning || '';
                 const resultColor = isCorrect ? '#1a6630' : '#882020';
                 const resultBg    = isCorrect ? 'rgba(30,120,60,0.13)' : 'rgba(160,30,30,0.10)';
+                const resultBorder= isCorrect ? 'rgba(40,160,80,0.35)' : 'rgba(200,40,40,0.25)';
                 const resultIcon  = isCorrect ? '✅ 正解！' : '❌ 不正解';
+                const meaningEl = document.createElement('div');
+                meaningEl.style.cssText = 'margin:4px 0 10px;';
                 meaningEl.innerHTML = `
-                    <div style="text-align:center;font-size:15px;font-weight:bold;color:${resultColor};margin-bottom:8px;">${resultIcon}</div>
-                    <div style="background:${resultBg};border-radius:10px;padding:10px 12px;">
-                        <div style="font-size:13px;font-weight:bold;color:#3a2010;margin-bottom:4px;">💡 ${card.quiz.answer}　<span style="font-size:12px;font-weight:normal;color:#706050;">${card.quiz.meaning}</span></div>
-                        ${exMeaning ? `<div style="font-size:12px;color:#5a4030;line-height:1.6;border-top:1px solid rgba(150,120,80,0.2);padding-top:6px;margin-top:4px;">📖 ${exMeaning}</div>` : ''}
+                    <div style="text-align:center;font-size:16px;font-weight:bold;color:${resultColor};margin-bottom:10px;">${resultIcon}</div>
+                    <div style="background:${resultBg};border:1px solid ${resultBorder};border-radius:12px;padding:12px 14px;">
+                        <div style="font-size:14px;font-weight:bold;color:#2a1a08;margin-bottom:6px;">💡 ${card.quiz.answer}</div>
+                        <div style="font-size:12px;color:#604830;margin-bottom:${exMeaning ? '8px' : '0'};">${card.quiz.meaning}</div>
+                        ${exMeaning ? `<div style="font-size:12px;color:#5a4030;line-height:1.7;border-top:1px solid rgba(150,120,80,0.25);padding-top:8px;">📖 ${exMeaning}</div>` : ''}
                     </div>
                 `;
-                choicesEl.insertBefore(meaningEl, choicesEl.firstChild);
+                choicesEl.appendChild(meaningEl);
 
                 const isFinished = trainingSession.cards.length === 0;
                 const nextBtn = document.createElement('button');
