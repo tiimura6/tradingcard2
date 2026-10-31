@@ -965,10 +965,9 @@
             z-index: 30; justify-content: center; align-items: center;
         }
         .zoom-box {
-            position: relative; background: linear-gradient(160deg, #f4f0fa 0%, #ede8f8 100%); padding: 14px;
-            border-radius: 20px; width: 92%; max-width: 520px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6), 0 0 20px rgba(100,60,180,0.2);
-            animation: zoomIn 0.25s ease-out; border: 3px solid #9a7a3a;
+            position: relative; background: transparent; padding: 0;
+            border-radius: 16px; width: 88%; max-width: 400px;
+            animation: zoomIn 0.25s ease-out; border: none;
             max-height: 90vh; overflow-y: auto;
         }
         .zoom-card-layout {
@@ -1933,7 +1932,6 @@
 
 <div id="zoom-overlay" onclick="closeZoom()">
     <div class="zoom-box" onclick="event.stopPropagation()">
-        <button class="zoom-close-btn" onclick="closeZoom()">✕</button>
         <div id="zoomContent"></div>
     </div>
 </div>
@@ -4151,15 +4149,10 @@
             <div id="zoomDetails" style="display:none;margin-top:8px;">${detailsHTML}</div>
         ` : '';
         zoomContent.innerHTML = `
-            <img src="${card.img}" alt="No.${card.no}" style="width:100%;max-width:340px;height:auto;border-radius:12px;display:block;margin:0 auto 10px;">
-            <div style="display:flex;justify-content:center;gap:10px;margin-bottom:8px;">
-                <span style="background:rgba(200,60,60,0.15);border:1px solid rgba(220,80,80,0.4);color:#cc5555;font-size:13px;font-weight:bold;padding:4px 14px;border-radius:8px;">⚔️ Power ${stats.atk}</span>
-                <span style="background:rgba(60,100,200,0.15);border:1px solid rgba(80,120,220,0.4);color:#5588cc;font-size:13px;font-weight:bold;padding:4px 14px;border-radius:8px;">🛡️ Guard ${stats.def}</span>
-            </div>
-            <div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
-                <span class="rarity-badge rarity-badge-${rarity}" style="position:static;display:inline-block;font-size:10px;padding:2px 7px;border-radius:5px;">${rarity}</span>
-                <span style="background:${srsColor};color:#fff;font-size:10px;padding:2px 7px;border-radius:6px;font-family:monospace;">${srsLabel}</span>
-                <span style="font-size:10px;color:#907060;padding:2px 4px;">${dueDate}</span>
+            <img src="${card.img}" alt="No.${card.no}" style="width:100%;height:auto;border-radius:14px;display:block;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
+            <div style="display:flex;justify-content:center;gap:10px;margin-top:10px;">
+                <span style="background:rgba(30,10,10,0.72);border:1px solid rgba(220,80,80,0.5);color:#ff9999;font-size:13px;font-weight:bold;padding:5px 16px;border-radius:20px;backdrop-filter:blur(4px);">⚔️ Power ${stats.atk}</span>
+                <span style="background:rgba(10,10,30,0.72);border:1px solid rgba(80,120,220,0.5);color:#99bbff;font-size:13px;font-weight:bold;padding:5px 16px;border-radius:20px;backdrop-filter:blur(4px);">🛡️ Guard ${stats.def}</span>
             </div>
             ${detailsBtnHTML}
         `;
