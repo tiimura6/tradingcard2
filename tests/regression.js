@@ -259,6 +259,36 @@ test('同じつづりの語は1枚：意味ごとの例文を表示／出題は�
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
+test('紙吹雪は新しいカードのときだけ／冒険の道：答えるたびに進み5問で次の地域へ', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1' } });
+  await p.evaluate(() => { window.__cf = 0; window.confetti = () => { window.__cf++; }; });
+  const c = await p.evaluate(() => {
+    const card = cardsData[0];
+    gachaSession.selectedCard = card; evaluateAndShowGachaResult(true);
+    return card.id;
+  });
+  await p.waitForTimeout(700);
+  const first = await p.evaluate(() => window.__cf);
+  await p.evaluate(() => { closeGacha && document.getElementById('gacha-overlay') && (document.getElementById('gacha-overlay').style.display = 'none');
+    window.__cf = 0; gachaSession.selectedCard = cardsData[0]; evaluateAndShowGachaResult(true); });
+  await p.waitForTimeout(700);
+  const second = await p.evaluate(() => window.__cf);
+  assert(first > 0 && second === 0, `紙吹雪 新:${first} 被り:${second}`);
+  await p.evaluate(() => { document.getElementById('gacha-overlay').style.display = 'none'; enterAdventureMode(); });
+  await p.waitForTimeout(1500);
+  await p.evaluate(() => { closeTrainingModal(false); openTrainingMode(); });
+  await p.waitForTimeout(400);
+  for (let i = 0; i < 5; i++) {
+    await p.evaluate(() => { trainingSession.qCount = 0; const btn = document.querySelector('.quiz-choice-btn[data-correct]'); btn.click(); });
+    await p.waitForTimeout(1500);
+    await p.evaluate(() => { const bs = [...document.querySelectorAll('#quizChoices .action-btn')]; bs[bs.length - 1].click(); });
+    await p.waitForTimeout(300);
+  }
+  const a = await p.evaluate(() => ({ adv: trainingSession.adv, trail: !!document.getElementById('advTrail') && document.getElementById('advTrail').style.display !== 'none' }));
+  assert(a.trail && a.adv.area === 1 && a.adv.step === 0 && a.adv.streak === 5, JSON.stringify(a));
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
 test('小さい画面（幅360px）で主な画面が横にはみ出さない', async b => {
   const p = await openApp(b, { viewport: { width: 360, height: 740 }, seed: { unlockedCards: ids('a1', 1, 50) } });
   const steps = ['openStudyMode("all")', 'closeStudyMode()', 'showHallOfFameModal()', 'closeChallengeModal()',

@@ -1890,6 +1890,48 @@
         .nb-bar > div { height: 100%; border-radius: 3px; }
         #nb-unlock-toast .custom-box { animation: nbUnlockPop .6s cubic-bezier(.2,1.4,.4,1); }
         @keyframes nbUnlockPop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        /* ===== 冒険の道（冒険モードの問題画面の上部） ===== */
+        #advTrail { --adv-tint: #8fd060; margin: -4px 0 10px; padding: 8px 10px 6px; border-radius: 12px;
+            background: linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.12)); border: 1px solid rgba(255,255,255,.14);
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,.2); position: relative; }
+        #advTrail .adv-head { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: bold; color: var(--adv-tint); }
+        #advTrail .adv-streak { font-size: 11px; color: #ffb040; opacity: 0; transition: opacity .3s; }
+        #advTrail .adv-streak.on { opacity: 1; animation: adv-pop .4s ease-out; }
+        #advTrail .adv-track { position: relative; height: 34px; margin: 4px 22px 0 10px; }
+        #advTrail .adv-line { position: absolute; left: 0; right: 0; top: 21px; height: 3px; border-radius: 2px; opacity: .7;
+            background: repeating-linear-gradient(90deg, var(--adv-tint) 0 6px, transparent 6px 11px); }
+        #advTrail .adv-node { position: absolute; top: 15px; width: 15px; height: 15px; margin-left: -7.5px; border-radius: 50%; box-sizing: border-box;
+            background: rgba(20,20,20,.75); border: 2px solid var(--adv-tint); transition: background .3s, transform .3s; }
+        #advTrail .adv-node.ok { background: var(--adv-tint); transform: scale(1.12); }
+        #advTrail .adv-node.ng { background: #803030; border-color: #d06060; }
+        #advTrail .adv-goal { position: absolute; right: -20px; top: 4px; font-size: 22px; filter: drop-shadow(0 0 4px var(--adv-tint)); }
+        #advTrail .adv-goal.near { animation: adv-glow 1s ease-in-out infinite alternate; }
+        #advTrail .adv-hero { position: absolute; top: -3px; font-size: 22px; margin-left: -11px; transition: left .55s cubic-bezier(.3,1.4,.6,1);
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,.5)); }
+        #advTrail .adv-hero.jump { animation: adv-jump .55s ease-out; }
+        #advTrail .adv-hero.trip { animation: adv-trip .5s ease-in-out; }
+        #advTrail .adv-enc { margin-top: 3px; font-size: 12px; color: #f2e6c0; text-align: center; animation: adv-enc .6s ease-out; }
+        .adv-spark { position: absolute; pointer-events: none; font-size: 14px; z-index: 5; animation: adv-spark .7s ease-out forwards; }
+        .adv-unfurl { animation: adv-unfurl .45s ease-out; transform-origin: top center; }
+        .adv-shake { animation: adv-shake .4s ease-in-out; }
+        #advClear { position: fixed; inset: 0; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: radial-gradient(circle, rgba(0,0,0,.55), rgba(0,0,0,.82)); color: #fff6d8; text-align: center; animation: adv-fade 2.2s ease forwards; }
+        #advClear .big { font-size: 72px; animation: adv-chest 1s cubic-bezier(.3,1.6,.5,1); filter: drop-shadow(0 0 18px var(--adv-tint, #ffd060)); }
+        #advClear .t1 { font-size: 22px; font-weight: bold; margin-top: 10px; letter-spacing: .05em; text-shadow: 0 0 10px var(--adv-tint, #ffd060); animation: adv-pop .6s ease-out .3s both; }
+        #advClear .t2 { font-size: 13px; margin-top: 6px; opacity: .9; animation: adv-pop .6s ease-out .55s both; }
+        @keyframes adv-jump { 0% { transform: translateY(0) } 35% { transform: translateY(-14px) rotate(-8deg) } 70% { transform: translateY(0) } 85% { transform: translateY(-3px) } 100% { transform: translateY(0) } }
+        @keyframes adv-trip { 0%,100% { transform: rotate(0) } 25% { transform: rotate(-22deg) translateX(-3px) } 60% { transform: rotate(14deg) } }
+        @keyframes adv-spark { from { opacity: 1; transform: translate(0,0) scale(.6) } to { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.3) } }
+        @keyframes adv-unfurl { from { opacity: .3; transform: scaleY(.9) translateY(-6px) } to { opacity: 1; transform: none } }
+        @keyframes adv-shake { 0%,100% { transform: translateX(0) } 20% { transform: translateX(-7px) } 40% { transform: translateX(6px) } 60% { transform: translateX(-4px) } 80% { transform: translateX(3px) } }
+        @keyframes adv-enc { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
+        @keyframes adv-pop { from { opacity: 0; transform: scale(.6) } to { opacity: 1; transform: scale(1) } }
+        @keyframes adv-glow { from { transform: scale(1) } to { transform: scale(1.18) } }
+        @keyframes adv-chest { 0% { transform: scale(.2) rotate(-20deg); opacity: 0 } 60% { transform: scale(1.25) rotate(6deg); opacity: 1 } 100% { transform: scale(1) rotate(0) } }
+        @keyframes adv-fade { 0%,80% { opacity: 1 } 100% { opacity: 0 } }
+        @media (prefers-reduced-motion: reduce) {
+            #advTrail *, .adv-unfurl, .adv-shake, #advClear, #advClear * { animation: none !important; transition: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -2043,7 +2085,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-0200</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-0230</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -6996,6 +7038,7 @@ const Cloud = (function () {
     function showQuiz(card) {
         _awakenAttempt = false;
         pickSense(card);
+        if (!trainingSession.active) advHide();   // 冒険の道は冒険のときだけ
         markAnswerStart();  // 回答時間計測開始
 
         // 問題タイプを決定
@@ -7292,6 +7335,7 @@ const Cloud = (function () {
 
         // ○/× エフェクト表示
         showJudgeEffect(isCorrect);
+        if (trainingSession.active) advAfterAnswer(isCorrect);
 
         // 不正解時は正解ボタンを緑に
         if (!isCorrect) {
@@ -7409,8 +7453,10 @@ const Cloud = (function () {
         gachaCardEl.className = 'gacha-card';
         gachaCardEl.id = 'gachaCard-0';
 
+        let isNewCard = false;
         if (isCorrect) {
             const isNew = !isOwned(card.id);
+            isNewCard = isNew;
             if (isNew) unlockedCards.push(card.id);
             if (isNew) logEvent('unlock', card, null);   // 回答は直前の logEvent('gacha') で記録済み
             // ガチャでXP獲得（レアリティに応じてボーナス）
@@ -7457,7 +7503,7 @@ const Cloud = (function () {
         if (isCorrect) {
             setTimeout(() => {
                 document.getElementById('gachaCard-0').classList.add('do-flip');
-                fireRarityConfetti(rarity);
+                if (isNewCard) fireRarityConfetti(rarity);   // 紙吹雪は新しいカードのときだけ
             }, 500);
         }
         setTimeout(() => { document.getElementById('gachaCloseBtn').style.display = 'block'; }, 1200);
@@ -7784,6 +7830,111 @@ const Cloud = (function () {
     }
 
     let _awakenAttempt = false;
+    /* ========== 冒険の道（問題を解くたびに旅が進む演出） ==========
+       5問で1つの地域を踏破 → 次の地域へ。地域は前回の続きから（advArea に保存）。報酬は変えない（見た目の演出のみ） */
+    const ADV_STEPS = 5;
+    const ADV_AREAS = [
+        { name: 'ささやきの森', icon: '🌲', goal: '🏕️', tint: '#8fd060', enc: ['🍄 キノコの精が問いかけてきた', '🦊 森のキツネがなぞなぞを出した', '🌿 木の幹に古い文字が刻まれている', '🦉 フクロウが言葉の意味をたずねた'] },
+        { name: '霧の洞窟',     icon: '🦇', goal: '💎', tint: '#8fa0ff', enc: ['🦇 コウモリの群れが道をふさいだ', '🕯️ 壁に光る文字が浮かび上がった', '🗝️ 錆びた扉に謎の言葉が…', '💧 地底湖に言葉が映っている'] },
+        { name: '星降る丘',     icon: '⛰️', goal: '🔭', tint: '#c9a6ff', enc: ['⭐ 流れ星が言葉を落としていった', '🐑 羊飼いの少年が道をたずねた', '🌙 月の精がささやいた', '🪁 風に乗って手紙が飛んできた'] },
+        { name: '古代の遺跡',   icon: '🏛️', goal: '📜', tint: '#e8b850', enc: ['🗿 石像が口を開いた', '📜 古文書の一節が読めそうだ', '🐍 封印の蛇が合言葉を求めている', '🏺 壺の底に文字が刻まれている'] },
+        { name: '竜の山脈',     icon: '🐉', goal: '🥚', tint: '#ff8a60', enc: ['🔥 竜の吐息で道が熱い…', '🦅 大鷲が試練を与えた', '⛏️ 鉱夫が岩に刻んだ言葉を見せた', '🌋 火山の精霊が問いかけた'] },
+        { name: '天空の城',     icon: '🏰', goal: '👑', tint: '#80e0ff', enc: ['☁️ 雲の門番が合言葉を問う', '👑 王の書庫で不思議な本を見つけた', '🕊️ 白い鳩が手紙を運んできた', '🔔 塔の鐘に言葉が刻まれている'] },
+    ];
+    function advState() {
+        const s = trainingSession;
+        if (!s.adv) {
+            let area = 0;
+            try { area = (parseInt(localStorage.getItem('advArea'), 10) || 0) % ADV_AREAS.length; } catch (e) {}
+            s.adv = { area, step: 0, res: [], streak: 0 };
+        }
+        return s.adv;
+    }
+    function advEl() {
+        let el = document.getElementById('advTrail');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'advTrail';
+            const box = document.querySelector('#quiz-overlay .custom-box');
+            box.insertBefore(el, box.firstChild);
+        }
+        return el;
+    }
+    function advHide() { const el = document.getElementById('advTrail'); if (el) el.style.display = 'none'; }
+    function advRender(encounter) {
+        const a = advState(), A = ADV_AREAS[a.area], el = advEl();
+        el.style.display = '';
+        el.style.setProperty('--adv-tint', A.tint);
+        const pos = k => (k / ADV_STEPS * 100).toFixed(1) + '%';
+        let nodes = '';
+        for (let k = 0; k < ADV_STEPS; k++) nodes += `<div class="adv-node ${a.res[k] === true ? 'ok' : a.res[k] === false ? 'ng' : ''}" style="left:${pos(k)}"></div>`;
+        el.innerHTML = `
+            <div class="adv-head"><span>${A.icon} ${A.name}　<span style="opacity:.75;font-weight:normal;">${Math.min(a.step + 1, ADV_STEPS)} / ${ADV_STEPS}</span></span>
+                <span class="adv-streak ${a.streak >= 3 ? 'on' : ''}">🔥 ${a.streak}連続</span></div>
+            <div class="adv-track"><div class="adv-line"></div>${nodes}
+                <div class="adv-goal ${a.step >= ADV_STEPS - 1 ? 'near' : ''}">${A.goal}</div>
+                <div class="adv-hero" style="left:${pos(a.step)}">🧙</div></div>
+            ${encounter ? `<div class="adv-enc">${encounter}</div>` : ''}`;
+    }
+    // 次の問題の前：地域を踏破していれば演出 → 新しい地域へ。出会いのひとことと、巻物が開くような登場
+    function advBeforeQuestion() {
+        const a = advState();
+        if (a.step >= ADV_STEPS) {
+            const A = ADV_AREAS[a.area], ok = a.res.filter(Boolean).length;
+            a.area = (a.area + 1) % ADV_AREAS.length; a.step = 0; a.res = [];
+            try { localStorage.setItem('advArea', String(a.area)); } catch (e) {}
+            const N = ADV_AREAS[a.area];
+            const ov = document.createElement('div');
+            ov.id = 'advClear';
+            ov.style.setProperty('--adv-tint', A.tint);
+            ov.innerHTML = `<div class="big">${A.goal}</div><div class="t1">🏁 ${A.name} 踏破！</div>
+                <div class="t2">正解 ${ok} / ${ADV_STEPS}　次は ${N.icon} ${N.name} へ</div>`;
+            const old = document.getElementById('advClear'); if (old) old.remove();
+            document.body.appendChild(ov);
+            ov.onclick = () => ov.remove();
+            setTimeout(() => ov.remove(), 2200);
+            playSE('unlock');
+        }
+        const A = ADV_AREAS[a.area];
+        advRender(A.enc[Math.floor(Math.random() * A.enc.length)]);
+        const box = document.querySelector('#quiz-overlay .custom-box');
+        if (box) { box.classList.remove('adv-unfurl', 'adv-shake'); void box.offsetWidth; box.classList.add('adv-unfurl'); }
+    }
+    // 答えたあと：主人公が1歩進む（正解＝ジャンプときらめき、不正解＝つまずき）
+    function advAfterAnswer(ok) {
+        const a = advState();
+        a.res[a.step] = ok;
+        a.streak = ok ? a.streak + 1 : 0;
+        a.step = Math.min(a.step + 1, ADV_STEPS);
+        const el = advEl();
+        const hero = el.querySelector('.adv-hero'), node = el.querySelectorAll('.adv-node')[a.step - 1];
+        if (node) node.classList.add(ok ? 'ok' : 'ng');
+        if (hero) {
+            hero.style.left = (a.step / ADV_STEPS * 100).toFixed(1) + '%';
+            hero.classList.remove('jump', 'trip'); void hero.offsetWidth; hero.classList.add(ok ? 'jump' : 'trip');
+        }
+        const st = el.querySelector('.adv-streak');
+        if (st) { st.textContent = `🔥 ${a.streak}連続`; st.classList.toggle('on', a.streak >= 3); }
+        if (a.step >= ADV_STEPS) { const g = el.querySelector('.adv-goal'); if (g) g.classList.add('near'); }
+        const box = document.querySelector('#quiz-overlay .custom-box');
+        if (ok) {
+            const track = el.querySelector('.adv-track');
+            if (track) {
+                const x = a.step / ADV_STEPS * track.clientWidth;
+                ['✨', '⭐', '✨', '💫', '✨', '⭐'].forEach((c, k) => {
+                    const sp = document.createElement('span');
+                    sp.className = 'adv-spark'; sp.textContent = c;
+                    const ang = (k / 6) * Math.PI * 2;
+                    sp.style.left = (x - 7) + 'px'; sp.style.top = '4px';
+                    sp.style.setProperty('--dx', Math.round(Math.cos(ang) * 30) + 'px');
+                    sp.style.setProperty('--dy', Math.round(Math.sin(ang) * 22 - 6) + 'px');
+                    track.appendChild(sp);
+                    setTimeout(() => sp.remove(), 750);
+                });
+            }
+        } else if (box) { box.classList.remove('adv-unfurl', 'adv-shake'); void box.offsetWidth; box.classList.add('adv-shake'); }
+    }
+
     function showTrainingQuiz() {
         if (!trainingSession.active || trainingSession.cards.length === 0) return;
         // SRS優先: 復習期限が来たカードを先に出題
@@ -7793,6 +7944,7 @@ const Cloud = (function () {
         _awakenAttempt = false;
         // 4問に1回、★2のカード（まだ覚醒していない）があれば覚醒クエストを出す
         trainingSession.qCount = (trainingSession.qCount || 0) + 1;
+        advBeforeQuestion();
         if (trainingSession.qCount % 4 === 0) {
             const cand = cardsData.slice(0, Math.min((getCurrentGachaTabIndex() + 1) * COLLECTION_PAGE_SIZE, cardsData.length))
                 .find(c => getStars(c.id) === 2);
