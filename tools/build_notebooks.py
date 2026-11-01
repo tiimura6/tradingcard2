@@ -6,7 +6,7 @@ data/cefrj_notebooks.csv（鉄・銅・銀・金の4手帖を1つにまとめた
 使い方: python3 tools/build_notebooks.py
 CSVの例文や訳を直したら、このコマンドを実行してJSONを作り直す。
 
-JSON 1行 = [英単語, 品詞, 日本語, 例文, 例文中の語形, カテゴリ]
+JSON 1行 = [英単語, 品詞, 日本語, 例文, 例文中の語形, カテゴリ, 除外する選択肢の番号リスト]
   語形: 例文の中で見出し語が変化した形（wind → wound など）。穴埋め問題で隠す部分。
         見つからない場合は空文字（その単語は穴埋めではなく意味問題で出題される）
 """
@@ -67,6 +67,88 @@ IRREGULAR = {
 
 VOWELS = "aeiou"
 
+# 同じ文脈に入れ替えて入り得る語のグループ（同じグループの語はダミー選択肢にしない）
+SWAP_GROUPS = [
+    "a.m. p.m. morning afternoon evening night midnight noon tonight",
+    "monday tuesday wednesday thursday friday saturday sunday weekend weekday",
+    "january february march april may june july august september october november december",
+    "spring summer autumn fall winter",
+    "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety hundred thousand million billion dozen half",
+    "first second third fourth fifth sixth seventh eighth ninth tenth eleventh twelfth twentieth hundredth last next",
+    "red blue green yellow black white brown pink purple orange grey gray gold silver dark light",
+    "north south east west northern southern eastern western left right up down",
+    "yesterday today tomorrow now then soon later already yet still ago before after",
+    "breakfast lunch dinner supper snack meal",
+    "sunny rainy cloudy snowy windy foggy stormy hot cold warm cool",
+    "alone together",
+    "mother father mom dad mum parent brother sister son daughter aunt uncle cousin grandmother grandfather grandparent wife husband baby child",
+    "in on at under above below behind beside between near over across through into onto from to by with without around along inside outside off out up down toward towards past beyond within against among opposite",
+    "and but or so because if when while although though unless until since as than",
+    "can could may might must shall should will would",
+    "what who whom whose which where when why how",
+    "i you he she it we they me him her us them my your his its our their mine yours hers ours theirs myself yourself himself herself itself ourselves themselves",
+    "a an the this that these those some any many much few little several all every each both either neither no none more most less least enough",
+    "always usually often sometimes rarely seldom never ever",
+    "very quite really too so rather pretty extremely",
+    "here there everywhere somewhere anywhere nowhere",
+    "big large small little huge tiny tall short long high low",
+    "good bad better best worse worst",
+]
+GROUP_OF = {}
+for gi, g in enumerate(SWAP_GROUPS):
+    for w in g.split():
+        GROUP_OF.setdefault(w, set()).add(gi)
+
+LEXREL = {}
+_lex_path = Path(__file__).resolve().parent.parent / "data" / "lexrel.json"
+if _lex_path.exists():
+    LEXREL = json.loads(_lex_path.read_text(encoding="utf-8"))
+
+
+def ja_segments(meaning: str):
+    """日本語訳を「／」などで区切った意味のまとまり（〜や括弧は除く）"""
+    segs = set()
+    for t in re.split(r"[／/、,;；]", meaning or ""):
+        t = re.sub(r"[（(].*?[）)]", "", t).replace("〜", "").replace("～", "").strip()
+        if len(t) >= 1:
+            segs.add(t)
+    return segs
+
+
+def exclusions(items, get_word, get_meaning, get_syn=None):
+    """各語について、ダミー選択肢にしてはいけない語（反対語・類義語・同じ意味・入れ替え可能な語）の番号リスト"""
+    words = [get_word(x).lower() for x in items]
+    idx_by_word = {}
+    for i, w in enumerate(words):
+        idx_by_word.setdefault(w, []).append(i)
+    segs = [ja_segments(get_meaning(x)) for x in items]
+    seg_index = {}
+    for i, ss in enumerate(segs):
+        for t in ss:
+            seg_index.setdefault(t, []).append(i)
+    out = []
+    for i, x in enumerate(items):
+        w = words[i]
+        ex = set()
+        rel = set(LEXREL.get(w, []))
+        if get_syn:
+            rel |= {t.strip().lower() for t in re.split(r"[|,/]", get_syn(x) or "") if t.strip()}
+        for g in GROUP_OF.get(w, ()):
+            rel |= set(SWAP_GROUPS[g].split())
+        for r in rel:
+            ex.update(idx_by_word.get(r, []))
+        for t in segs[i]:
+            ex.update(seg_index.get(t, []))
+        ex.update(idx_by_word.get(w, []))      # 同じつづり（品詞違いのカード）
+        ex.discard(i)
+        out.append(sorted(ex))
+    # 関係は対称にする
+    for i, ex in enumerate(out):
+        for j in ex:
+            if i not in out[j]:
+                out[j].append(i)
+    return [sorted(set(e)) for e in out]
+
 
 def candidates(word: str):
     """見出し語から考えられる語形（長い順）"""
@@ -120,11 +202,27 @@ def main():
         if not form:
             miss.setdefault(lv, []).append(word)
         books.setdefault(lv, []).append([word, r["pos"].strip(), r["japanese"].strip(), ex, form, r["category"].strip()])
+    syn_by = {}
+    for r in rows:
+        syn_by.setdefault(r["notebook"], []).append(r.get("synonym", ""))
     for lv, items in books.items():
+        ex = exclusions(list(range(len(items))), lambda k: items[k][0], lambda k: items[k][2], lambda k: syn_by[lv][k])
+        for k, e in enumerate(ex):
+            items[k].append(e)
         out = ROOT / "data" / f"nb_{lv}.json"
         out.write_text(json.dumps(items, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
         m = miss.get(lv, [])
         print(f"{lv}: {len(items)}語 → {out.name} ({out.stat().st_size // 1024}KB) 穴埋め不可 {len(m)}語 {m[:12]}")
+
+    # 白金の手帖（index.html 内の quizList）の除外リスト → data/excl_PT.json
+    html = (ROOT / "index.html").read_text(encoding="utf-8")
+    pt = []
+    for mm in re.finditer(r"^\s*(\d+): \{ meaning: '((?:[^'\\]|\\.)*)', answer: '((?:[^'\\]|\\.)*)'", html, re.M):
+        pt.append((int(mm.group(1)), mm.group(2).replace("\\'", "'"), mm.group(3).replace("\\'", "'")))
+    ex = exclusions(pt, lambda t: t[2], lambda t: t[1])
+    excl = {str(pt[i][0]): [pt[j][0] for j in e] for i, e in enumerate(ex) if e}
+    (ROOT / "data" / "excl_PT.json").write_text(json.dumps(excl, separators=(",", ":")), encoding="utf-8")
+    print(f"PT: {len(pt)}語 → excl_PT.json ({(ROOT / 'data' / 'excl_PT.json').stat().st_size // 1024}KB)")
 
 
 if __name__ == "__main__":
