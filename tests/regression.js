@@ -311,13 +311,20 @@ test('バトル突入・帰還の演出／ボスは下位の手帖ほど小さ�
   assert(sizes.A1 < sizes.PT, JSON.stringify(sizes));
 });
 
-test('カードを探す：名称・回数の上限なし・40分で休憩のすすめ', async b => {
+test('カードを探す：名称・新カードは1日100枚まで（探す回数は無制限）・40分で休憩のすすめ', async b => {
   const p = await openApp(b, { seed: { cardMergeV1: '1' } });
   await p.waitForTimeout(2600);
   assert((await p.evaluate(() => document.getElementById('gachaBtn').innerText)).includes('カードを探す'), 'ボタン名');
-  const r = await p.evaluate(() => { gold = 99999; dailyGachaStorage.draws = 500; window.__alerts = []; const before = gold; drawCard('normal');
-    return { spent: before - gold, alerts: window.__alerts.slice() }; });
+  // 探した回数が多くても、新カードの残りがあれば探せる
+  const r = await p.evaluate(() => { gold = 99999; dailyGachaStorage.draws = 500; newCardsLeftToday(); dailyGachaStorage.newCount = 98;
+    window.__alerts = []; const before = gold; drawCard('normal'); return { spent: before - gold, alerts: window.__alerts.slice() }; });
   assert(r.spent === 50 && r.alerts.length === 0, JSON.stringify(r));
+  await p.waitForTimeout(300);
+  const m = await p.evaluate(() => { dailyGachaStorage.newCount = 97; return [multiDrawCount('normal'), multiDrawCount('premium')]; });
+  assert(m[0] === 3 && m[1] === 3, 'まとめて探す回数: ' + m);
+  const r2 = await p.evaluate(() => { dailyGachaStorage.newCount = 100; window.__alerts = []; const before = gold; drawCard('premium'); startGachaViaButton();
+    return { spent: before - gold, alerts: window.__alerts.slice(), multi: multiDrawCount('normal') }; });
+  assert(r2.spent === 0 && r2.alerts.length === 2 && r2.alerts[0].includes('100 枚まで') && r2.multi === 0, JSON.stringify(r2));
   const toast = await p.evaluate(() => { _playStart = Date.now() - 41 * 60000; _lastActive = Date.now(); wellbeingTick(); return document.getElementById('challengeToast').textContent; });
   assert(toast.includes('目を休めよう'), toast);
   assert(p.__errors.length === 0, p.__errors.join(' / '));

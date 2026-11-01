@@ -2150,7 +2150,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-0900</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-0930</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -4941,7 +4941,20 @@ const Cloud = (function () {
      */
     const GOLD_PER_GACHA = 100;
     const DRAW_COST = { normal: 50, premium: 100 };
-    // 探した回数（1日ごと。上限はなし。記録のみ）
+    // 1日に手に入る新しいカードは100枚まで（探す回数そのものの上限はなし）
+    const DAILY_NEW_LIMIT = 100;
+    const NEW_LIMIT_MSG = `今日手に入る新しいカードは ${DAILY_NEW_LIMIT} 枚まで。また明日！\n今日は冒険で、集めたカードの単語を復習しよう。`;
+    function newCardsLeftToday() {
+        const today = new Date().toLocaleDateString();
+        if (dailyGachaStorage.newDate !== today) { dailyGachaStorage.newDate = today; dailyGachaStorage.newCount = 0; }
+        return Math.max(0, DAILY_NEW_LIMIT - (dailyGachaStorage.newCount || 0));
+    }
+    function countNewCard() {
+        newCardsLeftToday();
+        dailyGachaStorage.newCount = (dailyGachaStorage.newCount || 0) + 1;
+        localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
+    }
+    // 探した回数（1日ごと。記録のみ）
     function countDraw() {
         const today = new Date().toLocaleDateString();
         if (dailyGachaStorage.drawDate !== today) { dailyGachaStorage.drawDate = today; dailyGachaStorage.draws = 0; }
@@ -5965,10 +5978,12 @@ const Cloud = (function () {
         const unowned = gachaPools().unowned.length;
         if (desc) desc.innerHTML = `所持ゴールド：💰 <strong>${gold.toLocaleString()}G</strong>` +
             (unowned === 0 ? '<br><span style="font-size:11px;color:#a05030;">解禁中のタブのカードはすべて集まりました（討伐で次のタブへ）</span>' : '');
+        const newLeft = newCardsLeftToday();
+        if (desc) desc.innerHTML += `<br><span style="font-size:11px;color:#8a6a40;">今日の新しいカード あと <strong>${newLeft}</strong> 枚（1日 ${DAILY_NEW_LIMIT} 枚まで）</span>`;
         const n = document.getElementById('drawNormalBtn'), pr = document.getElementById('drawPremiumBtn');
-        if (n)  n.disabled  = gold < DRAW_COST.normal;
-        if (pr) pr.disabled = gold < DRAW_COST.premium || unowned === 0;
-        // まとめて探す：最大10回（ゴールド・未取得カード数の範囲で）
+        if (n)  n.disabled  = gold < DRAW_COST.normal || newLeft <= 0;
+        if (pr) pr.disabled = gold < DRAW_COST.premium || unowned === 0 || newLeft <= 0;
+        // まとめて探す：最大10回（ゴールド・今日の新カードの残り・未取得カード数の範囲で）
         const nN = multiDrawCount('normal'), nP = multiDrawCount('premium');
         const mn = document.getElementById('drawNormalMultiBtn'), mp = document.getElementById('drawPremiumMultiBtn');
         if (mn) { mn.disabled = nN < 2; document.getElementById('drawNormalMultiInfo').textContent = nN >= 2 ? `${nN}回 ${nN * DRAW_COST.normal}G` : '2回分のGが必要'; }
@@ -5986,6 +6001,7 @@ const Cloud = (function () {
     function startGachaViaButton() {
         checkAndResetDailyGacha();
         if (gold < DRAW_COST.normal) { alert(`ゴールドが足りません（ふつうに探すには ${DRAW_COST.normal}G 必要）。\n冒険で問題に正解するとゴールドがもらえます！`); return; }
+        if (newCardsLeftToday() <= 0) { alert(NEW_LIMIT_MSG); return; }
         openGachaChoiceModal();
     }
     // 引ける範囲：解禁済みタブのカード
@@ -5997,6 +6013,7 @@ const Cloud = (function () {
     function drawCard(mode) {
         const cost = DRAW_COST[mode];
         const pools = gachaPools();
+        if (newCardsLeftToday() <= 0) { alert(NEW_LIMIT_MSG); return; }
         if (mode === 'premium' && pools.unowned.length === 0) { alert('解禁中のタブのカードはすべて集まっています。討伐バトルで次のタブを開こう！'); return; }
         if (!spendGold(cost)) { alert(`ゴールドが足りません（${cost}G 必要）`); return; }
         countDraw();
@@ -6008,7 +6025,8 @@ const Cloud = (function () {
     // まとめて探す回数（最大10）
     const MULTI_DRAW_MAX = 10;
     function multiDrawCount(mode) {
-        let n = Math.min(MULTI_DRAW_MAX, Math.floor(gold / DRAW_COST[mode]));
+        // 新しいカードの残り枚数を超えないように（ふつうに探すも全部新カードになり得るため同じ扱い）
+        let n = Math.min(MULTI_DRAW_MAX, Math.floor(gold / DRAW_COST[mode]), newCardsLeftToday());
         if (mode === 'premium') n = Math.min(n, gachaPools().unowned.length);
         return Math.max(0, n);
     }
@@ -6025,7 +6043,7 @@ const Cloud = (function () {
             const pool = (mode === 'premium' && pools.unowned.length > 0) ? pools.unowned : pools.all;
             const card = weightedGachaPick(pool);
             const isNew = !isOwned(card.id);
-            if (isNew) { unlockedCards.push(card.id); logEvent('unlock', card, null); }
+            if (isNew) { unlockedCards.push(card.id); countNewCard(); logEvent('unlock', card, null); }
             const rarity = getRarity(card.no);
             addXP({ N: 5, R: 10, SR: 20, UR: 50 }[rarity] || 5, null);
             countDraw();
@@ -6039,7 +6057,7 @@ const Cloud = (function () {
         const tabAfter = getCurrentGachaTabIndex();
         document.getElementById('mdTitle').textContent = news.length ? `✨ 新しいカード ${news.length}枚！` : '🧭 探索の結果';
         document.getElementById('mdSub').textContent = `${n}回探した（${n * DRAW_COST[mode]}G）` +
-            (tabAfter > tabBefore ? `　🎉 タブ${tabAfter + 1}解禁！` : '');
+            (tabAfter > tabBefore ? `　🎉 タブ${tabAfter + 1}解禁！` : '') + `　今日の新カード あと${newCardsLeftToday()}枚`;
         const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
         document.getElementById('mdGrid').innerHTML = results.map((r, k) => `
             <div class="md-card r-${r.rarity} ${r.isNew ? '' : 'dup'}" style="animation-delay:${(k * 0.12).toFixed(2)}s">
@@ -7647,7 +7665,7 @@ const Cloud = (function () {
         if (isCorrect) {
             const isNew = !isOwned(card.id);
             isNewCard = isNew;
-            if (isNew) unlockedCards.push(card.id);
+            if (isNew) { unlockedCards.push(card.id); countNewCard(); }
             if (isNew) logEvent('unlock', card, null);   // 回答は直前の logEvent('gacha') で記録済み
             // ガチャでXP獲得（レアリティに応じてボーナス）
             const xpGain = { N: 5, R: 10, SR: 20, UR: 50 }[rarity] || 5;
