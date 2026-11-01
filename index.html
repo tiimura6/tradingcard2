@@ -2058,7 +2058,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-2120</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-2135</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -4357,7 +4357,8 @@ const Cloud = (function () {
         if (fillEl) fillEl.style.width = pct + '%';
         // 殿堂入りボタンのロック状態を更新
         const hofBtn = document.getElementById('hofBtn');
-        if (hofBtn) {
+        if (hofBtn) hofBtn.style.display = isPT ? '' : 'none';   // 殿堂入りは白金の手帖だけに表示
+        if (hofBtn && isPT) {
             // 殿堂入りは白金の手帖（863語）のコンプリートで解禁
             const ptOwned = nbOwnedCount(NB_BY_KEY.PT);
             const allComplete = ptOwned >= TOTAL_CARDS;
@@ -6294,10 +6295,15 @@ const Cloud = (function () {
         selectFormationSlot(pos);
     }
 
-    function closeFormationModal() {
+    function closeFormationModal(starting) {
         const fm = document.getElementById('battle-formation-modal');
         fm.classList.remove('modal-animate');
         fm.style.display = 'none';
+        // ボスラッシュの編成をキャンセルしたら、ボスラッシュを終えて背景を戻す
+        if (!starting && hofBossRush.active && !(battleSession && battleSession.active)) {
+            hofBossRush.active = false;
+            document.body.classList.remove('battle-mode');
+        }
     }
 
     // バトルBGM：メイン画面の音声ON/OFFに従う（バトル画面のON/OFFボタンは廃止）。
@@ -6317,7 +6323,7 @@ const Cloud = (function () {
     function confirmFormationAndStart() {
         const allFilled = Object.values(formationState.slots).every(s => s !== null);
         if (!allFilled) { alert('前衛・中衛・後衛にカードを配置してください'); return; }
-        closeFormationModal();
+        closeFormationModal(true);
         playBossBGM(true); // タップ内で即時再生
         fadeScreen(function() { startBattle(formationState.stage); });
     }
@@ -6861,6 +6867,8 @@ const Cloud = (function () {
                     document.querySelector('#battle-result-overlay .action-btn').onclick = function() {
                         document.getElementById('battle-result-overlay').style.display = 'none';
                         document.getElementById('battle-overlay').style.display = 'none';
+                        // 元の「閉じる」動作に戻してから次のボスへ（中断・敗北時にボスラッシュ用の動作が残らないように）
+                        this.onclick = function() { closeBattleResult(); };
                         advanceHofBossRush();
                     };
                 } else {
@@ -7733,6 +7741,8 @@ const Cloud = (function () {
         }));
         hofBossRush.bossIndex = 0;
         hofBossRush.active = true;
+        // ボスラッシュ中は、編成画面の間もバトルと同じ背景にする
+        document.body.classList.add('battle-mode');
         // フォーメーション選択から開始
         openBattleFormationModal(hofBossRush.bosses[0]);
     }

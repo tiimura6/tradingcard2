@@ -1,0 +1,11 @@
+{
+  "name": "kotonoha-himitsu-techo",
+  "private": true,
+  "description": "言の葉堂のひみつ手帖（英単語カードアプリ）の回帰テスト",
+  "scripts": {
+    "test": "node tests/regression.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.40.0"
+  }
+}
