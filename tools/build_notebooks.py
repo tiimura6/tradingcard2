@@ -56,6 +56,9 @@ IRREGULAR = {
     "undertake": ["undertook", "undertaken"], "upset": [], "wake": ["woke", "woken"], "wear": ["wore", "worn"],
     "weave": ["wove", "woven"], "weep": ["wept"], "win": ["won"], "wind": ["wound"], "withdraw": ["withdrew", "withdrawn"],
     "withstand": ["withstood"], "wring": ["wrung"], "write": ["wrote", "written"],
+    "outshine": ["outshone"], "overthrow": ["overthrew", "overthrown"], "stride": ["strode", "stridden"],
+    "repay": ["repaid"], "retell": ["retold"], "workman": ["workmen"], "grandchild": ["grandchildren"],
+    "schoolchild": ["schoolchildren"], "equip": ["equipped", "equipping", "equips"],
     "child": ["children"], "man": ["men"], "woman": ["women"], "foot": ["feet"], "tooth": ["teeth"],
     "mouse": ["mice"], "person": ["people"], "goose": ["geese"], "ox": ["oxen"], "knife": ["knives"],
     "leaf": ["leaves"], "life": ["lives"], "wife": ["wives"], "wolf": ["wolves"], "half": ["halves"],
@@ -160,6 +163,8 @@ def candidates(word: str):
         head, rest = w.split(" ", 1)
         for f in candidates(head):
             forms.add(f + " " + rest)
+        # 名詞句の複数形（martial art → martial arts、video game → video games）
+        forms.add(w + "s")
         return sorted(forms, key=len, reverse=True)
     forms.update({w + "s", w + "es", w + "ed", w + "d", w + "ing", w + "er", w + "est", w + "ly", w + "'s"})
     if w.endswith("e"):
