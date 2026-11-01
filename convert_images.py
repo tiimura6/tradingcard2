@@ -15,10 +15,27 @@ from PIL import Image
 PHOTO_DIR = Path(__file__).parent / "photo"
 MAX_WIDTH = 400      # 最大幅（px）
 QUALITY = 82         # WebP品質（0-100）
+THUMB_DIR = PHOTO_DIR / "thumb"
+THUMB_WIDTH = 240    # 一覧・編成画面用サムネイル幅（px）
+THUMB_QUALITY = 72
+
+def make_thumb(src: Path, force: bool = False) -> None:
+    """一覧・編成画面用の軽いサムネイル photo/thumb/{番号}.webp を作る"""
+    THUMB_DIR.mkdir(exist_ok=True)
+    dst = THUMB_DIR / (src.stem + ".webp")
+    if dst.exists() and not force:
+        return
+    with Image.open(src) as img:
+        w, h = img.size
+        if w > THUMB_WIDTH:
+            img = img.resize((THUMB_WIDTH, int(THUMB_WIDTH * h / w)), Image.LANCZOS)
+        img.save(dst, "WEBP", quality=THUMB_QUALITY, method=6)
+
 
 def convert(src: Path, force: bool = False) -> tuple[int, int]:
     """変換実行。(元サイズ, 変換後サイズ) をバイトで返す"""
     dst = src.with_suffix(".webp")
+    make_thumb(src, force)
     if dst.exists() and not force:
         return 0, 0  # スキップ
 
