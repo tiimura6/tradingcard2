@@ -6,7 +6,7 @@ data/cefrj_notebooks.csv（鉄・銅・銀・金の4手帖を1つにまとめた
 使い方: python3 tools/build_notebooks.py
 CSVの例文や訳を直したら、このコマンドを実行してJSONを作り直す。
 
-JSON 1行 = [英単語, 品詞, 日本語, 例文, 例文中の語形, カテゴリ, 除外する選択肢の番号リスト]
+JSON 1行 = [英単語, 品詞, 日本語, 例文, 例文中の語形, カテゴリ, 除外する選択肢の番号リスト, 例文の日本語訳]
   語形: 例文の中で見出し語が変化した形（wind → wound など）。穴埋め問題で隠す部分。
         見つからない場合は空文字（その単語は穴埋めではなく意味問題で出題される）
 """
@@ -207,8 +207,10 @@ def main():
         syn_by.setdefault(r["notebook"], []).append(r.get("synonym", ""))
     for lv, items in books.items():
         ex = exclusions(list(range(len(items))), lambda k: items[k][0], lambda k: items[k][2], lambda k: syn_by[lv][k])
+        exja = [r.get("example_ja", "").strip() for r in rows if r["notebook"] == lv]
         for k, e in enumerate(ex):
             items[k].append(e)
+            items[k].append(exja[k] if k < len(exja) else "")
         out = ROOT / "data" / f"nb_{lv}.json"
         out.write_text(json.dumps(items, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
         m = miss.get(lv, [])
