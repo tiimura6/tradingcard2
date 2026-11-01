@@ -3850,7 +3850,7 @@ const Cloud = (function () {
      * 鉄〜金 = CEFR-J A1〜B2（データは data/nb_*.json、カードIDは a1-N など）
      * 前の手帖のカードを全部集めると次の手帖が開く。既存ユーザーは白金も最初から開いている。
      */
-    const NB_DATA_VERSION = '20261101';
+    const NB_DATA_VERSION = '20261101b';
     const NOTEBOOKS = [
         { key: 'A1', name: '鉄の手帖',   level: 'CEFR-J A1', sub: 'はじまりの扉　基礎の英単語', count: 1166, prefix: 'a1',
           c: ['#eef0f3', '#8c939d', '#5d636b'], gem: '⚙️' },
@@ -3920,6 +3920,7 @@ const Cloud = (function () {
                     cardsData.push({
                         id: `${currentNB.prefix}-${no}`, no, nb: currentNB.key,
                         quiz: { answer: r[0], pos: r[1], meaning: r[2], example: r[3], form: r[4], category: r[5], level: currentNB.key },
+                        _excl: r[6] || [],
                         // 絵のカードはまだ無いので、文字のカード（SVG）をその場で作る
                         get img()   { return cardSVG(this); },
                         get thumb() { return cardSVG(this); },
@@ -3953,6 +3954,50 @@ const Cloud = (function () {
             });
         }
         return _quizPoolCache;
+    }
+
+    /* 4択のダミー選択肢から「正解になり得る語」を外す
+       （反対語・類義語・同じ日本語訳・入れ替え可能な語。例: a.m. と p.m.、alone と together）
+       除外リストは tools/build_notebooks.py で作成（鉄〜金は各手帖のJSON、白金は data/excl_PT.json） */
+    let _ptExcl = null;
+    function excludedIdxFor(card) {
+        if (card.nb !== 'PT') return card._excl || [];
+        if (_ptExcl === null) {
+            _ptExcl = {};
+            try {
+                const x = new XMLHttpRequest();
+                x.open('GET', `data/excl_PT.json?v=${NB_DATA_VERSION}`, false);
+                x.send(null);
+                if ((x.status === 200 || x.status === 0) && x.responseText) _ptExcl = JSON.parse(x.responseText);
+            } catch (e) {}
+        }
+        return (_ptExcl[card.no] || []).map(no => no - 1);
+    }
+    function jaSegs(m) {
+        return String(m || '').split(/[／\/、,;；]/).map(t => t.replace(/[（(].*?[）)]/g, '').replace(/[〜～]/g, '').trim()).filter(Boolean);
+    }
+    function safeDistractors(card, list, kind) {
+        const exAns = new Set(), exMean = new Set();
+        excludedIdxFor(card).forEach(i => {
+            const c = cardsData[i];
+            if (c) { exAns.add(c.quiz.answer.toLowerCase()); exMean.add(c.quiz.meaning); }
+        });
+        const mySegs = new Set(jaSegs(card.quiz.meaning));
+        const correct = kind === 'meaning' ? card.quiz.meaning : card.quiz.answer.toLowerCase();
+        const seen = new Set();
+        const ok = [];
+        for (const v of list) {
+            const key = kind === 'meaning' ? v : String(v).toLowerCase();
+            if (key === correct || seen.has(key)) continue;
+            if (kind === 'meaning') {
+                if (exMean.has(v) || jaSegs(v).some(t => mySegs.has(t))) continue;
+            } else if (exAns.has(key)) continue;
+            seen.add(key);
+            ok.push(v);
+        }
+        // 万一足りなければ（極端に小さい手帖など）元の候補で補う
+        if (ok.length < 3) for (const v of list) { if (ok.length >= 3) break; if (!ok.includes(v) && v !== correct) ok.push(v); }
+        return ok;
     }
 
     /* 文字のカード（画像が無いカード用）。SVGをその場で生成してキャッシュ */
@@ -6802,7 +6847,7 @@ const Cloud = (function () {
             const allMeanings = shuffle(
                 quizPool().map(q => q.meaning).filter(m => m !== correctMeaning)
             );
-            const choices = shuffle([correctMeaning, ...allMeanings.slice(0, 3)]);
+            const choices = shuffle([correctMeaning, ...safeDistractors(card, allMeanings, 'meaning').slice(0, 3)]);
 
             document.getElementById('quizTitle').innerText = '📖 意味を選ぼう';
             document.getElementById('quizSentence').innerHTML =
@@ -6837,7 +6882,7 @@ const Cloud = (function () {
             } else {
                 pool = quizPool().map(q => q.answer).filter(a => a !== correctAnswer);
             }
-            const choices = shuffle([correctAnswer, ...shuffle(pool).slice(0, 3)]);
+            const choices = shuffle([correctAnswer, ...safeDistractors(card, shuffle(pool), 'answer').slice(0, 3)]);
 
             document.getElementById('quizTitle').innerText = '🔤 英単語を選ぼう';
             document.getElementById('quizSentence').innerHTML =
@@ -6916,7 +6961,7 @@ const Cloud = (function () {
                 if (filtered.length >= 3) allAnswers = filtered;
             }
 
-            const choices = shuffle([correctAnswer, ...shuffle(allAnswers).slice(0, 3)]);
+            const choices = shuffle([correctAnswer, ...safeDistractors(card, shuffle(allAnswers), 'answer').slice(0, 3)]);
 
             choices.forEach(ans => {
                 const btn = document.createElement('button');
