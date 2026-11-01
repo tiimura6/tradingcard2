@@ -8068,7 +8068,10 @@ const Cloud = (function () {
 <script>
 (function () {
     // 試行する候補ファイル（優先度順）
+    // 手帖ごとの背景（鉄はオリジナルの bg.jpg、銅〜白金は bg_A2.jpg / bg_B1.jpg / bg_B2.jpg / bg_PT.jpg）
+    const nbKey = (typeof currentNB !== 'undefined' && currentNB) ? currentNB.key : '';
     const BG_CANDIDATES = [
+        ...(nbKey && nbKey !== 'A1' ? ['./background/bg_' + nbKey + '.jpg'] : []),
         './background/bg.jpg',
         './background/bg.png',
         './background/bg.webp',
