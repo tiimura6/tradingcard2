@@ -2058,7 +2058,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-2030</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-2045</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -4429,9 +4429,10 @@ const Cloud = (function () {
 
     // ポジション別ボーナス
     const POSITION_BONUS = {
-        front: { atkMult: 1.3, hpMult: 0.8,  label: '前衛', cls: 'front' },
-        mid:   { atkMult: 1.0, hpMult: 1.0,  label: '中衛', cls: 'mid'   },
-        rear:  { atkMult: 0.7, hpMult: 1.3,  label: '後衛', cls: 'rear'  },
+        // 前衛＝攻撃役（Power+30%）／中衛＝体力役（HP+30%）／後衛＝守り役（Guardで敵の攻撃を軽減）
+        front: { atkMult: 1.3, hpMult: 0.8,  label: '前衛', cls: 'front', role: 'Power+30%' },
+        mid:   { atkMult: 1.0, hpMult: 1.3,  label: '中衛', cls: 'mid',   role: 'HP+30%' },
+        rear:  { atkMult: 0.7, hpMult: 1.0,  label: '後衛', cls: 'rear',  role: 'Guardで被ダメ軽減', guard: true },
     };
 
     // ユニットスキル (品詞別 × レアリティ強化)
@@ -4597,17 +4598,22 @@ const Cloud = (function () {
      * プレイヤーレベルのボーナスは含めない（冒険するほど楽になる） */
     const BOSS_TUNING = { midRounds: 4, midSurvive: 8, finalRounds: 6, finalSurvive: 8 };
     const HIT_RATE = { attack: { ok: 0.9, ng: 0.3 }, skill: { ok: 0.8, ng: 0.2 } };
+    const WRONG_DAMAGE_MULT = 0.5;   // 不正解のターンは、命中しても与えるダメージ（回復量も）が半分
+    // 後衛のGuardによる被ダメージ軽減率：Guard ÷ (Guard ＋ 敵の攻撃力×2.5)、最大50%
+    // 平均的なカードで約25%、レアで★の多いカードほど50%に近づく
+    function guardRateFor(rearDef, bossAtk) { return Math.min(0.5, rearDef / (rearDef + bossAtk * 2.5)); }
+    const EXPECTED_GUARD = 0.26;
     function bossStatsFor(g) {
         const base = statBase(g);
         const A = base * 1.08 * 1.04;                  // 想定する攻撃力（★1・品詞ボーナス程度。レアカードや★が多いほど楽になる）
         const D = base * 1.08;                         // 想定する守備力
-        const partyHP = D * 3 * 3 * (0.8 + 1.0 + 1.3) / 3;
+        const partyHP = D * 3 * (0.8 + 1.3 + 1.0);
         const perRound = A * 3 * HIT_RATE.attack.ok;   // 全員「攻撃」で正解したときの1ターンの期待ダメージ
         return {
             midHp:    Math.round(perRound * BOSS_TUNING.midRounds),
-            midAtk:   Math.round(partyHP / BOSS_TUNING.midSurvive),
+            midAtk:   Math.round(partyHP / BOSS_TUNING.midSurvive / (1 - EXPECTED_GUARD)),   // 後衛の軽減ぶんを見込む
             finalHp:  Math.round(perRound * BOSS_TUNING.finalRounds),
-            finalAtk: Math.round(partyHP / BOSS_TUNING.finalSurvive),
+            finalAtk: Math.round(partyHP / BOSS_TUNING.finalSurvive / (1 - EXPECTED_GUARD)),
         };
     }
 
@@ -5455,18 +5461,8 @@ const Cloud = (function () {
         }
 
         el.innerHTML = `
-            <div style="color:#e8d070;font-size:17px;font-weight:bold;margin-bottom:4px;font-family:'Noto Serif JP',serif;">🗺️ 冒険</div>
-            <div style="color:#a090c0;font-size:12px;margin-bottom:2px;">解禁タブ内の単語からランダム出題</div>
-            <div style="color:#807090;font-size:11px;margin-bottom:12px;">例文中の（　　）に入る単語を選ぼう</div>
+            <div style="color:#e8d070;font-size:17px;font-weight:bold;margin-bottom:10px;font-family:'Noto Serif JP',serif;">🗺️ 冒険</div>
 
-            ${(() => { const t = adventureTier();
-                const xp = Math.round(ADVENTURE_BASE.xp * t.mult), g = Math.round(ADVENTURE_BASE.gold * t.mult);
-                return `<div style="background:linear-gradient(135deg,rgba(90,60,0,0.75),rgba(40,25,0,0.75));border:1px solid rgba(255,200,80,0.45);border-radius:10px;padding:12px;margin-bottom:12px;">
-                <div style="color:#ffd27a;font-size:12px;font-weight:bold;margin-bottom:4px;">💰 冒険のごほうび</div>
-                <div style="font-size:13px;color:#fff;">今は1問正解ごとに <strong style="color:#9fe0ff;">+${xp}XP</strong>・<strong style="color:#ffd24a;">+${g}G</strong>${t.label ? `（${t.label}）` : ''}</div>
-                <div style="font-size:11px;color:#e0c890;margin-top:3px;">今日の冒険 ${t.count}問${t.next ? `・あと${t.next.from - t.count}問で${t.next.label}` : '・最大ボーナス中！'}</div>
-                <div style="font-size:10px;color:#b8a070;margin-top:4px;">今日たくさん冒険するほど増える：20問で×1.5、50問で×2、100問で×3</div>
-            </div>`; })()}
             <div style="background:rgba(10,5,30,0.7);border:1px solid rgba(180,150,60,0.2);border-radius:10px;padding:12px;margin-bottom:12px;">
                 <div style="color:#e8a020;font-size:12px;font-weight:bold;margin-bottom:8px;letter-spacing:0.05em;">📋 冒険タスク</div>
                 ${taskRow('🔥','3連続正解', combo, 3, '+100G', combo>=3)}
@@ -5493,14 +5489,6 @@ const Cloud = (function () {
                 const wkDone = wc.completed.streak7, ws = loginStreak.streak;
                 const wkP = !wkDone ? ` (${Math.min(ws,7)}/7)` : '';
                 return `
-            <div style="background:linear-gradient(135deg,rgba(60,30,110,0.75),rgba(30,15,60,0.75));border:1px solid rgba(190,140,255,0.4);border-radius:10px;padding:12px;margin-bottom:12px;">
-                <div style="color:#d8b8ff;font-size:12px;font-weight:bold;margin-bottom:4px;">🧠 忘却曲線の復習</div>
-                ${(() => { const due = countDueReviews(); const nx = nextReviewLabel();
-                    return due > 0
-                        ? `<div style="font-size:13px;color:#fff;margin-bottom:4px;">いま <strong style="color:#ffd27a;font-size:16px;">${due}</strong> 語が「忘れかけ」です。冒険で優先して出題されます</div>`
-                        : `<div style="font-size:12px;color:#c8b8e8;margin-bottom:4px;">いまは忘れかけの単語はありません${nx ? `（次は${nx}）` : '。冒険で正解した単語が、忘れるころに戻ってきます'}</div>`; })()}
-                <div style="font-size:10px;color:#a898c8;line-height:1.6;">正解した単語は 1日 → 3日 → 1週間 → 2週間 → 1か月 の間隔で戻ってきます。ちょうど忘れるころに思い出すと記憶が長持ちします。</div>
-            </div>
             <div style="background:rgba(10,5,30,0.7);border:1px solid rgba(80,120,200,0.25);border-radius:10px;padding:12px;margin-bottom:12px;">
                 <div style="color:#88aaff;font-size:12px;font-weight:bold;margin-bottom:8px;">📅 デイリーチャレンジ <span style="color:#a090c0;font-weight:normal;">${dailyDone}/11</span></div>
                 ${ciRow(dc.completed.review3,  '🧠 忘れかけ単語を3つ復習',  dc.progress.reviewCorrect||0, 3,  '+100G')}
@@ -6156,20 +6144,19 @@ const Cloud = (function () {
                 const stats = getCardStats(card);
                 const skill = getWordSkill(card);
                 const power = Math.round(stats.atk * bonus.atkMult * tabScale);
-                const guard = Math.round(stats.def * bonus.hpMult * 3 * tabScale);
+                const guard = Math.round(stats.def * bonus.hpMult * 3 * tabScale);   // HP
                 slot.innerHTML = `
                     <div class="formation-slot-label ${pos}">${bonus.label}</div>
                     <img src="${card.thumb}" class="formation-slot-card-img" decoding="async" onerror="imgFallback(this,'${card.id}')">
                     <div style="font-size:10px;font-weight:bold;color:#fff;line-height:1.2">${card.quiz.answer.slice(0,8)}</div>
-                    <div style="font-size:9px;color:#88bbff">P:${power} G:${guard}</div>
+                    <div style="font-size:9px;color:#88bbff">P:${power} HP:${guard}${bonus.guard ? `<br>ガード-${Math.round(guardRateFor(stats.def, formationState.stage ? formationState.stage.atk : 1) * 100)}%` : ""}</div>
                     <div style="font-size:9px;color:#f9ca24">${skill.icon}${skill.name}</div>
                     <div style="font-size:9px;color:#aaa;cursor:pointer;margin-top:1px" onclick="removeFormationCard('${pos}')">✕ 外す</div>`;
             } else {
                 slot.innerHTML = `
                     <div class="formation-slot-label ${pos}">${bonus.label}</div>
                     <div style="font-size:11px;color:#aaa;margin-top:4px">
-                        ATK${bonus.atkMult > 1 ? '+':''}${Math.round((bonus.atkMult-1)*100)}%<br>
-                        HP${bonus.hpMult > 1 ? '+':''}${Math.round((bonus.hpMult-1)*100)}%
+                        ${bonus.role}
                     </div>
                     <div style="font-size:11px;color:#666;margin-top:6px">タップして選択</div>`;
             }
@@ -6208,7 +6195,7 @@ const Cloud = (function () {
             myCards.push({
                 card, rarity: getRarity(card.no), skill: getWordSkill(card),
                 power: Math.round(stats.atk * midBonus.atkMult),
-                guard: Math.round(stats.def * midBonus.hpMult * 3)
+                guard: stats.def
             });
         }
         myCards.sort((a, b) => {
@@ -6260,7 +6247,7 @@ const Cloud = (function () {
     }
 
     /* 編成はカードをタップするだけで 前衛 → 中衛 → 後衛 の順に入る。
-       前衛（攻撃+30%）を選ぶときは攻撃力の高い順、後衛（HP+30%）を選ぶときは守備力の高い順に自動で並べ替える */
+       前衛（Power+30%）はPowerの高い順、中衛（HP+30%）と後衛（Guardで軽減）はGuardの高い順に自動で並べ替える */
     const FORMATION_ORDER = ['front', 'mid', 'rear'];
     function nextEmptyFormationSlot() { return FORMATION_ORDER.find(p => !formationState.slots[p]) || null; }
     function selectFormationSlot(pos, keepSort) {
@@ -6273,9 +6260,10 @@ const Cloud = (function () {
         }
         const bonus = POSITION_BONUS[pos];
         const step = FORMATION_ORDER.indexOf(pos) + 1;
-        const autoKey = pos === 'front' ? 'power' : pos === 'rear' ? 'guard' : null;
-        label.textContent = `${'①②③'[step - 1]} ${bonus.label}のカードを選ぼう（Power${bonus.atkMult>=1?'+':''}${Math.round((bonus.atkMult-1)*100)}% / HP${bonus.hpMult>=1?'+':''}${Math.round((bonus.hpMult-1)*100)}%）`
-            + (autoKey ? `　→ ${autoKey === 'power' ? '攻撃力' : '守備力'}が高い順に並べ替えました` : '');
+        // 前衛はPower順、中衛（HP=Guard×3）と後衛（Guardで軽減）はGuard順に自動で並べ替え
+        const autoKey = pos === 'front' ? 'power' : 'guard';
+        label.textContent = `${'①②③'[step - 1]} ${bonus.label}のカードを選ぼう（${bonus.role}）`
+            + (autoKey ? `　→ ${autoKey === 'power' ? 'Power' : 'Guard'}が高い順に並べ替えました` : '');
         if (!keepSort) {
             const key = autoKey || 'rarity';
             if (formationPoolSort !== key || !formationPoolEls.size) setFormationSort(key, pos);
@@ -6357,6 +6345,9 @@ const Cloud = (function () {
         }
         battleSession._synergy = synergy;
 
+        // 後衛のGuardで敵の攻撃を軽減
+        const rearUnit = units.find(u => u.pos === 'rear');
+        const guardRate = rearUnit ? guardRateFor(getCardStats(rearUnit.card).def, stage.atk) : 0;
         // プレイヤーHP = カード合算 + レベルボーナス (Lv上昇で耐久力アップ)
         const cardMaxHP = units.reduce((s, u) => s + u.maxHp, 0);
         const lvBonus   = (xpData.level - 1) * 25;
@@ -6368,7 +6359,7 @@ const Cloud = (function () {
 
         battleSession = {
             active: true, stage, units,
-            currentUnitIdx: -1, plan: null, _defReduction: 0, _victoryShown: false,
+            currentUnitIdx: -1, plan: null, _defReduction: 0, _victoryShown: false, guardRate,
             playerHP: playerMaxHP, playerMaxHP,
             enemyHP: stage.hp, enemyMaxHP: stage.hp,
             turn: 'player', turnCount: 1,
@@ -6514,7 +6505,7 @@ const Cloud = (function () {
                     <img src="${u.card.thumb}" decoding="async" onerror="imgFallback(this,'${u.card.id}')" style="width:100%;height:78px;object-fit:cover;object-position:center 30%;border-radius:6px;display:block;margin-bottom:3px;">
                     <div style="font-size:10px;line-height:1;">${starsHTML(getStars(u.card.id), 9)}</div>
                     <div class="battle-unit-word">${(u.card.quiz.answer||'').slice(0,10)}</div>
-                    <div class="battle-unit-pg">P:${u.atk} G:${u.maxHp}</div>
+                    <div class="battle-unit-pg">P:${u.atk} HP:${u.maxHp}</div>
                     <div class="battle-unit-hp-bar"><div class="battle-unit-hp-fill${hpPct<=30?' low':''}" style="width:${hpPct}%"></div></div>
                     <div class="battle-unit-hp-num">${u.hp}/${u.maxHp}</div>
                     <div class="battle-unit-skill-label">${u.skill.icon}${u.skill.name}</div>`;
@@ -6540,7 +6531,7 @@ const Cloud = (function () {
         const totalP = battleSession.units.reduce((s, u) => s + u.atk, 0);
         const totalG = battleSession.playerMaxHP;
         const el = document.getElementById('battleTotalStats');
-        if (el) el.innerHTML = `⚔️ 総P: <b>${totalP}</b>　🛡️ 総G: <b>${totalG}</b>`;
+        if (el) el.innerHTML = `⚔️ 総P: <b>${totalP}</b>　❤️ HP: <b>${totalG}</b>　🛡️ 後衛ガード: <b>-${Math.round((battleSession.guardRate || 0) * 100)}%</b>`;
     }
 
     /* ===== ターンの流れ =====
@@ -6587,8 +6578,8 @@ const Cloud = (function () {
         const { units, plan, stage } = battleSession;
         const key = isCorrect ? 'ok' : 'ng';
         battleSession._defReduction = 0;   // 名詞スキル（堅固な存在など）で軽減されたときだけ使う
-        addBattleLog(isCorrect ? '✅ 正解！ 命中率アップ（攻撃90%・スキル80%）' : '❌ 不正解… 命中率ダウン（攻撃30%・スキル20%）');
-        const enhance = battleSession.buffActive ? (battleSession._enhancePower || 1.5) : 1;
+        addBattleLog(isCorrect ? '✅ 正解！ 命中率アップ（攻撃90%・スキル80%）' : '❌ 不正解… 命中率ダウン（攻撃30%・スキル20%）、当たっても威力は半分');
+        const enhance = (battleSession.buffActive ? (battleSession._enhancePower || 1.5) : 1) * (isCorrect ? 1 : WRONG_DAMAGE_MULT);
         battleSession.buffActive = false; battleSession._enhancePower = null;
         let i = 0;
         const step = () => {
@@ -6656,7 +6647,7 @@ const Cloud = (function () {
             battleSession._enhancePower = skill.power;
             addBattleLog(`${head} 次のターン、全員の攻撃×${skill.power}`);
         } else if (skill.type === 'fortify') {
-            const heal = Math.round(unit.maxHp * skill.power);
+            const heal = Math.round(unit.maxHp * skill.power * Math.min(1, enhance));
             battleSession.playerHP = Math.min(battleSession.playerMaxHP, battleSession.playerHP + heal);
             battleSession._defReduction = Math.min(0.75, (battleSession._defReduction || 0) + skill.power);
             addBattleLog(`${head} HP+${heal}・次の被ダメージ -${Math.round(skill.power * 100)}%`);
@@ -6766,14 +6757,14 @@ const Cloud = (function () {
         }
 
         setTimeout(() => {
-            let dmg = stage.atk;
-            // 防御・名詞スキルによる被ダメージ軽減（このターンのみ）
+            let dmg = Math.round(stage.atk * (1 - (battleSession.guardRate || 0)));   // 後衛のGuard
+            // 名詞スキルによる被ダメージ軽減（このターンのみ）
             if (battleSession._defReduction) {
                 dmg = Math.round(dmg * (1 - battleSession._defReduction));
                 battleSession._defReduction = 0;
             }
             battleSession.playerHP = Math.max(0, battleSession.playerHP - dmg);
-            addBattleLog(`${stage.emoji} ${stage.name}の攻撃！ ${dmg} ダメージ`);
+            addBattleLog(`${stage.emoji} ${stage.name}の攻撃！ ${dmg} ダメージ` + (battleSession.guardRate ? `（後衛のガードで -${Math.round(battleSession.guardRate * 100)}%）` : ''));
 
             // ボス前進アニメ → SE → ユニットshake + 画面揺れ
             animateBossAttack(() => {
