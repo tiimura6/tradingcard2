@@ -2072,7 +2072,7 @@
 <div id="nb-picker" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeNotebookPicker()">
     <div class="custom-box" style="width:90%;max-width:380px;">
         <h3 style="margin:0 0 4px;color:#5a3a10;font-family:'Noto Serif JP',serif;">📚 手帖をえらぶ</h3>
-        <div style="font-size:11px;color:#7a6a50;">前の手帖のカードをすべて集めると、次の手帖が開きます</div>
+        <div style="font-size:11px;color:#7a6a50;">前の手帖のカードを8割集めると、次の手帖が開きます</div>
         <div class="nb-list" id="nbList"></div>
         <button class="modal-cancel-btn" onclick="closeNotebookPicker()" style="margin-top:10px;">閉じる</button>
     </div>
@@ -7839,7 +7839,7 @@ const Cloud = (function () {
                 <div class="nb-gem" style="background:linear-gradient(135deg,${nb.c[0]},${nb.c[1]} 55%,${nb.c[2]})">${unlocked ? nb.gem : '🔒'}</div>
                 <div class="nb-row-main">
                     <div class="nb-row-name">${nb.name}${nb.key === currentNB.key ? '　<span style="font-size:11px;color:#9a7a3a;">ひらいている手帖</span>' : ''}</div>
-                    <div class="nb-row-sub">${nb.level}・${unlocked ? `${owned} / ${nb.count}枚` : (prev ? `${prev.name}をすべて集めると開く` : '')}</div>
+                    <div class="nb-row-sub">${nb.level}・${unlocked ? `${owned} / ${nb.count}枚` : (prev ? `${prev.name}を${nbUnlockNeed(prev)}枚集めると開く（あと${Math.max(0, nbUnlockNeed(prev) - nbOwnedCount(prev))}枚）` : '')}</div>
                     ${unlocked ? `<div class="nb-bar"><div style="width:${pct}%;background:linear-gradient(90deg,${nb.c[1]},${nb.c[0]})"></div></div>` : ''}
                 </div>`;
             if (unlocked) row.onclick = () => switchNotebook(nb.key);
@@ -7855,13 +7855,17 @@ const Cloud = (function () {
         m.style.display = 'none';
     }
 
-    // 前の手帖をコンプリートしたら次の手帖を開く
+    // 次の手帖を開くのに必要な枚数（前の手帖の8割）
+    const NB_UNLOCK_RATIO = 0.8;
+    function nbUnlockNeed(nb) { return Math.ceil(nb.count * NB_UNLOCK_RATIO); }
+
+    // 前の手帖を8割集めたら次の手帖を開く
     function checkNotebookUnlocks() {
         let newly = null;
         for (let i = 0; i < NOTEBOOKS.length - 1; i++) {
             const nb = NOTEBOOKS[i], next = NOTEBOOKS[i + 1];
             if (!notebookState.unlocked.includes(nb.key) || notebookState.unlocked.includes(next.key)) continue;
-            if (nbOwnedCount(nb) >= nb.count) {
+            if (nbOwnedCount(nb) >= nbUnlockNeed(nb)) {
                 notebookState.unlocked.push(next.key);
                 newly = next;
             }
