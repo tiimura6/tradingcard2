@@ -2043,7 +2043,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-2230</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-2240</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -3865,7 +3865,7 @@ const Cloud = (function () {
      * 鉄〜金 = CEFR-J A1〜B2（データは data/nb_*.json、カードIDは a1-N など）
      * 前の手帖のカードを全部集めると次の手帖が開く。既存ユーザーは白金も最初から開いている。
      */
-    const NB_DATA_VERSION = '20261101c';
+    const NB_DATA_VERSION = '20261101d';
     const NOTEBOOKS = [
         { key: 'A1', name: '鉄の手帖',   level: 'CEFR-J A1', sub: 'はじまりの扉　基礎の英単語', count: 1166, prefix: 'a1',
           c: ['#eef0f3', '#8c939d', '#5d636b'], gem: '⚙️' },
@@ -3873,7 +3873,7 @@ const Cloud = (function () {
           c: ['#ffd9b8', '#c06a30', '#7a3a12'], gem: '🔶' },
         { key: 'B1', name: '銀の手帖',   level: 'CEFR-J B1', sub: '広がる世界　実用の英単語',   count: 2445, prefix: 'b1',
           c: ['#ffffff', '#aab6c4', '#6a7684'], gem: '💠' },
-        { key: 'B2', name: '金の手帖',   level: 'CEFR-J B2', sub: '深まる知恵　発展の英単語',   count: 2779, prefix: 'b2',
+        { key: 'B2', name: '金の手帖',   level: 'CEFR-J B2', sub: '深まる知恵　発展の英単語',   count: 2775, prefix: 'b2',
           c: ['#f5e285', '#d4980c', '#8a5a00'], gem: '👑' },
         { key: 'PT', name: '白金の手帖', level: '英検準1級〜1級', sub: '世界をひもとく　難関の英単語', count: TOTAL_CARDS, prefix: 'card',
           c: ['#ffffff', '#c4cde0', '#8a93ab'], gem: '💎' },
