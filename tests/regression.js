@@ -311,6 +311,32 @@ test('バトル突入・帰還の演出／ボスは下位の手帖ほど小さ�
   assert(sizes.A1 < sizes.PT, JSON.stringify(sizes));
 });
 
+test('カードを探す：名称・1日30回の上限・40分で休憩のすすめ', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1', gold: '99999' } });
+  await p.waitForTimeout(2600);
+  assert((await p.evaluate(() => document.getElementById('gachaBtn').innerText)).includes('カードを探す'), 'ボタン名');
+  await p.evaluate(() => { gold = 99999; dailyGachaStorage.drawDate = new Date().toLocaleDateString(); dailyGachaStorage.draws = 29; openGachaChoiceModal(); });
+  assert((await p.evaluate(() => document.getElementById('gachaChoiceDesc').innerText)).includes('あと 1 回'), '残り回数表示');
+  await p.evaluate(() => drawCard('normal'));
+  await p.waitForTimeout(300);
+  const r = await p.evaluate(() => { window.__alerts = []; drawCard('normal'); return { left: drawsLeftToday(), alerts: window.__alerts.slice() }; });
+  assert(r.left === 0 && r.alerts.some(a => a.includes('30 回まで')), JSON.stringify(r));
+  const toast = await p.evaluate(() => { _playStart = Date.now() - 41 * 60000; _lastActive = Date.now(); wellbeingTick(); return document.getElementById('challengeToast').textContent; });
+  assert(toast.includes('目を休めよう'), toast);
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('まとめて探す：最大10回・ゴールドと今日の残り回数を消費・結果一覧', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1' } });
+  await p.waitForTimeout(2600);
+  const r = await p.evaluate(() => { gold = 1200; saveGold(); const before = unlockedCards.length; drawMulti('normal');
+    return { gold, left: drawsLeftToday(), cards: document.querySelectorAll('#mdGrid .md-card').length, shown: document.getElementById('multi-draw-overlay').style.display, gained: unlockedCards.length - before }; });
+  assert(r.gold === 700 && r.left === 20 && r.cards === 10 && r.shown === 'flex' && r.gained >= 1, JSON.stringify(r));
+  const r2 = await p.evaluate(() => { gold = 250; dailyGachaStorage.draws = 0; return multiDrawCount('premium'); });
+  assert(r2 === 2, 'premium count ' + r2);
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
 test('小さい画面（幅360px）で主な画面が横にはみ出さない', async b => {
   const p = await openApp(b, { viewport: { width: 360, height: 740 }, seed: { unlockedCards: ids('a1', 1, 50) } });
   const steps = ['openStudyMode("all")', 'closeStudyMode()', 'showHallOfFameModal()', 'closeChallengeModal()',

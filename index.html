@@ -1972,6 +1972,25 @@
         @media (prefers-reduced-motion: reduce) {
             #battle-trans * { animation-duration: .01s !important; }
         }
+        /* ===== まとめて探す（結果一覧） ===== */
+        #multi-draw-overlay { position: fixed; inset: 0; z-index: 9000; display: none; align-items: center; justify-content: center;
+            background: radial-gradient(circle at 50% 35%, rgba(60,40,110,.92), rgba(5,3,12,.96)); }
+        #multi-draw-overlay .md-box { width: 94%; max-width: 520px; max-height: 92vh; overflow-y: auto; text-align: center; padding: 14px 10px 16px; }
+        #multi-draw-overlay .md-title { color: #ffe9a8; font-size: 18px; font-weight: bold; font-family: 'Noto Serif JP', serif; text-shadow: 0 0 10px rgba(255,200,90,.6); }
+        #multi-draw-overlay .md-sub { color: #d8c8f0; font-size: 12px; margin: 4px 0 10px; }
+        #multi-draw-overlay .md-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; }
+        @media (max-width: 400px) { #multi-draw-overlay .md-grid { gap: 5px; } }
+        .md-card { position: relative; border-radius: 7px; opacity: 0; transform: rotateY(90deg) scale(.8); animation: md-flip .45s ease-out forwards; }
+        .md-card img { width: 100%; display: block; border-radius: 7px; }
+        .md-card.dup img { filter: saturate(.45) brightness(.75); }
+        .md-card .md-r { position: absolute; top: 3px; left: 3px; font-size: 9px; font-weight: bold; padding: 1px 4px; border-radius: 4px; background: rgba(0,0,0,.6); }
+        .md-card .md-new { position: absolute; top: -6px; right: -4px; font-size: 9px; font-weight: bold; color: #fff; background: linear-gradient(90deg,#ff5a7a,#ffb040);
+            padding: 1px 5px; border-radius: 6px; box-shadow: 0 0 8px rgba(255,120,80,.8); }
+        .md-card .md-w { font-size: 10px; color: #eee; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .md-card.r-UR { box-shadow: 0 0 12px 2px rgba(255,128,255,.85); }
+        .md-card.r-SR { box-shadow: 0 0 10px 1px rgba(240,200,64,.8); }
+        .md-card.r-R  { box-shadow: 0 0 8px rgba(106,168,255,.7); }
+        @keyframes md-flip { to { opacity: 1; transform: none; } }
     </style>
 </head>
 <body>
@@ -1979,6 +1998,9 @@
 <div id="adventure-bg"></div>
 <div id="adventure-fade"></div>
 <div id="screen-fade"></div>
+<div id="multi-draw-overlay"><div class="md-box"><div class="md-title" id="mdTitle"></div><div class="md-sub" id="mdSub"></div>
+    <div class="md-grid" id="mdGrid"></div>
+    <button class="action-btn" id="mdClose" onclick="closeMultiDraw()" style="margin:14px auto 0;width:70%;padding:11px;font-size:15px;font-weight:bold;">OK</button></div></div>
 <div id="battle-trans"><div class="bt-flash"></div><div class="bt-bar top"></div><div class="bt-bar bot"></div><div class="bt-slash"></div>
     <div class="bt-text"><div class="b1"></div><div class="b2"></div></div>
     <div class="bt-iris"></div><div class="bt-ring"></div><div class="bt-home"></div></div>
@@ -2128,7 +2150,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-0730</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-0830</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -2160,7 +2182,7 @@
 
 <div class="action-grid">
     <button class="action-btn btn-gacha" id="gachaBtn" onclick="startGachaViaButton()" style="grid-column:span 2;">
-        <span class="btn-icon">🎴</span>カードを引く <span id="gachaBtnCount"></span>
+        <span class="btn-icon">🧭</span>カードを探す <span id="gachaBtnCount"></span>
     </button>
     <button class="action-btn btn-study" id="adventureBattleBtn" onclick="adventureOrBattle()" style="grid-column:span 2;">
         <span class="btn-icon" id="adventureBattleBtnIcon">🗺️</span><span id="adventureBattleBtnLabel">冒険</span>
@@ -2196,14 +2218,20 @@
 
 <div id="gacha-choice-modal" class="modal-overlay" style="display:none;">
     <div class="custom-box" style="width:88%;max-width:340px;text-align:center;">
-        <h3 style="margin:0 0 6px;color:#5a3a10;font-family:'Noto Serif JP',serif;">🎴 カードを引く</h3>
+        <h3 style="margin:0 0 6px;color:#5a3a10;font-family:'Noto Serif JP',serif;">🧭 カードを探す</h3>
         <p id="gachaChoiceDesc" style="font-size:14px;color:#6a5030;margin:0 0 14px;"></p>
         <button class="action-btn btn-gacha" id="drawNormalBtn" onclick="drawCard('normal')" style="width:100%;font-size:15px;padding:10px 8px;margin-bottom:10px;flex-direction:column;gap:3px;">
-            <span>🎴 ふつうに引く　<strong>50G</strong></span><span style="font-size:11px;font-weight:normal;opacity:.85;">持っているカードと被ることがある</span>
+            <span>🧭 ふつうに探す　<strong>50G</strong></span><span style="font-size:11px;font-weight:normal;opacity:.85;">持っているカードと被ることがある</span>
         </button>
         <button class="action-btn btn-gacha" id="drawPremiumBtn" onclick="drawCard('premium')" style="width:100%;font-size:15px;padding:10px 8px;background:linear-gradient(150deg,#8a5a10,#4a2a00);flex-direction:column;gap:3px;">
-            <span>✨ 新カード確定　<strong>100G</strong></span><span style="font-size:11px;font-weight:normal;opacity:.85;">まだ持っていないカードが必ず出る</span>
+            <span>✨ 新しいカードを探す　<strong>100G</strong></span><span style="font-size:11px;font-weight:normal;opacity:.85;">まだ持っていないカードが必ず出る</span>
         </button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+            <button class="action-btn btn-gacha" id="drawNormalMultiBtn" onclick="drawMulti('normal')" style="font-size:12px;white-space:nowrap;padding:8px 2px;flex-direction:column;gap:2px;">
+                <span>🧭 まとめて探す</span><span id="drawNormalMultiInfo" style="font-size:11px;font-weight:normal;opacity:.9;"></span></button>
+            <button class="action-btn btn-gacha" id="drawPremiumMultiBtn" onclick="drawMulti('premium')" style="font-size:12px;white-space:nowrap;padding:8px 2px;background:linear-gradient(150deg,#8a5a10,#4a2a00);flex-direction:column;gap:2px;">
+                <span>✨ 新カードをまとめて</span><span id="drawPremiumMultiInfo" style="font-size:11px;font-weight:normal;opacity:.9;"></span></button>
+        </div>
         <button class="modal-cancel-btn" onclick="closeGachaChoiceModal()" style="margin-top:12px;">キャンセル</button>
     </div>
 </div>
@@ -2382,7 +2410,7 @@
         <span class="streak-bonus-icon">🔥</span>
         <p class="streak-day-label" id="streakDayLabel"></p>
         <p class="streak-bonus-msg" id="streakBonusMsg"></p>
-        <p class="streak-bonus-sub">ゴールドでカードを引こう！</p>
+        <p class="streak-bonus-sub">ゴールドでカードを探しに行こう！</p>
         <button class="modal-btn" style="background:linear-gradient(#8a4010, #5a2808);" onclick="closeStreakBonusModal()">やった！</button>
     </div>
 </div>
@@ -4913,6 +4941,19 @@ const Cloud = (function () {
      */
     const GOLD_PER_GACHA = 100;
     const DRAW_COST = { normal: 50, premium: 100 };
+    // 1日にカードを探せる回数（課金はなく、探しすぎを防いで学習の時間を確保するため）
+    const DAILY_DRAW_LIMIT = 30;
+    const DRAW_LIMIT_MSG = `今日カードを探せるのは ${DAILY_DRAW_LIMIT} 回まで。また明日！\n今日は冒険で単語を復習して、ゴールドをためておこう。`;
+    function drawsLeftToday() {
+        const today = new Date().toLocaleDateString();
+        if (dailyGachaStorage.drawDate !== today) { dailyGachaStorage.drawDate = today; dailyGachaStorage.draws = 0; }
+        return Math.max(0, DAILY_DRAW_LIMIT - (dailyGachaStorage.draws || 0));
+    }
+    function countDraw() {
+        drawsLeftToday();
+        dailyGachaStorage.draws = (dailyGachaStorage.draws || 0) + 1;
+        localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
+    }
     let gold = parseInt(localStorage.getItem('gold') || '0', 10) || 0;
     // 旧データ移行：残っていたガチャ回数を 1回=100G でゴールドに変換（1回だけ）
     (function migrateGachaToGold() {
@@ -5603,7 +5644,7 @@ const Cloud = (function () {
                     </div>
                     <div style="background:rgba(20,10,40,0.7);border-radius:10px;padding:12px;border:1px solid rgba(180,150,80,0.2);">
                         <div style="color:#807090;font-size:11px;line-height:1.8;">
-                            ガチャでカードを集めて<br>コレクションを完成させよう！
+                            冒険でゴールドをためて、カードを探しに行こう！<br>コレクションを完成させよう！
                         </div>
                     </div>
                 </div>
@@ -5908,16 +5949,38 @@ const Cloud = (function () {
         document.getElementById('zoom-info-panel').classList.remove('open');
     }
 
+    /* ========== 休憩のすすめ ==========
+       続けて40分遊んだら、目と頭を休めるようにやさしく声をかける（10分以上操作がなければ休憩したとみなす）。止めはしない */
+    const REST_AFTER_MIN = 40, REST_GAP_MIN = 10;
+    let _playStart = Date.now(), _lastActive = Date.now();
+    function wellbeingTick() {
+        const now = Date.now();
+        if (now - _lastActive > REST_GAP_MIN * 60000) _playStart = now;
+        _lastActive = now;
+        if (now - _playStart >= REST_AFTER_MIN * 60000) {
+            _playStart = now;
+            const t = document.getElementById('challengeToast');
+            if (typeof showChallengeToast === 'function' && t) showChallengeToast(`⏸️ ${REST_AFTER_MIN}分がんばったね！ 少し目を休めよう。休んだあとの方が単語はよく覚えられるよ`);
+        }
+    }
+
     /* ========== GACHA CHOICE MODAL ========== */
     function openGachaChoiceModal() {
         checkAndResetDailyGacha();
         const desc = document.getElementById('gachaChoiceDesc');
         const unowned = gachaPools().unowned.length;
+        const left = drawsLeftToday();
         if (desc) desc.innerHTML = `所持ゴールド：💰 <strong>${gold.toLocaleString()}G</strong>` +
+            `<br><span style="font-size:11px;color:#8a6a40;">今日あと <strong>${left}</strong> 回（1日 ${DAILY_DRAW_LIMIT} 回まで）</span>` +
             (unowned === 0 ? '<br><span style="font-size:11px;color:#a05030;">解禁中のタブのカードはすべて集まりました（討伐で次のタブへ）</span>' : '');
         const n = document.getElementById('drawNormalBtn'), pr = document.getElementById('drawPremiumBtn');
-        if (n)  n.disabled  = gold < DRAW_COST.normal;
-        if (pr) pr.disabled = gold < DRAW_COST.premium || unowned === 0;
+        if (n)  n.disabled  = gold < DRAW_COST.normal || left <= 0;
+        if (pr) pr.disabled = gold < DRAW_COST.premium || unowned === 0 || left <= 0;
+        // まとめて探す：最大10回（ゴールド・今日の残り回数・未取得カード数の範囲で）
+        const nN = multiDrawCount('normal'), nP = multiDrawCount('premium');
+        const mn = document.getElementById('drawNormalMultiBtn'), mp = document.getElementById('drawPremiumMultiBtn');
+        if (mn) { mn.disabled = nN < 2; document.getElementById('drawNormalMultiInfo').textContent = nN >= 2 ? `${nN}回 ${nN * DRAW_COST.normal}G` : '2回分のGが必要'; }
+        if (mp) { mp.disabled = nP < 2; document.getElementById('drawPremiumMultiInfo').textContent = nP >= 2 ? `${nP}回 ${nP * DRAW_COST.premium}G` : '2回分のGが必要'; }
         const modal = document.getElementById('gacha-choice-modal');
         if (modal) { modal.style.display = 'flex'; modal.classList.add('modal-animate'); }
     }
@@ -5930,7 +5993,8 @@ const Cloud = (function () {
     /* ========== GACHA TRIGGER ========== */
     function startGachaViaButton() {
         checkAndResetDailyGacha();
-        if (gold < DRAW_COST.normal) { alert(`ゴールドが足りません（ふつうに引くには ${DRAW_COST.normal}G 必要）。\n冒険で問題に正解するとゴールドがもらえます！`); return; }
+        if (gold < DRAW_COST.normal) { alert(`ゴールドが足りません（ふつうに探すには ${DRAW_COST.normal}G 必要）。\n冒険で問題に正解するとゴールドがもらえます！`); return; }
+        if (drawsLeftToday() <= 0) { alert(DRAW_LIMIT_MSG); return; }
         openGachaChoiceModal();
     }
     // 引ける範囲：解禁済みタブのカード
@@ -5942,10 +6006,68 @@ const Cloud = (function () {
     function drawCard(mode) {
         const cost = DRAW_COST[mode];
         const pools = gachaPools();
+        if (drawsLeftToday() <= 0) { alert(DRAW_LIMIT_MSG); return; }
         if (mode === 'premium' && pools.unowned.length === 0) { alert('解禁中のタブのカードはすべて集まっています。討伐バトルで次のタブを開こう！'); return; }
         if (!spendGold(cost)) { alert(`ゴールドが足りません（${cost}G 必要）`); return; }
+        countDraw();
+        wellbeingTick();
         closeGachaChoiceModal();
         triggerGachaCore(null, mode);
+    }
+
+    // まとめて探す回数（最大10）
+    const MULTI_DRAW_MAX = 10;
+    function multiDrawCount(mode) {
+        let n = Math.min(MULTI_DRAW_MAX, Math.floor(gold / DRAW_COST[mode]), drawsLeftToday());
+        if (mode === 'premium') n = Math.min(n, gachaPools().unowned.length);
+        return Math.max(0, n);
+    }
+    function drawMulti(mode) {
+        const n = multiDrawCount(mode);
+        if (n < 2) return;
+        if (!spendGold(n * DRAW_COST[mode])) return;
+        closeGachaChoiceModal();
+        checkAndResetDailyGacha();
+        const tabBefore = getCurrentGachaTabIndex();
+        const results = [];
+        for (let k = 0; k < n; k++) {
+            const pools = gachaPools();
+            const pool = (mode === 'premium' && pools.unowned.length > 0) ? pools.unowned : pools.all;
+            const card = weightedGachaPick(pool);
+            const isNew = !isOwned(card.id);
+            if (isNew) { unlockedCards.push(card.id); logEvent('unlock', card, null); }
+            const rarity = getRarity(card.no);
+            addXP({ N: 5, R: 10, SR: 20, UR: 50 }[rarity] || 5, null);
+            countDraw();
+            results.push({ card, isNew, rarity });
+        }
+        saveUnlocked();
+        wellbeingTick();
+        const news = results.filter(r => r.isNew);
+        const order = { UR: 4, SR: 3, R: 2, N: 1 };
+        const best = news.reduce((m, r) => (order[r.rarity] > order[m] ? r.rarity : m), 'N');
+        const tabAfter = getCurrentGachaTabIndex();
+        document.getElementById('mdTitle').textContent = news.length ? `✨ 新しいカード ${news.length}枚！` : '🧭 探索の結果';
+        document.getElementById('mdSub').textContent = `${n}回探した（${n * DRAW_COST[mode]}G）` +
+            (tabAfter > tabBefore ? `　🎉 タブ${tabAfter + 1}解禁！` : '') + `　今日あと${drawsLeftToday()}回`;
+        const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        document.getElementById('mdGrid').innerHTML = results.map((r, k) => `
+            <div class="md-card r-${r.rarity} ${r.isNew ? '' : 'dup'}" style="animation-delay:${(k * 0.12).toFixed(2)}s">
+                <img src="${r.card.thumb}" alt="" onerror="imgFallback(this,'${r.card.id}')">
+                <span class="md-r" style="color:${{ UR: '#ff80ff', SR: '#f0c840', R: '#6aa8ff', N: '#ddd' }[r.rarity]}">${r.rarity}</span>
+                ${r.isNew ? '<span class="md-new">NEW</span>' : ''}
+                <div class="md-w">${esc(r.card.quiz.answer)}</div></div>`).join('');
+        const ov = document.getElementById('multi-draw-overlay');
+        ov.style.display = 'flex';
+        playSE(news.length ? 'unlock' : 'correct');
+        if (news.length) setTimeout(() => fireRarityConfetti(best), n * 120 + 300);   // 紙吹雪は新しいカードがあるときだけ
+        if (news.length) jumpToCardTab(news[0].card.no);
+    }
+    function closeMultiDraw() {
+        fadeScreen(function() {
+            document.getElementById('multi-draw-overlay').style.display = 'none';
+            renderCollection();
+        });
     }
 
     /* ---- タブ解禁ロジック ----
@@ -7412,6 +7534,7 @@ const Cloud = (function () {
 
         // ○/× エフェクト表示
         showJudgeEffect(isCorrect);
+        wellbeingTick();
         if (trainingSession.active) advAfterAnswer(isCorrect);
 
         // 不正解時は正解ボタンを緑に
@@ -7893,7 +8016,7 @@ const Cloud = (function () {
         const poolEnd = Math.min((tabIdx + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
         const pool = cardsData.slice(0, poolEnd).slice(); // shallow copy
         if (pool.length === 0) {
-            alert('まだカードがありません！ガチャでカードを入手してください。');
+            alert('まだカードがありません！「カードを探す」でカードを手に入れよう。');
             return;
         }
         // Shuffle
