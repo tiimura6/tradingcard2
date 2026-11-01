@@ -2043,7 +2043,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-0100</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-0200</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -3865,15 +3865,15 @@ const Cloud = (function () {
      * 鉄〜金 = CEFR-J A1〜B2（データは data/nb_*.json、カードIDは a1-N など）
      * 前の手帖のカードを全部集めると次の手帖が開く。既存ユーザーは白金も最初から開いている。
      */
-    const NB_DATA_VERSION = '20261102a';
+    const NB_DATA_VERSION = '20261102c';
     const NOTEBOOKS = [
-        { key: 'A1', name: '鉄の手帖',   level: 'CEFR-J A1', sub: 'はじまりの扉　基礎の英単語', count: 1166, prefix: 'a1',
+        { key: 'A1', name: '鉄の手帖',   level: 'CEFR-J A1', sub: 'はじまりの扉　基礎の英単語', count: 1067, prefix: 'a1',
           c: ['#eef0f3', '#8c939d', '#5d636b'], gem: '⚙️' },
-        { key: 'A2', name: '銅の手帖',   level: 'CEFR-J A2', sub: '旅立ちの道　日常の英単語',   count: 1411, prefix: 'a2',
+        { key: 'A2', name: '銅の手帖',   level: 'CEFR-J A2', sub: '旅立ちの道　日常の英単語',   count: 1352, prefix: 'a2',
           c: ['#ffd9b8', '#c06a30', '#7a3a12'], gem: '🔶' },
-        { key: 'B1', name: '銀の手帖',   level: 'CEFR-J B1', sub: '広がる世界　実用の英単語',   count: 2445, prefix: 'b1',
+        { key: 'B1', name: '銀の手帖',   level: 'CEFR-J B1', sub: '広がる世界　実用の英単語',   count: 2353, prefix: 'b1',
           c: ['#ffffff', '#aab6c4', '#6a7684'], gem: '💠' },
-        { key: 'B2', name: '金の手帖',   level: 'CEFR-J B2', sub: '深まる知恵　発展の英単語',   count: 2775, prefix: 'b2',
+        { key: 'B2', name: '金の手帖',   level: 'CEFR-J B2', sub: '深まる知恵　発展の英単語',   count: 2689, prefix: 'b2',
           c: ['#f5e285', '#d4980c', '#8a5a00'], gem: '👑' },
         { key: 'PT', name: '白金の手帖', level: '英検準1級〜1級', sub: '世界をひもとく　難関の英単語', count: TOTAL_CARDS, prefix: 'card',
           c: ['#ffffff', '#c4cde0', '#8a93ab'], gem: '💎' },
@@ -3888,6 +3888,48 @@ const Cloud = (function () {
         for (const id of (list || unlockedCards)) if (typeof id === 'string' && id.startsWith(pre)) n++;
         return n;
     }
+
+    /* 同じつづりの語を1枚のカードにまとめたことによる、カード番号の付け替え（2026-11）
+       以前の番号（CSV の No）のまま保存されている所持カード・★の記録・覚醒を新しい番号へ移す。1回だけ実行。
+       ※ クラウド保存（GAS_URL）を有効にする場合、それ以前のサーバー側データは古い番号のままなので注意 */
+    (function migrateMergedCards() {
+        try {
+            if (localStorage.getItem('cardMergeV1')) return;
+            const RE = /^(a1|a2|b1|b2)-(\d+)$/;
+            const rd = (k, f) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? f : v; } catch (e) { return f; } };
+            const owned = rd('unlockedCards', []), srs = rd('srsData', {}), aw = rd('awakened', {}), sp = rd('spEnhanceData', {});
+            const old = [...(Array.isArray(owned) ? owned : []), ...Object.keys(srs || {}), ...Object.keys(aw || {}), ...Object.keys(sp || {})];
+            if (!old.some(id => RE.test(id))) { localStorage.setItem('cardMergeV1', '1'); return; }
+            const x = new XMLHttpRequest();
+            x.open('GET', `data/idmap.json?v=${NB_DATA_VERSION}`, false);
+            x.send(null);
+            if (!((x.status === 200 || x.status === 0) && x.responseText)) return;   // 読めなければ次回やり直す
+            const map = JSON.parse(x.responseText);
+            const KEY = { a1: 'A1', a2: 'A2', b1: 'B1', b2: 'B2' };
+            const mapId = id => {
+                const m = RE.exec(id); if (!m) return id;
+                const n = (map[KEY[m[1]]] || [])[+m[2] - 1];
+                return n ? `${m[1]}-${n}` : id;
+            };
+            if (Array.isArray(owned)) localStorage.setItem('unlockedCards', JSON.stringify([...new Set(owned.map(mapId))]));
+            const ns = {};
+            Object.entries(srs || {}).forEach(([k, e]) => {
+                const nk = mapId(k), cur = ns[nk];
+                if (!cur) { ns[nk] = e; return; }
+                // まとめた2枚の記録：段階の高い方を残し、正解・不正解の回数は合計する
+                const keep = (e.level || 0) > (cur.level || 0) ? { ...e } : { ...cur };
+                keep.correct = (cur.correct || 0) + (e.correct || 0);
+                keep.incorrect = (cur.incorrect || 0) + (e.incorrect || 0);
+                ns[nk] = keep;
+            });
+            localStorage.setItem('srsData', JSON.stringify(ns));
+            const na = {}; Object.keys(aw || {}).forEach(k => { na[mapId(k)] = 1; });
+            localStorage.setItem('awakened', JSON.stringify(na));
+            const nsp = {}; Object.entries(sp || {}).forEach(([k, v]) => { const nk = mapId(k); if (!(nk in nsp)) nsp[nk] = v; });
+            localStorage.setItem('spEnhanceData', JSON.stringify(nsp));
+            localStorage.setItem('cardMergeV1', '1');
+        } catch (e) { console.warn('カード番号の移行に失敗:', e); }
+    })();
 
     let notebookState = (function () {
         let st = null;
@@ -3930,10 +3972,15 @@ const Cloud = (function () {
         if (nb.key !== 'PT') {
             (rows || []).forEach((r, i) => {
                 const no = i + 1;
+                // 意味（品詞）ごとの出題データ。同じつづりの語（about 副詞／前置詞など）は1枚に複数の意味を持つ
+                const senses = [{ answer: r[0], pos: r[1], meaning: r[2], example: r[3], form: r[4], category: r[5], level: nb.key,
+                                  exMeaning: r[7] || '' }];   // 例文の日本語訳
+                (r[8] || []).forEach(x => senses.push({ answer: r[0], pos: x[0], meaning: x[1], example: x[2], form: x[3],
+                                                      category: r[5], level: nb.key, exMeaning: x[4] || '' }));
                 list.push({
                     id: `${nb.prefix}-${no}`, no, nb: nb.key,
-                    quiz: { answer: r[0], pos: r[1], meaning: r[2], example: r[3], form: r[4], category: r[5], level: nb.key,
-                            exMeaning: r[7] || '' },   // 例文の日本語訳
+                    _senses: senses, _si: 0,
+                    get quiz() { return this._senses[this._si] || this._senses[0]; },   // いま出題中の意味
                     _excl: r[6] || [],
                     // 絵のカードはまだ無いので、文字のカード（SVG）をその場で作る
                     get img()   { return cardSVG(this); },
@@ -3947,6 +3994,19 @@ const Cloud = (function () {
             list.push({ id: `card-${i}`, img: `photo/${i}.webp`, thumb: `photo/thumb/${i}.webp`, no: i, nb: 'PT', quiz: quiz });
         }
         return list;
+    }
+
+    // カードの意味の一覧（白金など1つの意味だけのカードは [quiz]）
+    function cardSenses(card) { return (card && card._senses) || (card && card.quiz ? [card.quiz] : []); }
+    // 出題する意味を選ぶ（複数の意味を持つカードは毎回ランダム）
+    function pickSense(card) {
+        if (card && card._senses && card._senses.length > 1) card._si = Math.floor(Math.random() * card._senses.length);
+    }
+    // 表示用：品詞をまとめた文字列（adv. / prep.）と、品詞つきの意味（adv. およそ　prep. 〜について）
+    function posAll(card) { return cardSenses(card).map(q => q.pos).filter(Boolean).join(' / '); }
+    function meaningAll(card) {
+        const ss = cardSenses(card);
+        return ss.length > 1 ? ss.map(q => `${q.pos} ${q.meaning}`).join('　') : (ss[0] ? ss[0].meaning : '');
     }
 
     let currentNB = NB_BY_KEY[notebookState.current];
@@ -3971,7 +4031,7 @@ const Cloud = (function () {
     function quizPool() {
         if (!_quizPoolCache) {
             const seen = new Set();
-            _quizPoolCache = cardsData.map(c => c.quiz).filter(q => {
+            _quizPoolCache = cardsData.flatMap(c => cardSenses(c)).filter(q => {
                 const k = q.answer + '|' + q.pos;
                 if (seen.has(k)) return false;
                 seen.add(k); return true;
@@ -4004,9 +4064,11 @@ const Cloud = (function () {
         const exAns = new Set(), exMean = new Set();
         excludedIdxFor(card).forEach(i => {
             const c = cardsData[i];
-            if (c) { exAns.add(c.quiz.answer.toLowerCase()); exMean.add(c.quiz.meaning); }
+            if (c) { exAns.add(c.quiz.answer.toLowerCase()); cardSenses(c).forEach(q => exMean.add(q.meaning)); }
         });
-        const mySegs = new Set(jaSegs(card.quiz.meaning));
+        // 同じカードのほかの意味も正解になり得るので、ダミーにしない
+        cardSenses(card).forEach(q => { if (q !== card.quiz) exMean.add(q.meaning); });
+        const mySegs = new Set(cardSenses(card).flatMap(q => jaSegs(q.meaning)));
         const correct = kind === 'meaning' ? card.quiz.meaning : card.quiz.answer.toLowerCase();
         const seen = new Set();
         const ok = [];
@@ -4036,7 +4098,11 @@ const Cloud = (function () {
         const esc = t => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         const word = q.answer || '';
         const fs = word.length <= 5 ? 84 : word.length <= 7 ? 72 : word.length <= 9 ? 60 : word.length <= 12 ? 48 : word.length <= 16 ? 38 : 30;
-        const ja = String(q.meaning || '').split(/[／\/]/).filter(Boolean).slice(0, 3);
+        const ss = cardSenses(card);
+        // 複数の意味：品詞ごとに1行（最初の訳語だけ）。1つだけ：訳語を3つまで
+        const ja = ss.length > 1
+            ? ss.slice(0, 3).map(x => String(x.meaning || '').split(/[／\/]/)[0])
+            : String(q.meaning || '').split(/[／\/]/).filter(Boolean).slice(0, 3);
         const rarCol = { UR: '#ff80ff', SR: '#f0c840', R: '#6aa8ff', N: nb.c[1] }[rar];
         const icon = CAT_ICON[q.category] || '✦';
         const jaSvg = ja.map((t, i) => {
@@ -4054,7 +4120,7 @@ const Cloud = (function () {
             `<circle cx="200" cy="178" r="46" fill="${nb.c[1]}" fill-opacity=".14"/>` +
             `<text x="200" y="196" font-size="48" text-anchor="middle" fill="${nb.c[0]}">${icon}</text>` +
             `<text x="200" y="${310}" font-size="${fs}" fill="#ffffff" text-anchor="middle" font-weight="bold" font-family="Georgia,'Times New Roman',serif">${esc(word)}</text>` +
-            `<text x="200" y="356" font-size="24" fill="#c8bce8" text-anchor="middle" font-style="italic" font-family="Georgia,serif">${esc(q.pos || '')}</text>` +
+            `<text x="200" y="356" font-size="24" fill="#c8bce8" text-anchor="middle" font-style="italic" font-family="Georgia,serif">${esc(posAll(card))}</text>` +
             `<line x1="90" y1="384" x2="310" y2="384" stroke="${nb.c[1]}" stroke-opacity=".6" stroke-width="1.5"/>` +
             jaSvg +
             `<text x="200" y="612" font-size="18" fill="${nb.c[1]}" fill-opacity=".9" text-anchor="middle" letter-spacing="4">${esc(nb.name)}</text>` +
@@ -4698,7 +4764,7 @@ const Cloud = (function () {
         document.getElementById('studyEnglishWord').textContent = eng;
         document.getElementById('studyEnglishWordBack').textContent = eng;
         // Meaning
-        document.getElementById('studyMeaning').textContent = card.quiz.meaning;
+        document.getElementById('studyMeaning').textContent = meaningAll(card);
         // Progress
         const total = studyState.cards.length;
         const cur = studyState.index + 1;
@@ -5719,7 +5785,9 @@ const Cloud = (function () {
 
     function renderWordGuide(card, d) {
         const E = t => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
-        const q = card.quiz || {};
+        const ss = cardSenses(card);
+        const q = ss[0] || {};
+        const multi = ss.length > 1;
         const old = (isPT && typeof CARD_DETAILS !== 'undefined') ? (CARD_DETAILS[card.no] || {}) : {};
         const sec = (label, body) => body ? `<div class="zip-section"><div class="zip-label">${label}</div><div class="zip-value">${body}</div></div>` : '';
         const list = arr => (arr && arr.length) ? `<ul class="zip-phrases">${arr.map(x => `<li>${E(x)}</li>`).join('')}</ul>` : '';
@@ -5727,12 +5795,18 @@ const Cloud = (function () {
             <div class="zip-word">
                 <div class="zip-word-en">${E(q.answer || ('No.' + card.no))}</div>
                 ${d.i ? `<div style="font-size:15px;color:#c8b8f0;font-family:'Lucida Sans Unicode','Arial Unicode MS','Segoe UI',sans-serif;margin-top:2px;">${E(d.i)}</div>` : ''}
-                <div class="zip-word-ja">${q.pos ? `<span class="zip-pos-badge">${E(q.pos)}</span> ` : ''}${E(q.meaning || '')}</div>
+                ${ss.map(x => `<div class="zip-word-ja"${multi ? ' style="margin-top:4px;"' : ''}>${x.pos ? `<span class="zip-pos-badge">${E(x.pos)}</span> ` : ''}${E(x.meaning || '')}</div>`).join('')}
             </div>`;
         html += sec('🗣️ 発音のポイント', E(d.p));
         html += sec('🌈 ほかの意味', list(d.s));
-        if (q.example) html += sec('📖 例文', `<div style="font-family:Georgia,'Noto Serif JP',serif;line-height:1.6;">${E(q.example)}</div>`
-            + (q.exMeaning ? `<div style="font-size:12px;color:#8a7a9a;margin-top:3px;line-height:1.6;">${E(q.exMeaning)}</div>` : ''));
+        // 例文：意味（品詞）ごとに1つずつ
+        const exHtml = ss.filter(x => x.example).map((x, k) =>
+            `<div${k ? ' style="margin-top:10px;padding-top:10px;border-top:1px dashed rgba(160,130,220,.25);"' : ''}>`
+            + (multi ? `<div style="font-size:11px;color:#b8a0e8;margin-bottom:2px;"><span class="zip-pos-badge">${E(x.pos)}</span> ${E(x.meaning)}</div>` : '')
+            + `<div style="font-family:Georgia,'Noto Serif JP',serif;line-height:1.6;">${E(x.example)}</div>`
+            + (x.exMeaning ? `<div style="font-size:12px;color:#8a7a9a;margin-top:3px;line-height:1.6;">${E(x.exMeaning)}</div>` : '')
+            + `</div>`).join('');
+        if (exHtml) html += sec(multi ? '📖 例文（意味ごと）' : '📖 例文', exHtml);
         html += sec('🧩 成り立ち（接頭辞・語根・接尾辞）', E(d.a || old.affixes));
         html += sec('📜 語源', E(d.e || old.etymology));
         html += sec('🔗 よく一緒に使う語', list(d.c) || (old.phrases ? list(old.phrases.split(' / ')) : ''));
@@ -6921,6 +6995,7 @@ const Cloud = (function () {
     /* ========== QUIZ DISPLAY ========== */
     function showQuiz(card) {
         _awakenAttempt = false;
+        pickSense(card);
         markAnswerStart();  // 回答時間計測開始
 
         // 問題タイプを決定
@@ -7280,7 +7355,7 @@ const Cloud = (function () {
                     <div style="text-align:center;font-size:16px;font-weight:bold;color:${resultColor};margin-bottom:10px;">${resultIcon}</div>
                     <div style="background:${resultBg};border:1px solid ${resultBorder};border-radius:12px;padding:12px 14px;">
                         <div style="font-size:14px;font-weight:bold;color:${textMain};margin-bottom:6px;">💡 ${card.quiz.answer}${(() => { const dd = getDetailSync(card); return dd && dd.i ? ` <span style="font-weight:normal;font-size:12px;opacity:.85;">${dd.i}</span>` : ''; })()}</div>
-                        <div style="font-size:12px;color:${textSub};margin-bottom:${exMeaning ? '8px' : '0'};">${card.quiz.meaning}</div>
+                        <div style="font-size:12px;color:${textSub};margin-bottom:${exMeaning ? '8px' : '0'};">${cardSenses(card).length > 1 ? card.quiz.pos + ' ' : ''}${card.quiz.meaning}${(() => { const o = cardSenses(card).filter(x => x !== card.quiz); return o.length ? `<div style="font-size:11px;opacity:.85;margin-top:3px;">ほかの意味：${o.map(x => x.pos + ' ' + x.meaning).join('　')}</div>` : ''; })()}</div>
                         ${card.quiz.example && card.quiz.exMeaning ? `<div style="font-size:12.5px;color:${textMain};line-height:1.6;border-top:1px solid ${borderEx};padding-top:8px;font-family:Georgia,'Noto Serif JP',serif;">📖 ${String(card.quiz.example).replace(/</g, '&lt;')}</div>` : ''}
                         ${exMeaning ? `<div style="font-size:12px;color:${textEx};line-height:1.7;${card.quiz.example && card.quiz.exMeaning ? 'margin-top:3px;' : `border-top:1px solid ${borderEx};padding-top:8px;`}">${card.quiz.example && card.quiz.exMeaning ? '' : '📖 '}${exMeaning}</div>` : ''}
                     </div>
@@ -7347,7 +7422,7 @@ const Cloud = (function () {
                 <div class="gacha-face gacha-front ${rc.frontClass}">
                     <div class="gacha-rarity-badge gacha-rarity-badge-${rarity}">${rc.label}</div>
                     <img src="${card.img}" onerror="imgFallback(this,'${card.id}')">
-                    <div class="gacha-info">No.${card.no}　${card.quiz.answer}${isNew ? '' : '　<span style="font-size:10px;opacity:0.75;">✔ 取得済み</span>'}<br><span style="font-size:10px;font-weight:normal;color:#d0c090;">${card.quiz.meaning}</span></div>
+                    <div class="gacha-info">No.${card.no}　${card.quiz.answer}${isNew ? '' : '　<span style="font-size:10px;opacity:0.75;">✔ 取得済み</span>'}<br><span style="font-size:10px;font-weight:normal;color:#d0c090;">${meaningAll(card)}</span></div>
                     <div class="gacha-stats"><span>⚔️ Power:${st.atk}</span><span>🛡️ Guard:${st.def}</span></div>
                 </div>
             `;
@@ -7740,6 +7815,7 @@ const Cloud = (function () {
     // 覚醒クエスト：日本語の意味を見て英単語をつづる（「見て分かる」→「自分で書ける」へ）
     function showAwakenQuiz(card) {
         _awakenAttempt = true;
+        pickSense(card);
         const ov = document.getElementById('quiz-overlay');
         document.getElementById('quizTitle').innerText = '⭐ 覚醒クエスト';
         const ans = card.quiz.answer;

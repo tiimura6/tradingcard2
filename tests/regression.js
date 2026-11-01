@@ -74,7 +74,7 @@ async function formParty(page, stageIndex) {
 test('新規ユーザーは鉄の手帖から始まり、エラーが出ない', async b => {
   const p = await openApp(b);
   const r = await p.evaluate(() => ({ nb: currentNB.key, n: cardsData.length, h1: document.getElementById('nbTitle').textContent }));
-  assert(r.nb === 'A1' && r.n === 1166 && r.h1 === '鉄の手帖', JSON.stringify(r));
+  assert(r.nb === 'A1' && r.n === 1067 && r.h1 === '鉄の手帖', JSON.stringify(r));
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
@@ -166,7 +166,7 @@ test('回答判定：1文字では正解にならない', async b => {
 
 test('★：復習日前の連続正解では上がらない／覚醒クエストで★3', async b => {
   const now = Date.now();
-  const p = await openApp(b, { seed: { srsData: { 'a1-30': { level: 2, nextReview: now + 86400000 * 3, correct: 2, incorrect: 0 } } } });
+  const p = await openApp(b, { seed: { cardMergeV1: '1', srsData: { 'a1-30': { level: 2, nextReview: now + 86400000 * 3, correct: 2, incorrect: 0 } } } });
   await p.evaluate(() => { updateSRS('a1-40', true); updateSRS('a1-40', true); updateSRS('a1-40', true); });
   assert((await p.evaluate(() => srsData['a1-40'].level)) === 1, '連続正解で段階が上がった');
   await p.evaluate(() => enterAdventureMode()); await p.waitForTimeout(1500);
@@ -200,7 +200,7 @@ test('管理者キーで全手帖・全カード・全タブが開く', async b 
   await p.evaluate(() => { openCouponModal(); document.getElementById('couponInput').value = 'SHION3215T'; submitCoupon(); });
   await p.waitForTimeout(500);
   const r = await p.evaluate(() => ({ st: notebookState.unlocked.length, owned: unlockedCards.length, tabs: getUnlockedTabCount() }));
-  assert(r.st === 5 && r.owned === 8660 && r.tabs === 12, JSON.stringify(r));
+  assert(r.st === 5 && r.owned === 8324 && r.tabs === 11, JSON.stringify(r));
 });
 
 test('殿堂入りボスラッシュが開始できる（白金の手帖）', async b => {
@@ -232,6 +232,30 @@ test('単語ガイド：発音記号・成り立ち・例文訳が表示され�
   const txt = await p.evaluate(() => document.getElementById('zoomInfoContent').innerText);
   assert(txt.includes('/ɪɡˈzædʒəreɪt/'), 'IPAなし: ' + txt.slice(0, 120));
   assert(txt.includes('成り立ち') && txt.includes('誇張'), txt.slice(0, 200));
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('同じつづりの語は1枚：意味ごとの例文を表示／出題は意味ごと／古い番号の所持カードを移行', async b => {
+  // 旧番号：A1 の about(副)=a1-3, about(前)=a1-4, answer(名)=a1-38, answer(動)=a1-39 → 新番号 a1-3, a1-3, a1-3, a1-34
+  const p = await openApp(b, { seed: { unlockedCards: ['a1-3', 'a1-4', 'a1-39'],
+    srsData: { 'a1-3': { level: 1, nextReview: 0, correct: 2, incorrect: 0 }, 'a1-4': { level: 3, nextReview: 0, correct: 4, incorrect: 1 } } } });
+  const r = await p.evaluate(() => {
+    const about = cardsData.find(c => c.quiz.answer === 'about');
+    const ans = cardsData.find(c => c.quiz.answer === 'answer');
+    return { owned: unlockedCards.slice().sort(), aboutNo: about.no, ansNo: ans.no, senses: about._senses.map(s => s.pos).join(','),
+      srs: srsData['a1-3'], dupWords: cardsData.length - new Set(cardsData.map(c => c.quiz.answer.toLowerCase())).size, flag: localStorage.getItem('cardMergeV1') };
+  });
+  assert(r.aboutNo === 3 && r.ansNo === 34 && r.senses === 'adv.,prep.', JSON.stringify(r));
+  assert(JSON.stringify(r.owned) === JSON.stringify(['a1-3', 'a1-34']), '移行: ' + JSON.stringify(r.owned));
+  assert(r.srs.level === 3 && r.srs.correct === 6, 'srs: ' + JSON.stringify(r.srs));
+  assert(r.dupWords === 2 && r.flag === '1', JSON.stringify(r));   // May/may と Miss/miss だけは別の語として残す
+  // 単語ガイド：意味ごとの例文
+  await p.evaluate(() => showZoomInfoPanel(3)); await p.waitForTimeout(1200);
+  const txt = await p.evaluate(() => document.getElementById('zoomInfoContent').innerText);
+  assert(txt.includes('例文（意味ごと）') && txt.includes('two hours') && txt.includes('sleeping star'), txt.slice(0, 300));
+  // 出題：何度か出すと両方の意味が出る
+  const seen = await p.evaluate(() => { const c = cardsData[2], s = new Set(); for (let i = 0; i < 40; i++) { pickSense(c); s.add(c.quiz.pos); } return [...s].sort().join(','); });
+  assert(seen === 'adv.,prep.', seen);
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
