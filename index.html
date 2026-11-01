@@ -2058,7 +2058,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-2045</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-2055</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -7224,29 +7224,39 @@ const Cloud = (function () {
         if (thumbEl) thumbEl.style.display = 'none';
         const sentenceEl = document.getElementById('quizSentence');
         const choicesEl  = document.getElementById('quizChoices');
-        document.getElementById('quizTitle').innerText = '🏆 冒険の記録';
+        document.getElementById('quizTitle').innerText = '🏆 今回の冒険の記録';
+        const gainXP   = Math.max(0, xpData.totalXP - (trainingSession.xpStart != null ? trainingSession.xpStart : xpData.totalXP - trainingSession.totalXP));
+        const gainGold = Math.max(0, gold - (trainingSession.goldStart != null ? trainingSession.goldStart : gold));
+        const rateColor = rate >= 80 ? '#22aa44' : rate >= 60 ? '#e08020' : '#cc3333';
         sentenceEl.innerHTML = `
             <div style="text-align:center;padding:10px 0;">
-                <div style="font-size:40px;font-weight:bold;color:${rate >= 80 ? '#22aa44' : rate >= 60 ? '#e08020' : '#cc3333'};">${rate}%</div>
+                <div style="font-size:40px;font-weight:bold;color:${rateColor};"><span data-count="${rate}">0</span>%</div>
                 <div style="font-size:13px;color:#907060;margin-top:4px;">正解率</div>
                 <div style="display:flex;justify-content:center;gap:24px;margin-top:14px;font-size:15px;">
-                    <div><span style="color:#22aa44;font-size:22px;font-weight:bold;">✅ ${trainingSession.correct}</span><br><span style="color:#707060;font-size:11px;">正解</span></div>
-                    <div><span style="color:#cc3333;font-size:22px;font-weight:bold;">❌ ${trainingSession.incorrect}</span><br><span style="color:#707060;font-size:11px;">不正解</span></div>
-                    <div><span style="color:#4488cc;font-size:22px;font-weight:bold;">📚 ${total}</span><br><span style="color:#707060;font-size:11px;">合計</span></div>
+                    <div><span style="color:#22aa44;font-size:22px;font-weight:bold;">✅ <span data-count="${trainingSession.correct}">0</span></span><br><span style="color:#707060;font-size:11px;">正解</span></div>
+                    <div><span style="color:#cc3333;font-size:22px;font-weight:bold;">❌ <span data-count="${trainingSession.incorrect}">0</span></span><br><span style="color:#707060;font-size:11px;">不正解</span></div>
+                    <div><span style="color:#4488cc;font-size:22px;font-weight:bold;">📚 <span data-count="${total}">0</span></span><br><span style="color:#707060;font-size:11px;">合計</span></div>
                 </div>
-                <div style="margin-top:16px;background:rgba(220,180,40,0.13);border-radius:10px;padding:10px 0;">
-                    <div style="font-size:22px;font-weight:bold;color:#d0a820;">+${trainingSession.totalXP} XP</div>
-                    <div style="font-size:11px;color:#907040;margin-top:2px;">獲得経験値</div>
+                <div style="display:flex;gap:8px;margin-top:16px;">
+                    <div style="flex:1;background:rgba(80,140,220,0.13);border-radius:10px;padding:10px 0;">
+                        <div style="font-size:22px;font-weight:bold;color:#3a78c0;">+<span data-count="${gainXP}">0</span> XP</div>
+                        <div style="font-size:11px;color:#507090;margin-top:2px;">獲得経験値</div>
+                    </div>
+                    <div style="flex:1;background:rgba(220,180,40,0.15);border-radius:10px;padding:10px 0;">
+                        <div style="font-size:22px;font-weight:bold;color:#c8960a;">💰 +<span data-count="${gainGold}">0</span> G</div>
+                        <div style="font-size:11px;color:#907040;margin-top:2px;">獲得ゴールド</div>
+                    </div>
                 </div>
-                ${trainingSession.masteredIds.size > 0 ? `<div style="margin-top:10px;font-size:12px;color:#5080a0;">🌟 マスター済み: ${trainingSession.masteredIds.size}枚</div>` : ''}
+                ${trainingSession.masteredIds.size > 0 ? `<div style="margin-top:10px;font-size:12px;color:#5080a0;">🌟 正解した単語: ${trainingSession.masteredIds.size}語</div>` : ''}
             </div>`;
+        countUpNumbers(sentenceEl);
         choicesEl.innerHTML = '';
         // 結果画面では「やめる」を隠し、「閉じる」だけ表示
         const quitBtn = document.getElementById('quizQuitBtn');
         if (quitBtn) quitBtn.style.display = 'none';
         const closeBtn = document.createElement('button');
         closeBtn.className = 'action-btn';
-        closeBtn.style.cssText = 'width:100%;padding:12px;font-size:15px;font-weight:bold;margin-top:8px;';
+        closeBtn.style.cssText = 'grid-column:1/-1;width:100%;padding:12px;font-size:15px;font-weight:bold;margin-top:8px;';
         closeBtn.textContent = '閉じる';
         closeBtn.onclick = () => {
             document.getElementById('quiz-overlay').style.display = 'none';
@@ -7257,6 +7267,21 @@ const Cloud = (function () {
         };
         choicesEl.appendChild(closeBtn);
         if (rate === 100) confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+    }
+
+    // 0 から目標の数字までカウントアップ（約1.2秒、だんだんゆっくり）
+    function countUpNumbers(root, duration) {
+        duration = duration || 1200;
+        const els = [...root.querySelectorAll('[data-count]')];
+        const t0 = performance.now();
+        const tick = now => {
+            const t = Math.min(1, (now - t0) / duration);
+            const e = 1 - Math.pow(1 - t, 3);
+            els.forEach(el => { el.textContent = Math.round(+el.dataset.count * e).toLocaleString(); });
+            if (t < 1) requestAnimationFrame(tick);
+            else playSE('correct');
+        };
+        requestAnimationFrame(tick);
     }
 
     function closeQuiz() {
@@ -7864,7 +7889,8 @@ const Cloud = (function () {
             const j = Math.floor(Math.random() * (i + 1));
             [pool[i], pool[j]] = [pool[j], pool[i]];
         }
-        trainingSession = { active: true, cards: pool, index: 0, levelFilter: 'all', masteredIds: new Set(), correct: 0, incorrect: 0, totalXP: 0 };
+        trainingSession = { active: true, cards: pool, index: 0, levelFilter: 'all', masteredIds: new Set(), correct: 0, incorrect: 0, totalXP: 0,
+                            xpStart: xpData.totalXP, goldStart: gold };   // 今回の冒険で得たXP・ゴールド（チャレンジ報酬も含む）を差分で出す
         showTrainingQuiz();
     }
 
