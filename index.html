@@ -469,6 +469,14 @@
             -webkit-overflow-scrolling: touch;
         }
         .collection-page-tabs::-webkit-scrollbar { display: none; }
+        .cpt-wrap { display: flex; align-items: center; gap: 4px; width: 100%; max-width: 750px; position: relative; z-index: 2; }
+        .cpt-wrap .collection-page-tabs { flex: 1; min-width: 0; scroll-behavior: smooth; }
+        .cpt-scroll {
+            flex: 0 0 auto; width: 30px; height: 44px; border-radius: 10px; cursor: pointer;
+            background: rgba(20,14,44,0.85); border: 1px solid var(--s-border, #3a2c60); color: var(--s-accent, #e8d070);
+            font-size: 22px; line-height: 1; padding: 0; font-family: Georgia, serif;
+        }
+        .cpt-scroll:disabled { opacity: .25; cursor: default; }
         .cpt-btn {
             flex: 1 0 auto;
             min-width: 58px;
@@ -2006,7 +2014,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-1900</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-1930</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -2369,7 +2377,11 @@
     </div>
 </div>
 
-<div class="collection-page-tabs" id="collectionPageTabs"></div>
+<div class="cpt-wrap">
+    <button class="cpt-scroll" id="cptLeft" onclick="scrollCollectionTabs(-1)" aria-label="左へ">‹</button>
+    <div class="collection-page-tabs" id="collectionPageTabs"></div>
+    <button class="cpt-scroll" id="cptRight" onclick="scrollCollectionTabs(1)" aria-label="右へ">›</button>
+</div>
 <div class="collection-grid" id="collectionGrid"></div>
 </div><!-- /#main-page (end) -->
 
@@ -2388,7 +2400,7 @@ const Cloud = (function () {
     const SYNC_KEYS = [
         'unlockedCards', 'srsData', 'dailyGachaStorage', 'loginStreak', 'xpData',
         'specialTickets', 'spEnhanceData', 'dailyStudyData', 'dailyChallenges',
-        'weeklyChallenges', 'hallOfFame', 'battleProgress', 'notebookState', 'gold',
+        'weeklyChallenges', 'hallOfFame', 'battleProgress', 'notebookState', 'gold', 'awakened',
     ];
     const K = { SESSION: 'authSession', GUEST: 'authGuest', DIRTY: 'authDirty', QUEUE: 'logQueue', LAST: 'authLastSync' };
 
@@ -4142,16 +4154,7 @@ const Cloud = (function () {
         if (xpData.level > prevLevel) showLevelUpToast(xpData.level);
         if (originEl) spawnXPFloat(`+${amount} XP`, originEl);
 
-        // 累積XPが SP_TICKET_XP の倍数を超えたらチケット付与
-        const prevMilestone = Math.floor(prevTotal / SP_TICKET_XP);
-        const newMilestone  = Math.floor(xpData.totalXP / SP_TICKET_XP);
-        if (newMilestone > prevMilestone) {
-            const gained = newMilestone - prevMilestone;
-            specialTickets += gained;
-            localStorage.setItem('specialTickets', specialTickets);
-            updateSpecialGachaBtn();
-            showSPTicketToast(gained);
-        }
+        // （強化の種は廃止。カードは★習熟度とプレイヤーレベルで強くなる）
     }
 
     function updateXPDisplay() {
@@ -4162,15 +4165,15 @@ const Cloud = (function () {
         const label = document.getElementById('xpLabel');
         if (el) el.textContent = `Lv.${xpData.level} ${title}`;
         if (bar) bar.style.width = Math.round((xpData.xp / XP_PER_LEVEL) * 100) + '%';
-        // 次のSPチケットまでの残りXPを表示
-        const toNext = SP_TICKET_XP - (xpData.totalXP % SP_TICKET_XP);
-        if (label) label.textContent = `${xpData.xp}/${XP_PER_LEVEL} XP ｜ 種まで${toNext}XP`;
+        if (label) label.textContent = `${xpData.xp}/${XP_PER_LEVEL} XP ｜ 次のLvまで${XP_PER_LEVEL - xpData.xp}XP`;
     }
 
     function updateSpecialGachaBtn() {
         const btn   = document.getElementById('spGachaBtn');
         const badge = document.getElementById('spPointBadge');
         if (!btn) return;
+        btn.style.display = 'none';   // 強化の種は廃止
+        return;
         if (specialTickets > 0) {
             btn.style.display = '';
             if (badge) badge.textContent = `${specialTickets}個`;
@@ -4581,13 +4584,30 @@ const Cloud = (function () {
     const BATTLE_FINAL_RATIO = 0.8;   // 討伐戦：タブのカード80%
     function battleNeed(total, type) { return Math.ceil(total * (type === 'mid' ? BATTLE_MID_RATIO : BATTLE_FINAL_RATIO)); }
 
+    /* ボスの強さ：そのタブのカード（平均的なレアリティ・★1〜2）3枚の部隊を想定して決める
+     *   撃退戦：約6回の正解で倒せる／敵の攻撃に約12回耐えられる（ミスにある程度の余裕）
+     *   討伐戦：約9回の正解で倒せる／敵の攻撃に約11回耐えられる（ミスは1回程度まで。★・レベル・スキル・防御で余裕が出る）
+     * プレイヤーレベルのボーナスは含めない（冒険するほど楽になる） */
+    const BOSS_TUNING = { midHits: 6, midSurvive: 12, finalHits: 9, finalSurvive: 11 };
+    function bossStatsFor(g) {
+        const base = statBase(g);
+        const A = base * 1.08 * 1.04;                  // 想定する攻撃力（★1・品詞ボーナス程度。レアカードや★が多いほど楽になる）
+        const D = base * 1.08;                         // 想定する守備力
+        const partyHP = D * 3 * 3 * (0.8 + 1.0 + 1.3) / 3;
+        return {
+            midHp:    Math.round(A * BOSS_TUNING.midHits),
+            midAtk:   Math.round(partyHP / BOSS_TUNING.midSurvive),
+            finalHp:  Math.round(A * BOSS_TUNING.finalHits),
+            finalAtk: Math.round(partyHP / BOSS_TUNING.finalSurvive),
+        };
+    }
+
     function getBattleStages() {
         const totalTabs = Math.ceil(cardsData.length / COLLECTION_PAGE_SIZE);
         const stages = [];
         for (let tabIdx = 0; tabIdx < totalTabs; tabIdx++) {
-            const scale = 1 + tabIdx * 0.35; // タブが上がるほどボスが大幅強化
-            const tMid   = MID_BOSS_TEMPLATES[tabIdx % MID_BOSS_TEMPLATES.length];
-            const tFinal = FINAL_BOSS_TEMPLATES[tabIdx % FINAL_BOSS_TEMPLATES.length];
+            // そのタブのカード3枚で組んだ部隊を基準に強さを決める（鉄タブ1が最弱、白金の最終タブが最強）
+            const bs = bossStatsFor(globalTab(currentNB.key, tabIdx));
             const isLastTab = tabIdx === totalTabs - 1;
             const look = slimeLook(tabIdx);
             const slimeName = (look.color ? look.color + 'の' : '') + (SLIME_BY_NB[currentNB.key] || SLIME_BY_NB.A1).name;
@@ -4599,8 +4619,8 @@ const Cloud = (function () {
                 name: slimeName,
                 emoji: '🟢',
                 img: slimeImg, imgFallback: SLIME_FALLBACK_IMG, filter: look.filter,
-                hp:  Math.round(tMid.hpBase * scale),
-                atk: Math.round(tMid.atkBase * scale),
+                hp:  bs.midHp,
+                atk: bs.midAtk,
                 tabUnlock: null,   // 中間ボスは次タブを開放しない
                 reward: { type: 'gacha', amount: Math.max(1, tabIdx + 1) }
             });
@@ -4611,14 +4631,10 @@ const Cloud = (function () {
                 name: slimeName,
                 emoji: '👑',
                 img: slimeImg, imgFallback: SLIME_FALLBACK_IMG, filter: look.filter,
-                hp:  Math.round(tFinal.hpBase * scale),
-                atk: Math.round(tFinal.atkBase * scale),
+                hp:  bs.finalHp,
+                atk: bs.finalAtk,
                 tabUnlock: isLastTab ? null : tabIdx + 1, // 最終ボスが次タブを開放
-                reward: isLastTab
-                    ? { type: 'sp', amount: 3 }
-                    : tabIdx >= totalTabs - 3
-                        ? { type: 'sp', amount: tabIdx - totalTabs + 4 }
-                        : { type: 'gacha', amount: tabIdx + 2 }
+                reward: { type: 'gacha', amount: tabIdx + 2 }   // ゴールド（×100G）
             });
         }
         return stages;
@@ -4655,37 +4671,80 @@ const Cloud = (function () {
     }
 
     /* ========== ATK/DEF CALCULATION ========== */
-    function getCardStats(card, withSPBonus) {
-        const rarityBase = { N: 40, R: 60, SR: 80, UR: 100 };
-        const posBonus   = { v: 15, adj: 10, n: 5, adv: 0 };
-        const srs = getSRSEntry(card.id);
-        const base = rarityBase[getRarity(card.no)] || 40;
-        const pos  = posBonus[card.quiz && card.quiz.pos] !== undefined ? posBonus[card.quiz.pos] : 5;
-        // 疑似ランダム（同じカードなら毎回同じ値）
-        const seed = (card.no * 7 + card.no % 13) % 20;
-        const srsBonus = srs.level * 4; // SRS定着でDEFが成長
-        // 英検レベル別ボーナス（カード番号で判定）
-        // タブ1段上がるごとに+50（タブ0=0, タブ1=50, タブ2=100, ...）
-        const tabIndex = Math.floor((card.no - 1) / COLLECTION_PAGE_SIZE);
-        const levelBonus = tabIndex * 50;
-        // プレイヤーレベルボーナス（レアリティに応じた成長率）
-        // N: 0.5/Lv, R: 1.0/Lv, SR: 1.5/Lv, UR: 2.5/Lv
-        const rarityGrowth = { N: 0.5, R: 1.0, SR: 1.5, UR: 2.5 };
+    /* ===== カードのステータス =====
+     * 初期値：鉄のタブ1が最も低く、白金の最後のタブが最も高い（全手帖を通した「通しタブ番号」で決まる）
+     * ＋ レアリティ倍率 ＋ ★（その単語をどれだけ深く知っているか）1つにつき +8%
+     * ＋ プレイヤーレベルボーナス（冒険で経験値を積むほど全カードが強くなる：従来どおり）
+     */
+    const NB_TAB_OFFSET = (() => {
+        const o = {}; let acc = 0;
+        NOTEBOOKS.forEach(nb => { o[nb.key] = acc; acc += Math.ceil(nb.count / COLLECTION_PAGE_SIZE); });
+        o._total = acc;   // 鉄12＋銅15＋銀25＋金28＋白金9 = 89タブ
+        return o;
+    })();
+    function globalTab(nbKey, tabIdx) { return (NB_TAB_OFFSET[nbKey] || 0) + tabIdx; }
+    function statBase(g) { return 40 + 5.5 * g; }          // 通しタブ0 → 40、通しタブ88 → 524
+    const RARITY_MULT = { N: 1.0, R: 1.15, SR: 1.35, UR: 1.6 };
+    const STAR_BONUS = 0.08;
+
+    function getCardStats(card) {
         const rarity = getRarity(card.no);
+        const tabIndex = Math.floor((card.no - 1) / COLLECTION_PAGE_SIZE);
+        const g = globalTab(card.nb || currentNB.key, tabIndex);
+        const base = statBase(g) * (RARITY_MULT[rarity] || 1);
+        const p = String((card.quiz && card.quiz.pos) || '').replace(/[.\s]/g, '').toLowerCase();
+        const posPct = p.startsWith('v') ? 0.08 : p.startsWith('adj') ? 0.05 : p.startsWith('n') ? 0.03 : 0;
+        // 疑似ランダム（同じカードなら毎回同じ値）：±10%
+        const seed = (((card.no * 7 + card.no % 13) % 21) - 10) / 100;
+        const starMult = 1 + getStars(card.id) * STAR_BONUS;
+        // プレイヤーレベルボーナス（レアリティに応じた成長率）N: 0.5/Lv, R: 1.0/Lv, SR: 1.5/Lv, UR: 2.5/Lv
+        const rarityGrowth = { N: 0.5, R: 1.0, SR: 1.5, UR: 2.5 };
         const playerBonus = Math.floor((xpData.level - 1) * (rarityGrowth[rarity] || 0.5));
-        // SP強化ボーナス（withSPBonus=falseの時はベースステータスのみ）
-        // 強化の種1個 = ATK/DEF ベース値の10%アップ（累積）
-        const enhEntry = spEnhanceData && spEnhanceData[card.id];
-        const enhCount = withSPBonus !== false && enhEntry
-            ? (enhEntry.count !== undefined ? enhEntry.count : Math.round((enhEntry.atk || 0) / 10)) // 旧フォーマット互換
-            : 0;
-        const pct = 1 + enhCount * 0.10;
-        const baseAtk = base + pos + seed + levelBonus + playerBonus;
-        const baseDef = base + srsBonus + (20 - seed) + levelBonus + playerBonus;
         return {
-            atk: Math.round(baseAtk * pct),
-            def: Math.round(baseDef * pct)
+            atk: Math.round(base * (1 + posPct + seed) * starMult) + playerBonus,
+            def: Math.round(base * (1 - seed) * starMult) + playerBonus,
         };
+    }
+
+    /* ===== ★習熟度（強化の種の代わり）=====
+     * ★1 見て分かる：4択で正解
+     * ★2 思い出せる：1日あけて、もう一度正解
+     * ★3 書ける：覚醒クエスト（日本語→英単語のスペル入力）に合格
+     * ★4 文の中で使える：1週間あけても正解
+     * ★5 身についた：2週間以上あけても正解
+     * 忘却曲線の段階（srsData の level）は「復習日が来てから正解」したときだけ上がる
+     */
+    let awakened = safeParse('awakened', {});
+    function getStars(cardId) {
+        const e = srsData[cardId];
+        const lv = e ? e.level : 0;
+        if (lv < 1) return 0;
+        if (lv < 2) return 1;
+        if (!awakened[cardId] && !noAwakenNeeded(cardId)) return 2;
+        if (lv < 4) return 3;
+        if (lv < 5) return 4;
+        return 5;
+    }
+    // 2文字以下の語（a, I, of など）はスペル入力の意味が薄いので覚醒クエストなしで★3へ
+    function noAwakenNeeded(cardId) {
+        const c = getCardIndex().get(cardId);
+        return !!(c && c.quiz && String(c.quiz.answer).replace(/[^A-Za-z]/g, '').length <= 2);
+    }
+    function starsHTML(n, size) {
+        if (!n) return '';
+        return `<span style="color:#ffd24a;font-size:${size || 10}px;letter-spacing:-1px;text-shadow:0 0 3px rgba(0,0,0,.8);">${'★'.repeat(n)}<span style="color:rgba(255,255,255,.28)">${'★'.repeat(5 - n)}</span></span>`;
+    }
+    function nextStarHint(cardId) {
+        const st = getStars(cardId), e = srsData[cardId];
+        const when = e && e.nextReview > Date.now() ? `（${new Date(e.nextReview).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })}以降）` : '';
+        return [
+            '冒険でこの単語に正解すると ★1',
+            `1日あけてもう一度正解すると ★2${when}`,
+            '冒険の「覚醒クエスト」でスペルを書けると ★3',
+            `1週間あけても正解すると ★4${when}`,
+            `2週間以上あけても正解すると ★5${when}`,
+            '★5 達成！ この単語は身についています',
+        ][st];
     }
 
     /* ========== STUDY MODE STATE ========== */
@@ -4808,6 +4867,20 @@ const Cloud = (function () {
         localStorage.setItem('gold', String(gold));
         localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
         localStorage.setItem('goldMigrated', '1');
+    })();
+    // 強化の種の廃止：残っていた種・使った種を1個100Gでゴールドに換算（1回だけ）
+    (function migrateSeedsToGold() {
+        if (localStorage.getItem('seedMigrated') === '1') return;
+        let n = parseInt(localStorage.getItem('specialTickets') || '0', 10) || 0;
+        try {
+            const enh = JSON.parse(localStorage.getItem('spEnhanceData') || '{}');
+            Object.values(enh).forEach(v => { n += (v && v.count !== undefined) ? v.count : Math.round(((v && v.atk) || 0) / 10); });
+        } catch (e) {}
+        if (n > 0) gold += n * GOLD_PER_GACHA;
+        localStorage.setItem('specialTickets', '0');
+        localStorage.setItem('gold', String(gold));
+        localStorage.setItem('seedMigrated', '1');
+        if (n > 0) setTimeout(() => showChallengeToast(`🌱 強化の種 ${n}個を ${n * GOLD_PER_GACHA}G に交換しました`), 2500);
     })();
     function saveGold() { localStorage.setItem('gold', String(gold)); updateGoldDisplay(); }
     function addGold(amount, originEl) {
@@ -5646,7 +5719,23 @@ const Cloud = (function () {
             tabsEl.appendChild(btn);
         }
         const act = tabsEl.querySelector('.cpt-btn.active');
-        if (act) tabsEl.scrollLeft = Math.max(0, act.offsetLeft - tabsEl.clientWidth / 2 + act.offsetWidth / 2);
+        if (act) { tabsEl.style.scrollBehavior = 'auto'; tabsEl.scrollLeft = Math.max(0, act.offsetLeft - tabsEl.offsetLeft - tabsEl.clientWidth / 2 + act.offsetWidth / 2); tabsEl.style.scrollBehavior = ''; }
+        updateTabScrollButtons();
+        if (!tabsEl._scrollHooked) { tabsEl._scrollHooked = true; tabsEl.addEventListener('scroll', updateTabScrollButtons, { passive: true }); }
+    }
+    // タブ列を左右にスクロールするボタン（見えている幅の8割ずつ）
+    function scrollCollectionTabs(dir) {
+        const el = document.getElementById('collectionPageTabs');
+        if (el) el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: 'smooth' });
+    }
+    function updateTabScrollButtons() {
+        const el = document.getElementById('collectionPageTabs');
+        const l = document.getElementById('cptLeft'), r = document.getElementById('cptRight');
+        if (!el || !l || !r) return;
+        const overflow = el.scrollWidth > el.clientWidth + 2;
+        l.style.display = r.style.display = overflow ? '' : 'none';
+        l.disabled = el.scrollLeft <= 2;
+        r.disabled = el.scrollLeft + el.clientWidth >= el.scrollWidth - 2;
     }
 
     function renderCollection() {
@@ -5670,7 +5759,7 @@ const Cloud = (function () {
             cardEl.className = `card-container ${isUnlocked ? `card-rarity-${rarity}` : 'locked'}`;
             cardEl.onclick = () => tapCard(card, isUnlocked);
 
-            const srsBadge = isUnlocked ? getSRSBadgeHTML(card.id) : '';
+            const srsBadge = isUnlocked ? starsHTML(getStars(card.id), 10) : '';
             let cardVisualHTML = isUnlocked
                 ? (() => {
                       const st = getCardStats(card);
@@ -5703,6 +5792,10 @@ const Cloud = (function () {
             <div style="display:flex;justify-content:center;gap:10px;margin-top:10px;">
                 <span style="background:rgba(30,10,10,0.72);border:1px solid rgba(220,80,80,0.5);color:#ff9999;font-size:13px;font-weight:bold;padding:5px 16px;border-radius:20px;backdrop-filter:blur(4px);">⚔️ Power ${stats.atk}</span>
                 <span style="background:rgba(10,10,30,0.72);border:1px solid rgba(80,120,220,0.5);color:#99bbff;font-size:13px;font-weight:bold;padding:5px 16px;border-radius:20px;backdrop-filter:blur(4px);">🛡️ Guard ${stats.def}</span>
+            </div>
+            <div style="text-align:center;margin-top:8px;background:rgba(10,8,25,0.72);border-radius:12px;padding:6px 10px;">
+                <div>${starsHTML(getStars(card.id), 20) || starsHTML(0) || '<span style="color:rgba(255,255,255,.35);font-size:20px;">★★★★★</span>'}</div>
+                <div style="font-size:11px;color:#e8d8a8;margin-top:2px;">${nextStarHint(card.id)}</div>
             </div>
         `;
         document.getElementById('zoom-overlay').style.display = 'flex';
@@ -5842,9 +5935,23 @@ const Cloud = (function () {
     }
     function updateSRS(cardId, isCorrect) {
         const e = getSRSEntry(cardId);
+        const now = Date.now();
         if (isCorrect) {
             e.correct++;
-            e.level = Math.min(e.level + 1, SRS_INTERVALS.length - 1);
+            // 復習日が来る前に正解しても段階は上がらない（間隔をあけて思い出すことに意味がある）。3時間の猶予あり
+            if (e.level === 0 || now >= (e.nextReview || 0) - 3 * 3600000) {
+                e.level = Math.min(e.level + 1, SRS_INTERVALS.length - 1);
+            } else {
+                srsData[cardId] = e;
+                localStorage.setItem('srsData', JSON.stringify(srsData));
+                return;
+            }
+        } else if (_awakenAttempt) {
+            // 覚醒クエスト（スペル入力）の失敗では段階を下げない
+            e.incorrect++;
+            srsData[cardId] = e;
+            localStorage.setItem('srsData', JSON.stringify(srsData));
+            return;
         } else {
             e.incorrect++;
             e.level = Math.max(e.level > 0 ? 1 : 0, e.level - 1);
@@ -6030,8 +6137,7 @@ const Cloud = (function () {
     }
 
     function renderFormationSlots() {
-        const tabIdx = formationState.stage ? formationState.stage.tabIdx : 0;
-        const tabScale = 1 + tabIdx * 0.2; // タブ上昇でプレイヤーユニット強化
+        const tabScale = 1;
         ['front','mid','rear'].forEach(pos => {
             const slot = document.getElementById(`fslot-${pos}`);
             const bonus = POSITION_BONUS[pos];
@@ -6118,6 +6224,7 @@ const Cloud = (function () {
                     <div class="formation-pool-card-rarity" style="color:${rarityColors[rarity]||'#888'}">${rarity}</div>
                     <div class="formation-pool-card-stats">P:${power} G:${guard}</div>
                     <div class="formation-pool-card-skill">${skill.icon}${skill.name}</div>
+                    <div>${starsHTML(getStars(card.id), 8)}</div>
                 </div>`;
             div.onclick = () => { if (!formationState.usedCardIds.has(card.id)) addCardToFormation(card); };
             formationPoolEls.set(card.id, div);
@@ -6202,8 +6309,8 @@ const Cloud = (function () {
     }
 
     function startBattle(stage) {
-        // タブが上がるほどユニットも強化（tabIdx=0で等倍、タブ10で約3倍）
-        const tabScale = 1 + stage.tabIdx * 0.2;
+        // カードの強さは「通しタブ番号」と★で決まるので、ここでの追加倍率はなし
+        const tabScale = 1;
         // 編成からユニット構築
         const positions = ['front','mid','rear'];
         const units = positions.map(pos => {
@@ -6989,6 +7096,7 @@ const Cloud = (function () {
 
     /* ========== QUIZ DISPLAY ========== */
     function showQuiz(card) {
+        _awakenAttempt = false;
         markAnswerStart();  // 回答時間計測開始
 
         // 問題タイプを決定
@@ -7290,8 +7398,8 @@ const Cloud = (function () {
                     trainingSession.masteredIds.add(card.id);
                     trainingSession.cards = trainingSession.cards.filter(c => c.id !== card.id);
                     trainingSession.index = Math.min(trainingSession.index, trainingSession.cards.length);
-                    // 冒険中：20%の確率で強化の種+1
-                    if (adventureActive && Math.random() < 0.20) {
+                    // （強化の種は廃止）
+                    if (false) {
                         specialTickets++;
                         localStorage.setItem('specialTickets', specialTickets);
                         updateSpecialGachaBtn();
@@ -7809,12 +7917,21 @@ const Cloud = (function () {
         showTrainingQuiz();
     }
 
+    let _awakenAttempt = false;
     function showTrainingQuiz() {
         if (!trainingSession.active || trainingSession.cards.length === 0) return;
         // SRS優先: 復習期限が来たカードを先に出題
         trainingSession.cards = sortCardsBySRS(trainingSession.cards);
         trainingSession.index = 0;
         markAnswerStart();  // 回答時間計測開始
+        _awakenAttempt = false;
+        // 4問に1回、★2のカード（まだ覚醒していない）があれば覚醒クエストを出す
+        trainingSession.qCount = (trainingSession.qCount || 0) + 1;
+        if (trainingSession.qCount % 4 === 0) {
+            const cand = cardsData.slice(0, Math.min((getCurrentGachaTabIndex() + 1) * COLLECTION_PAGE_SIZE, cardsData.length))
+                .find(c => getStars(c.id) === 2);
+            if (cand) { showAwakenQuiz(cand); return; }
+        }
         const card = trainingSession.cards[trainingSession.index];
         const srsLabel = SRS_LABELS[getSRSEntry(card.id).level] || 'New';
         document.getElementById('quizTitle').innerText = `🗺️ 冒険`;
@@ -7827,6 +7944,44 @@ const Cloud = (function () {
             qs.insertBefore(tag, qs.firstChild);
             if (tag.nextSibling) qs.insertBefore(document.createElement('br'), tag.nextSibling);
         }
+    }
+
+    // 覚醒クエスト：日本語の意味を見て英単語をつづる（「見て分かる」→「自分で書ける」へ）
+    function showAwakenQuiz(card) {
+        _awakenAttempt = true;
+        const ov = document.getElementById('quiz-overlay');
+        document.getElementById('quizTitle').innerText = '⭐ 覚醒クエスト';
+        const ans = card.quiz.answer;
+        const hint = ans.split(' ').map(w => w[0] + '＿'.repeat(Math.max(0, w.length - 1))).join(' ');
+        document.getElementById('quizSentence').innerHTML = `
+            <div style="display:inline-block;font-size:11px;font-weight:bold;color:#fff;background:linear-gradient(90deg,#d89a20,#c0506a);border-radius:10px;padding:2px 10px;margin-bottom:6px;">★2 → ★3 に覚醒するチャンス！</div>
+            <div style="font-size:13px;color:#7a5a30;margin-bottom:4px;">この意味の英単語を書こう</div>
+            <div style="font-size:22px;font-weight:bold;color:#3a2010;">${card.quiz.meaning}</div>
+            <div style="font-size:12px;color:#907060;margin-top:4px;">${card.quiz.pos || ''}　ヒント：<span style="letter-spacing:2px;">${hint}</span>（${ans.replace(/ /g, '').length}文字）</div>`;
+        const choicesEl = document.getElementById('quizChoices');
+        choicesEl.innerHTML = `
+            <input id="awakenInput" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+                style="grid-column:1/-1;width:100%;box-sizing:border-box;font-size:20px;padding:10px 12px;border-radius:10px;border:2px solid #b08a40;margin-bottom:4px;text-align:center;font-family:Georgia,serif;">
+            <button class="quiz-choice-btn" id="awakenSubmit" style="grid-column:1/-1;width:100%;">決定</button>`;
+        const input = document.getElementById('awakenInput'), btn = document.getElementById('awakenSubmit');
+        const submit = () => {
+            const val = input.value;
+            if (!val.trim()) { input.focus(); return; }
+            input.disabled = true;
+            const ok = validateAnswer(val, ans);
+            if (ok) {
+                awakened[card.id] = 1;
+                localStorage.setItem('awakened', JSON.stringify(awakened));
+                setTimeout(() => showChallengeToast(`⭐ 「${ans}」が覚醒！ ★3 になった`), 700);
+                playSE('unlock');
+            }
+            btn.textContent = ok ? `✅ ${ans}` : `正しくは「${ans}」`;
+            submitChoice(ok, card, val, btn);
+        };
+        btn.onclick = submit;
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+        ov.style.display = 'flex';
+        setTimeout(() => input.focus(), 150);
     }
 
     /* ========== RENDER CHALLENGE TAB ========== */
