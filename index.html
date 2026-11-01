@@ -2006,7 +2006,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-1815</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-1825</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -5029,18 +5029,33 @@ const Cloud = (function () {
 
         // ===== 管理者テスト用クーポン（リリース時削除予定） =====
         if (inputCode === "SHION3215T") {
-            if (dailyGachaStorage.usedCoupons.includes(inputCode)) {
-                alert("このコードはすでに使用されています。"); return;
-            }
-            // 全カードを解禁
-            const allIds = cardsData.map(c => c.id);
-            allIds.forEach(id => { if (!isOwned(id)) unlockedCards.push(id); });
-            saveUnlocked();
-            dailyGachaStorage.usedCoupons.push(inputCode);
-            localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
+            // 管理者用マスターキー：全手帖・全カード・全タブ（全バトル勝利扱い）を解禁。何度でも使える
+            let added = 0;
+            NOTEBOOKS.forEach(nb => {
+                for (let n = 1; n <= nb.count; n++) {
+                    const id = `${nb.prefix}-${n}`;
+                    if (!isOwned(id)) { unlockedCards.push(id); added++; }
+                }
+                // 全タブの撃退戦・討伐戦を勝利済みにする（タブがすべて開く）
+                const pre = nb.key === 'PT' ? '' : nb.prefix + '_';
+                const tabs = Math.ceil(nb.count / COLLECTION_PAGE_SIZE);
+                for (let t = 0; t < tabs; t++) {
+                    [`${pre}tab${t}_mid`, `${pre}tab${t}_final`].forEach(sid => {
+                        if (!battleProgress.defeated.includes(sid)) battleProgress.defeated.push(sid);
+                    });
+                }
+            });
+            localStorage.setItem('battleProgress', JSON.stringify(battleProgress));
+            notebookState.unlocked = NOTEBOOKS.map(n => n.key);
+            saveNotebookState();
+            localStorage.setItem('unlockedCards', JSON.stringify(unlockedCards));   // 解禁お知らせは出さない
             closeCouponModal();
             confetti({ particleCount: 150, spread: 100, origin: { y: 0.5 } });
-            alert(`🔓 マスターキー解錠！\n全${cardsData.length}枚のカードが解禁されました！`);
+            renderCollection();
+            updateDailyGoalDisplay();
+            updateAdventureBattleBtn();
+            const total = NOTEBOOKS.reduce((a, n) => a + n.count, 0);
+            alert(`🔓 マスターキー解錠！\n5冊の手帖すべて（全${total}枚のカード・全タブ）を解禁しました。\n（今回新たに解禁: ${added}枚）`);
             return;
         }
         // ===== 通常の秘密の鍵 =====
@@ -7882,6 +7897,24 @@ const Cloud = (function () {
             SE[key] = a;
         });
     })();
+
+    // iPhone対策：効果音の要素は一度タップの中で再生しておかないと、後から（ガチャの演出中など）鳴らせない。
+    // 最初のタップで全効果音を「再生→即停止」して鳴らせる状態にしておく（音は出ない）
+    let _seUnlocked = false;
+    function unlockSEElements() {
+        if (_seUnlocked) return;
+        _seUnlocked = true;
+        Object.values(SE).forEach(a => {
+            try {
+                if (a.preload === 'none') a.preload = 'auto';
+                const p = a.play(); a.pause(); a.currentTime = 0;
+                if (p && p.catch) p.catch(() => {});
+            } catch (e) {}
+        });
+        try { if (_punchSE === null) { _punchSE = new Audio('./bgm/punch.mp3'); _punchSE.volume = 0.7; } const p = _punchSE.play(); _punchSE.pause(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+    }
+    document.addEventListener('pointerdown', unlockSEElements, { capture: true });
+    document.addEventListener('touchend', unlockSEElements, { capture: true });
 
     function playSE(key) {
         if (!bgmOn) return; // BGMオフ時は効果音も消音
