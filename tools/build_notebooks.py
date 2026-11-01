@@ -6,7 +6,11 @@ data/cefrj_notebooks.csv（鉄・銅・銀・金の4手帖を1つにまとめた
 使い方: python3 tools/build_notebooks.py
 CSVの例文や訳を直したら、このコマンドを実行してJSONを作り直す。
 
-JSON 1行 = [英単語, 品詞, 日本語, 例文, 例文中の語形, カテゴリ, 除外する選択肢の番号リスト, 例文の日本語訳]
+JSON 1行 = [英単語, 品詞, 日本語, 例文, 例文中の語形, カテゴリ, 除外する選択肢の番号リスト, 例文の日本語訳, ほかの品詞の意味]
+  ほかの品詞の意味: 同じつづりの語（about 副詞／前置詞 など）は1枚のカードにまとめる。
+        2つ目以降の意味を [[品詞, 日本語, 例文, 語形, 例文の日本語訳], ...] で持つ（1つだけの語は省略）
+  CSV は1行＝1つの品詞のまま。まとめるのはこのスクリプト（CSVの No とカード番号の対応は data/idmap.json）
+  単語ガイドの元データ tools/detail_src/detail_*.json（CSV の No 順）も、まとめたカード順の data/detail_*.json にする
   語形: 例文の中で見出し語が変化した形（wind → wound など）。穴埋め問題で隠す部分。
         見つからない場合は空文字（その単語は穴埋めではなく意味問題で出題される）
 """
@@ -195,31 +199,106 @@ def find_form(word: str, example: str) -> str:
     return ""
 
 
+POS_JA = {"n.": "名", "v.": "動", "adj.": "形", "adv.": "副", "prep.": "前", "conj.": "接", "pron.": "代",
+          "det.": "限", "aux.": "助", "interj.": "間", "num.": "数", "int.": "間"}
+
+
+def _uniq(xs):
+    out = []
+    for x in xs:
+        if x and x not in out:
+            out.append(x)
+    return out
+
+
+def merge_detail(word, poses, ds):
+    """同じつづりの複数の品詞の単語ガイドを1つにまとめる"""
+    if len(ds) == 1:
+        return ds[0]
+    g = lambda k: [d.get(k) for d in ds]
+    out = {}
+    ipas = g("i")
+    if len(set(x for x in ipas if x)) > 1:
+        out["i"] = " ・ ".join(f"{POS_JA.get(p, p)} {i}" for p, i in zip(poses, ipas) if i)
+    elif any(ipas):
+        out["i"] = next(x for x in ipas if x)
+    for k, sep in (("p", " ／ "), ("m", " ／ "), ("n", " ／ ")):
+        v = _uniq(g(k))
+        if v:
+            out[k] = sep.join(v)
+    for k in ("e", "a"):
+        v = _uniq(g(k))
+        if v:
+            out[k] = v[0]
+    t = _uniq(g("t"))
+    if t:
+        out["t"] = " ／ ".join(t[:2])
+    s = _uniq([x for d in ds for x in (d.get("s") or [])])
+    if s:
+        out["s"] = s[:5]
+    c = _uniq([x for d in ds for x in (d.get("c") or [])])
+    if c:
+        out["c"] = c[:5]
+    dv = [x for x in _uniq([x for d in ds for x in (d.get("d") or [])])
+          if re.sub(r"（.*", "", x).strip().lower() != word.lower()]
+    if dv:
+        out["d"] = dv[:5]
+    return out
+
+
 def main():
     rows = list(csv.DictReader(open(SRC, encoding="utf-8-sig")))
-    books = {}
-    miss = {}
+    by_nb = {}
     for r in rows:
-        lv = r["notebook"]
-        word = r["word"].strip()
-        ex = r["example"].strip()
-        form = find_form(word, ex)
-        if not form:
-            miss.setdefault(lv, []).append(word)
-        books.setdefault(lv, []).append([word, r["pos"].strip(), r["japanese"].strip(), ex, form, r["category"].strip()])
-    syn_by = {}
-    for r in rows:
-        syn_by.setdefault(r["notebook"], []).append(r.get("synonym", ""))
-    for lv, items in books.items():
-        ex = exclusions(list(range(len(items))), lambda k: items[k][0], lambda k: items[k][2], lambda k: syn_by[lv][k])
-        exja = [r.get("example_ja", "").strip() for r in rows if r["notebook"] == lv]
-        for k, e in enumerate(ex):
-            items[k].append(e)
-            items[k].append(exja[k] if k < len(exja) else "")
+        by_nb.setdefault(r["notebook"], []).append(r)
+    idmap = {}
+    for lv, rs in by_nb.items():
+        # 同じつづり（大文字小文字も同じ）の行を1枚にまとめる（CSVでは隣り合っている）
+        groups, pos_of = [], {}
+        for r in rs:
+            w = r["word"].strip()
+            if w in pos_of:
+                groups[pos_of[w]].append(r)
+            else:
+                pos_of[w] = len(groups)
+                groups.append([r])
+        idmap[lv] = [0] * len(rs)
+        items, miss, meanings, syns = [], [], [], []
+        for gi, grp in enumerate(groups):
+            senses = []
+            for r in grp:
+                idmap[lv][int(r["No"]) - 1] = gi + 1
+                word, ex = r["word"].strip(), r["example"].strip()
+                form = find_form(word, ex)
+                if not form:
+                    miss.append(word)
+                senses.append([r["pos"].strip(), r["japanese"].strip(), ex, form, r.get("example_ja", "").strip()])
+            p0 = senses[0]
+            item = [grp[0]["word"].strip(), p0[0], p0[1], p0[2], p0[3], grp[0]["category"].strip()]
+            items.append((item, p0[4], senses[1:]))
+            meanings.append("／".join(s[1] for s in senses))
+            syns.append("|".join(r.get("synonym", "") for r in grp))
+        ex = exclusions(list(range(len(items))), lambda k: items[k][0][0], lambda k: meanings[k], lambda k: syns[k])
+        out_items = []
+        for k, (item, exja, extra) in enumerate(items):
+            row = item + [ex[k], exja]
+            if extra:
+                row.append(extra)
+            out_items.append(row)
         out = ROOT / "data" / f"nb_{lv}.json"
-        out.write_text(json.dumps(items, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-        m = miss.get(lv, [])
-        print(f"{lv}: {len(items)}語 → {out.name} ({out.stat().st_size // 1024}KB) 穴埋め不可 {len(m)}語 {m[:12]}")
+        out.write_text(json.dumps(out_items, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        # 単語ガイド
+        src = ROOT / "tools" / "detail_src" / f"detail_{lv}.json"
+        if src.exists():
+            det = json.loads(src.read_text(encoding="utf-8"))
+            merged = []
+            for grp in groups:
+                merged.append(merge_detail(grp[0]["word"].strip(), [r["pos"].strip() for r in grp],
+                                           [det[int(r["No"]) - 1] if int(r["No"]) - 1 < len(det) else {} for r in grp]))
+            (ROOT / "data" / f"detail_{lv}.json").write_text(json.dumps(merged, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        print(f"{lv}: {len(rs)}行 → {len(out_items)}枚（{len(rs) - len(out_items)}語をまとめた） {out.name} "
+              f"({out.stat().st_size // 1024}KB) 穴埋め不可 {len(miss)} {miss[:8]}")
+    (ROOT / "data" / "idmap.json").write_text(json.dumps(idmap, separators=(",", ":")), encoding="utf-8")
 
     # 白金の手帖（index.html 内の quizList）の除外リスト → data/excl_PT.json
     html = (ROOT / "index.html").read_text(encoding="utf-8")
