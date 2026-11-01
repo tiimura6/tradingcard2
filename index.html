@@ -2006,7 +2006,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-1750</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-1815</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -3909,38 +3909,46 @@ const Cloud = (function () {
         return null;
     }
 
-    let currentNB = NB_BY_KEY[notebookState.current];
-    let cardsData = [];
-    (function buildCardsData() {
-        if (currentNB.key !== 'PT') {
-            const rows = loadNotebookRows(currentNB);
-            if (rows && rows.length) {
-                rows.forEach((r, i) => {
-                    const no = i + 1;
-                    cardsData.push({
-                        id: `${currentNB.prefix}-${no}`, no, nb: currentNB.key,
-                        quiz: { answer: r[0], pos: r[1], meaning: r[2], example: r[3], form: r[4], category: r[5], level: currentNB.key },
-                        _excl: r[6] || [],
-                        // 絵のカードはまだ無いので、文字のカード（SVG）をその場で作る
-                        get img()   { return cardSVG(this); },
-                        get thumb() { return cardSVG(this); },
-                    });
+    // 手帖のカード一式を作る（rows = 鉄〜金のJSONデータ。白金は quizList から）
+    function buildCardsFor(nb, rows) {
+        const list = [];
+        if (nb.key !== 'PT') {
+            (rows || []).forEach((r, i) => {
+                const no = i + 1;
+                list.push({
+                    id: `${nb.prefix}-${no}`, no, nb: nb.key,
+                    quiz: { answer: r[0], pos: r[1], meaning: r[2], example: r[3], form: r[4], category: r[5], level: nb.key },
+                    _excl: r[6] || [],
+                    // 絵のカードはまだ無いので、文字のカード（SVG）をその場で作る
+                    get img()   { return cardSVG(this); },
+                    get thumb() { return cardSVG(this); },
                 });
-                return;
-            }
-            // 読み込み失敗：白金が開いていればそちらで起動、だめなら空のまま（メッセージ表示）
-            alert(`${currentNB.name}のデータを読み込めませんでした。通信状態を確認して再読み込みしてください。`);
-            if (notebookState.unlocked.includes('PT')) currentNB = NB_BY_KEY.PT;
-            else return;
+            });
+            return list;
         }
         for (let i = 1; i <= TOTAL_CARDS; i++) {
             const quiz = quizList[i] || { meaning: `意味 ${i}`, answer: `Word ${i}` };
-            cardsData.push({ id: `card-${i}`, img: `photo/${i}.webp`, thumb: `photo/thumb/${i}.webp`, no: i, nb: 'PT', quiz: quiz });
+            list.push({ id: `card-${i}`, img: `photo/${i}.webp`, thumb: `photo/thumb/${i}.webp`, no: i, nb: 'PT', quiz: quiz });
         }
+        return list;
+    }
+
+    let currentNB = NB_BY_KEY[notebookState.current];
+    let cardsData = [];
+    (function initialCards() {
+        if (currentNB.key !== 'PT') {
+            const rows = loadNotebookRows(currentNB);
+            if (rows && rows.length) { cardsData = buildCardsFor(currentNB, rows); return; }
+            // 読み込み失敗：白金が開いていればそちらで起動、だめなら空のまま（メッセージ表示）
+            alert(`${currentNB.name}のデータを読み込めませんでした。通信状態を確認して再読み込みしてください。`);
+            if (!notebookState.unlocked.includes('PT')) return;
+            currentNB = NB_BY_KEY.PT;
+        }
+        cardsData = buildCardsFor(currentNB);
     })();
-    const isPT = currentNB.key === 'PT';
+    let isPT = currentNB.key === 'PT';
     // バトルの撃破記録IDの接頭辞（白金は従来どおり tab0_final など。他の手帖は a1_tab0_final など）
-    const STAGE_PREFIX = isPT ? '' : currentNB.prefix + '_';
+    let STAGE_PREFIX = isPT ? '' : currentNB.prefix + '_';
 
     // 出題用の英単語・意味の一覧（現在の手帖から。重複は除く）
     let _quizPoolCache = null;
@@ -8004,14 +8012,17 @@ const Cloud = (function () {
     }
 
     /* ========== 手帖：切替・解禁・ヘッダー ========== */
-    function applyNotebookTheme() {
+    function applyNotebookTheme(fromKeyArg) {
         const nb = currentNB;
+        NOTEBOOKS.forEach(n => document.body.classList.remove('nb-' + n.key));
         document.body.classList.add('nb-' + nb.key);
+        const r = document.documentElement.style;
         if (nb.key !== 'B2') {
-            const r = document.documentElement.style;
             r.setProperty('--s-primary', nb.c[1]);
             r.setProperty('--s-accent', nb.c[0]);
             r.setProperty('--s-border', nb.c[1] + 'aa');
+        } else {
+            ['--s-primary', '--s-accent', '--s-border'].forEach(v => r.removeProperty(v));   // 金は既定の金色
         }
         document.title = `言の葉堂のひみつ手帖 ｜ ${nb.name}`;
         const sub = document.getElementById('nbSubtitle');
@@ -8019,8 +8030,8 @@ const Cloud = (function () {
         const h1 = document.getElementById('nbTitle');
         if (!h1) return;
         // 手帖を切り替えた直後・解禁直後は、前の手帖名から新しい手帖名へアニメーションで変える
-        let from = null;
-        try { from = sessionStorage.getItem('nbSwitchFrom'); sessionStorage.removeItem('nbSwitchFrom'); } catch (e) {}
+        let from = fromKeyArg || null;
+        try { if (!from) from = sessionStorage.getItem('nbSwitchFrom'); sessionStorage.removeItem('nbSwitchFrom'); } catch (e) {}
         const fromNB = from && NB_BY_KEY[from];
         if (fromNB && fromNB.key !== nb.key) {
             document.body.classList.remove('nb-' + nb.key);
@@ -8047,11 +8058,41 @@ const Cloud = (function () {
         if (!notebookState.unlocked.includes(key)) return;
         if (key === currentNB.key) { closeNotebookPicker(); return; }
         if (battleSession && battleSession.active) { alert('バトル中は手帖を切り替えられません'); return; }
-        notebookState.current = key;
-        saveNotebookState();
-        try { sessionStorage.setItem('nbSwitchFrom', currentNB.key); } catch (e) {}
-        // 未送信の進捗は「未保存」印が残るので、読み込み直した後に自動で同期される
-        fadeScreen(() => location.reload(), 500);
+        // ページを読み込み直さずに手帖を入れ替える（読み込み直すとブラウザの制限でBGMが止まり、
+        // タップするまで鳴らせないため）
+        const nb = NB_BY_KEY[key];
+        const proceed = (rows) => {
+            if (nb.key !== 'PT' && !(rows && rows.length)) {
+                alert(`${nb.name}のデータを読み込めませんでした。通信状態を確認してください。`);
+                return;
+            }
+            closeNotebookPicker();
+            const fromKey = currentNB.key;
+            fadeScreen(() => {
+                if (typeof adventureActive !== 'undefined' && adventureActive) exitAdventureMode();
+                notebookState.current = key;
+                saveNotebookState();
+                currentNB = nb;
+                cardsData = buildCardsFor(nb, rows);
+                isPT = nb.key === 'PT';
+                STAGE_PREFIX = isPT ? '' : nb.prefix + '_';
+                _quizPoolCache = null;
+                _cardIndex = null;
+                currentCollectionPage = 0;
+                trainingSession = { active: false, cards: [], index: 0, levelFilter: 'all', masteredIds: new Set(), correct: 0, incorrect: 0, totalXP: 0 };
+                applyNotebookTheme(fromKey);
+                if (window.applyNotebookBackground) window.applyNotebookBackground();
+                renderCollection();
+                updateDailyGoalDisplay();
+                updateAdventureBattleBtn();
+                window.scrollTo(0, 0);
+            }, 500);
+        };
+        if (nb.key === 'PT') { proceed(null); return; }
+        fetch(`data/nb_${nb.key}.json?v=${NB_DATA_VERSION}`)
+            .then(r => r.ok ? r.json() : null)
+            .then(proceed)
+            .catch(() => proceed(null));
     }
 
     function openNotebookPicker() {
@@ -8174,9 +8215,14 @@ const Cloud = (function () {
 (function () {
     // 試行する候補ファイル（優先度順）
     // 手帖ごとの背景（鉄はオリジナルの bg.jpg、銅〜白金は bg_A2.jpg / bg_B1.jpg / bg_B2.jpg / bg_PT.jpg）
-    const nbKey = (typeof currentNB !== 'undefined' && currentNB) ? currentNB.key : '';
-    const BG_CANDIDATES = [
-        ...(nbKey && nbKey !== 'A1' ? ['./background/bg_' + nbKey + '.jpg'] : []),
+    function candidatesForNotebook() {
+        const nbKey = (typeof currentNB !== 'undefined' && currentNB) ? currentNB.key : '';
+        return [
+            ...(nbKey && nbKey !== 'A1' ? ['./background/bg_' + nbKey + '.jpg'] : []),
+            ...BASE_CANDIDATES,
+        ];
+    }
+    const BASE_CANDIDATES = [
         './background/bg.jpg',
         './background/bg.png',
         './background/bg.webp',
@@ -8204,11 +8250,13 @@ const Cloud = (function () {
         img.src = src;
     }
 
+    // 手帖を切り替えたときにも呼べるようにする
+    window.applyNotebookBackground = function () { tryLoad(candidatesForNotebook(), 0); };
     // DOM 構築後に実行
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () { tryLoad(BG_CANDIDATES, 0); });
+        document.addEventListener('DOMContentLoaded', window.applyNotebookBackground);
     } else {
-        tryLoad(BG_CANDIDATES, 0);
+        window.applyNotebookBackground();
     }
 })();
 </script>
