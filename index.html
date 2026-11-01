@@ -7,7 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>/* 紙吹雪ライブラリが読めない・未読込でもエラーにしない */ if (!window.confetti) window.confetti = function () {};</script>
     <style>
         /* ===== KOTONOHA-DO SERIES DESIGN SYSTEM =====
          *  言の葉堂のひみつ手帖 — CSS変数でシリーズ統一
@@ -2101,7 +2102,6 @@
         <span class="battle-stage-name" id="battleStageName"></span>
         <span style="display:flex;align-items:center;gap:6px;">
             <span class="battle-turn-label" id="battleTurnLabel">ターン 1</span>
-            <button class="battle-close-btn" id="battleBgmBtn" onclick="toggleBGM()" title="BGM ON/OFF" style="padding:6px 10px;">🔇</button>
         </span>
     </div>
 
@@ -3781,7 +3781,7 @@ const Cloud = (function () {
     const cardsData = [];
     for (let i = 1; i <= TOTAL_CARDS; i++) {
         const quiz = quizList[i] || { meaning: `意味 ${i}`, answer: `Word ${i}` };
-        cardsData.push({ id: `card-${i}`, img: `photo/${i}.webp`, no: i, quiz: quiz });
+        cardsData.push({ id: `card-${i}`, img: `photo/${i}.webp`, thumb: `photo/thumb/${i}.webp`, no: i, quiz: quiz });
     }
 
     /* ========== SAFE localStorage HELPER ========== */
@@ -3791,6 +3791,13 @@ const Cloud = (function () {
     }
 
     /* ========== STATE ========== */
+    // サムネイル(photo/thumb)が無ければ原寸画像へ、それも無ければ非表示にする
+    function imgFallback(el, full) {
+        if (el.dataset.fb) { el.style.display = 'none'; return; }
+        el.dataset.fb = '1';
+        el.src = full;
+    }
+
     let unlockedCards = safeParse('unlockedCards', []);
     let currentSingleCard = null;
 
@@ -4790,10 +4797,12 @@ const Cloud = (function () {
 
     // BGM再開ヘルパー（visibilitychange / focus / pageshow で共通使用）
     function resumeActiveBGM() {
+        if (battleSession && battleSession.active) {
+            if (window.bossBGM && window.bossBGM.paused) window.bossBGM.play().catch(() => {});
+            return;
+        }
         if (!bgmOn) return;
-        if (battleSession && battleSession.active && window.bossBGM && window.bossBGM.paused) {
-            window.bossBGM.play().catch(() => {});
-        } else if (adventureActive && adventureBGM && adventureBGM.paused) {
+        if (adventureActive && adventureBGM && adventureBGM.paused) {
             adventureBGM.play().catch(() => {});
         } else if (!adventureActive && !(battleSession && battleSession.active) && bgmAudio && bgmAudio.paused) {
             bgmAudio.play().catch(() => {});
@@ -5217,7 +5226,7 @@ const Cloud = (function () {
                 ? (() => {
                       const st = getCardStats(card);
                       return `<div style="position:relative">
-                          <img src="${card.img}" alt="No.${card.no}" class="card-img" loading="lazy">
+                          <img src="${card.thumb}" alt="No.${card.no}" class="card-img" loading="lazy" decoding="async" onerror="imgFallback(this,'${card.img}')">
                           <div class="rarity-badge rarity-badge-${rarity}">${rarity}</div>
                           <div style="position:absolute;bottom:2px;left:0;right:0;display:flex;justify-content:center;gap:4px;pointer-events:none;">
                               <span style="background:rgba(20,5,5,0.82);border:1px solid rgba(220,60,60,0.65);color:#ff9090;font-size:11px;font-weight:bold;padding:2px 7px;border-radius:8px;">P${st.atk}</span>
@@ -5501,6 +5510,13 @@ const Cloud = (function () {
                 ${stage.emoji} <span style="color:#e74c3c">${stage.name}</span> に挑む編成を組め！
              </div>`;
 
+        // 編成している間に、ボスBGMとボス画像を裏で読み込んでおく（開始時の無音・画像遅延を防ぐ）
+        if (window.bossBGM && window.bossBGM.preload !== 'auto') {
+            window.bossBGM.preload = 'auto';
+            try { window.bossBGM.load(); } catch (e) {}
+        }
+        if (stage.img) { const pre = new Image(); pre.decoding = 'async'; pre.src = stage.img; }
+
         renderFormationSlots();
         renderFormationPool();
         document.getElementById('formationSelectedSlotLabel').textContent = 'ポジションを選択してください';
@@ -5526,7 +5542,7 @@ const Cloud = (function () {
                 const guard = Math.round(stats.def * bonus.hpMult * 3 * tabScale);
                 slot.innerHTML = `
                     <div class="formation-slot-label ${pos}">${bonus.label}</div>
-                    <img src="${card.img}" class="formation-slot-card-img" onerror="this.style.display='none'">
+                    <img src="${card.thumb}" class="formation-slot-card-img" decoding="async" onerror="imgFallback(this,'${card.img}')">
                     <div style="font-size:10px;font-weight:bold;color:#fff;line-height:1.2">${card.quiz.answer.slice(0,8)}</div>
                     <div style="font-size:9px;color:#88bbff">P:${power} G:${guard}</div>
                     <div style="font-size:9px;color:#f9ca24">${skill.icon}${skill.name}</div>
@@ -5553,51 +5569,74 @@ const Cloud = (function () {
         renderFormationPool();
     }
 
+    // カード選択プールの要素キャッシュ（id → div）。開いたときに1回だけ組み立て、
+    // カードを置く・外すときは「使用中」表示だけを切り替える（毎回150〜800枚を作り直さない）
+    let formationPoolEls = new Map();
+
     function renderFormationPool() {
         const pool = document.getElementById('formationCardPool');
         pool.innerHTML = '';
-        const rarityRank = { SSR: 4, SR: 3, R: 2, N: 1 };
-        const tabScale = battleSession.tabScale || 1;
+        formationPoolEls = new Map();
+        const rarityRank = { UR: 5, SSR: 4, SR: 3, R: 2, N: 1 };
         const midBonus = POSITION_BONUS['mid'];
+        const cardById = getCardIndex();
 
-        const myCards = unlockedCards
-            .map(id => cardsData.find(c => c.id === id))
-            .filter(Boolean)
-            .map(card => {
-                const stats = getCardStats(card);
-                const rarity = getRarity(card.no);
-                const skill = getWordSkill(card);
-                const power = Math.round(stats.atk * midBonus.atkMult * tabScale);
-                const guard = Math.round(stats.def * midBonus.hpMult * 3 * tabScale);
-                return { card, rarity, skill, power, guard };
-            })
-            .sort((a, b) => {
-                if (formationPoolSort === 'power')  return b.power - a.power;
-                if (formationPoolSort === 'guard')  return b.guard - a.guard;
-                if (formationPoolSort === 'skill')  return a.skill.name.localeCompare(b.skill.name);
-                return (rarityRank[b.rarity] || 0) - (rarityRank[a.rarity] || 0);
+        const myCards = [];
+        for (const id of unlockedCards) {
+            const card = cardById.get(id);
+            if (!card) continue;
+            const stats = getCardStats(card);
+            myCards.push({
+                card, rarity: getRarity(card.no), skill: getWordSkill(card),
+                power: Math.round(stats.atk * midBonus.atkMult),
+                guard: Math.round(stats.def * midBonus.hpMult * 3)
             });
+        }
+        myCards.sort((a, b) => {
+            if (formationPoolSort === 'power')  return b.power - a.power;
+            if (formationPoolSort === 'guard')  return b.guard - a.guard;
+            if (formationPoolSort === 'skill')  return a.skill.name.localeCompare(b.skill.name);
+            return (rarityRank[b.rarity] || 0) - (rarityRank[a.rarity] || 0);
+        });
 
         if (myCards.length === 0) {
             pool.innerHTML = '<div style="color:#888;padding:8px">カードがありません</div>';
             return;
         }
-        const rarityColors = { SSR: '#ff8800', SR: '#cc88ff', R: '#4499ff', N: '#888' };
+        const rarityColors = { UR: '#ff8800', SSR: '#ff8800', SR: '#cc88ff', R: '#4499ff', N: '#888' };
+        const frag = document.createDocumentFragment();
         myCards.forEach(({ card, rarity, skill, power, guard }) => {
-            const used = formationState.usedCardIds.has(card.id);
             const div = document.createElement('div');
-            div.className = 'formation-pool-card' + (used ? ' used' : '');
+            div.className = 'formation-pool-card' + (formationState.usedCardIds.has(card.id) ? ' used' : '');
             div.innerHTML = `
-                <img src="${card.img}" onerror="this.style.display='none'">
+                <img src="${card.thumb}" loading="lazy" decoding="async" alt="" onerror="imgFallback(this,'${card.img}')">
                 <div class="formation-pool-card-overlay">
                     <div class="formation-pool-card-name">${(card.quiz.answer||'').slice(0,8)}</div>
                     <div class="formation-pool-card-rarity" style="color:${rarityColors[rarity]||'#888'}">${rarity}</div>
                     <div class="formation-pool-card-stats">P:${power} G:${guard}</div>
                     <div class="formation-pool-card-skill">${skill.icon}${skill.name}</div>
                 </div>`;
-            if (!used) div.onclick = () => addCardToFormation(card);
-            pool.appendChild(div);
+            div.onclick = () => { if (!formationState.usedCardIds.has(card.id)) addCardToFormation(card); };
+            formationPoolEls.set(card.id, div);
+            frag.appendChild(div);
         });
+        pool.appendChild(frag);
+    }
+
+    // 使用中マークだけを更新（プールを作り直さない）
+    function refreshFormationPoolUsed() {
+        formationPoolEls.forEach((div, id) => {
+            div.classList.toggle('used', formationState.usedCardIds.has(id));
+        });
+    }
+
+    // id → カードの索引（毎回 cardsData.find で線形探索しない）
+    let _cardIndex = null;
+    function getCardIndex() {
+        if (!_cardIndex || _cardIndex.size !== cardsData.length) {
+            _cardIndex = new Map(cardsData.map(c => [c.id, c]));
+        }
+        return _cardIndex;
     }
 
     function selectFormationSlot(pos) {
@@ -5617,7 +5656,7 @@ const Cloud = (function () {
         formationState.slots[pos] = card;
         formationState.usedCardIds.add(card.id);
         renderFormationSlots();
-        renderFormationPool();
+        refreshFormationPoolUsed();
         const allFilled = Object.values(formationState.slots).every(s => s !== null);
         document.getElementById('formationStartBtn').disabled = !allFilled;
     }
@@ -5627,7 +5666,7 @@ const Cloud = (function () {
         if (card) formationState.usedCardIds.delete(card.id);
         formationState.slots[pos] = null;
         renderFormationSlots();
-        renderFormationPool();
+        refreshFormationPoolUsed();
         document.getElementById('formationStartBtn').disabled = true;
     }
 
@@ -5637,25 +5676,25 @@ const Cloud = (function () {
         fm.style.display = 'none';
     }
 
+    // バトルBGMはメイン画面のBGM ON/OFFに関係なく常に流す（バトル画面のON/OFFボタンは廃止）。
+    // iOS Safari は「タップの処理中に同期的に」play() しないと拒否するため、必ずタップ内から呼ぶ。
+    function playBossBGM(restart) {
+        const a = window.bossBGM;
+        if (!a) return;
+        if (bgmAudio && !bgmAudio.paused) bgmAudio.pause();
+        if (bgmCtx && bgmCtx.state === 'running') bgmCtx.suspend();
+        if (adventureBGM && !adventureBGM.paused) adventureBGM.pause();
+        if (restart) { try { a.currentTime = 0; } catch (e) {} }
+        a.loop = true;
+        a.muted = false;
+        if (a.paused) a.play().catch(e => console.warn('bossBGM play failed:', e && e.name));
+    }
+
     function confirmFormationAndStart() {
         const allFilled = Object.values(formationState.slots).every(s => s !== null);
         if (!allFilled) { alert('前衛・中衛・後衛にカードを配置してください'); return; }
         closeFormationModal();
-        // ボスBGMをユーザー操作中に即時再生開始（iOS autoplay制限対策：fadeScreen内のsetTimeoutでは遅延しすぎる）
-        if (bgmOn) {
-            if (bgmAudio) bgmAudio.pause();
-            if (bgmCtx && bgmCtx.state !== 'suspended') bgmCtx.suspend();
-            if (adventureBGM) adventureBGM.pause();
-            window.bossBGM.pause();
-            window.bossBGM.currentTime = 0;
-            window.bossBGM.play().catch(e => {
-                console.warn('bossBGM early play failed:', e);
-                const fresh = new Audio('./bgm/boss.mp3');
-                fresh.loop = true; fresh.volume = 0.35;
-                window.bossBGM = fresh;
-                fresh.play().catch(e2 => console.warn('bossBGM fresh play failed:', e2));
-            });
-        }
+        playBossBGM(true); // タップ内で即時再生
         fadeScreen(function() { startBattle(formationState.stage); });
     }
 
@@ -5733,11 +5772,9 @@ const Cloud = (function () {
         // ボスバトル背景・BGM開始
         document.body.classList.add('battle-mode');
         updateBgmButtons();
-        // BGMはconfirmFormationAndStart()でユーザー操作中に既に再生開始済み
-        // ここではbgmOnがtrueでもbossBGMが何らかの理由で停止していた場合のみ再生
-        if (bgmOn && window.bossBGM && window.bossBGM.paused) {
-            window.bossBGM.play().catch(() => {});
-        }
+        // BGMは confirmFormationAndStart() のタップ内で開始済み。止まっていれば再試行
+        // （拒否された場合でも、バトル画面の最初のタップで playBossBGM が再開する）
+        if (window.bossBGM && window.bossBGM.paused) playBossBGM(false);
     }
 
     function renderBattleUI() {
@@ -5748,32 +5785,38 @@ const Cloud = (function () {
         // ボスイラスト表示（画像あり→img表示、なし→emoji表示）
         const bossImg = document.getElementById('battleEnemyImg');
         const bossSprite = document.getElementById('battleEnemySprite');
+        bossSprite.textContent = stage.emoji;
         if (stage.img) {
-            // 同じsrcが既にロード済みならそのまま表示
-            const currentSrc = bossImg.getAttribute('data-loaded-src');
-            if (currentSrc === stage.img && bossImg.complete && bossImg.naturalHeight > 0) {
+            const loadedOk = bossImg.getAttribute('data-loaded-src') === stage.img
+                && bossImg.complete && bossImg.naturalWidth > 0;
+            if (loadedOk) {
                 bossImg.style.display = 'block';
                 bossSprite.style.display = 'none';
-            } else if (currentSrc !== stage.img) {
-                // 新しい画像を設定（1度だけ、Date.now()なし）
-                bossImg.setAttribute('data-loaded-src', stage.img);
-                bossSprite.style.display = 'none';
+            } else if (bossImg.getAttribute('data-want-src') !== stage.img || bossImg.getAttribute('data-failed') === stage.img) {
+                // 新しいボス、または前回読み込みに失敗したボス → 読み込み直す。
+                // 読み込み完了までは絵文字を出しておく（空白にしない）
+                bossImg.setAttribute('data-want-src', stage.img);
+                bossImg.removeAttribute('data-failed');
                 bossImg.style.display = 'none';
+                bossSprite.style.display = 'block';
                 bossImg.onload = () => {
+                    if (bossImg.getAttribute('data-want-src') !== stage.img) return;
+                    bossImg.setAttribute('data-loaded-src', stage.img);
                     bossImg.style.display = 'block';
                     bossSprite.style.display = 'none';
                 };
                 bossImg.onerror = () => {
+                    bossImg.setAttribute('data-failed', stage.img);
                     bossImg.style.display = 'none';
                     bossSprite.style.display = 'block';
-                    bossSprite.textContent = stage.emoji;
+                    console.warn('ボス画像が見つかりません:', stage.img);
                 };
                 bossImg.src = stage.img;
             }
         } else {
+            bossImg.removeAttribute('data-want-src');
             bossImg.style.display = 'none';
             bossSprite.style.display = 'block';
-            bossSprite.textContent = stage.emoji;
         }
 
         document.getElementById('battleEnemyHPNum').textContent = `${Math.max(0,enemyHP)} / ${enemyMaxHP}`;
@@ -5822,7 +5865,7 @@ const Cloud = (function () {
                 div.innerHTML = `
                     <div class="battle-unit-pos-label ${u.pos}">${u.bonus.label}</div>
                     <div class="battle-unit-rarity ${getRarity(u.card.no)}">${getRarity(u.card.no)}</div>
-                    <img src="${u.card.img}" onerror="this.style.display='none'" style="width:100%;border-radius:6px;display:block;margin-bottom:3px;">
+                    <img src="${u.card.thumb}" decoding="async" onerror="imgFallback(this,'${u.card.img}')" style="width:100%;border-radius:6px;display:block;margin-bottom:3px;">
                     <div class="battle-unit-word">${(u.card.quiz.answer||'').slice(0,10)}</div>
                     <div class="battle-unit-pg">P:${u.atk} G:${u.maxHp}</div>
                     <div class="battle-unit-hp-bar"><div class="battle-unit-hp-fill${hpPct<=30?' low':''}" style="width:${hpPct}%"></div></div>
@@ -5938,11 +5981,14 @@ const Cloud = (function () {
         box.style.display = 'block';
     }
 
+    // 打撃SE：バトルの音はBGM設定に関係なく鳴らす。毎回 new Audio せず1つを使い回す
+    let _punchSE = null;
     function playPunchSE() {
-        if (!bgmOn) return;
         try {
-            const se = new Audio('./bgm/punch.mp3');
+            if (!_punchSE) { _punchSE = new Audio('./bgm/punch.mp3'); _punchSE.volume = 0.7; }
+            const se = _punchSE.paused ? _punchSE : _punchSE.cloneNode();
             se.volume = 0.7;
+            se.currentTime = 0;
             se.play().catch(() => {});
         } catch(e) {}
     }
@@ -6326,6 +6372,13 @@ const Cloud = (function () {
         battleSession.active = false;
         updateAdventureBattleBtn();
     }
+
+    // バトル中にBGMが止まっていたら（自動再生拒否・電話着信・画面ロック後など）、次のタップで再開
+    document.addEventListener('pointerdown', () => {
+        if (battleSession && battleSession.active && window.bossBGM && window.bossBGM.paused) {
+            playBossBGM(false);
+        }
+    }, { capture: true });
 
     function stopBossBGM() {
         document.body.classList.remove('battle-mode');
@@ -7353,7 +7406,8 @@ const Cloud = (function () {
         };
         Object.entries(files).forEach(([key, src]) => {
             const a = new Audio(src);
-            a.preload = 'auto';
+            // 起動時の通信量削減：頻繁に鳴る小さい音だけ先読み、他は初回再生時に読み込む
+            a.preload = ['correct', 'wrong', 'tap'].includes(key) ? 'auto' : 'none';
             a.volume = key === 'gacha_bgm' ? 0.5 : 0.6;
             SE[key] = a;
         });
@@ -7430,8 +7484,6 @@ const Cloud = (function () {
             if (bgmOn) { btn.innerHTML = '🔊 BGM'; btn.style.color = 'rgba(255,210,60,1)'; btn.style.borderColor = 'rgba(255,210,60,0.9)'; btn.style.background = 'rgba(80,50,0,0.85)'; }
             else       { btn.innerHTML = '🔇 BGM'; btn.style.color = 'rgba(220,170,50,0.85)'; btn.style.borderColor = 'rgba(220,170,50,0.7)'; btn.style.background = 'rgba(30,20,5,0.7)'; }
         }
-        const bb = document.getElementById('battleBgmBtn');
-        if (bb) bb.textContent = bgmOn ? '🔊' : '🔇';
     }
 
     function toggleBGM() {
@@ -7458,7 +7510,7 @@ const Cloud = (function () {
             bgmOn = false;
             if (bgmAudio) bgmAudio.pause();
             if (bgmCtx) bgmCtx.suspend();
-            if (window.bossBGM) window.bossBGM.pause();
+            if (window.bossBGM && !(battleSession && battleSession.active)) window.bossBGM.pause();
             if (adventureBGM) adventureBGM.pause();
         }
         updateBgmButtons();
