@@ -2006,7 +2006,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-1840</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-1850</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -2093,7 +2093,7 @@
         <h3 style="margin:0 0 6px;color:#5a3a10;font-family:'Noto Serif JP',serif;">🎴 カードを引く</h3>
         <p id="gachaChoiceDesc" style="font-size:14px;color:#6a5030;margin:0 0 14px;"></p>
         <button class="action-btn btn-gacha" id="drawNormalBtn" onclick="drawCard('normal')" style="width:100%;font-size:15px;padding:10px 8px;margin-bottom:10px;flex-direction:column;gap:3px;">
-            <span>🎴 ふつうに引く　<strong>10G</strong></span><span style="font-size:11px;font-weight:normal;opacity:.85;">持っているカードと被ることがある</span>
+            <span>🎴 ふつうに引く　<strong>50G</strong></span><span style="font-size:11px;font-weight:normal;opacity:.85;">持っているカードと被ることがある</span>
         </button>
         <button class="action-btn btn-gacha" id="drawPremiumBtn" onclick="drawCard('premium')" style="width:100%;font-size:15px;padding:10px 8px;background:linear-gradient(150deg,#8a5a10,#4a2a00);flex-direction:column;gap:3px;">
             <span>✨ 新カード確定　<strong>100G</strong></span><span style="font-size:11px;font-weight:normal;opacity:.85;">まだ持っていないカードが必ず出る</span>
@@ -4521,7 +4521,7 @@ const Cloud = (function () {
     ];
     function slimeBaseHue() {
         let h = null;
-        try { h = JSON.parse(localStorage.getItem('slimeHue') || '{}')[currentNB.key]; } catch (e) {}
+        try { h = JSON.parse(localStorage.getItem('slimeHue2') || '{}')[currentNB.key]; } catch (e) {}
         return (typeof h === 'number') ? h : (SLIME_BY_NB[currentNB.key] || SLIME_BY_NB.A1).baseHue;
     }
     // 画像のスライムの色相を測る（色名と実際の色を一致させるため）
@@ -4541,9 +4541,9 @@ const Cloud = (function () {
             }
             const best = bins.indexOf(Math.max(...bins));
             if (bins[best] < 20) return;
-            const st = JSON.parse(localStorage.getItem('slimeHue') || '{}');
+            const st = JSON.parse(localStorage.getItem('slimeHue2') || '{}');
             st[currentNB.key] = best * 10 + 5;
-            localStorage.setItem('slimeHue', JSON.stringify(st));
+            localStorage.setItem('slimeHue2', JSON.stringify(st));
         } catch (e) {}
     }
     function slimeLook(tabIdx) {
@@ -4788,12 +4788,12 @@ const Cloud = (function () {
 
     /* ========== ゴールド（通貨）==========
      * 冒険で問題に正解するとXPとゴールドがもらえる。カードはゴールドで引く。
-     *   ふつうに引く  10G：解禁済みタブの全カードから（取得済みカードと被ることがある）
+     *   ふつうに引く  50G：解禁済みタブの全カードから（取得済みカードと被ることがある）
      *   新カード確定 100G：まだ持っていないカードから（被りなし）
      * 以前「ガチャ+1回」だった報酬は、すべて 100G（＝新カード確定1回分）に置き換えた。
      */
     const GOLD_PER_GACHA = 100;
-    const DRAW_COST = { normal: 10, premium: 100 };
+    const DRAW_COST = { normal: 50, premium: 100 };
     let gold = parseInt(localStorage.getItem('gold') || '0', 10) || 0;
     // 旧データ移行：残っていたガチャ回数を 1回=100G でゴールドに変換（1回だけ）
     (function migrateGachaToGold() {
@@ -5904,7 +5904,7 @@ const Cloud = (function () {
     function triggerGachaCore(onDone, mode) {
         if (cardsData.length === 0) { alert("カードデータがありません。"); return; }
 
-        // normal(10G)：解禁済みタブの全カードから（被りあり）／premium(100G)：未取得カードから（被りなし）
+        // normal(50G)：解禁済みタブの全カードから（被りあり）／premium(100G)：未取得カードから（被りなし）
         const pools = gachaPools();
         const drawPool = (mode === 'premium' && pools.unowned.length > 0) ? pools.unowned : pools.all;
         const randomCard = weightedGachaPick(drawPool);
