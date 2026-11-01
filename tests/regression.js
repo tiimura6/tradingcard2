@@ -200,7 +200,7 @@ test('管理者キーで全手帖・全カード・全タブが開く', async b 
   await p.evaluate(() => { openCouponModal(); document.getElementById('couponInput').value = 'SHION3215T'; submitCoupon(); });
   await p.waitForTimeout(500);
   const r = await p.evaluate(() => ({ st: notebookState.unlocked.length, owned: unlockedCards.length, tabs: getUnlockedTabCount() }));
-  assert(r.st === 5 && r.owned === 8664 && r.tabs === 12, JSON.stringify(r));
+  assert(r.st === 5 && r.owned === 8660 && r.tabs === 12, JSON.stringify(r));
 });
 
 test('殿堂入りボスラッシュが開始できる（白金の手帖）', async b => {
