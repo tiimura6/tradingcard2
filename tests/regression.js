@@ -289,6 +289,28 @@ test('紙吹雪は新しいカードのときだけ／冒険の道：答える�
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
+test('バトル突入・帰還の演出／ボスは下位の手帖ほど小さく白金ほど大きい', async b => {
+  const sizes = {};
+  for (const nb of ['A1', 'PT']) {
+    const p = await openApp(b, { seed: { cardMergeV1: '1', notebookState: { unlocked: ['A1', 'A2', 'B1', 'B2', 'PT'], current: nb } } });
+    await p.evaluate(() => { cardsData.slice(0, 30).forEach(c => { if (!unlockedCards.includes(c.id)) unlockedCards.push(c.id); }); });
+    await formParty(p, 0);
+    await p.evaluate(() => confirmFormationAndStart());
+    await p.waitForTimeout(300);
+    const cls = await p.evaluate(() => document.getElementById('battle-trans').className);
+    assert(cls.includes('enter'), '突入演出なし: ' + cls);
+    await p.waitForTimeout(1600);
+    sizes[nb] = await p.evaluate(() => parseInt(document.getElementById('battleEnemyImg').style.maxHeight, 10));
+    await p.evaluate(() => confirmCloseBattle());
+    await p.waitForTimeout(300);
+    assert((await p.evaluate(() => document.getElementById('battle-trans').className)).includes('exit'), '帰還演出なし');
+    await p.waitForTimeout(1300);
+    assert(await p.evaluate(() => document.getElementById('battle-overlay').style.display === 'none' && !document.body.classList.contains('battle-mode')), '帰還後にバトル画面が残っている');
+    assert(p.__errors.length === 0, p.__errors.join(' / '));
+  }
+  assert(sizes.A1 < sizes.PT, JSON.stringify(sizes));
+});
+
 test('小さい画面（幅360px）で主な画面が横にはみ出さない', async b => {
   const p = await openApp(b, { viewport: { width: 360, height: 740 }, seed: { unlockedCards: ids('a1', 1, 50) } });
   const steps = ['openStudyMode("all")', 'closeStudyMode()', 'showHallOfFameModal()', 'closeChallengeModal()',

@@ -1932,6 +1932,46 @@
         @media (prefers-reduced-motion: reduce) {
             #advTrail *, .adv-unfurl, .adv-shake, #advClear, #advClear * { animation: none !important; transition: none !important; }
         }
+        /* ===== バトルへの突入・帰還の演出 ===== */
+        #battle-trans { position: fixed; inset: 0; z-index: 100000; pointer-events: all; overflow: hidden; display: none; }
+        #battle-trans .bt-flash { position: absolute; inset: 0; background: #fff; opacity: 0; }
+        #battle-trans .bt-bar { position: absolute; left: -20%; width: 140%; height: 52%; background: #0b0614;
+            box-shadow: 0 0 40px rgba(180,40,60,.6); }
+        #battle-trans .bt-bar.top { top: 0; transform: translateX(-110%) skewY(-6deg); transform-origin: left; }
+        #battle-trans .bt-bar.bot { bottom: 0; transform: translateX(110%) skewY(-6deg); transform-origin: right; }
+        #battle-trans .bt-text { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; color: #fff; opacity: 0; }
+        #battle-trans .bt-text .b1 { font-size: 34px; font-weight: bold; letter-spacing: .12em; color: #ffd36a;
+            text-shadow: 0 0 14px rgba(255,90,60,.9), 0 2px 0 #6a1010; font-family: Georgia, 'Noto Serif JP', serif; }
+        #battle-trans .bt-text .b2 { font-size: 15px; margin-top: 8px; color: #f6e8ff; text-shadow: 0 0 8px rgba(0,0,0,.9); }
+        #battle-trans .bt-slash { position: absolute; left: -10%; top: 50%; width: 120%; height: 4px; margin-top: -2px; opacity: 0;
+            background: linear-gradient(90deg, transparent, #fff 30%, #ffd36a 50%, #fff 70%, transparent); transform: rotate(-6deg) scaleX(0); }
+        #battle-trans.enter { display: block; }
+        #battle-trans.enter .bt-flash { animation: bt-flash .32s ease-out 2; }
+        #battle-trans.enter .bt-bar.top { animation: bt-in-top 1.45s cubic-bezier(.7,0,.3,1) forwards; }
+        #battle-trans.enter .bt-bar.bot { animation: bt-in-bot 1.45s cubic-bezier(.7,0,.3,1) forwards; }
+        #battle-trans.enter .bt-slash { animation: bt-slash 1.45s ease forwards; }
+        #battle-trans.enter .bt-text { animation: bt-text 1.45s ease forwards; }
+        /* 帰還：光の輪が閉じて開く */
+        #battle-trans .bt-iris { display: none; position: absolute; inset: 0; background: radial-gradient(circle, #1a1030 0%, #05030a 70%); clip-path: circle(150% at 50% 50%); }
+        #battle-trans .bt-home { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center;
+            color: #ffe9a8; font-size: 18px; font-weight: bold; letter-spacing: .1em; opacity: 0; text-shadow: 0 0 12px rgba(255,200,90,.7); }
+        #battle-trans .bt-ring { position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
+            border: 3px solid rgba(255,220,140,.9); box-shadow: 0 0 24px rgba(255,200,90,.8); opacity: 0; }
+        #battle-trans.exit { display: block; }
+        #battle-trans.exit .bt-iris { display: block; animation: bt-iris 1.3s ease-in-out forwards; }
+        #battle-trans.exit .bt-home { animation: bt-home 1.3s ease forwards; }
+        #battle-trans.exit .bt-ring { animation: bt-ring 1.3s ease-out forwards; }
+        @keyframes bt-flash { 0% { opacity: .9 } 100% { opacity: 0 } }
+        @keyframes bt-in-top { 0% { transform: translateX(-110%) skewY(-6deg) } 30%, 70% { transform: translateX(0) skewY(-6deg) } 100% { transform: translateX(110%) skewY(-6deg) } }
+        @keyframes bt-in-bot { 0% { transform: translateX(110%) skewY(-6deg) } 30%, 70% { transform: translateX(0) skewY(-6deg) } 100% { transform: translateX(-110%) skewY(-6deg) } }
+        @keyframes bt-slash { 0%, 28% { opacity: 0; transform: rotate(-6deg) scaleX(0) } 38% { opacity: 1; transform: rotate(-6deg) scaleX(1) } 62% { opacity: .8 } 72%, 100% { opacity: 0; transform: rotate(-6deg) scaleX(1) } }
+        @keyframes bt-text { 0%, 30% { opacity: 0; transform: translateY(-50%) scale(1.6) } 40% { opacity: 1; transform: translateY(-50%) scale(1) } 66% { opacity: 1; transform: translateY(-50%) scale(1.04) } 76%, 100% { opacity: 0; transform: translateY(-50%) scale(.9) } }
+        @keyframes bt-iris { 0% { clip-path: circle(0% at 50% 50%) } 42%, 58% { clip-path: circle(150% at 50% 50%) } 100% { clip-path: circle(0% at 50% 50%) } }
+        @keyframes bt-home { 0%, 30% { opacity: 0 } 42%, 58% { opacity: 1 } 70%, 100% { opacity: 0 } }
+        @keyframes bt-ring { 0%, 50% { opacity: 0; transform: scale(1) } 55% { opacity: 1 } 100% { opacity: 0; transform: scale(60) } }
+        @media (prefers-reduced-motion: reduce) {
+            #battle-trans * { animation-duration: .01s !important; }
+        }
     </style>
 </head>
 <body>
@@ -1939,6 +1979,9 @@
 <div id="adventure-bg"></div>
 <div id="adventure-fade"></div>
 <div id="screen-fade"></div>
+<div id="battle-trans"><div class="bt-flash"></div><div class="bt-bar top"></div><div class="bt-bar bot"></div><div class="bt-slash"></div>
+    <div class="bt-text"><div class="b1"></div><div class="b2"></div></div>
+    <div class="bt-iris"></div><div class="bt-ring"></div><div class="bt-home"></div></div>
 
 <!-- ===== ATMOSPHERIC BACKGROUND LAYERS ===== -->
 <!-- Star field -->
@@ -2085,7 +2128,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-0700</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-0730</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -6308,7 +6351,33 @@ const Cloud = (function () {
         if (!allFilled) { alert('前衛・中衛・後衛にカードを配置してください'); return; }
         closeFormationModal(true);
         playBossBGM(true); // タップ内で即時再生
-        fadeScreen(function() { startBattle(formationState.stage); });
+        battleEnterTransition(formationState.stage, function() { startBattle(formationState.stage); });
+    }
+
+    /* バトル突入の演出：白い閃光 → 闇の帯が左右から閉じる → 斬撃と「ENCOUNTER!」→ 帯が開いてバトル画面
+       fn は帯が閉じきった瞬間（画面が隠れている間）に呼ぶ */
+    function battleEnterTransition(stage, fn) {
+        const el = document.getElementById('battle-trans');
+        if (!el) { fadeScreen(fn); return; }
+        const t = stage && stage.type;
+        el.querySelector('.b1').textContent = t === 'final' ? '⚔ 討伐戦 ⚔' : t === 'hof' ? '⚔ BOSS RUSH ⚔' : '⚔ ENCOUNTER! ⚔';
+        el.querySelector('.b2').textContent = stage ? `${stage.name}が現れた！` : '';
+        el.classList.remove('enter', 'exit'); void el.offsetWidth; el.classList.add('enter');
+        let done = false;
+        const run = () => { if (done) return; done = true; try { fn(); } catch (e) { console.error(e); } };
+        setTimeout(run, 520);
+        setTimeout(() => { el.classList.remove('enter'); run(); }, 1500);
+    }
+    /* バトルから帰還する演出：闇が輪のように広がって画面を包み「帰還…」→ 光の輪が広がってメイン画面へ */
+    function battleExitTransition(fn) {
+        const el = document.getElementById('battle-trans');
+        if (!el) { fadeScreen(fn); return; }
+        el.querySelector('.bt-home').textContent = adventureActive ? '🗺️ 冒険へ戻る…' : '🏠 帰還…';
+        el.classList.remove('enter', 'exit'); void el.offsetWidth; el.classList.add('exit');
+        let done = false;
+        const run = () => { if (done) return; done = true; try { fn(); } catch (e) { console.error(e); } };
+        setTimeout(run, 600);
+        setTimeout(() => { el.classList.remove('exit'); run(); }, 1350);
     }
 
     function startBattle(stage) {
@@ -6377,7 +6446,7 @@ const Cloud = (function () {
         sprite.classList.remove('appearing','floating');
         void sprite.offsetWidth;
         sprite.classList.add('appearing');
-        setTimeout(() => { sprite.classList.remove('appearing'); sprite.classList.add('floating'); }, 700);
+        setTimeout(() => { sprite.classList.remove('appearing'); sprite.classList.add('floating'); }, 1500);
 
         renderBattleUI();
         addBattleLog(stage.type === 'mid' ? `⚔️ ${stage.name}が現れた！ 撃退せよ！`
@@ -6407,7 +6476,13 @@ const Cloud = (function () {
         // タブごとの色違い（画像に色フィルター）＋討伐戦は大きく・光らせる
         bossImg.style.filter = (stage.filter ? stage.filter + ' ' : '') + 'drop-shadow(0 6px 24px rgba(0,0,0,0.8))'
             + (stage.type === 'final' ? ' drop-shadow(0 0 18px rgba(255,210,90,0.65))' : '');
-        bossImg.style.transform = stage.type === 'final' ? 'scale(1.12)' : '';
+        // ボスの大きさ：下位の手帖ほど小さく、白金に近づくほど大きい（討伐戦はさらに一回り大きく）
+        const BOSS_SIZE = { A1: 118, A2: 142, B1: 168, B2: 196, PT: 226 };
+        const bh = Math.round((BOSS_SIZE[currentNB.key] || 190) * (stage.type === 'final' || stage.type === 'hof' ? 1.12 : 1));
+        bossImg.style.transform = '';
+        bossImg.style.maxHeight = bh + 'px';
+        bossImg.style.maxWidth = `min(${Math.round(bh * 1.47)}px, 86vw)`;
+        bossSprite.style.fontSize = Math.round(bh * 0.5) + 'px';
         if (stage.img) {
             const loadedOk = bossImg.getAttribute('data-loaded-src') === stage.img
                 && bossImg.complete && bossImg.naturalWidth > 0;
@@ -6959,7 +7034,7 @@ const Cloud = (function () {
     }
 
     function closeBattleResult() {
-        fadeScreen(function() {
+        battleExitTransition(function() {
             document.getElementById('battle-result-overlay').style.display = 'none';
             document.getElementById('battle-overlay').style.display = 'none';
             stopBossBGM();
@@ -6971,7 +7046,7 @@ const Cloud = (function () {
             if (!confirm('バトルを中断しますか？（報酬は得られません）')) return;
         }
         battleSession.active = false;
-        fadeScreen(function() {
+        battleExitTransition(function() {
             document.getElementById('battle-result-overlay').style.display = 'none';
             document.getElementById('battle-overlay').style.display = 'none';
             stopBossBGM();
