@@ -1738,6 +1738,19 @@
             align-items: center; gap: 3px; line-height: 1.2;
         }
         .battle-action-btn .btn-icon { font-size: 20px; }
+        /* 作戦（3枚それぞれの行動を選ぶ） */
+        .battle-action-area.planner { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .bplan-col { display: flex; flex-direction: column; gap: 4px; background: rgba(10,6,24,0.75); border: 1px solid rgba(200,170,90,0.3); border-radius: 10px; padding: 5px; }
+        .bplan-head { font-size: 10px; color: #e8d8a8; text-align: center; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .bplan-btn { font-size: 11px; padding: 6px 2px; border-radius: 8px; border: 1.5px solid rgba(255,255,255,0.18); background: rgba(40,30,60,0.8); color: #bbb; cursor: pointer; font-family: 'Noto Serif JP', serif; line-height: 1.15; }
+        .bplan-btn small { display: block; font-size: 8.5px; opacity: .8; }
+        .bplan-btn.sel.attack { background: linear-gradient(135deg,#7a1818,#4a0a0a); border-color: #ff6666; color: #ffd0d0; }
+        .bplan-btn.sel.skill  { background: linear-gradient(135deg,#3a1a6a,#20104a); border-color: #b080ff; color: #e8d8ff; }
+        .bplan-btn.sel.defend { background: linear-gradient(135deg,#123a5a,#0a2038); border-color: #66aaff; color: #d0e8ff; }
+        .bplan-go { grid-column: 1 / -1; padding: 11px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; border: 2px solid #f0c040; background: linear-gradient(135deg,#8a5a10,#5a3400); color: #fff3c8; font-family: 'Noto Serif JP', serif; }
+        .bplan-go:disabled { opacity: .45; }
+        .bhit { display: inline-block; font-weight: bold; padding: 0 6px; border-radius: 6px; margin-left: 4px; }
+        .bhit.hit { background: #2e8b3e; color: #fff; } .bhit.miss { background: #6a2a2a; color: #ffbbbb; }
         .battle-action-btn .btn-sub  { font-size: 9px; font-weight: normal; color: inherit; opacity: 0.8; }
         .battle-action-btn.atk {
             background: linear-gradient(135deg, #5a1010, #3a0808);
@@ -2014,7 +2027,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-1955</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-2010</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -2203,7 +2216,7 @@
     <div class="battle-enemy-area">
         <!-- イラスト表示（画像あれば表示、なければ emoji フォールバック） -->
         <img id="battleEnemyImg" src="" alt=""
-             style="display:none;max-height:240px;max-width:min(300px,80vw);object-fit:contain;
+             style="display:none;max-height:190px;max-width:min(280px,76vw);object-fit:contain;
                     filter:drop-shadow(0 6px 24px rgba(0,0,0,0.8));
                     image-rendering:auto;">
         <div class="battle-enemy-sprite" id="battleEnemySprite">👾</div>
@@ -2217,20 +2230,7 @@
     <div class="battle-log" id="battleLog">バトル開始！</div>
 
     <!-- アクションボタン (プレイヤーターン用) -->
-    <div class="battle-action-area" id="battleActionArea">
-        <button class="battle-action-btn atk" id="battleBtnAtk" onclick="battleDoAction('attack')">
-            <span class="btn-icon">⚔️</span>攻撃
-            <span class="btn-sub">単語問題</span>
-        </button>
-        <button class="battle-action-btn skl" id="battleBtnSkl" onclick="battleDoAction('skill')">
-            <span class="btn-icon">🔮</span>スキル
-            <span class="btn-sub">文法問題</span>
-        </button>
-        <button class="battle-action-btn def" id="battleBtnDef" onclick="battleDoAction('defend')">
-            <span class="btn-icon">🛡️</span>防御
-            <span class="btn-sub">次ダメ-40%</span>
-        </button>
-    </div>
+    <div class="battle-action-area planner" id="battleActionArea"></div>
     <!-- 後方互換: 旧コードから参照されるかもしれないので残す (非表示) -->
     <button id="battleQuizBtn" style="display:none;" onclick="battleStartQuiz()"></button>
 </div>
@@ -4580,20 +4580,25 @@ const Cloud = (function () {
     const BATTLE_FINAL_RATIO = 0.8;   // 討伐戦：タブのカード80%
     function battleNeed(total, type) { return Math.ceil(total * (type === 'mid' ? BATTLE_MID_RATIO : BATTLE_FINAL_RATIO)); }
 
-    /* ボスの強さ：そのタブのカード（平均的なレアリティ・★1〜2）3枚の部隊を想定して決める
-     *   撃退戦：約6回の正解で倒せる／敵の攻撃に約12回耐えられる（ミスにある程度の余裕）
+    /* ボスの強さ：そのタブのカード（★1程度）3枚の部隊を想定して決める
+     * 1ターン＝3枚の行動を選ぶ → 1問 → 正解なら命中率90%（スキル80%）、不正解なら30%（スキル20%）
+     *   撃退戦：全問正解で約4ターン／敵の攻撃に約8ターン耐えられる
+     *   討伐戦：全問正解で約6ターン／敵の攻撃に約8ターン耐えられる（不正解は2〜3回まで）
+     *   ※以下の旧コメントは参考：
      *   討伐戦：約9回の正解で倒せる／敵の攻撃に約11回耐えられる（ミスは1回程度まで。★・レベル・スキル・防御で余裕が出る）
      * プレイヤーレベルのボーナスは含めない（冒険するほど楽になる） */
-    const BOSS_TUNING = { midHits: 6, midSurvive: 12, finalHits: 9, finalSurvive: 11 };
+    const BOSS_TUNING = { midRounds: 4, midSurvive: 8, finalRounds: 6, finalSurvive: 8 };
+    const HIT_RATE = { attack: { ok: 0.9, ng: 0.3 }, skill: { ok: 0.8, ng: 0.2 } };
     function bossStatsFor(g) {
         const base = statBase(g);
         const A = base * 1.08 * 1.04;                  // 想定する攻撃力（★1・品詞ボーナス程度。レアカードや★が多いほど楽になる）
         const D = base * 1.08;                         // 想定する守備力
         const partyHP = D * 3 * 3 * (0.8 + 1.0 + 1.3) / 3;
+        const perRound = A * 3 * HIT_RATE.attack.ok;   // 全員「攻撃」で正解したときの1ターンの期待ダメージ
         return {
-            midHp:    Math.round(A * BOSS_TUNING.midHits),
+            midHp:    Math.round(perRound * BOSS_TUNING.midRounds),
             midAtk:   Math.round(partyHP / BOSS_TUNING.midSurvive),
-            finalHp:  Math.round(A * BOSS_TUNING.finalHits),
+            finalHp:  Math.round(perRound * BOSS_TUNING.finalRounds),
             finalAtk: Math.round(partyHP / BOSS_TUNING.finalSurvive),
         };
     }
@@ -6338,7 +6343,7 @@ const Cloud = (function () {
 
         battleSession = {
             active: true, stage, units,
-            currentUnitIdx: 0,
+            currentUnitIdx: -1, plan: null, _defReduction: 0,
             playerHP: playerMaxHP, playerMaxHP,
             enemyHP: stage.hp, enemyMaxHP: stage.hp,
             turn: 'player', turnCount: 1,
@@ -6455,10 +6460,8 @@ const Cloud = (function () {
             banner.textContent = '⚔️ あなたのターン';
         }
 
-        // アクションボタン有効化
-        const area = document.getElementById('battleActionArea');
-        if (area) area.style.display = 'grid';
-        setBattleActionBtnsEnabled(true);
+        // 作戦（3枚それぞれの行動）を選ぶ
+        renderBattlePlanner();
 
         // 後方互換
         const btn = document.getElementById('battleQuizBtn');
@@ -6482,7 +6485,8 @@ const Cloud = (function () {
                 div.innerHTML = `
                     <div class="battle-unit-pos-label ${u.pos}">${u.bonus.label}</div>
                     <div class="battle-unit-rarity ${getRarity(u.card.no)}">${getRarity(u.card.no)}</div>
-                    <img src="${u.card.thumb}" decoding="async" onerror="imgFallback(this,'${u.card.id}')" style="width:100%;border-radius:6px;display:block;margin-bottom:3px;">
+                    <img src="${u.card.thumb}" decoding="async" onerror="imgFallback(this,'${u.card.id}')" style="width:100%;height:78px;object-fit:cover;object-position:center 30%;border-radius:6px;display:block;margin-bottom:3px;">
+                    <div style="font-size:10px;line-height:1;">${starsHTML(getStars(u.card.id), 9)}</div>
                     <div class="battle-unit-word">${(u.card.quiz.answer||'').slice(0,10)}</div>
                     <div class="battle-unit-pg">P:${u.atk} G:${u.maxHp}</div>
                     <div class="battle-unit-hp-bar"><div class="battle-unit-hp-fill${hpPct<=30?' low':''}" style="width:${hpPct}%"></div></div>
@@ -6511,6 +6515,131 @@ const Cloud = (function () {
         const totalG = battleSession.playerMaxHP;
         const el = document.getElementById('battleTotalStats');
         if (el) el.innerHTML = `⚔️ 総P: <b>${totalP}</b>　🛡️ 総G: <b>${totalG}</b>`;
+    }
+
+    /* ===== ターンの流れ =====
+     * ① 3枚それぞれの行動（攻撃／スキル／防御）を選ぶ → ② ランダムに1問
+     * ③ 正解なら命中率90%（スキル80%）、不正解なら30%（スキル20%）で3枚が順に行動 → ④ ボスのターン
+     * 防御は命中判定なし：1枚につき被ダメージ -20%（不正解なら -10%）、最大 -60%
+     */
+    const BATTLE_ACTIONS = {
+        attack: { icon: '⚔️', name: '攻撃' },
+        skill:  { icon: '🔮', name: 'スキル' },
+        defend: { icon: '🛡️', name: '防御' },
+    };
+    function renderBattlePlanner() {
+        const area = document.getElementById('battleActionArea');
+        if (!area) return;
+        if (!battleSession.plan || battleSession.plan.length !== battleSession.units.length) {
+            battleSession.plan = battleSession.units.map(() => 'attack');
+        }
+        area.style.display = 'grid';
+        area.innerHTML = battleSession.units.map((u, i) => `
+            <div class="bplan-col">
+                <div class="bplan-head">${u.bonus.label}：${(u.card.quiz.answer || '').slice(0, 9)}</div>
+                ${['attack', 'skill', 'defend'].map(a => `
+                    <button class="bplan-btn ${a}${battleSession.plan[i] === a ? ' sel' : ''}" onclick="setBattlePlan(${i},'${a}')">
+                        ${BATTLE_ACTIONS[a].icon}${BATTLE_ACTIONS[a].name}
+                        <small>${a === 'attack' ? `P${u.atk}` : a === 'skill' ? `${u.skill.icon}${u.skill.name}` : '被ダメ-20%'}</small>
+                    </button>`).join('')}
+            </div>`).join('') +
+            `<button class="bplan-go" id="battleGoBtn" onclick="confirmBattlePlan()">📜 作戦決定 → 問題へ</button>`;
+    }
+    function setBattlePlan(i, action) {
+        if (!battleSession.active || battleSession.turn !== 'player') return;
+        battleSession.plan[i] = action;
+        renderBattlePlanner();
+    }
+    function confirmBattlePlan() {
+        if (!battleSession.active || battleSession.turn !== 'player') return;
+        battleSession.turn = 'quiz';
+        const area = document.getElementById('battleActionArea');
+        if (area) area.style.display = 'none';
+        battleStartQuiz();
+    }
+
+    // 3枚の行動を順に解決（命中判定つき）→ ボスのターン
+    function resolveBattleRound(isCorrect) {
+        const { units, plan, stage } = battleSession;
+        const key = isCorrect ? 'ok' : 'ng';
+        const defCount = plan.filter(a => a === 'defend').length;
+        battleSession._defReduction = Math.min(0.6, defCount * (isCorrect ? 0.2 : 0.1));
+        addBattleLog(isCorrect ? '✅ 正解！ 命中率アップ（攻撃90%・スキル80%）' : '❌ 不正解… 命中率ダウン（攻撃30%・スキル20%）');
+        const enhance = battleSession.buffActive ? (battleSession._enhancePower || 1.5) : 1;
+        battleSession.buffActive = false; battleSession._enhancePower = null;
+        let i = 0;
+        const step = () => {
+            if (!battleSession.active) return;
+            if (i >= units.length || battleSession.enemyHP <= 0) {
+                if (defCount > 0) addBattleLog(`🛡️ 防御 ${defCount}枚：次の被ダメージ -${Math.round(battleSession._defReduction * 100)}%`);
+                setTimeout(() => {
+                    if (battleSession.enemyHP <= 0 || battleSession.playerHP <= 0) endBattle();
+                    else { battleSession.turn = 'enemy'; battleEnemyTurn(); }
+                }, 500);
+                return;
+            }
+            const u = units[i], act = plan[i];
+            battleSession.currentUnitIdx = i;
+            renderBattleUnits();
+            if (act === 'defend') { i++; step(); return; }
+            const rate = HIT_RATE[act][key];
+            const hit = Math.random() < rate;
+            const tag = `<span class="bhit ${hit ? 'hit' : 'miss'}">${hit ? 'HIT' : 'MISS'}</span>`;
+            if (!hit) {
+                addBattleLog(`${u.bonus.label}の${BATTLE_ACTIONS[act].name}（命中${Math.round(rate * 100)}%）${tag}`);
+                showDamageFloat('MISS', true, '#aaaaaa');
+                i++; setTimeout(step, 550); return;
+            }
+            if (act === 'attack') {
+                const dmg = Math.round(u.atk * enhance);
+                battleSession.enemyHP = Math.max(0, battleSession.enemyHP - dmg);
+                addBattleLog(`${u.bonus.label}の攻撃（命中${Math.round(rate * 100)}%）${tag} ${dmg}ダメージ`);
+                animateUnitAttack(() => { playPunchSE(); bossHitAnim(); battleFlash('atk-flash'); showDamageFloat(dmg, true, '#ff4444'); });
+            } else {
+                applySkillEffect(u, enhance, rate, tag);
+            }
+            renderBattleUI_hpOnly();
+            i++; setTimeout(step, 750);
+        };
+        step();
+    }
+    function bossHitAnim() {
+        const sprite = document.getElementById('battleEnemySprite');
+        const bossImg = document.getElementById('battleEnemyImg');
+        [sprite, bossImg].forEach(el => {
+            if (!el || el.style.display === 'none') return;
+            el.classList.remove('shake', 'glow-damage'); void el.offsetWidth;
+            el.classList.add('shake', 'glow-damage');
+            setTimeout(() => el.classList.remove('shake', 'glow-damage'), 500);
+        });
+    }
+    function renderBattleUI_hpOnly() {
+        const { playerHP, playerMaxHP, enemyHP, enemyMaxHP } = battleSession;
+        document.getElementById('battleEnemyHPNum').textContent = `${Math.max(0, enemyHP)} / ${enemyMaxHP}`;
+        document.getElementById('battlePlayerHPNum').textContent = `${Math.max(0, playerHP)} / ${playerMaxHP}`;
+        document.getElementById('battleEnemyHPBar').style.width = Math.max(0, Math.min(100, enemyHP / enemyMaxHP * 100)) + '%';
+        document.getElementById('battlePlayerHPBar').style.width = Math.max(0, Math.min(100, playerHP / playerMaxHP * 100)) + '%';
+    }
+    function applySkillEffect(unit, enhance, rate, tag) {
+        const skill = unit.skill;
+        const head = `${unit.bonus.label}の${skill.icon}${skill.name}（命中${Math.round(rate * 100)}%）${tag}`;
+        if (skill.type === 'strike' || skill.type === 'swift') {
+            const hits = skill.hits || 1;
+            let total = 0;
+            for (let k = 0; k < hits; k++) total += Math.round(unit.atk * skill.power * enhance);
+            battleSession.enemyHP = Math.max(0, battleSession.enemyHP - total);
+            addBattleLog(`${head} ${hits > 1 ? hits + '連撃 ' : ''}${total}ダメージ`);
+            animateUnitAttack(() => { playPunchSE(); bossHitAnim(); battleFlash('atk-flash'); showDamageFloat(total, true, skill.type === 'swift' ? '#ffdd00' : '#ff6622'); });
+        } else if (skill.type === 'enhance') {
+            battleSession.buffActive = true;
+            battleSession._enhancePower = skill.power;
+            addBattleLog(`${head} 次のターン、全員の攻撃×${skill.power}`);
+        } else if (skill.type === 'fortify') {
+            const heal = Math.round(unit.maxHp * skill.power);
+            battleSession.playerHP = Math.min(battleSession.playerMaxHP, battleSession.playerHP + heal);
+            battleSession._defReduction = Math.min(0.75, (battleSession._defReduction || 0) + skill.power);
+            addBattleLog(`${head} HP+${heal}・次の被ダメージ -${Math.round(skill.power * 100)}%`);
+        }
     }
 
     function setBattleActionBtnsEnabled(enabled) {
@@ -6545,7 +6674,7 @@ const Cloud = (function () {
         // battle-overlayは表示したままにし、quiz-overlayをその上に重ねる
         const quizOv = document.getElementById('quiz-overlay');
         quizOv.classList.add('battle-quiz-mode');
-        document.getElementById('quizTitle').innerText = `⚔️ 攻撃！正解で敵にダメージ！`;
+        document.getElementById('quizTitle').innerText = `⚔️ 正解すると命中率アップ！`;
         showQuiz(questionCard);
     }
 
@@ -6659,7 +6788,7 @@ const Cloud = (function () {
         const el = document.createElement('div');
         el.className = 'battle-damage-float';
         el.style.cssText = `left:${rect.left + rect.width/2 - 20}px;top:${rect.top - 10}px;color:${color};`;
-        el.textContent = `-${dmg}`;
+        el.textContent = typeof dmg === 'number' ? `-${dmg}` : dmg;
         document.body.appendChild(el);
         setTimeout(() => el.remove(), 1300);
     }
@@ -6689,16 +6818,10 @@ const Cloud = (function () {
 
         setTimeout(() => {
             let dmg = stage.atk;
-            if (battleSession.defendActive) {
-                dmg = Math.round(dmg * 0.6);
-                battleSession.defendActive = false;
-            }
-            if (battleSession._fortifyActive) {
-                // fortifyの名詞スキル: 被ダメージ軽減（powerは回復量と共用、軽減は固定-20%or-30%）
-                const fortifyUnit = battleSession.units.find(u => u.skill && u.skill.type === 'fortify');
-                const reduction = fortifyUnit ? fortifyUnit.skill.power : 0.20;
-                dmg = Math.round(dmg * (1 - reduction));
-                battleSession._fortifyActive = false;
+            // 防御・名詞スキルによる被ダメージ軽減（このターンのみ）
+            if (battleSession._defReduction) {
+                dmg = Math.round(dmg * (1 - battleSession._defReduction));
+                battleSession._defReduction = 0;
             }
             battleSession.playerHP = Math.max(0, battleSession.playerHP - dmg);
             addBattleLog(`${stage.emoji} ${stage.name}の攻撃！ ${dmg} ダメージ`);
@@ -6722,16 +6845,14 @@ const Cloud = (function () {
             });
 
             battleSession.turnCount++;
-            // 次ターン前にバフリセット（1ターン限り）
-            battleSession.buffActive = false;
 
             setTimeout(() => {
                 if (battleSession.enemyHP <= 0 || battleSession.playerHP <= 0) {
                     endBattle();
                 } else {
-                    // 次プレイヤーターン
+                    // 次プレイヤーターン（作戦は前のターンの選択を引き継ぐ）
                     battleSession.turn = 'player';
-                    battleSession.currentUnitIdx = (battleSession.currentUnitIdx + 1) % battleSession.units.length;
+                    battleSession.currentUnitIdx = -1;
                     renderBattleUI();
                 }
             }, 900);
@@ -6741,87 +6862,9 @@ const Cloud = (function () {
     function processBattleAnswer(isCorrect, card) {
         if (!battleSession.active) return;
         updateSRS(card.id, isCorrect);
-
-        const unit = battleSession.units[battleSession.currentUnitIdx];
-        const { stage } = battleSession;
-
-        if (isCorrect) {
-            let dmg = unit.atk;
-            if (battleSession.buffActive) {
-                const mult = battleSession._enhancePower || 2;
-                dmg = Math.round(dmg * mult);
-                battleSession.buffActive = false;
-                battleSession._enhancePower = null;
-            }
-            battleSession.enemyHP = Math.max(0, battleSession.enemyHP - dmg);
-            addXP(15, null);
-            addBattleLog(`✅ 正解！${card.quiz ? card.quiz.answer : card.word} → ${stage.emoji}に ${dmg} ダメージ！`);
-
-            // 攻撃アニメ：ユニット前進 → SE → ボスshake
-            animateUnitAttack(() => {
-                playPunchSE();
-                const sprite = document.getElementById('battleEnemySprite');
-                const bossImg = document.getElementById('battleEnemyImg');
-                if (sprite) {
-                    sprite.classList.remove('floating','shake','glow-damage');
-                    void sprite.offsetWidth;
-                    sprite.classList.add('shake','glow-damage');
-                    setTimeout(() => { sprite.classList.remove('shake','glow-damage'); sprite.classList.add('floating'); }, 500);
-                }
-                if (bossImg && bossImg.style.display !== 'none') {
-                    bossImg.classList.remove('shake','glow-damage');
-                    void bossImg.offsetWidth;
-                    bossImg.classList.add('shake','glow-damage');
-                    setTimeout(() => bossImg.classList.remove('shake','glow-damage'), 500);
-                }
-                battleFlash('atk-flash');
-                showDamageFloat(dmg, true, '#ff4444');
-            });
-        } else {
-            const dmg = stage.atk;
-            battleSession.playerHP = Math.max(0, battleSession.playerHP - dmg);
-            addBattleLog(`❌ 不正解… ${stage.emoji}に ${dmg} のダメージを受けた`);
-
-            // 敵が即攻撃：ボス前進モーション → SE → ユニットshake
-            animateBossAttack(() => {
-                playPunchSE();
-                battleFlash('hit-flash');
-                animateUnitsHit();
-                const overlay = document.getElementById('battle-overlay');
-                if (overlay) {
-                    overlay.classList.remove('screen-shake');
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(() => {
-                            overlay.classList.add('screen-shake');
-                            setTimeout(() => overlay.classList.remove('screen-shake'), 380);
-                        });
-                    });
-                }
-                showDamageFloat(dmg, false, '#88aaff');
-            });
-            // 不正解時は即時被ダメ済みのためターンカウント進め、次のプレイヤーターンへ
-            setTimeout(() => {
-                if (battleSession.playerHP <= 0) {
-                    endBattle();
-                } else {
-                    battleSession.turnCount++;
-                    battleSession.currentUnitIdx = (battleSession.currentUnitIdx + 1) % battleSession.units.length;
-                    battleSession.turn = 'player';
-                    renderBattleUI();
-                }
-            }, 900);
-        }
-
-        if (isCorrect) {
-            setTimeout(() => {
-                if (battleSession.enemyHP <= 0 || battleSession.playerHP <= 0) {
-                    endBattle();
-                } else {
-                    battleSession.turn = 'enemy';
-                    battleEnemyTurn();
-                }
-            }, 900);
-        }
+        if (isCorrect) addXP(15, null);
+        battleSession.turn = 'resolve';
+        setTimeout(() => resolveBattleRound(isCorrect), 300);
     }
 
     function processGrammarAnswer(isCorrect) {
