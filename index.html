@@ -1746,9 +1746,40 @@
         .bplan-btn small { display: block; font-size: 8.5px; opacity: .8; }
         .bplan-btn.sel.attack { background: linear-gradient(135deg,#7a1818,#4a0a0a); border-color: #ff6666; color: #ffd0d0; }
         .bplan-btn.sel.skill  { background: linear-gradient(135deg,#3a1a6a,#20104a); border-color: #b080ff; color: #e8d8ff; }
-        .bplan-btn.sel.defend { background: linear-gradient(135deg,#123a5a,#0a2038); border-color: #66aaff; color: #d0e8ff; }
         .bplan-go { grid-column: 1 / -1; padding: 11px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; border: 2px solid #f0c040; background: linear-gradient(135deg,#8a5a10,#5a3400); color: #fff3c8; font-family: 'Noto Serif JP', serif; }
         .bplan-go:disabled { opacity: .45; }
+        /* 撃退：スライムが跳ねて逃げていく／討伐：光って弾けて消える */
+        @keyframes slimeFlee {
+            0%   { transform: translate(0,0) scale(1); }
+            15%  { transform: translate(0,-18px) scale(1.05,.95); }
+            30%  { transform: translate(-10px,0) scale(.95,1.05); }
+            45%  { transform: translate(0,-30px) rotate(-6deg); }
+            100% { transform: translate(140vw,-60px) rotate(25deg) scale(.7); opacity: .2; }
+        }
+        @keyframes slimeVanquish {
+            0%   { transform: scale(1); filter: brightness(1); }
+            10%,30%,50% { filter: brightness(3) saturate(0); }
+            20%,40% { filter: brightness(1); }
+            60%  { transform: scale(1.18); filter: brightness(2.5) saturate(0); opacity: 1; }
+            100% { transform: scale(0) rotate(-20deg); filter: brightness(4) saturate(0); opacity: 0; }
+        }
+        .slime-flee     { animation: slimeFlee 1.5s cubic-bezier(.5,0,.8,.6) forwards !important; }
+        .slime-vanquish { animation: slimeVanquish 1.6s ease-in forwards !important; }
+        .victory-word {
+            position: fixed; left: 50%; top: 32%; transform: translate(-50%,-50%) scale(.3); z-index: 3200;
+            font-family: 'Noto Serif JP', serif; font-weight: 900; font-size: 64px; letter-spacing: .15em; pointer-events: none;
+            animation: victoryWord 1.7s cubic-bezier(.2,1.4,.4,1) forwards; white-space: nowrap;
+        }
+        .victory-word.flee { color: #9fdcff; text-shadow: 0 0 18px rgba(80,180,255,.9), 0 4px 0 #1a3a6a; }
+        .victory-word.vanquish { color: #ffe27a; text-shadow: 0 0 24px rgba(255,200,60,1), 0 4px 0 #6a3a00; }
+        .victory-word small { display: block; font-size: 16px; letter-spacing: .05em; text-align: center; margin-top: 4px; }
+        @keyframes victoryWord {
+            0% { transform: translate(-50%,-50%) scale(.3); opacity: 0; }
+            25% { transform: translate(-50%,-50%) scale(1.15); opacity: 1; }
+            40% { transform: translate(-50%,-50%) scale(1); }
+            85% { opacity: 1; }
+            100% { transform: translate(-50%,-50%) scale(1); opacity: 0; }
+        }
         .bhit { display: inline-block; font-weight: bold; padding: 0 6px; border-radius: 6px; margin-left: 4px; }
         .bhit.hit { background: #2e8b3e; color: #fff; } .bhit.miss { background: #6a2a2a; color: #ffbbbb; }
         .battle-action-btn .btn-sub  { font-size: 9px; font-weight: normal; color: inherit; opacity: 0.8; }
@@ -2027,7 +2058,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-2010</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-2030</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -2150,7 +2181,7 @@
                 <div id="fslot-rear-content" style="display:none"></div>
             </div>
         </div>
-        <div style="font-size:11px;color:#a08060;margin-bottom:4px;">▼ カードを選んでポジションに配置</div>
+        <div style="font-size:11px;color:#a08060;margin-bottom:4px;">▼ カードをタップすると 前衛→中衛→後衛 の順に入ります</div>
         <div class="formation-pool-sort-bar" id="formationSortBar">
             <span style="font-size:10px;color:#886699;align-self:center;">並替:</span>
             <button class="formation-pool-sort-btn active" onclick="setFormationSort('rarity')">レアリティ</button>
@@ -4395,29 +4426,6 @@ const Cloud = (function () {
         deck: [], deckIndex: 0
     };
 
-    // 英文法問題データ (スキル発動時に使用)
-    const GRAMMAR_QUESTIONS = [
-        { q: '次の文の空欄を埋めよ。\n"She ___ to school every day."', choices: ['go','goes','going','gone'], a: 'goes', hint: '三人称単数現在形' },
-        { q: '正しい形を選べ。\n"He has ___ there before."', choices: ['go','went','gone','going'], a: 'gone', hint: '現在完了形 (have + 過去分詞)' },
-        { q: '空欄に入る正しい前置詞を選べ。\n"She is good ___ music."', choices: ['in','at','on','of'], a: 'at', hint: 'be good at ～ (～が得意)' },
-        { q: '正しい形を選べ。\n"If I ___ you, I would go."', choices: ['am','was','were','been'], a: 'were', hint: '仮定法過去: If + 主語 + were' },
-        { q: '関係代名詞を選べ。\n"The book ___ I read was great."', choices: ['who','which','whom','whose'], a: 'which', hint: '先行詞が物の場合はwhich/that' },
-        { q: '空欄を埋めよ。\n"You must ___ your homework now."', choices: ['do','did','done','doing'], a: 'do', hint: '助動詞の後は動詞の原形' },
-        { q: '正しい比較級を選べ。\n"This problem is ___ than that one."', choices: ['more difficult','most difficult','difficultier','difficultest'], a: 'more difficult', hint: '3音節以上の形容詞はmore〜を使う' },
-        { q: '受動態を選べ。\n"The window ___ by Tom yesterday."', choices: ['broke','is broken','was broken','has broken'], a: 'was broken', hint: '過去の受動態: was/were + 過去分詞' },
-        { q: '正しい疑問文を選べ。\n___ does she live?', choices: ['What','When','Where','Which'], a: 'Where', hint: '場所を尋ねるときはwhere' },
-        { q: '不定詞を使う動詞を選べ。\n"I want ___ speak English."', choices: ['to','of','for','at'], a: 'to', hint: 'want to + 動詞の原形' },
-        { q: '正しい冠詞を選べ。\n"She is ___ honest person."', choices: ['a','an','the','×'], a: 'an', hint: 'honestは母音(h無音)で始まるためan' },
-        { q: '空欄を埋めよ。\n"I have been studying English ___ three hours."', choices: ['since','for','during','from'], a: 'for', hint: '期間を表すときはfor (since + 起点)' },
-        { q: '正しい形を選べ。\n"This is the most ___ movie I have seen."', choices: ['exciting','excited','excite','excitingly'], a: 'exciting', hint: 'exciting=興奮させる(物・事が主語), excited=興奮した(人が主語)' },
-        { q: '正しい語句を選べ。\n"___ he rich, he could buy it."', choices: ['If','Were','Should','When'], a: 'Were', hint: '仮定法の倒置: Were he ~ = If he were ~' },
-        { q: '空欄を埋めよ。\n"I am used to ___ early."', choices: ['wake','waking','woke','woken'], a: 'waking', hint: 'be used to + 動名詞(~ing)' },
-        { q: '正しい前置詞を選べ。\n"We arrived ___ Tokyo at noon."', choices: ['in','at','to','on'], a: 'in', hint: '都市・国などの広い場所にはin' },
-        { q: '空欄を埋めよ。\n"Not only he ___ she came to the party."', choices: ['but also','and also','or also','however'], a: 'but also', hint: 'Not only A but also B (AだけでなくBも)' },
-        { q: '正しい形を選べ。\n"I wish I ___ speak French."', choices: ['can','could','will','would'], a: 'could', hint: 'I wish + 仮定法過去 → could' },
-        { q: '空欄を埋めよ。\n"The harder you study, ___ you will get."', choices: ['the better','a better','better','the best'], a: 'the better', hint: 'The 比較級, the 比較級 (〜すればするほど)' },
-        { q: '正しい語を選べ。\n"He ___ to the store yesterday."', choices: ['go','goes','went','gone'], a: 'went', hint: 'yesterdayは過去 → 過去形went' },
-    ];
 
     // ポジション別ボーナス
     const POSITION_BONUS = {
@@ -6128,9 +6136,8 @@ const Cloud = (function () {
             pre.src = stage.img;
         }
 
-        renderFormationSlots();
-        renderFormationPool();
-        document.getElementById('formationSelectedSlotLabel').textContent = 'ポジションを選択してください';
+        formationPoolEls = new Map();
+        selectFormationSlot('front');   // 前衛から順に選ぶ（攻撃力の高い順に並べ替え）
         document.getElementById('formationStartBtn').disabled = true;
         const fModal = document.getElementById('battle-formation-modal');
         fModal.style.display = 'flex';
@@ -6169,8 +6176,10 @@ const Cloud = (function () {
         });
     }
 
-    function setFormationSort(key) {
+    let formationSortPos = 'mid';   // 並べ替えの基準にするポジション（前衛なら攻撃+30%込みで比較）
+    function setFormationSort(key, pos) {
         formationPoolSort = key;
+        if (pos) formationSortPos = pos;
         document.querySelectorAll('.formation-pool-sort-btn').forEach(btn => {
             btn.classList.toggle('active', btn.textContent.trim().startsWith(
                 key === 'rarity' ? 'レア' : key === 'power' ? 'Power' : key === 'guard' ? 'Guard' : 'スキル'
@@ -6188,7 +6197,7 @@ const Cloud = (function () {
         pool.innerHTML = '';
         formationPoolEls = new Map();
         const rarityRank = { UR: 5, SSR: 4, SR: 3, R: 2, N: 1 };
-        const midBonus = POSITION_BONUS['mid'];
+        const midBonus = POSITION_BONUS[formationSortPos] || POSITION_BONUS['mid'];
         const cardById = getCardIndex();
 
         const myCards = [];
@@ -6250,35 +6259,51 @@ const Cloud = (function () {
         return _cardIndex;
     }
 
-    function selectFormationSlot(pos) {
+    /* 編成はカードをタップするだけで 前衛 → 中衛 → 後衛 の順に入る。
+       前衛（攻撃+30%）を選ぶときは攻撃力の高い順、後衛（HP+30%）を選ぶときは守備力の高い順に自動で並べ替える */
+    const FORMATION_ORDER = ['front', 'mid', 'rear'];
+    function nextEmptyFormationSlot() { return FORMATION_ORDER.find(p => !formationState.slots[p]) || null; }
+    function selectFormationSlot(pos, keepSort) {
         formationState.selectedSlot = pos;
         renderFormationSlots();
+        const label = document.getElementById('formationSelectedSlotLabel');
+        if (!pos) {
+            label.textContent = '✅ 3枚そろいました。入れ替えるときは枠をタップ';
+            return;
+        }
         const bonus = POSITION_BONUS[pos];
-        document.getElementById('formationSelectedSlotLabel').textContent =
-            `${bonus.label}にカードを配置 (Power${bonus.atkMult>=1?'+':''}${Math.round((bonus.atkMult-1)*100)}% / HP${bonus.hpMult>=1?'+':''}${Math.round((bonus.hpMult-1)*100)}%)`;
+        const step = FORMATION_ORDER.indexOf(pos) + 1;
+        const autoKey = pos === 'front' ? 'power' : pos === 'rear' ? 'guard' : null;
+        label.textContent = `${'①②③'[step - 1]} ${bonus.label}のカードを選ぼう（Power${bonus.atkMult>=1?'+':''}${Math.round((bonus.atkMult-1)*100)}% / HP${bonus.hpMult>=1?'+':''}${Math.round((bonus.hpMult-1)*100)}%）`
+            + (autoKey ? `　→ ${autoKey === 'power' ? '攻撃力' : '守備力'}が高い順に並べ替えました` : '');
+        if (!keepSort) {
+            const key = autoKey || 'rarity';
+            if (formationPoolSort !== key || !formationPoolEls.size) setFormationSort(key, pos);
+            else { formationSortPos = pos; renderFormationPool(); }
+        }
     }
 
     function addCardToFormation(card) {
-        const pos = formationState.selectedSlot;
-        if (!pos) { alert('先にポジションを選択してください'); return; }
+        const pos = formationState.selectedSlot || nextEmptyFormationSlot();
+        if (!pos) return;
         if (formationState.slots[pos]) {
             formationState.usedCardIds.delete(formationState.slots[pos].id);
         }
         formationState.slots[pos] = card;
         formationState.usedCardIds.add(card.id);
-        renderFormationSlots();
         refreshFormationPoolUsed();
         const allFilled = Object.values(formationState.slots).every(s => s !== null);
         document.getElementById('formationStartBtn').disabled = !allFilled;
+        selectFormationSlot(nextEmptyFormationSlot());   // 次の空き枠へ自動で進む
     }
 
     function removeFormationCard(pos) {
         const card = formationState.slots[pos];
         if (card) formationState.usedCardIds.delete(card.id);
         formationState.slots[pos] = null;
-        renderFormationSlots();
         refreshFormationPoolUsed();
         document.getElementById('formationStartBtn').disabled = true;
+        selectFormationSlot(pos);
     }
 
     function closeFormationModal() {
@@ -6343,7 +6368,7 @@ const Cloud = (function () {
 
         battleSession = {
             active: true, stage, units,
-            currentUnitIdx: -1, plan: null, _defReduction: 0,
+            currentUnitIdx: -1, plan: null, _defReduction: 0, _victoryShown: false,
             playerHP: playerMaxHP, playerMaxHP,
             enemyHP: stage.hp, enemyMaxHP: stage.hp,
             turn: 'player', turnCount: 1,
@@ -6390,6 +6415,7 @@ const Cloud = (function () {
     }
 
     function renderBattleUI() {
+        ['battleEnemyImg', 'battleEnemySprite'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('slime-flee', 'slime-vanquish'); });
         const { stage, units, playerHP, playerMaxHP, enemyHP, enemyMaxHP, turnCount } = battleSession;
         document.getElementById('battleStageName').textContent = `${stage.emoji} ${stage.name}`;
         document.getElementById('battleTurnLabel').textContent = `ターン ${turnCount}`;
@@ -6518,14 +6544,12 @@ const Cloud = (function () {
     }
 
     /* ===== ターンの流れ =====
-     * ① 3枚それぞれの行動（攻撃／スキル／防御）を選ぶ → ② ランダムに1問
+     * ① 3枚それぞれの行動（攻撃／スキル）を選ぶ → ② ランダムに1問（単語問題）
      * ③ 正解なら命中率90%（スキル80%）、不正解なら30%（スキル20%）で3枚が順に行動 → ④ ボスのターン
-     * 防御は命中判定なし：1枚につき被ダメージ -20%（不正解なら -10%）、最大 -60%
      */
     const BATTLE_ACTIONS = {
         attack: { icon: '⚔️', name: '攻撃' },
         skill:  { icon: '🔮', name: 'スキル' },
-        defend: { icon: '🛡️', name: '防御' },
     };
     function renderBattlePlanner() {
         const area = document.getElementById('battleActionArea');
@@ -6537,10 +6561,10 @@ const Cloud = (function () {
         area.innerHTML = battleSession.units.map((u, i) => `
             <div class="bplan-col">
                 <div class="bplan-head">${u.bonus.label}：${(u.card.quiz.answer || '').slice(0, 9)}</div>
-                ${['attack', 'skill', 'defend'].map(a => `
+                ${['attack', 'skill'].map(a => `
                     <button class="bplan-btn ${a}${battleSession.plan[i] === a ? ' sel' : ''}" onclick="setBattlePlan(${i},'${a}')">
                         ${BATTLE_ACTIONS[a].icon}${BATTLE_ACTIONS[a].name}
-                        <small>${a === 'attack' ? `P${u.atk}` : a === 'skill' ? `${u.skill.icon}${u.skill.name}` : '被ダメ-20%'}</small>
+                        <small>${a === 'attack' ? `P${u.atk}・命中90%` : `${u.skill.icon}${u.skill.name}・命中80%`}</small>
                     </button>`).join('')}
             </div>`).join('') +
             `<button class="bplan-go" id="battleGoBtn" onclick="confirmBattlePlan()">📜 作戦決定 → 問題へ</button>`;
@@ -6562,8 +6586,7 @@ const Cloud = (function () {
     function resolveBattleRound(isCorrect) {
         const { units, plan, stage } = battleSession;
         const key = isCorrect ? 'ok' : 'ng';
-        const defCount = plan.filter(a => a === 'defend').length;
-        battleSession._defReduction = Math.min(0.6, defCount * (isCorrect ? 0.2 : 0.1));
+        battleSession._defReduction = 0;   // 名詞スキル（堅固な存在など）で軽減されたときだけ使う
         addBattleLog(isCorrect ? '✅ 正解！ 命中率アップ（攻撃90%・スキル80%）' : '❌ 不正解… 命中率ダウン（攻撃30%・スキル20%）');
         const enhance = battleSession.buffActive ? (battleSession._enhancePower || 1.5) : 1;
         battleSession.buffActive = false; battleSession._enhancePower = null;
@@ -6571,7 +6594,6 @@ const Cloud = (function () {
         const step = () => {
             if (!battleSession.active) return;
             if (i >= units.length || battleSession.enemyHP <= 0) {
-                if (defCount > 0) addBattleLog(`🛡️ 防御 ${defCount}枚：次の被ダメージ -${Math.round(battleSession._defReduction * 100)}%`);
                 setTimeout(() => {
                     if (battleSession.enemyHP <= 0 || battleSession.playerHP <= 0) endBattle();
                     else { battleSession.turn = 'enemy'; battleEnemyTurn(); }
@@ -6581,7 +6603,6 @@ const Cloud = (function () {
             const u = units[i], act = plan[i];
             battleSession.currentUnitIdx = i;
             renderBattleUnits();
-            if (act === 'defend') { i++; step(); return; }
             const rate = HIT_RATE[act][key];
             const hit = Math.random() < rate;
             const tag = `<span class="bhit ${hit ? 'hit' : 'miss'}">${hit ? 'HIT' : 'MISS'}</span>`;
@@ -6649,22 +6670,6 @@ const Cloud = (function () {
         });
     }
 
-    function battleDoAction(type) {
-        if (!battleSession.active || battleSession.turn !== 'player') return;
-        setBattleActionBtnsEnabled(false);
-        const area = document.getElementById('battleActionArea');
-        if (area) area.style.display = 'none';
-        battleSession.currentAction = type;
-
-        if (type === 'attack') {
-            battleStartQuiz();
-        } else if (type === 'skill') {
-            battleUseSkill();
-        } else if (type === 'defend') {
-            battleDefend();
-        }
-    }
-
     function battleStartQuiz() {
         const pool = battleSession.questionPool;
         const questionCard = pool[Math.floor(Math.random() * pool.length)];
@@ -6676,55 +6681,6 @@ const Cloud = (function () {
         quizOv.classList.add('battle-quiz-mode');
         document.getElementById('quizTitle').innerText = `⚔️ 正解すると命中率アップ！`;
         showQuiz(questionCard);
-    }
-
-    function battleUseSkill() {
-        // 文法問題を出してスキル発動
-        const gqList = GRAMMAR_QUESTIONS;
-        const gq = gqList[Math.floor(Math.random() * gqList.length)];
-        battleSession.grammarQuestion = gq;
-        showGrammarQuiz(gq);
-    }
-
-    function showGrammarQuiz(gq) {
-        const overlay = document.getElementById('battle-overlay');
-        // grammar quiz をバトル画面内に表示
-        let box = document.getElementById('grammarQuizBox');
-        if (!box) {
-            box = document.createElement('div');
-            box.id = 'grammarQuizBox';
-            box.className = 'grammar-quiz-box';
-            overlay.appendChild(box);
-        }
-        const unit = battleSession.units[battleSession.currentUnitIdx];
-        box.innerHTML = `
-            <div style="font-size:13px;color:#f9ca24;font-weight:bold;margin-bottom:6px">
-                🔮 スキル発動！${unit.skill.icon}${unit.skill.name} — 文法問題に正解せよ！
-            </div>
-            <div style="font-size:14px;color:#fff;margin-bottom:10px;white-space:pre-wrap">${gq.q}</div>
-            <div class="grammar-quiz-choices" id="grammarChoices"></div>
-            <div style="font-size:11px;color:#aaa;margin-top:6px">ヒント: ${gq.hint}</div>`;
-        const choicesEl = box.querySelector('#grammarChoices');
-        gq.choices.forEach(ch => {
-            const btn = document.createElement('button');
-            btn.className = 'grammar-choice-btn';
-            btn.textContent = ch;
-            btn.onclick = () => {
-                choicesEl.querySelectorAll('.grammar-choice-btn').forEach(b => b.disabled = true);
-                const correct = ch === gq.a;
-                btn.style.background = correct ? '#27ae60' : '#e74c3c';
-                // 正解ボタンに色
-                choicesEl.querySelectorAll('.grammar-choice-btn').forEach(b => {
-                    if (b.textContent === gq.a) b.style.background = '#27ae60';
-                });
-                setTimeout(() => {
-                    box.remove();
-                    processGrammarAnswer(correct);
-                }, 900);
-            };
-            choicesEl.appendChild(btn);
-        });
-        box.style.display = 'block';
     }
 
     // 打撃SE：メイン画面の音声ON/OFFに従う。毎回 new Audio せず1つを使い回す
@@ -6800,13 +6756,6 @@ const Cloud = (function () {
         setTimeout(() => el.remove(), 400);
     }
 
-    function battleDefend() {
-        if (!battleSession.active) return;
-        battleSession.defendActive = true;
-        addBattleLog(`🛡️ 防御態勢！次の被ダメージを40%カット`);
-        setTimeout(() => battleEnemyTurn(), 700);
-    }
-
     function battleEnemyTurn() {
         if (!battleSession.active) return;
         const { stage } = battleSession;
@@ -6867,73 +6816,45 @@ const Cloud = (function () {
         setTimeout(() => resolveBattleRound(isCorrect), 300);
     }
 
-    function processGrammarAnswer(isCorrect) {
-        if (!battleSession.active) return;
-        const unit = battleSession.units[battleSession.currentUnitIdx];
-        const { stage, buffActive } = battleSession;
-        const skill = unit.skill;
-
-        if (isCorrect) {
-            addBattleLog(`✅ 文法正解！${skill.icon}${skill.name} 発動！`);
-            // ---- 動詞スキル: strike ----
-            if (skill.type === 'strike') {
-                if (skill.hits && skill.hits >= 2) {
-                    const dmg1 = Math.round(unit.atk * skill.power);
-                    const dmg2 = Math.round(unit.atk * skill.power);
-                    battleSession.enemyHP = Math.max(0, battleSession.enemyHP - dmg1 - dmg2);
-                    addBattleLog(`🗡️ 連鎖突撃！${dmg1}+${dmg2}ダメージ！`);
-                    showDamageFloat(dmg1+dmg2, true, '#ff4444');
-                } else {
-                    const dmg = Math.round(unit.atk * skill.power);
-                    battleSession.enemyHP = Math.max(0, battleSession.enemyHP - dmg);
-                    addBattleLog(`⚔️ 行動力！貫通${dmg}ダメージ！`);
-                    showDamageFloat(dmg, true, '#ff6622');
-                }
-                battleFlash('atk-flash');
-            // ---- 形容詞スキル: enhance ----
-            } else if (skill.type === 'enhance') {
-                battleSession.buffActive = true;
-                battleSession._enhancePower = skill.power;
-                addBattleLog(`✨ ${skill.name}！次ターン全員ATK×${skill.power}！`);
-            // ---- 名詞スキル: fortify ----
-            } else if (skill.type === 'fortify') {
-                const heal = Math.round(unit.maxHp * skill.power);
-                unit.hp = Math.min(unit.maxHp, unit.hp + heal);
-                battleSession.playerHP = Math.min(battleSession.playerMaxHP, battleSession.playerHP + heal);
-                battleSession._fortifyActive = true;
-                addBattleLog(`🛡️ ${skill.name}！HP+${heal} 回復・次ダメ-${Math.round(skill.power*100)}%！`);
-            // ---- 副詞スキル: swift (先制即時攻撃) ----
-            } else if (skill.type === 'swift') {
-                const hits = skill.hits || 1;
-                let totalDmg = 0;
-                for (let i = 0; i < hits; i++) totalDmg += Math.round(unit.atk * skill.power);
-                battleSession.enemyHP = Math.max(0, battleSession.enemyHP - totalDmg);
-                addBattleLog(`⚡ ${skill.name}！先制${hits > 1 ? '2連' : ''}攻撃 ${totalDmg}ダメージ！`);
-                battleFlash('atk-flash');
-                showDamageFloat(totalDmg, true, '#ffdd00');
-            }
-        } else {
-            addBattleLog(`❌ 文法不正解… ${skill.icon}${skill.name}失敗`);
-            // 失敗時は小ダメージ被弾
-            const dmg = Math.round(stage.atk * 0.5);
-            battleSession.playerHP = Math.max(0, battleSession.playerHP - dmg);
-            showDamageFloat(dmg, false, '#888');
+    // 勝利の演出（撃退＝逃げる／討伐＝光って消える）→ 終わったら結果画面へ
+    function playVictoryAnimation(stage, done) {
+        const img = document.getElementById('battleEnemyImg');
+        const sp  = document.getElementById('battleEnemySprite');
+        const target = (img && img.style.display !== 'none') ? img : sp;
+        const flee = stage.type === 'mid';
+        const area = document.getElementById('battleActionArea');
+        if (area) area.style.display = 'none';
+        if (target) {
+            target.classList.remove('shake', 'glow-damage', 'floating', 'boss-attack-anim', 'slime-flee', 'slime-vanquish');
+            void target.offsetWidth;
+            target.classList.add(flee ? 'slime-flee' : 'slime-vanquish');
         }
-
-        renderBattleUnits();
-        setTimeout(() => {
-            if (battleSession.enemyHP <= 0 || battleSession.playerHP <= 0) {
-                endBattle();
-            } else {
-                battleSession.turn = 'enemy';
-                battleEnemyTurn();
-            }
-        }, 600);
+        const w = document.createElement('div');
+        w.className = 'victory-word ' + (flee ? 'flee' : 'vanquish');
+        w.innerHTML = flee ? '撃退！<small>スライムは逃げていった…</small>' : '討伐！<small>' + stage.name + 'をたおした！</small>';
+        setTimeout(() => document.body.appendChild(w), flee ? 500 : 900);
+        if (!flee) {
+            playSE('gacha_sr');
+            setTimeout(() => {
+                const r = target ? target.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 3, width: 0, height: 0 };
+                try { confetti({ particleCount: 140, spread: 360, startVelocity: 28, gravity: .6, ticks: 120, scalar: .9,
+                    colors: ['#ffffff', '#ffe27a', '#9fdcff', '#c8a2ff'],
+                    origin: { x: (r.left + r.width / 2) / innerWidth, y: (r.top + r.height / 2) / innerHeight } }); } catch (e) {}
+            }, 1250);
+        } else {
+            playSE('unlock');
+        }
+        setTimeout(() => { w.remove(); done(); }, flee ? 2200 : 2600);
     }
 
     function endBattle() {
         const { enemyHP, playerHP, stage } = battleSession;
         const win = enemyHP <= 0 && playerHP > 0;
+        if (win && !battleSession._victoryShown) {
+            battleSession._victoryShown = true;
+            playVictoryAnimation(stage, () => endBattle());
+            return;
+        }
         const resultOverlay = document.getElementById('battle-result-overlay');
         const titleEl = document.getElementById('battleResultTitle');
         const descEl  = document.getElementById('battleResultDesc');
