@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>言の葉堂のひみつ手帖 ｜ 金の手帖</title>
+    <title>言の葉堂のひみつ手帖</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
@@ -462,12 +462,16 @@
             width: 100%; max-width: 750px;
             box-sizing: border-box;
             position: relative; z-index: 2;
-            /* 等間隔で左右いっぱいに並べる */
-            justify-content: space-between;
+            /* タブが多い手帖（最大28タブ）でも押せる幅を保ち、横スクロールにする */
+            justify-content: flex-start;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
         }
+        .collection-page-tabs::-webkit-scrollbar { display: none; }
         .cpt-btn {
-            flex: 1 1 0;
-            min-width: 0;
+            flex: 1 0 auto;
+            min-width: 58px;
             padding: 8px 2px;
             background: rgba(20,14,44,0.80);
             border: 1px solid #3a2c60;
@@ -1814,6 +1818,41 @@
             max-width: 90vw; text-align: center;
         }
         #authToast.show { opacity: 1; }
+        /* ===== 手帖（鉄・銅・銀・金・白金）===== */
+        h1#nbTitle { cursor: pointer; }
+        body.nb-A1 h1#nbTitle { background-image: linear-gradient(180deg,#f2f4f7 0%,#8c939d 38%,#c3c9d1 58%,#e2e6eb 80%,#6e747d 100%); filter: drop-shadow(0 0 12px rgba(170,180,195,0.55)) drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+        body.nb-A2 h1#nbTitle { background-image: linear-gradient(180deg,#ffd9b8 0%,#b5612a 36%,#e08f55 56%,#f3b98a 80%,#8c4318 100%); filter: drop-shadow(0 0 12px rgba(215,125,60,0.6)) drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+        body.nb-B1 h1#nbTitle { background-image: linear-gradient(180deg,#ffffff 0%,#9eabba 36%,#dfe6ee 56%,#f5f8fb 80%,#7f8b99 100%); filter: drop-shadow(0 0 12px rgba(190,205,225,0.65)) drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+        body.nb-PT h1#nbTitle { background-image: linear-gradient(180deg,#ffffff 0%,#c4cde0 34%,#eef2fa 54%,#dcd6f0 76%,#a9b3c9 100%); filter: drop-shadow(0 0 14px rgba(215,220,255,0.75)) drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+        h1#nbTitle.nb-morph-out { animation: nbMorphOut .55s ease-in forwards; }
+        h1#nbTitle.nb-morph-in  { animation: nbMorphIn .9s cubic-bezier(.2,.8,.2,1) forwards; }
+        @keyframes nbMorphOut { to { opacity: 0; transform: scale(.82) translateY(-6px); filter: blur(6px); letter-spacing: .5em; } }
+        @keyframes nbMorphIn {
+            0%   { opacity: 0; transform: scale(1.25); letter-spacing: .4em; filter: blur(8px) brightness(2.2); }
+            60%  { opacity: 1; filter: blur(0) brightness(1.6); }
+            100% { opacity: 1; transform: scale(1); letter-spacing: .12em; }
+        }
+        .nb-chip {
+            display: inline-flex; align-items: center; gap: 4px; margin: -6px 0 10px;
+            background: rgba(20,14,40,0.6); border: 1px solid var(--s-border); color: var(--s-accent);
+            border-radius: 14px; padding: 3px 12px; font-size: 11px; cursor: pointer;
+            font-family: 'Noto Serif JP', serif; letter-spacing: .06em;
+        }
+        .nb-list { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 4px; text-align: left; }
+        .nb-row {
+            display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px;
+            background: rgba(255,255,255,0.55); border: 1.5px solid rgba(120,100,60,0.25); cursor: pointer;
+        }
+        .nb-row.current { border-color: #9a7a3a; box-shadow: 0 0 0 2px rgba(200,160,60,0.35); }
+        .nb-row.locked { opacity: .55; cursor: default; filter: grayscale(.6); }
+        .nb-gem { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; box-shadow: inset 0 -3px 6px rgba(0,0,0,.35), 0 0 8px rgba(0,0,0,.15); display:flex;align-items:center;justify-content:center;font-size:16px; }
+        .nb-row-main { flex: 1; min-width: 0; }
+        .nb-row-name { font-weight: bold; font-size: 15px; color: #2a1a08; }
+        .nb-row-sub { font-size: 11px; color: #6a5a40; margin-top: 2px; }
+        .nb-bar { height: 5px; border-radius: 3px; background: rgba(0,0,0,.12); margin-top: 5px; overflow: hidden; }
+        .nb-bar > div { height: 100%; border-radius: 3px; }
+        #nb-unlock-toast .custom-box { animation: nbUnlockPop .6s cubic-bezier(.2,1.4,.4,1); }
+        @keyframes nbUnlockPop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -1972,9 +2011,10 @@
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
     <div class="series-divider"><span>✦</span></div>
-    <h1>金の手帖</h1>
-    <div class="book-subtitle">世界をひもとく　難関の英単語</div>
-    <div id="collectionCounter" style="display:none;">0 / 863</div>
+    <h1 id="nbTitle" onclick="openNotebookPicker()" title="手帖をえらぶ">白金の手帖</h1>
+    <div class="book-subtitle" id="nbSubtitle">世界をひもとく　難関の英単語</div>
+    <button class="nb-chip" id="nbChip" onclick="openNotebookPicker()">📚 手帖をえらぶ</button>
+    <div id="collectionCounter" style="display:none;">0 / 0</div>
     <div class="header-info-row">
         <div class="gacha-limit-info" id="gachaLimitInfo">本日のガチャ残り: 1回</div>
         <div class="streak-info" id="streakInfo">🔥 0日連続</div>
@@ -2025,6 +2065,26 @@
         <p style="font-size:11px;color:#607090;margin:0 0 10px;text-align:center;">強化の種を使うカードを選択（ATK/DEF +10）</p>
         <div id="spEnhanceCardList" style="overflow-y:auto;flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 2px;"></div>
         <button onclick="closeSPEnhanceModal()" style="margin-top:12px;background:rgba(40,60,80,0.8);border:1px solid rgba(80,120,160,0.4);border-radius:8px;color:#80a0c0;padding:8px;font-size:13px;cursor:pointer;font-family:'Noto Serif JP',serif;">閉じる</button>
+    </div>
+</div>
+
+<!-- 手帖えらび -->
+<div id="nb-picker" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeNotebookPicker()">
+    <div class="custom-box" style="width:90%;max-width:380px;">
+        <h3 style="margin:0 0 4px;color:#5a3a10;font-family:'Noto Serif JP',serif;">📚 手帖をえらぶ</h3>
+        <div style="font-size:11px;color:#7a6a50;">前の手帖のカードをすべて集めると、次の手帖が開きます</div>
+        <div class="nb-list" id="nbList"></div>
+        <button class="modal-cancel-btn" onclick="closeNotebookPicker()" style="margin-top:10px;">閉じる</button>
+    </div>
+</div>
+<!-- 手帖解禁のお知らせ -->
+<div id="nb-unlock-toast" class="modal-overlay" style="display:none;z-index:4000;">
+    <div class="custom-box" style="width:86%;max-width:340px;">
+        <div style="font-size:44px;line-height:1;margin-bottom:6px;">🔓</div>
+        <div id="nbUnlockMsg" style="font-size:17px;font-weight:bold;color:#3a2410;font-family:'Noto Serif JP',serif;margin-bottom:6px;"></div>
+        <div id="nbUnlockSub" style="font-size:12px;color:#6a5a40;margin-bottom:14px;"></div>
+        <button class="action-btn" id="nbUnlockGo" style="width:100%;padding:12px;font-size:15px;font-weight:bold;">ひらく</button>
+        <button class="modal-cancel-btn" onclick="document.getElementById('nb-unlock-toast').style.display='none'" style="margin-top:10px;">あとで</button>
     </div>
 </div>
 
@@ -2325,7 +2385,7 @@ const Cloud = (function () {
     const SYNC_KEYS = [
         'unlockedCards', 'srsData', 'dailyGachaStorage', 'loginStreak', 'xpData',
         'specialTickets', 'spEnhanceData', 'dailyStudyData', 'dailyChallenges',
-        'weeklyChallenges', 'hallOfFame', 'battleProgress',
+        'weeklyChallenges', 'hallOfFame', 'battleProgress', 'notebookState',
     ];
     const K = { SESSION: 'authSession', GUEST: 'authGuest', DIRTY: 'authDirty', QUEUE: 'logQueue', LAST: 'authLastSync' };
 
@@ -2590,7 +2650,7 @@ const Cloud = (function () {
 
     function render(v) {
         if (v === 'login') return `
-            <h3 class="auth-title">金の手帖へようこそ</h3>
+            <h3 class="auth-title">ひみつ手帖へようこそ</h3>
             <p class="auth-sub">ログインすると、家のスマホでも学校の端末でも<br>続きから遊べます。</p>
             ${tabs('login')}
             <div class="auth-error" id="authError"></div>
@@ -2860,6 +2920,7 @@ const Cloud = (function () {
             word:           card ? card.quiz.answer : null,
             meaning:        card ? card.quiz.meaning : null,
             level:          card ? (card.quiz.level || '') : null,
+            notebook:       (typeof currentNB !== 'undefined' && currentNB) ? currentNB.key : null,
             isCorrect:      isCorrect,
             responseTime:   getResponseTime(),
             tabIndex:       tabIndex,
@@ -2875,6 +2936,13 @@ const Cloud = (function () {
     const R_CARDS  = [2,6,7,8,12,16,17,18,22,26,27,28,32,36,37,38,42,46,47,48,52,57,62,67,72,77,82,87,92,97,102,107,112,117,122,127,132,137,142,147,152,157,162,167,172,177,182,187,192,197,202,207,212,217,222,227,232,237,242,247,252,257,262,267,272,277,282,287,292,297,302,307,312,317,322,327,332,337,342,347,352,357,362,367,372,377,382,387,392,397,402,407,412,417,422,432,437,442,447,452,457,462,467,472,477,482,487,492,497,502,507,512,517,522,527,532,537,542,547,552,557,562,567,572,577,582,587,592,597,602,607,612,617,622,627,632,637,642,647,652,657,662,667,672,677,682,687,692,697,702,707,712,717,722,727,732,737,742,747,752,757,762,767,772,777,782,787,792,797,802,807,812,817,822,827,832,837,842,847,852,857,862];
 
     function getRarity(no) {
+        if (typeof currentNB !== 'undefined' && currentNB && currentNB.key !== 'PT') {
+            // 鉄〜金：白金と同じくらいの割合（UR約1.4% / SR約5% / R約20%）で番号から決める
+            if (no % 70 === 10) return 'UR';
+            if (no % 20 === 5)  return 'SR';
+            if (no % 5 === 2)   return 'R';
+            return 'N';
+        }
         if (UR_CARDS.includes(no)) return 'UR';
         if (SR_CARDS.includes(no)) return 'SR';
         if (R_CARDS.includes(no))  return 'R';
@@ -3777,11 +3845,154 @@ const Cloud = (function () {
         70:  { nuance: '"arise" は「（問題・状況が）生じる・発生する」を意味し、物事が自然に起こることを表す。"rise"（物が物理的に上がる）や "occur"（出来事が起きる）と混同しやすい。', etymology: 'Old English āRīsan → ā-（強調）+ rīsan（立ち上がる）', affixes: 'ā-（古英語：強調接頭辞）＋ rīsan（立ち上がる）→ 接尾辞なし', phrases: 'problems arise / opportunities arise / arise from … / as the need arises', mistake: '❌ "A new problem raised."（raise = 誰かが持ち上げる・他動詞）→ ✅ "A new problem arose." / arise = 自然に発生する・自動詞' },
     };
 
-    /* ========== CARD DATA ========== */
-    const cardsData = [];
-    for (let i = 1; i <= TOTAL_CARDS; i++) {
-        const quiz = quizList[i] || { meaning: `意味 ${i}`, answer: `Word ${i}` };
-        cardsData.push({ id: `card-${i}`, img: `photo/${i}.webp`, thumb: `photo/thumb/${i}.webp`, no: i, quiz: quiz });
+    /* ========== 手帖（鉄 → 銅 → 銀 → 金 → 白金）==========
+     * 白金の手帖 = 従来の863語（データはこのファイル内、カードIDは card-N のまま）
+     * 鉄〜金 = CEFR-J A1〜B2（データは data/nb_*.json、カードIDは a1-N など）
+     * 前の手帖のカードを全部集めると次の手帖が開く。既存ユーザーは白金も最初から開いている。
+     */
+    const NB_DATA_VERSION = '20261101';
+    const NOTEBOOKS = [
+        { key: 'A1', name: '鉄の手帖',   level: 'CEFR-J A1', sub: 'はじまりの扉　基礎の英単語', count: 1166, prefix: 'a1',
+          c: ['#eef0f3', '#8c939d', '#5d636b'], gem: '⚙️' },
+        { key: 'A2', name: '銅の手帖',   level: 'CEFR-J A2', sub: '旅立ちの道　日常の英単語',   count: 1411, prefix: 'a2',
+          c: ['#ffd9b8', '#c06a30', '#7a3a12'], gem: '🔶' },
+        { key: 'B1', name: '銀の手帖',   level: 'CEFR-J B1', sub: '広がる世界　実用の英単語',   count: 2445, prefix: 'b1',
+          c: ['#ffffff', '#aab6c4', '#6a7684'], gem: '💠' },
+        { key: 'B2', name: '金の手帖',   level: 'CEFR-J B2', sub: '深まる知恵　発展の英単語',   count: 2779, prefix: 'b2',
+          c: ['#f5e285', '#d4980c', '#8a5a00'], gem: '👑' },
+        { key: 'PT', name: '白金の手帖', level: '英検準1級〜1級', sub: '世界をひもとく　難関の英単語', count: TOTAL_CARDS, prefix: 'card',
+          c: ['#ffffff', '#c4cde0', '#8a93ab'], gem: '💎' },
+    ];
+    const NB_BY_KEY = {};
+    NOTEBOOKS.forEach((n, i) => { n.idx = i; NB_BY_KEY[n.key] = n; });
+
+    // 手帖ごとの所持枚数（IDの接頭辞で数える。手帖データを読み込まなくても数えられる）
+    function nbOwnedCount(nb, list) {
+        const pre = nb.prefix + '-';
+        let n = 0;
+        for (const id of (list || unlockedCards)) if (typeof id === 'string' && id.startsWith(pre)) n++;
+        return n;
+    }
+
+    let notebookState = (function () {
+        let st = null;
+        try { st = JSON.parse(localStorage.getItem('notebookState') || 'null'); } catch (e) { st = null; }
+        if (!st || !Array.isArray(st.unlocked)) {
+            let owned = [];
+            try { owned = JSON.parse(localStorage.getItem('unlockedCards') || '[]'); } catch (e) {}
+            // 既存ユーザー = 白金（従来の863語）のカードを1枚以上持っている人 → 白金を最初から開放し、白金から始める
+            const isExisting = Array.isArray(owned) && owned.some(id => /^card-\d+$/.test(id));
+            st = { unlocked: isExisting ? ['A1', 'PT'] : ['A1'], current: isExisting ? 'PT' : 'A1' };
+            try { localStorage.setItem('notebookState', JSON.stringify(st)); } catch (e) {}
+        }
+        if (!st.unlocked.includes('A1')) st.unlocked.unshift('A1');
+        // 別の端末でログインして進捗を復元した場合など：白金のカードを持っていれば白金は開いている扱い
+        if (!st.unlocked.includes('PT')) {
+            try {
+                const owned = JSON.parse(localStorage.getItem('unlockedCards') || '[]');
+                if (Array.isArray(owned) && owned.some(id => /^card-\d+$/.test(id))) st.unlocked.push('PT');
+            } catch (e) {}
+        }
+        if (!NB_BY_KEY[st.current] || !st.unlocked.includes(st.current)) st.current = st.unlocked[0];
+        return st;
+    })();
+    function saveNotebookState() { localStorage.setItem('notebookState', JSON.stringify(notebookState)); }
+
+    // 手帖データの読み込み（同期。カードデータが揃ってから画面を組み立てるため）
+    function loadNotebookRows(nb) {
+        try {
+            const x = new XMLHttpRequest();
+            x.open('GET', `data/nb_${nb.key}.json?v=${NB_DATA_VERSION}`, false);
+            x.send(null);
+            if ((x.status === 200 || x.status === 0) && x.responseText) return JSON.parse(x.responseText);
+        } catch (e) { console.warn('手帖データを読み込めません:', nb.key, e); }
+        return null;
+    }
+
+    let currentNB = NB_BY_KEY[notebookState.current];
+    let cardsData = [];
+    (function buildCardsData() {
+        if (currentNB.key !== 'PT') {
+            const rows = loadNotebookRows(currentNB);
+            if (rows && rows.length) {
+                rows.forEach((r, i) => {
+                    const no = i + 1;
+                    cardsData.push({
+                        id: `${currentNB.prefix}-${no}`, no, nb: currentNB.key,
+                        quiz: { answer: r[0], pos: r[1], meaning: r[2], example: r[3], form: r[4], category: r[5], level: currentNB.key },
+                        // 絵のカードはまだ無いので、文字のカード（SVG）をその場で作る
+                        get img()   { return cardSVG(this); },
+                        get thumb() { return cardSVG(this); },
+                    });
+                });
+                return;
+            }
+            // 読み込み失敗：白金が開いていればそちらで起動、だめなら空のまま（メッセージ表示）
+            alert(`${currentNB.name}のデータを読み込めませんでした。通信状態を確認して再読み込みしてください。`);
+            if (notebookState.unlocked.includes('PT')) currentNB = NB_BY_KEY.PT;
+            else return;
+        }
+        for (let i = 1; i <= TOTAL_CARDS; i++) {
+            const quiz = quizList[i] || { meaning: `意味 ${i}`, answer: `Word ${i}` };
+            cardsData.push({ id: `card-${i}`, img: `photo/${i}.webp`, thumb: `photo/thumb/${i}.webp`, no: i, nb: 'PT', quiz: quiz });
+        }
+    })();
+    const isPT = currentNB.key === 'PT';
+    // バトルの撃破記録IDの接頭辞（白金は従来どおり tab0_final など。他の手帖は a1_tab0_final など）
+    const STAGE_PREFIX = isPT ? '' : currentNB.prefix + '_';
+
+    // 出題用の英単語・意味の一覧（現在の手帖から。重複は除く）
+    let _quizPoolCache = null;
+    function quizPool() {
+        if (!_quizPoolCache) {
+            const seen = new Set();
+            _quizPoolCache = cardsData.map(c => c.quiz).filter(q => {
+                const k = q.answer + '|' + q.pos;
+                if (seen.has(k)) return false;
+                seen.add(k); return true;
+            });
+        }
+        return _quizPoolCache;
+    }
+
+    /* 文字のカード（画像が無いカード用）。SVGをその場で生成してキャッシュ */
+    const _svgCache = new Map();
+    const CAT_ICON = { nature: '🌿', action: '⚡', emotion: '💗', social: '🏛️', science: '🔬', academic: '📜', language: '💬' };
+    function cardSVG(card) {
+        const hit = _svgCache.get(card.id);
+        if (hit) return hit;
+        const nb = NB_BY_KEY[card.nb] || currentNB;
+        const q = card.quiz || {};
+        const rar = getRarity(card.no);
+        const esc = t => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        const word = q.answer || '';
+        const fs = word.length <= 5 ? 84 : word.length <= 7 ? 72 : word.length <= 9 ? 60 : word.length <= 12 ? 48 : word.length <= 16 ? 38 : 30;
+        const ja = String(q.meaning || '').split(/[／\/]/).filter(Boolean).slice(0, 3);
+        const rarCol = { UR: '#ff80ff', SR: '#f0c840', R: '#6aa8ff', N: nb.c[1] }[rar];
+        const icon = CAT_ICON[q.category] || '✦';
+        const jaSvg = ja.map((t, i) => {
+            const f = t.length <= 6 ? 40 : t.length <= 9 ? 34 : t.length <= 12 ? 28 : 22;
+            return `<text x="200" y="${440 + i * 54}" font-size="${f}" fill="#f3ead6" text-anchor="middle" font-weight="bold">${esc(t)}</text>`;
+        }).join('');
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="661" viewBox="0 0 400 661" font-family="'Noto Serif JP','Hiragino Mincho ProN','Yu Mincho',serif">` +
+            `<defs><linearGradient id="f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${nb.c[0]}"/><stop offset=".5" stop-color="${nb.c[1]}"/><stop offset="1" stop-color="${nb.c[2]}"/></linearGradient>` +
+            `<radialGradient id="g" cx=".5" cy=".38" r=".75"><stop offset="0" stop-color="#2e2456"/><stop offset="1" stop-color="#0d0a1e"/></radialGradient></defs>` +
+            `<rect width="400" height="661" rx="28" fill="url(#f)"/>` +
+            `<rect x="14" y="14" width="372" height="633" rx="20" fill="url(#g)"/>` +
+            `<rect x="26" y="26" width="348" height="609" rx="14" fill="none" stroke="${nb.c[1]}" stroke-opacity=".55" stroke-width="2"/>` +
+            `<rect x="26" y="26" width="348" height="609" rx="14" fill="none" stroke="${rarCol}" stroke-opacity="${rar === 'N' ? 0 : .8}" stroke-width="4"/>` +
+            `<circle cx="200" cy="178" r="56" fill="none" stroke="${nb.c[1]}" stroke-opacity=".7" stroke-width="2"/>` +
+            `<circle cx="200" cy="178" r="46" fill="${nb.c[1]}" fill-opacity=".14"/>` +
+            `<text x="200" y="196" font-size="48" text-anchor="middle" fill="${nb.c[0]}">${icon}</text>` +
+            `<text x="200" y="${310}" font-size="${fs}" fill="#ffffff" text-anchor="middle" font-weight="bold" font-family="Georgia,'Times New Roman',serif">${esc(word)}</text>` +
+            `<text x="200" y="356" font-size="24" fill="#c8bce8" text-anchor="middle" font-style="italic" font-family="Georgia,serif">${esc(q.pos || '')}</text>` +
+            `<line x1="90" y1="384" x2="310" y2="384" stroke="${nb.c[1]}" stroke-opacity=".6" stroke-width="1.5"/>` +
+            jaSvg +
+            `<text x="200" y="612" font-size="18" fill="${nb.c[1]}" fill-opacity=".9" text-anchor="middle" letter-spacing="4">${esc(nb.name)}</text>` +
+            `</svg>`;
+        const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg).replace(/'/g, '%27');
+        _svgCache.set(card.id, url);
+        return url;
     }
 
     /* ========== SAFE localStorage HELPER ========== */
@@ -3791,14 +4002,33 @@ const Cloud = (function () {
     }
 
     /* ========== STATE ========== */
-    // サムネイル(photo/thumb)が無ければ原寸画像へ、それも無ければ非表示にする
-    function imgFallback(el, full) {
-        if (el.dataset.fb) { el.style.display = 'none'; return; }
-        el.dataset.fb = '1';
-        el.src = full;
+    // 画像の読み込み失敗時：サムネイル → 原寸画像 → 文字のカード（SVG）の順に切り替える
+    function imgFallback(el, id) {
+        const card = getCardIndex().get(id);
+        const step = +(el.dataset.fb || 0);
+        el.dataset.fb = step + 1;
+        if (!card || step >= 2) { el.style.display = 'none'; return; }
+        if (step === 0 && card.img && el.getAttribute('src') !== card.img) { el.src = card.img; return; }
+        el.src = cardSVG(card);
     }
 
     let unlockedCards = safeParse('unlockedCards', []);
+
+    // 所持判定（unlockedCards.includes は数千枚で重いので Set で引く）
+    let _ownedSet = null, _ownedLen = -1, _ownedArr = null;
+    function isOwned(id) {
+        if (_ownedArr !== unlockedCards || _ownedLen !== unlockedCards.length) {
+            _ownedSet = new Set(unlockedCards); _ownedLen = unlockedCards.length; _ownedArr = unlockedCards;
+        }
+        return _ownedSet.has(id);
+    }
+    function ownedInNotebook() { return nbOwnedCount(currentNB); }
+
+    // 所持カードを保存し、手帖の解禁をチェック
+    function saveUnlocked() {
+        localStorage.setItem('unlockedCards', JSON.stringify(unlockedCards));
+        checkNotebookUnlocks();
+    }
     let currentSingleCard = null;
 
     let gachaSession = { isGachaMode: false, selectedCard: null, userAnswer: "", onDone: null };
@@ -3921,7 +4151,7 @@ const Cloud = (function () {
         const list = document.getElementById('spEnhanceCardList');
         if (!list) return;
         // 所持カードのみ表示
-        const owned = cardsData.filter(c => unlockedCards.includes(c.id));
+        const owned = cardsData.filter(c => isOwned(c.id));
         list.innerHTML = owned.length === 0
             ? '<div style="grid-column:span 2;text-align:center;color:#607090;padding:20px">カードを取得してください</div>'
             : owned.map(c => {
@@ -4023,8 +4253,8 @@ const Cloud = (function () {
     function updateDailyGoalDisplay() { updateCollectionProgress(); } // 後方互換ラッパー
 
     function updateCollectionProgress() {
-        const acquired = unlockedCards.length;
-        const total    = TOTAL_CARDS;
+        const acquired = ownedInNotebook();
+        const total    = cardsData.length;
         const pct      = total > 0 ? Math.min(100, Math.round((acquired / total) * 100)) : 0;
         const acqEl  = document.getElementById('cpAcquired');
         const totEl  = document.getElementById('cpTotal');
@@ -4037,7 +4267,9 @@ const Cloud = (function () {
         // 殿堂入りボタンのロック状態を更新
         const hofBtn = document.getElementById('hofBtn');
         if (hofBtn) {
-            const allComplete = acquired >= total;
+            // 殿堂入りは白金の手帖（863語）のコンプリートで解禁
+            const ptOwned = nbOwnedCount(NB_BY_KEY.PT);
+            const allComplete = ptOwned >= TOTAL_CARDS;
             const wasLocked = hofBtn.style.opacity !== '1';
             if (allComplete) {
                 if (wasLocked) playSE('hof'); // 解禁瞬間にSE
@@ -4047,7 +4279,9 @@ const Cloud = (function () {
             } else {
                 hofBtn.style.opacity = '0.5';
                 hofBtn.style.background = 'linear-gradient(150deg,#2a2020,#1a1010)';
-                hofBtn.innerHTML = `<span class="btn-icon">🔒</span>殿堂入りへの道 (残り${total - acquired}枚)`;
+                hofBtn.innerHTML = notebookState.unlocked.includes('PT')
+                    ? `<span class="btn-icon">🔒</span>殿堂入りへの道 (白金 残り${TOTAL_CARDS - ptOwned}枚)`
+                    : `<span class="btn-icon">🔒</span>殿堂入りへの道 (白金の手帖で解禁)`;
             }
         }
         updateAdventureBattleBtn();
@@ -4240,7 +4474,7 @@ const Cloud = (function () {
             const tFinal = FINAL_BOSS_TEMPLATES[tabIdx % FINAL_BOSS_TEMPLATES.length];
             const isLastTab = tabIdx === totalTabs - 1;
             stages.push({
-                id: `tab${tabIdx}_mid`,
+                id: `${STAGE_PREFIX}tab${tabIdx}_mid`,
                 tabIdx,
                 type: 'mid',
                 name: tMid.name,
@@ -4252,7 +4486,7 @@ const Cloud = (function () {
                 reward: { type: 'gacha', amount: Math.max(1, tabIdx + 1) }
             });
             stages.push({
-                id: `tab${tabIdx}_final`,
+                id: `${STAGE_PREFIX}tab${tabIdx}_final`,
                 tabIdx,
                 type: 'final',
                 name: tFinal.name,
@@ -4276,7 +4510,7 @@ const Cloud = (function () {
         const totalTabs = Math.ceil(cardsData.length / COLLECTION_PAGE_SIZE);
         let count = 1; // タブ0は常に解禁
         for (let i = 0; i < totalTabs - 1; i++) {
-            if (battleProgress.defeated.includes(`tab${i}_final`)) count++;
+            if (battleProgress.defeated.includes(`${STAGE_PREFIX}tab${i}_final`)) count++;
             else break;
         }
         return Math.min(count, totalTabs);
@@ -4287,7 +4521,7 @@ const Cloud = (function () {
         const start = tabIdx * COLLECTION_PAGE_SIZE;
         const end   = Math.min((tabIdx + 1) * COLLECTION_PAGE_SIZE, cardsData.length);
         const tabCards = cardsData.slice(start, end);
-        return { collected: tabCards.filter(c => unlockedCards.includes(c.id)).length, total: tabCards.length };
+        return { collected: tabCards.filter(c => isOwned(c.id)).length, total: tabCards.length };
     }
 
     // ステージ解禁条件チェック
@@ -4298,7 +4532,7 @@ const Cloud = (function () {
         if (type === 'mid') {
             return collected >= half;
         } else { // final
-            return collected >= total && battleProgress.defeated.includes(`tab${tabIdx}_mid`);
+            return collected >= total && battleProgress.defeated.includes(`${STAGE_PREFIX}tab${tabIdx}_mid`);
         }
     }
 
@@ -4342,7 +4576,7 @@ const Cloud = (function () {
     function openStudyMode(mode) {
         studyState.mode = mode || 'all';
         let pool;
-        pool = cardsData.filter(c => unlockedCards.includes(c.id));
+        pool = cardsData.filter(c => isOwned(c.id));
         document.getElementById('studyModeTitle').textContent = '📖 学習モード';
         if (pool.length === 0) {
             alert('まずカードをアンロックしてください！');
@@ -4372,7 +4606,10 @@ const Cloud = (function () {
         flipEl.classList.remove('flipped');
 
         // Image
-        document.getElementById('studyCardImg').src = card.img;
+        const studyImg = document.getElementById('studyCardImg');
+        studyImg.dataset.fb = 0; studyImg.style.display = '';
+        studyImg.onerror = () => imgFallback(studyImg, card.id);
+        studyImg.src = card.img;
         // Scene caption (image generation prompt context)
         const sceneEl = document.getElementById('studySceneCaption');
         if (sceneEl) sceneEl.textContent = card.quiz.scene || '';
@@ -4687,8 +4924,8 @@ const Cloud = (function () {
             }
             // 全カードを解禁
             const allIds = cardsData.map(c => c.id);
-            allIds.forEach(id => { if (!unlockedCards.includes(id)) unlockedCards.push(id); });
-            localStorage.setItem('unlockedCards', JSON.stringify(unlockedCards));
+            allIds.forEach(id => { if (!isOwned(id)) unlockedCards.push(id); });
+            saveUnlocked();
             dailyGachaStorage.usedCoupons.push(inputCode);
             localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
             closeCouponModal();
@@ -5029,18 +5266,19 @@ const Cloud = (function () {
     }
 
     function showHallOfFameModal() {
-        const allComplete = unlockedCards.length >= TOTAL_CARDS;
+        const ptOwnedNow = nbOwnedCount(NB_BY_KEY.PT);
+        const allComplete = ptOwnedNow >= TOTAL_CARDS;
         // SE はボタン押下では流れない（コンプ解禁時・ボスラッシュクリア時のみ）
         if (!allComplete) {
             // 未コンプリートならロック画面を表示
-            const remaining = TOTAL_CARDS - unlockedCards.length;
+            const remaining = TOTAL_CARDS - ptOwnedNow;
             const el = document.getElementById('challengeModalContent');
             el.innerHTML = `
                 <div style="text-align:center;padding:24px 8px;">
                     <div style="font-size:48px;margin-bottom:12px;">🔒</div>
                     <div style="color:#e8d070;font-size:16px;font-weight:bold;font-family:'Noto Serif JP',serif;margin-bottom:10px;">殿堂入りへの道</div>
                     <div style="color:#a090c0;font-size:13px;line-height:1.8;margin-bottom:16px;">
-                        全 <strong style="color:#f0c840;">${TOTAL_CARDS}</strong> 枚をコンプリートすると解禁されます。<br>
+                        白金の手帖の全 <strong style="color:#f0c840;">${TOTAL_CARDS}</strong> 枚をコンプリートすると解禁されます。<br>
                         残り <strong style="color:#ff8080;">${remaining}</strong> 枚
                     </div>
                     <div style="background:rgba(20,10,40,0.7);border-radius:10px;padding:12px;border:1px solid rgba(180,150,80,0.2);">
@@ -5098,12 +5336,12 @@ const Cloud = (function () {
         el.innerHTML = `
             <div class="challenge-section">
                 <div class="challenge-section-title">
-                    <span>📒 金の手帖</span>
+                    <span>📒 白金の手帖</span>
                     <span style="font-size:10px;color:#a090c0;">歴代ボスラッシュ（強化版）</span>
                 </div>
                 ${hofRow('金の手帖', hof['金の手帖'])}
                 <div style="font-size:10px;color:#706060;margin-top:6px;">
-                    歴代の最終ボス全員を2倍強化で連続撃破<br>報酬: ガチャ+30回 / 金の手帖バッジ＋称号
+                    歴代の最終ボス全員を2倍強化で連続撃破<br>報酬: ガチャ+30回 / 白金の手帖バッジ＋称号
                 </div>
             </div>
             <div style="text-align:center;color:#706080;font-size:10px;padding:6px 0 2px;">
@@ -5156,7 +5394,7 @@ const Cloud = (function () {
     function isTabUnlocked(tabIndex) {
         if (tabIndex === 0) return true;  // タブ0は常に解禁
         // タブNはタブN-1の最終ボス（tab{N-1}_final）を倒すと解禁
-        return battleProgress.defeated.includes(`tab${tabIndex - 1}_final`);
+        return battleProgress.defeated.includes(`${STAGE_PREFIX}tab${tabIndex - 1}_final`);
     }
 
     function renderCollectionTabs() {
@@ -5198,11 +5436,13 @@ const Cloud = (function () {
             }
             tabsEl.appendChild(btn);
         }
+        const act = tabsEl.querySelector('.cpt-btn.active');
+        if (act) tabsEl.scrollLeft = Math.max(0, act.offsetLeft - tabsEl.clientWidth / 2 + act.offsetWidth / 2);
     }
 
     function renderCollection() {
         checkAndResetDailyGacha();
-        document.getElementById('collectionCounter').innerText = `${unlockedCards.length} / ${TOTAL_CARDS}`;
+        document.getElementById('collectionCounter').innerText = `${ownedInNotebook()} / ${cardsData.length}`;
         updateCollectionProgress();
         const grid = document.getElementById('collectionGrid');
         grid.innerHTML = '';
@@ -5215,7 +5455,7 @@ const Cloud = (function () {
         const displayCards = cardsData.slice(pageStart, pageStart + COLLECTION_PAGE_SIZE);
 
         displayCards.forEach(card => {
-            const isUnlocked = unlockedCards.includes(card.id);
+            const isUnlocked = isOwned(card.id);
             const rarity = getRarity(card.no);
             const cardEl = document.createElement('div');
             cardEl.className = `card-container ${isUnlocked ? `card-rarity-${rarity}` : 'locked'}`;
@@ -5226,7 +5466,7 @@ const Cloud = (function () {
                 ? (() => {
                       const st = getCardStats(card);
                       return `<div style="position:relative">
-                          <img src="${card.thumb}" alt="No.${card.no}" class="card-img" loading="lazy" decoding="async" onerror="imgFallback(this,'${card.img}')">
+                          <img src="${card.thumb}" alt="No.${card.no}" class="card-img" loading="lazy" decoding="async" onerror="imgFallback(this,'${card.id}')">
                           <div class="rarity-badge rarity-badge-${rarity}">${rarity}</div>
                           <div style="position:absolute;bottom:2px;left:0;right:0;display:flex;justify-content:center;gap:4px;pointer-events:none;">
                               <span style="background:rgba(20,5,5,0.82);border:1px solid rgba(220,60,60,0.65);color:#ff9090;font-size:11px;font-weight:bold;padding:2px 7px;border-radius:8px;">P${st.atk}</span>
@@ -5248,7 +5488,7 @@ const Cloud = (function () {
         const zoomContent = document.getElementById('zoomContent');
         zoomContent.innerHTML = `
             <div style="position:relative;">
-                <img src="${card.img}" alt="No.${card.no}" style="width:100%;height:auto;border-radius:14px;display:block;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
+                <img src="${card.img}" onerror="imgFallback(this,'${card.id}')" alt="No.${card.no}" style="width:100%;height:auto;border-radius:14px;display:block;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
                 <button class="zoom-info-btn" onclick="event.stopPropagation();document.getElementById('zoom-info-panel').classList.contains('open')?closeZoomInfoPanel():showZoomInfoPanel(${card.no})">📖</button>
             </div>
             <div style="display:flex;justify-content:center;gap:10px;margin-top:10px;">
@@ -5266,7 +5506,7 @@ const Cloud = (function () {
     function showZoomInfoPanel(cardNo) {
         const card = cardsData.find(c => c.no === cardNo);
         if (!card) return;
-        const details = CARD_DETAILS[cardNo];
+        const details = isPT ? CARD_DETAILS[cardNo] : null;
         const pos = (card.quiz && card.quiz.pos) ? card.quiz.pos : '';
         const meaning = (card.quiz && card.quiz.meaning) ? card.quiz.meaning : '';
         const answer = (card.quiz && card.quiz.answer) ? card.quiz.answer : `No.${cardNo}`;
@@ -5317,6 +5557,10 @@ const Cloud = (function () {
                     <div class="zip-mistake">${details.mistake}</div>
                 </div>`;
             }
+        } else if (card.quiz && card.quiz.example) {
+            const ex = String(card.quiz.example).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+            html += `<div class="zip-section"><div class="zip-label">📖 例文</div>
+                <div style="font-size:13px;line-height:1.7;">${ex}</div></div>`;
         } else {
             html += `<div class="zip-section" style="text-align:center;color:#604880;padding:30px 16px;">
                 <div style="font-size:28px;margin-bottom:8px;">🔮</div>
@@ -5407,7 +5651,7 @@ const Cloud = (function () {
         const unlockedCount = getUnlockedTabCount();
         const end     = Math.min(unlockedCount * COLLECTION_PAGE_SIZE, cardsData.length);
         const tabPool = cardsData.slice(0, end);
-        const uncollectedPool = tabPool.filter(c => !unlockedCards.includes(c.id));
+        const uncollectedPool = tabPool.filter(c => !isOwned(c.id));
         const drawPool = uncollectedPool.length > 0 ? uncollectedPool : tabPool;
         const randomCard = weightedGachaPick(drawPool);
 
@@ -5542,7 +5786,7 @@ const Cloud = (function () {
                 const guard = Math.round(stats.def * bonus.hpMult * 3 * tabScale);
                 slot.innerHTML = `
                     <div class="formation-slot-label ${pos}">${bonus.label}</div>
-                    <img src="${card.thumb}" class="formation-slot-card-img" decoding="async" onerror="imgFallback(this,'${card.img}')">
+                    <img src="${card.thumb}" class="formation-slot-card-img" decoding="async" onerror="imgFallback(this,'${card.id}')">
                     <div style="font-size:10px;font-weight:bold;color:#fff;line-height:1.2">${card.quiz.answer.slice(0,8)}</div>
                     <div style="font-size:9px;color:#88bbff">P:${power} G:${guard}</div>
                     <div style="font-size:9px;color:#f9ca24">${skill.icon}${skill.name}</div>
@@ -5609,7 +5853,7 @@ const Cloud = (function () {
             const div = document.createElement('div');
             div.className = 'formation-pool-card' + (formationState.usedCardIds.has(card.id) ? ' used' : '');
             div.innerHTML = `
-                <img src="${card.thumb}" loading="lazy" decoding="async" alt="" onerror="imgFallback(this,'${card.img}')">
+                <img src="${card.thumb}" loading="lazy" decoding="async" alt="" onerror="imgFallback(this,'${card.id}')">
                 <div class="formation-pool-card-overlay">
                     <div class="formation-pool-card-name">${(card.quiz.answer||'').slice(0,8)}</div>
                     <div class="formation-pool-card-rarity" style="color:${rarityColors[rarity]||'#888'}">${rarity}</div>
@@ -5865,7 +6109,7 @@ const Cloud = (function () {
                 div.innerHTML = `
                     <div class="battle-unit-pos-label ${u.pos}">${u.bonus.label}</div>
                     <div class="battle-unit-rarity ${getRarity(u.card.no)}">${getRarity(u.card.no)}</div>
-                    <img src="${u.card.thumb}" decoding="async" onerror="imgFallback(this,'${u.card.img}')" style="width:100%;border-radius:6px;display:block;margin-bottom:3px;">
+                    <img src="${u.card.thumb}" decoding="async" onerror="imgFallback(this,'${u.card.id}')" style="width:100%;border-radius:6px;display:block;margin-bottom:3px;">
                     <div class="battle-unit-word">${(u.card.quiz.answer||'').slice(0,10)}</div>
                     <div class="battle-unit-pg">P:${u.atk} G:${u.maxHp}</div>
                     <div class="battle-unit-hp-bar"><div class="battle-unit-hp-fill${hpPct<=30?' low':''}" style="width:${hpPct}%"></div></div>
@@ -6491,6 +6735,8 @@ const Cloud = (function () {
             const isAdvanced = (rarity === 'SR' || rarity === 'UR') && Math.random() < 0.5;
             quizType = isAdvanced ? 'engToMeaning' : 'fillBlank';
         }
+        // 鉄〜金の手帖：例文の中に見出し語（またはその変化形）が見つからない単語は穴埋めにしない
+        if (quizType === 'fillBlank' && card.nb && card.nb !== 'PT' && !card.quiz.form) quizType = 'engToMeaning';
 
         const choicesEl = document.getElementById('quizChoices');
         choicesEl.innerHTML = '';
@@ -6508,7 +6754,7 @@ const Cloud = (function () {
             // 【タイプA】英単語→日本語意味選択
             const correctMeaning = card.quiz.meaning;
             const allMeanings = shuffle(
-                Object.values(quizList).map(q => q.meaning).filter(m => m !== correctMeaning)
+                quizPool().map(q => q.meaning).filter(m => m !== correctMeaning)
             );
             const choices = shuffle([correctMeaning, ...allMeanings.slice(0, 3)]);
 
@@ -6522,6 +6768,7 @@ const Cloud = (function () {
                 const btn = document.createElement('button');
                 btn.className = 'quiz-choice-btn';
                 btn.textContent = ans;
+                if (ans === correctMeaning) btn.dataset.correct = '1';
                 btn.onclick = () => submitChoice(ans === correctMeaning, card, ans, btn);
                 choicesEl.appendChild(btn);
             });
@@ -6532,17 +6779,17 @@ const Cloud = (function () {
             const cardPos = card.quiz.pos ? card.quiz.pos.replace(/[.\s]/g, '').toLowerCase() : '';
             let pool;
             if (cardPos) {
-                const samePos = Object.values(quizList)
+                const samePos = quizPool()
                     .filter(q => q.pos && q.pos.replace(/[.\s]/g, '').toLowerCase() === cardPos && q.answer !== correctAnswer)
                     .map(q => q.answer);
                 if (samePos.length >= 3) {
                     pool = samePos;
                 } else {
-                    const others = Object.values(quizList).map(q => q.answer).filter(a => a !== correctAnswer && !samePos.includes(a));
+                    const others = quizPool().map(q => q.answer).filter(a => a !== correctAnswer && !samePos.includes(a));
                     pool = [...samePos, ...others];
                 }
             } else {
-                pool = Object.values(quizList).map(q => q.answer).filter(a => a !== correctAnswer);
+                pool = quizPool().map(q => q.answer).filter(a => a !== correctAnswer);
             }
             const choices = shuffle([correctAnswer, ...shuffle(pool).slice(0, 3)]);
 
@@ -6556,6 +6803,7 @@ const Cloud = (function () {
                 const btn = document.createElement('button');
                 btn.className = 'quiz-choice-btn';
                 btn.textContent = ans;
+                if (ans === correctAnswer) btn.dataset.correct = '1';
                 btn.onclick = () => submitChoice(ans === correctAnswer, card, ans, btn);
                 choicesEl.appendChild(btn);
             });
@@ -6566,7 +6814,10 @@ const Cloud = (function () {
             // 標準問題: 例文の穴埋め（英語を選ぶ）
             const correctAnswer = card.quiz.answer;
             let sentence = card.quiz.example || '___';
-            const escaped = correctAnswer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            // 例文中で語形が変わっている場合（wind → wound など）は、その語形を隠す
+            const blankTarget = card.quiz.form || correctAnswer;
+            const formChanged = blankTarget.toLowerCase() !== correctAnswer.toLowerCase();
+            const escaped = blankTarget.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const regex = new RegExp('\\b' + escaped + '\\b', 'i');
             if (regex.test(sentence)) {
                 // 最初の1箇所のみ穴埋めに置換
@@ -6577,14 +6828,15 @@ const Cloud = (function () {
                     ? sentence.replace(regex2, '<span class="quiz-blank">（　　）</span>')
                     : '<span class="quiz-blank">（　　）</span> &mdash; ' + sentence;
             }
-            document.getElementById('quizSentence').innerHTML = sentence;
+            document.getElementById('quizSentence').innerHTML = sentence + (formChanged
+                ? '<div style="font-size:11px;color:#a07040;margin-top:6px;">※ 空欄の語は形が変わっています（もとの形を選ぼう）</div>' : '');
 
             // 文頭に穴埋めがあるか判定（選択肢の大文字化に使用）
             const blankAtStart = sentence.trimStart().startsWith('<span class="quiz-blank">');
 
             // a / an の直前文脈を判定（文法フィルタ用）
             const lowerEx = (card.quiz.example || '').toLowerCase();
-            const ansIdx = lowerEx.indexOf(correctAnswer.toLowerCase());
+            const ansIdx = lowerEx.indexOf(blankTarget.toLowerCase());
             const textBefore = ansIdx >= 0 ? lowerEx.substring(0, ansIdx).trimEnd() : '';
             const articleBeforeIsAn = /\ban$/.test(textBefore);
             const articleBeforeIsA  = /\ba$/.test(textBefore);
@@ -6594,17 +6846,17 @@ const Cloud = (function () {
             const cardPos = card.quiz && card.quiz.pos ? card.quiz.pos.replace(/[.\s]/g, '').toLowerCase() : '';
             let allAnswers;
             if (trainingSession.active && cardPos) {
-                const samePos = Object.values(quizList)
+                const samePos = quizPool()
                     .filter(q => q.pos && q.pos.replace(/[.\s]/g, '').toLowerCase() === cardPos && q.answer !== correctAnswer)
                     .map(q => q.answer);
                 if (samePos.length >= 3) {
                     allAnswers = samePos;
                 } else {
-                    const others = Object.values(quizList).map(q => q.answer).filter(a => a !== correctAnswer && !samePos.includes(a));
+                    const others = quizPool().map(q => q.answer).filter(a => a !== correctAnswer && !samePos.includes(a));
                     allAnswers = [...samePos, ...others];
                 }
             } else {
-                allAnswers = Object.values(quizList)
+                allAnswers = quizPool()
                     .map(q => q.answer)
                     .filter(a => a !== correctAnswer);
             }
@@ -6628,6 +6880,7 @@ const Cloud = (function () {
                     ? ans.charAt(0).toUpperCase() + ans.slice(1)
                     : ans;
                 btn.textContent = displayAns;
+                if (ans === correctAnswer) btn.dataset.correct = '1';
                 btn.onclick = () => submitChoice(ans === correctAnswer, card, ans, btn);
                 choicesEl.appendChild(btn);
             });
@@ -6709,10 +6962,14 @@ const Cloud = (function () {
     function validateAnswer(userInput, allowedAnswersString) {
         const user = cleanText(userInput);
         if (user === "") return false;
+        // 完全一致のみ正解（以前は部分一致で、"a" のような1文字でも正解になっていた）。
+        // 空白の違いと、先頭の冠詞 a / an / the の有無だけは許容する
+        const norm = t => t.replace(/\s+/g, " ").replace(/^(a|an|the) /, "");
+        const u = norm(user);
         return allowedAnswersString.split("/").some(ans => {
             const model = cleanText(ans);
             if (model === "") return false;
-            return user.includes(model) || model.includes(user);
+            return u === norm(model);
         });
     }
 
@@ -6737,7 +6994,7 @@ const Cloud = (function () {
         // 不正解時は正解ボタンを緑に
         if (!isCorrect) {
             document.querySelectorAll('.quiz-choice-btn').forEach(b => {
-                if (b.textContent === card.quiz.answer) b.classList.add('correct');
+                if (b.dataset.correct === '1') b.classList.add('correct');
             });
         }
 
@@ -6865,7 +7122,7 @@ const Cloud = (function () {
         gachaCardEl.id = 'gachaCard-0';
 
         if (isCorrect) {
-            const isNew = !unlockedCards.includes(card.id);
+            const isNew = !isOwned(card.id);
             if (isNew) unlockedCards.push(card.id);
             if (isNew) logEvent('unlock', card, null);   // 回答は直前の logEvent('gacha') で記録済み
             // ガチャでXP獲得（レアリティに応じてボーナス）
@@ -6876,7 +7133,7 @@ const Cloud = (function () {
                 <div class="gacha-face gacha-back ${rc.backClass}">？</div>
                 <div class="gacha-face gacha-front ${rc.frontClass}">
                     <div class="gacha-rarity-badge gacha-rarity-badge-${rarity}">${rc.label}</div>
-                    <img src="${card.img}">
+                    <img src="${card.img}" onerror="imgFallback(this,'${card.id}')">
                     <div class="gacha-info">No.${card.no}　${card.quiz.answer}${isNew ? '' : '　<span style="font-size:10px;opacity:0.75;">✔ 取得済み</span>'}<br><span style="font-size:10px;font-weight:normal;color:#d0c090;">${card.quiz.meaning}</span></div>
                     <div class="gacha-stats"><span>⚔️ Power:${st.atk}</span><span>🛡️ Guard:${st.def}</span></div>
                 </div>
@@ -6907,7 +7164,7 @@ const Cloud = (function () {
             setGachaTitle(`判定：不正解（正しい意味は: ${primaryAns}）`, 800);
         }
         container.appendChild(gachaCardEl);
-        localStorage.setItem('unlockedCards', JSON.stringify(unlockedCards));
+        saveUnlocked();
 
         if (isCorrect) {
             setTimeout(() => {
@@ -6932,9 +7189,9 @@ const Cloud = (function () {
         const rc = RARITY_CONFIG[rarity];
         setGachaTitle(`${rc.emoji} ${rc.resultTitle}`, 1000);
 
-        if (!unlockedCards.includes(card.id)) {
+        if (!isOwned(card.id)) {
             unlockedCards.push(card.id);
-            localStorage.setItem('unlockedCards', JSON.stringify(unlockedCards));
+            saveUnlocked();
         }
 
         const gachaCardEl = document.createElement('div');
@@ -6945,7 +7202,7 @@ const Cloud = (function () {
             <div class="gacha-face gacha-back ${rc.backClass}">？</div>
             <div class="gacha-face gacha-front ${rc.frontClass}">
                 <div class="gacha-rarity-badge gacha-rarity-badge-${rarity}">${rc.label}</div>
-                <img src="${card.img}">
+                <img src="${card.img}" onerror="imgFallback(this,'${card.id}')">
                 <div class="gacha-info">No.${card.no}　${card.quiz.answer}<br><span style="font-size:10px;font-weight:normal;color:#d0c090;">${card.quiz.meaning}</span></div>
                 <div class="gacha-stats"><span>⚔️ Power:${st2.atk}</span><span>🛡️ Guard:${st2.def}</span></div>
             </div>
@@ -7125,7 +7382,7 @@ const Cloud = (function () {
             document.getElementById('battleResultTitle').className = 'battle-result-title win';
             document.getElementById('battleResultTitle').textContent = '🏆 殿堂入り！';
             document.getElementById('battleResultDesc').innerHTML =
-                `全ボスラッシュ制覇！<br>🎖️ 金の手帖バッジ取得！<br>🎰 ガチャ+${r.gacha}回！` +
+                `全ボスラッシュ制覇！<br>🎖️ 白金の手帖バッジ取得！<br>🎰 ガチャ+${r.gacha}回！` +
                 (GAS_URL && !Cloud.isLoggedIn() ? '<br><small>ログインすると殿堂入りランキングに名前が載ります</small>' : '');
             Cloud.saveNow();   // ランキングへすぐ反映させる
             document.getElementById('battle-result-overlay').style.display = 'flex';
@@ -7219,8 +7476,8 @@ const Cloud = (function () {
         localStorage.setItem('dailyChallenges', JSON.stringify(dailyChallenges));
         localStorage.setItem('weeklyChallenges', JSON.stringify(weeklyChallenges));
 
-        // Hall of Fame tracking (金の手帖: 全トレーニング対象)
-        if (trainingSession.active) {
+        // Hall of Fame tracking (白金の手帖のトレーニングのみ対象。内部キーは従来の '金の手帖')
+        if (trainingSession.active && isPT) {
             checkHallOfFame('金の手帖', isCorrect);
         }
     }
@@ -7340,16 +7597,16 @@ const Cloud = (function () {
             </div>
             <div class="challenge-section">
                 <div class="challenge-section-title">
-                    <span>📒 金の手帖チャレンジ</span>
+                    <span>📒 白金の手帖チャレンジ</span>
                     <span style="font-size:11px;color:#a090c0;">100問連続正解</span>
                 </div>
                 <div style="font-size:11px;color:#807090;margin-bottom:8px;line-height:1.6;">
-                    冒険で100問連続正解すると金の手帖に殿堂入り！<br>
+                    冒険で100問連続正解すると白金の手帖に殿堂入り！<br>
                     ※1問でも不正解でカウンターリセット
                 </div>
                 ${hofRow('金の手帖', hof['金の手帖'])}
                 <div style="font-size:11px;color:#706060;margin-top:8px;">
-                    報酬: ガチャ+30回 / 金の手帖バッジ＋称号
+                    報酬: ガチャ+30回 / 白金の手帖バッジ＋称号
                 </div>
             </div>
             <div style="text-align:center;color:#706080;font-size:11px;padding:8px 0 16px;">
@@ -7361,7 +7618,7 @@ const Cloud = (function () {
     /* ========== RENDER TRAINING TAB ========== */
     function renderTrainingTab() {
         const grid = document.getElementById('collectionGrid');
-        const total = unlockedCards.length;
+        const total = ownedInNotebook();
         grid.innerHTML = `<div class="training-container" style="grid-column:1/-1;">
             <div style="color:#e8d070;font-size:17px;font-weight:bold;margin-bottom:6px;font-family:'Noto Serif JP',serif;">🗺️ 冒険モード</div>
             <div style="color:#a090c0;font-size:13px;margin-bottom:4px;">アンロック済み: ${total}枚 | 無制限で練習</div>
@@ -7370,11 +7627,11 @@ const Cloud = (function () {
             <button class="training-start-btn" onclick="openTrainingMode('all')">🎯 全カードで冒険</button>
 
             <div style="margin-top:22px;padding:14px;background:rgba(20,10,40,0.65);border:1px solid rgba(200,170,50,0.35);border-radius:10px;text-align:left;">
-                <div style="color:#e8d070;font-size:13px;margin-bottom:8px;font-family:'Noto Serif JP',serif;">📒 金の手帖チャレンジ</div>
+                <div style="color:#e8d070;font-size:13px;margin-bottom:8px;font-family:'Noto Serif JP',serif;">📒 白金の手帖チャレンジ</div>
                 <div style="color:#a090c0;font-size:12px;line-height:1.9;">
-                    • 冒険で <strong style="color:#f0c840;">100問連続正解</strong> → 金の手帖殿堂入り！<br>
+                    • 冒険で <strong style="color:#f0c840;">100問連続正解</strong> → 白金の手帖殿堂入り！<br>
                     • 1問でも不正解でカウンターリセット<br>
-                    • 報酬: ガチャ+30回 / 金の手帖バッジ＋称号<br>
+                    • 報酬: ガチャ+30回 / 白金の手帖バッジ＋称号<br>
                     • 進捗は「チャレンジ」タブで確認
                 </div>
             </div>
@@ -7517,7 +7774,117 @@ const Cloud = (function () {
         updateBgmButtons();
     }
 
+    /* ========== 手帖：切替・解禁・ヘッダー ========== */
+    function applyNotebookTheme() {
+        const nb = currentNB;
+        document.body.classList.add('nb-' + nb.key);
+        if (nb.key !== 'B2') {
+            const r = document.documentElement.style;
+            r.setProperty('--s-primary', nb.c[1]);
+            r.setProperty('--s-accent', nb.c[0]);
+            r.setProperty('--s-border', nb.c[1] + 'aa');
+        }
+        document.title = `言の葉堂のひみつ手帖 ｜ ${nb.name}`;
+        const sub = document.getElementById('nbSubtitle');
+        if (sub) sub.textContent = nb.sub;
+        const h1 = document.getElementById('nbTitle');
+        if (!h1) return;
+        // 手帖を切り替えた直後・解禁直後は、前の手帖名から新しい手帖名へアニメーションで変える
+        let from = null;
+        try { from = sessionStorage.getItem('nbSwitchFrom'); sessionStorage.removeItem('nbSwitchFrom'); } catch (e) {}
+        const fromNB = from && NB_BY_KEY[from];
+        if (fromNB && fromNB.key !== nb.key) {
+            document.body.classList.remove('nb-' + nb.key);
+            document.body.classList.add('nb-' + fromNB.key);
+            h1.textContent = fromNB.name;
+            setTimeout(() => {
+                h1.classList.add('nb-morph-out');
+                setTimeout(() => {
+                    document.body.classList.remove('nb-' + fromNB.key);
+                    document.body.classList.add('nb-' + nb.key);
+                    h1.textContent = nb.name;
+                    h1.classList.remove('nb-morph-out');
+                    h1.classList.add('nb-morph-in');
+                    playSE('unlock');
+                    setTimeout(() => h1.classList.remove('nb-morph-in'), 950);
+                }, 560);
+            }, 450);
+        } else {
+            h1.textContent = nb.name;
+        }
+    }
+
+    function switchNotebook(key) {
+        if (!notebookState.unlocked.includes(key)) return;
+        if (key === currentNB.key) { closeNotebookPicker(); return; }
+        if (battleSession && battleSession.active) { alert('バトル中は手帖を切り替えられません'); return; }
+        notebookState.current = key;
+        saveNotebookState();
+        try { sessionStorage.setItem('nbSwitchFrom', currentNB.key); } catch (e) {}
+        // 未送信の進捗は「未保存」印が残るので、読み込み直した後に自動で同期される
+        fadeScreen(() => location.reload(), 500);
+    }
+
+    function openNotebookPicker() {
+        const list = document.getElementById('nbList');
+        list.innerHTML = '';
+        NOTEBOOKS.forEach((nb, i) => {
+            const unlocked = notebookState.unlocked.includes(nb.key);
+            const owned = nbOwnedCount(nb);
+            const pct = Math.min(100, Math.round(owned / nb.count * 100));
+            const prev = NOTEBOOKS[i - 1];
+            const row = document.createElement('div');
+            row.className = 'nb-row' + (nb.key === currentNB.key ? ' current' : '') + (unlocked ? '' : ' locked');
+            row.innerHTML = `
+                <div class="nb-gem" style="background:linear-gradient(135deg,${nb.c[0]},${nb.c[1]} 55%,${nb.c[2]})">${unlocked ? nb.gem : '🔒'}</div>
+                <div class="nb-row-main">
+                    <div class="nb-row-name">${nb.name}${nb.key === currentNB.key ? '　<span style="font-size:11px;color:#9a7a3a;">ひらいている手帖</span>' : ''}</div>
+                    <div class="nb-row-sub">${nb.level}・${unlocked ? `${owned} / ${nb.count}枚` : (prev ? `${prev.name}をすべて集めると開く` : '')}</div>
+                    ${unlocked ? `<div class="nb-bar"><div style="width:${pct}%;background:linear-gradient(90deg,${nb.c[1]},${nb.c[0]})"></div></div>` : ''}
+                </div>`;
+            if (unlocked) row.onclick = () => switchNotebook(nb.key);
+            list.appendChild(row);
+        });
+        const m = document.getElementById('nb-picker');
+        m.style.display = 'flex';
+        m.classList.add('modal-animate');
+    }
+    function closeNotebookPicker() {
+        const m = document.getElementById('nb-picker');
+        m.classList.remove('modal-animate');
+        m.style.display = 'none';
+    }
+
+    // 前の手帖をコンプリートしたら次の手帖を開く
+    function checkNotebookUnlocks() {
+        let newly = null;
+        for (let i = 0; i < NOTEBOOKS.length - 1; i++) {
+            const nb = NOTEBOOKS[i], next = NOTEBOOKS[i + 1];
+            if (!notebookState.unlocked.includes(nb.key) || notebookState.unlocked.includes(next.key)) continue;
+            if (nbOwnedCount(nb) >= nb.count) {
+                notebookState.unlocked.push(next.key);
+                newly = next;
+            }
+        }
+        if (!newly) return;
+        saveNotebookState();
+        logEvent('notebook_unlock', null, null);
+        // ガチャ演出の邪魔をしないよう少し待ってから知らせる
+        setTimeout(() => {
+            document.getElementById('nbUnlockMsg').textContent = `${newly.name}が開いた！`;
+            document.getElementById('nbUnlockSub').textContent = `${newly.level}・${newly.count}枚の新しいカードが待っています`;
+            document.getElementById('nbUnlockGo').onclick = () => {
+                document.getElementById('nb-unlock-toast').style.display = 'none';
+                switchNotebook(newly.key);
+            };
+            document.getElementById('nb-unlock-toast').style.display = 'flex';
+            playSE('hof');
+            try { confetti({ particleCount: 160, spread: 110, origin: { y: 0.45 } }); } catch (e) {}
+        }, 2200);
+    }
+
     /* ========== INIT ========== */
+    applyNotebookTheme();
     updateXPDisplay();
     updateSpecialGachaBtn();
     updateDailyGoalDisplay();
