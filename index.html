@@ -2006,7 +2006,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-1825</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-1840</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -2016,7 +2016,7 @@
     <button class="nb-chip" id="nbChip" onclick="openNotebookPicker()">📚 手帖をえらぶ</button>
     <div id="collectionCounter" style="display:none;">0 / 0</div>
     <div class="header-info-row">
-        <div class="gacha-limit-info" id="gachaLimitInfo">本日のガチャ残り: 1回</div>
+        <div class="gacha-limit-info" id="gachaLimitInfo">💰 0 G</div>
         <div class="streak-info" id="streakInfo">🔥 0日連続</div>
     </div>
     <div class="combo-display" id="comboDisplay">
@@ -2038,7 +2038,7 @@
 
 <div class="action-grid">
     <button class="action-btn btn-gacha" id="gachaBtn" onclick="startGachaViaButton()" style="grid-column:span 2;">
-        <span class="btn-icon">🎰</span>ガチャ <span id="gachaBtnCount"></span>
+        <span class="btn-icon">🎴</span>カードを引く <span id="gachaBtnCount"></span>
     </button>
     <button class="action-btn btn-study" id="adventureBattleBtn" onclick="adventureOrBattle()" style="grid-column:span 2;">
         <span class="btn-icon" id="adventureBattleBtnIcon">🗺️</span><span id="adventureBattleBtnLabel">冒険</span>
@@ -2090,10 +2090,13 @@
 
 <div id="gacha-choice-modal" class="modal-overlay" style="display:none;">
     <div class="custom-box" style="width:88%;max-width:340px;text-align:center;">
-        <h3 style="margin:0 0 6px;color:#e8d070;font-family:'Noto Serif JP',serif;">🎰 ガチャ</h3>
-        <p id="gachaChoiceDesc" style="font-size:13px;color:#b0a080;margin:0 0 18px;"></p>
-        <button class="action-btn btn-gacha" onclick="closeGachaChoiceModal();triggerGachaCore();" style="width:100%;font-size:14px;padding:12px 8px;">
-            <span class="btn-icon">🎰</span>ガチャをまわす
+        <h3 style="margin:0 0 6px;color:#5a3a10;font-family:'Noto Serif JP',serif;">🎴 カードを引く</h3>
+        <p id="gachaChoiceDesc" style="font-size:14px;color:#6a5030;margin:0 0 14px;"></p>
+        <button class="action-btn btn-gacha" id="drawNormalBtn" onclick="drawCard('normal')" style="width:100%;font-size:15px;padding:10px 8px;margin-bottom:10px;flex-direction:column;gap:3px;">
+            <span>🎴 ふつうに引く　<strong>10G</strong></span><span style="font-size:11px;font-weight:normal;opacity:.85;">持っているカードと被ることがある</span>
+        </button>
+        <button class="action-btn btn-gacha" id="drawPremiumBtn" onclick="drawCard('premium')" style="width:100%;font-size:15px;padding:10px 8px;background:linear-gradient(150deg,#8a5a10,#4a2a00);flex-direction:column;gap:3px;">
+            <span>✨ 新カード確定　<strong>100G</strong></span><span style="font-size:11px;font-weight:normal;opacity:.85;">まだ持っていないカードが必ず出る</span>
         </button>
         <button class="modal-cancel-btn" onclick="closeGachaChoiceModal()" style="margin-top:12px;">キャンセル</button>
     </div>
@@ -2286,7 +2289,7 @@
         <span class="streak-bonus-icon">🔥</span>
         <p class="streak-day-label" id="streakDayLabel"></p>
         <p class="streak-bonus-msg" id="streakBonusMsg"></p>
-        <p class="streak-bonus-sub">ガチャ残り回数に追加されました！</p>
+        <p class="streak-bonus-sub">ゴールドでカードを引こう！</p>
         <button class="modal-btn" style="background:linear-gradient(#8a4010, #5a2808);" onclick="closeStreakBonusModal()">やった！</button>
     </div>
 </div>
@@ -2385,7 +2388,7 @@ const Cloud = (function () {
     const SYNC_KEYS = [
         'unlockedCards', 'srsData', 'dailyGachaStorage', 'loginStreak', 'xpData',
         'specialTickets', 'spEnhanceData', 'dailyStudyData', 'dailyChallenges',
-        'weeklyChallenges', 'hallOfFame', 'battleProgress', 'notebookState',
+        'weeklyChallenges', 'hallOfFame', 'battleProgress', 'notebookState', 'gold',
     ];
     const K = { SESSION: 'authSession', GUEST: 'authGuest', DIRTY: 'authDirty', QUEUE: 'logQueue', LAST: 'authLastSync' };
 
@@ -4266,13 +4269,14 @@ const Cloud = (function () {
         confetti({ particleCount: 60, spread: 50, origin: { y: 0.4 } });
     }
 
-    function spawnXPFloat(text, originEl) {
+    function spawnXPFloat(text, originEl, isGold) {
         const rect = originEl.getBoundingClientRect();
         const el = document.createElement('div');
         el.className = 'xp-float';
         el.textContent = text;
-        el.style.left = (rect.left + rect.width / 2 - 20) + 'px';
+        el.style.left = (rect.left + rect.width / 2 - 20 + (isGold ? 70 : 0)) + 'px';
         el.style.top = (rect.top - 10) + 'px';
+        if (isGold) el.style.color = '#ffd24a';
         document.body.appendChild(el);
         setTimeout(() => el.remove(), 1300);
     }
@@ -4782,13 +4786,70 @@ const Cloud = (function () {
         if (studyState.index < studyState.cards.length - 1) { studyState.index++; renderStudyCard(); }
     }
 
+    /* ========== ゴールド（通貨）==========
+     * 冒険で問題に正解するとXPとゴールドがもらえる。カードはゴールドで引く。
+     *   ふつうに引く  10G：解禁済みタブの全カードから（取得済みカードと被ることがある）
+     *   新カード確定 100G：まだ持っていないカードから（被りなし）
+     * 以前「ガチャ+1回」だった報酬は、すべて 100G（＝新カード確定1回分）に置き換えた。
+     */
+    const GOLD_PER_GACHA = 100;
+    const DRAW_COST = { normal: 10, premium: 100 };
+    let gold = parseInt(localStorage.getItem('gold') || '0', 10) || 0;
+    // 旧データ移行：残っていたガチャ回数を 1回=100G でゴールドに変換（1回だけ）
+    (function migrateGachaToGold() {
+        if (localStorage.getItem('goldMigrated') === '1') return;
+        const left = (dailyGachaStorage && dailyGachaStorage.count) || 0;
+        if (left > 0) gold += left * GOLD_PER_GACHA;
+        if (dailyGachaStorage) dailyGachaStorage.count = 0;
+        localStorage.setItem('gold', String(gold));
+        localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
+        localStorage.setItem('goldMigrated', '1');
+    })();
+    function saveGold() { localStorage.setItem('gold', String(gold)); updateGoldDisplay(); }
+    function addGold(amount, originEl) {
+        amount = Math.round(amount);
+        if (amount <= 0) return;
+        gold += amount;
+        saveGold();
+        if (originEl) spawnXPFloat(`+${amount} G`, originEl, true);
+    }
+    function spendGold(amount) {
+        if (gold < amount) return false;
+        gold -= amount;
+        saveGold();
+        return true;
+    }
+    function updateGoldDisplay() {
+        const el = document.getElementById('gachaLimitInfo');
+        if (el) el.innerHTML = `💰 <strong>${gold.toLocaleString()}</strong> G`;
+        const btn = document.getElementById('gachaBtn');
+        if (btn) btn.disabled = gold < DRAW_COST.normal;
+        const countSpan = document.getElementById('gachaBtnCount');
+        if (countSpan) countSpan.textContent = '';
+    }
+    // 冒険ボーナス：今日たくさん冒険するほど、1問あたりのXP・ゴールドが増える
+    const ADVENTURE_TIERS = [
+        { from: 0,   mult: 1,   label: '' },
+        { from: 20,  mult: 1.5, label: '冒険ボーナス ×1.5' },
+        { from: 50,  mult: 2,   label: '冒険ボーナス ×2' },
+        { from: 100, mult: 3,   label: '冒険ボーナス ×3' },
+    ];
+    const ADVENTURE_BASE = { xp: 10, gold: 5 };
+    function adventureTier() {
+        const n = (dailyChallenges && dailyChallenges.progress && dailyChallenges.progress.trainCount) || 0;
+        let t = ADVENTURE_TIERS[0];
+        for (const x of ADVENTURE_TIERS) if (n >= x.from) t = x;
+        const next = ADVENTURE_TIERS.find(x => x.from > n);
+        return { ...t, count: n, next };
+    }
+
     /* ========== DAILY GACHA RESET ========== */
     function checkAndResetDailyGacha() {
         const todayStr = new Date().toLocaleDateString();
         if (dailyGachaStorage.lastDate !== todayStr) {
             // 日付が変わったらリセット（ログインボーナス+1）
             dailyGachaStorage.lastDate = todayStr;
-            dailyGachaStorage.count = (dailyGachaStorage.count || 0) + 1; // ログイン+1
+            gold += GOLD_PER_GACHA; localStorage.setItem('gold', String(gold)); // ログインボーナス +100G
             dailyGachaStorage.firstTrainTime = null;
             dailyGachaStorage.trainBonuses = [];
             localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
@@ -4796,15 +4857,7 @@ const Cloud = (function () {
         // トレーニング時間ボーナスチェック
         checkTrainTimeBonus();
 
-        const remaining = dailyGachaStorage.count;
-        const el = document.getElementById('gachaLimitInfo');
-        if (el) el.innerText = remaining > 0
-            ? `本日のガチャ残り: ${remaining}回`
-            : `本日のガチャ残り: 0回`;
-        const btn = document.getElementById('gachaBtn');
-        if (btn) btn.disabled = (remaining <= 0);
-        const countSpan = document.getElementById('gachaBtnCount');
-        if (countSpan) countSpan.textContent = remaining > 0 ? `(残${remaining}回)` : '';
+        updateGoldDisplay();
     }
 
     /* ========== TRAINING TIME BONUS ========== */
@@ -4819,7 +4872,7 @@ const Cloud = (function () {
             const hrs = Number(hrsStr);
             if (elapsed >= hrs * 60 && !dailyGachaStorage.trainBonuses.includes(hrs)) {
                 dailyGachaStorage.trainBonuses.push(hrs);
-                dailyGachaStorage.count += bonus;
+                gold += bonus * GOLD_PER_GACHA; localStorage.setItem('gold', String(gold));
                 totalAwarded += bonus;
                 newMilestone = hrs;
                 // 時間マイルストーンでコンボストリークをリセット → また3/5/10正解ボーナスを狙える
@@ -4829,7 +4882,7 @@ const Cloud = (function () {
         });
         if (totalAwarded > 0) {
             localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
-            showChallengeToast(`⏱ ${newMilestone}hボーナス！ コンボリセット＆ガチャ+${totalAwarded}回！`);
+            showChallengeToast(`⏱ ${newMilestone}hボーナス！ コンボリセット＆+${totalAwarded * GOLD_PER_GACHA}G！`);
             checkAndResetDailyGacha(); // ボタン表示を更新
         }
     }
@@ -4905,7 +4958,7 @@ const Cloud = (function () {
 
         const bonus = getStreakBonus(loginStreak.streak);
         if (bonus > 0) {
-            dailyGachaStorage.count += bonus;
+            gold += bonus * GOLD_PER_GACHA; localStorage.setItem('gold', String(gold));
             loginStreak.bonusClaimed = true;
             localStorage.setItem('loginStreak', JSON.stringify(loginStreak));
             localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
@@ -4937,7 +4990,7 @@ const Cloud = (function () {
         else if (streak % 7  === 0) dayLabel = `🌟 1週間連続達成！`;
 
         document.getElementById('streakDayLabel').innerText = dayLabel;
-        document.getElementById('streakBonusMsg').innerText = `ガチャ ＋${bonus}回 ゲット！`;
+        document.getElementById('streakBonusMsg').innerText = `💰 ＋${bonus * GOLD_PER_GACHA}G ゲット！`;
         document.getElementById('streak-bonus-overlay').style.display = 'flex';
         confetti({ particleCount: 70, spread: 55, origin: { y: 0.7 } });
     }
@@ -4953,7 +5006,7 @@ const Cloud = (function () {
             updateComboDisplay();
             const milestone = checkComboMilestone(comboCount);
             if (milestone) {
-                dailyGachaStorage.count += milestone.count;
+                gold += milestone.count * GOLD_PER_GACHA; localStorage.setItem('gold', String(gold));
                 localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
                 checkAndResetDailyGacha();
                 setTimeout(() => { playSE('combo'); showComboBonusNotice(milestone.msg, milestone.count); }, 1300);
@@ -4965,10 +5018,10 @@ const Cloud = (function () {
     }
 
     function checkComboMilestone(combo) {
-        if (combo === 3)  return { count: 1, msg: `🔥 3連続正解！ ガチャ+1回！` };
-        if (combo === 5)  return { count: 1, msg: `⚡ 5連続正解！ ガチャ+1回！` };
-        if (combo === 10) return { count: 3, msg: `🌟 10連続正解！ ガチャ+3回！` };
-        if (combo > 10 && combo % 10 === 0) return { count: 3, msg: `✨ ${combo}連続正解！ ガチャ+3回！` };
+        if (combo === 3)  return { count: 1, msg: `🔥 3連続正解！ +100G！` };
+        if (combo === 5)  return { count: 1, msg: `⚡ 5連続正解！ +100G！` };
+        if (combo === 10) return { count: 3, msg: `🌟 10連続正解！ +300G！` };
+        if (combo > 10 && combo % 10 === 0) return { count: 3, msg: `✨ ${combo}連続正解！ +300G！` };
         return null;
     }
 
@@ -5062,13 +5115,13 @@ const Cloud = (function () {
         if (!(inputCode in VALID_COUPONS)) { alert("無効な鍵コードです。"); return; }
         if (dailyGachaStorage.usedCoupons.includes(inputCode)) { alert("この鍵はすでに使用されています。"); return; }
         const rewardCount = VALID_COUPONS[inputCode];
-        dailyGachaStorage.count += rewardCount;
+        gold += rewardCount * GOLD_PER_GACHA; localStorage.setItem('gold', String(gold));
         dailyGachaStorage.usedCoupons.push(inputCode);
         localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
         closeCouponModal();
         checkAndResetDailyGacha();
         confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
-        alert("🗝️ 秘密の鍵が開錠されました！🎉");
+        alert(`🗝️ 秘密の鍵が開錠されました！🎉\n💰 +${rewardCount * GOLD_PER_GACHA}G`);
     }
 
     /* ========== 冒険/バトル ボタン判定 ========== */
@@ -5305,7 +5358,7 @@ const Cloud = (function () {
                 <div style="flex:1;min-width:0;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
                         <span style="color:${done?'#22cc66':'#c8b080'};font-size:11px;">${label}</span>
-                        <span style="color:#e8a020;font-size:10px;font-weight:bold;">ガチャ+${bonus}</span>
+                        <span style="color:#e8a020;font-size:10px;font-weight:bold;">+${bonus * GOLD_PER_GACHA}G</span>
                     </div>
                     <div style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
                         <div style="height:100%;width:${dispPct}%;background:${done?'#22cc66':'#4080ff'};border-radius:2px;"></div>
@@ -5320,11 +5373,19 @@ const Cloud = (function () {
             <div style="color:#a090c0;font-size:12px;margin-bottom:2px;">解禁タブ内の単語からランダム出題</div>
             <div style="color:#807090;font-size:11px;margin-bottom:12px;">例文中の（　　）に入る単語を選ぼう</div>
 
+            ${(() => { const t = adventureTier();
+                const xp = Math.round(ADVENTURE_BASE.xp * t.mult), g = Math.round(ADVENTURE_BASE.gold * t.mult);
+                return `<div style="background:linear-gradient(135deg,rgba(90,60,0,0.75),rgba(40,25,0,0.75));border:1px solid rgba(255,200,80,0.45);border-radius:10px;padding:12px;margin-bottom:12px;">
+                <div style="color:#ffd27a;font-size:12px;font-weight:bold;margin-bottom:4px;">💰 冒険のごほうび</div>
+                <div style="font-size:13px;color:#fff;">今は1問正解ごとに <strong style="color:#9fe0ff;">+${xp}XP</strong>・<strong style="color:#ffd24a;">+${g}G</strong>${t.label ? `（${t.label}）` : ''}</div>
+                <div style="font-size:11px;color:#e0c890;margin-top:3px;">今日の冒険 ${t.count}問${t.next ? `・あと${t.next.from - t.count}問で${t.next.label}` : '・最大ボーナス中！'}</div>
+                <div style="font-size:10px;color:#b8a070;margin-top:4px;">今日たくさん冒険するほど増える：20問で×1.5、50問で×2、100問で×3</div>
+            </div>`; })()}
             <div style="background:rgba(10,5,30,0.7);border:1px solid rgba(180,150,60,0.2);border-radius:10px;padding:12px;margin-bottom:12px;">
                 <div style="color:#e8a020;font-size:12px;font-weight:bold;margin-bottom:8px;letter-spacing:0.05em;">📋 冒険タスク</div>
-                ${taskRow('🔥','3連続正解', combo, 3, 'ガチャ+1', combo>=3)}
-                ${taskRow('⚡','5連続正解', combo, 5, 'ガチャ+1', combo>=5)}
-                ${taskRow('🌟','10連続正解', combo, 10, 'ガチャ+3', combo>=10)}
+                ${taskRow('🔥','3連続正解', combo, 3, '+100G', combo>=3)}
+                ${taskRow('⚡','5連続正解', combo, 5, '+100G', combo>=5)}
+                ${taskRow('🌟','10連続正解', combo, 10, '+300G', combo>=10)}
                 ${timeRow(1, '1時間後冒険')}
                 ${timeRow(2, '2時間後冒険')}
                 ${timeRow(4, '4時間後冒険')}
@@ -5356,33 +5417,33 @@ const Cloud = (function () {
             </div>
             <div style="background:rgba(10,5,30,0.7);border:1px solid rgba(80,120,200,0.25);border-radius:10px;padding:12px;margin-bottom:12px;">
                 <div style="color:#88aaff;font-size:12px;font-weight:bold;margin-bottom:8px;">📅 デイリーチャレンジ <span style="color:#a090c0;font-weight:normal;">${dailyDone}/11</span></div>
-                ${ciRow(dc.completed.review3,  '🧠 忘れかけ単語を3つ復習',  dc.progress.reviewCorrect||0, 3,  '+1回')}
-                ${ciRow(dc.completed.review10, '🧠 忘れかけ単語を10個復習', dc.progress.reviewCorrect||0, 10, '+2回')}
-                ${ciRow(dc.completed.login,   'ログイン',      0, 0, '+1回')}
-                ${ciRow(dc.completed.train10, '10枚冒険',  dc.progress.trainCount,  10, '+1回')}
-                ${ciRow(dc.completed.train20, '20枚冒険',  dc.progress.trainCount,  20, '+1回')}
-                ${ciRow(dc.completed.train35, '35枚冒険',  dc.progress.trainCount,  35, '+1回')}
-                ${ciRow(dc.completed.quiz10,  '10問正解',  dc.progress.quizCorrect, 10, '+1回')}
-                ${ciRow(dc.completed.quiz20,  '20問正解',  dc.progress.quizCorrect, 20, '+1回')}
-                ${ciRow(dc.completed.quiz30,  '30問正解',  dc.progress.quizCorrect, 30, '+2回')}
-                ${ciRow(dc.completed.combo3,  '3連続コンボ', dc.progress.currentCombo, 3, '+1回')}
-                ${ciRow(dc.completed.combo5,  '5連続コンボ', dc.progress.currentCombo, 5, '+1回')}
+                ${ciRow(dc.completed.review3,  '🧠 忘れかけ単語を3つ復習',  dc.progress.reviewCorrect||0, 3,  '+100G')}
+                ${ciRow(dc.completed.review10, '🧠 忘れかけ単語を10個復習', dc.progress.reviewCorrect||0, 10, '+200G')}
+                ${ciRow(dc.completed.login,   'ログイン',      0, 0, '+100G')}
+                ${ciRow(dc.completed.train10, '10枚冒険',  dc.progress.trainCount,  10, '+100G')}
+                ${ciRow(dc.completed.train20, '20枚冒険',  dc.progress.trainCount,  20, '+100G')}
+                ${ciRow(dc.completed.train35, '35枚冒険',  dc.progress.trainCount,  35, '+100G')}
+                ${ciRow(dc.completed.quiz10,  '10問正解',  dc.progress.quizCorrect, 10, '+100G')}
+                ${ciRow(dc.completed.quiz20,  '20問正解',  dc.progress.quizCorrect, 20, '+100G')}
+                ${ciRow(dc.completed.quiz30,  '30問正解',  dc.progress.quizCorrect, 30, '+200G')}
+                ${ciRow(dc.completed.combo3,  '3連続コンボ', dc.progress.currentCombo, 3, '+100G')}
+                ${ciRow(dc.completed.combo5,  '5連続コンボ', dc.progress.currentCombo, 5, '+100G')}
             </div>
             <div style="background:rgba(10,5,30,0.7);border:1px solid rgba(80,180,120,0.25);border-radius:10px;padding:12px;margin-bottom:12px;">
                 <div style="color:#80d0a0;font-size:12px;font-weight:bold;margin-bottom:8px;">📆 ウィークリーチャレンジ <span style="color:#a090c0;font-weight:normal;">${weeklyDone}/13</span></div>
-                ${ciRow(wc.completed.review40,    '🧠 忘れかけ単語を40個復習', wc.progress.reviewCorrect||0, 40, '+4回')}
-                ${ciRow(wc.completed.reviewDays4, '🧠 4日に分けて復習',        (wc.progress.reviewDays||[]).length, 4, '+4回')}
-                ${ciRow(wc.completed.train100,  '100枚学習（2日）',    wc.progress.trainCount,  100, '+2回')}
-                ${ciRow(wc.completed.train200,  '200枚学習（4日）',    wc.progress.trainCount,  200, '+3回')}
-                ${ciRow(wc.completed.train350,  '350枚学習（フル週）', wc.progress.trainCount,  350, '+6回')}
-                ${ciRow(wc.completed.quiz70,    '70問正解（3日）',     wc.progress.quizCorrect,  70, '+2回')}
-                ${ciRow(wc.completed.quiz140,   '140問正解（5日）',    wc.progress.quizCorrect, 140, '+4回')}
-                ${ciRow(wc.completed.quiz210,   '210問正解（フル週）', wc.progress.quizCorrect, 210, '+6回')}
-                ${ciRow(wc.completed.combo8,    '8連続コンボ（週ベスト）',  wc.progress.bestCombo||0, 8,  '+2回')}
-                ${ciRow(wc.completed.combo12,   '12連続コンボ（週ベスト）', wc.progress.bestCombo||0, 12, '+3回')}
-                ${ciRow(wc.completed.combo15,   '15連続コンボ（週ベスト）', wc.progress.bestCombo||0, 15, '+5回')}
-                ${ciRow(wkDone,'3日連続ログイン'+(wc.completed.streak3?'':` (${Math.min(ws,3)}/3)`),0,0,'+2回')}
-                ${ciRow(wkDone,'7日連続ログイン'+wkP,0,0,'+5回')}
+                ${ciRow(wc.completed.review40,    '🧠 忘れかけ単語を40個復習', wc.progress.reviewCorrect||0, 40, '+400G')}
+                ${ciRow(wc.completed.reviewDays4, '🧠 4日に分けて復習',        (wc.progress.reviewDays||[]).length, 4, '+400G')}
+                ${ciRow(wc.completed.train100,  '100枚学習（2日）',    wc.progress.trainCount,  100, '+200G')}
+                ${ciRow(wc.completed.train200,  '200枚学習（4日）',    wc.progress.trainCount,  200, '+300G')}
+                ${ciRow(wc.completed.train350,  '350枚学習（フル週）', wc.progress.trainCount,  350, '+600G')}
+                ${ciRow(wc.completed.quiz70,    '70問正解（3日）',     wc.progress.quizCorrect,  70, '+200G')}
+                ${ciRow(wc.completed.quiz140,   '140問正解（5日）',    wc.progress.quizCorrect, 140, '+400G')}
+                ${ciRow(wc.completed.quiz210,   '210問正解（フル週）', wc.progress.quizCorrect, 210, '+600G')}
+                ${ciRow(wc.completed.combo8,    '8連続コンボ（週ベスト）',  wc.progress.bestCombo||0, 8,  '+200G')}
+                ${ciRow(wc.completed.combo12,   '12連続コンボ（週ベスト）', wc.progress.bestCombo||0, 12, '+300G')}
+                ${ciRow(wc.completed.combo15,   '15連続コンボ（週ベスト）', wc.progress.bestCombo||0, 15, '+500G')}
+                ${ciRow(wkDone,'3日連続ログイン'+(wc.completed.streak3?'':` (${Math.min(ws,3)}/3)`),0,0,'+200G')}
+                ${ciRow(wkDone,'7日連続ログイン'+wkP,0,0,'+500G')}
             </div>
             `;
             })()}
@@ -5485,11 +5546,11 @@ const Cloud = (function () {
                 </div>
                 ${hofRow('金の手帖', hof['金の手帖'])}
                 <div style="font-size:10px;color:#706060;margin-top:6px;">
-                    歴代の最終ボス全員を2倍強化で連続撃破<br>報酬: ガチャ+30回 / 白金の手帖バッジ＋称号
+                    歴代の最終ボス全員を2倍強化で連続撃破<br>報酬: 3,000G / 白金の手帖バッジ＋称号
                 </div>
             </div>
             <div style="text-align:center;color:#706080;font-size:10px;padding:6px 0 2px;">
-                チャレンジ達成でガチャ回数が付与されます
+                チャレンジ達成でゴールドがもらえます
             </div>
             ${hofRankingSectionHtml()}`;
     }
@@ -5723,9 +5784,13 @@ const Cloud = (function () {
     /* ========== GACHA CHOICE MODAL ========== */
     function openGachaChoiceModal() {
         checkAndResetDailyGacha();
-        const remaining = dailyGachaStorage.count;
         const desc = document.getElementById('gachaChoiceDesc');
-        if (desc) desc.textContent = `本日のガチャ残り: ${remaining}回`;
+        const unowned = gachaPools().unowned.length;
+        if (desc) desc.innerHTML = `所持ゴールド：💰 <strong>${gold.toLocaleString()}G</strong>` +
+            (unowned === 0 ? '<br><span style="font-size:11px;color:#a05030;">解禁中のタブのカードはすべて集まりました（討伐で次のタブへ）</span>' : '');
+        const n = document.getElementById('drawNormalBtn'), pr = document.getElementById('drawPremiumBtn');
+        if (n)  n.disabled  = gold < DRAW_COST.normal;
+        if (pr) pr.disabled = gold < DRAW_COST.premium || unowned === 0;
         const modal = document.getElementById('gacha-choice-modal');
         if (modal) { modal.style.display = 'flex'; modal.classList.add('modal-animate'); }
     }
@@ -5738,8 +5803,22 @@ const Cloud = (function () {
     /* ========== GACHA TRIGGER ========== */
     function startGachaViaButton() {
         checkAndResetDailyGacha();
-        if (dailyGachaStorage.count <= 0) { alert("ガチャ回数がありません。冒険を続けるか明日また来てね！"); return; }
-        triggerGachaCore();
+        if (gold < DRAW_COST.normal) { alert(`ゴールドが足りません（ふつうに引くには ${DRAW_COST.normal}G 必要）。\n冒険で問題に正解するとゴールドがもらえます！`); return; }
+        openGachaChoiceModal();
+    }
+    // 引ける範囲：解禁済みタブのカード
+    function gachaPools() {
+        const end = Math.min(getUnlockedTabCount() * COLLECTION_PAGE_SIZE, cardsData.length);
+        const all = cardsData.slice(0, end);
+        return { all, unowned: all.filter(c => !isOwned(c.id)) };
+    }
+    function drawCard(mode) {
+        const cost = DRAW_COST[mode];
+        const pools = gachaPools();
+        if (mode === 'premium' && pools.unowned.length === 0) { alert('解禁中のタブのカードはすべて集まっています。討伐バトルで次のタブを開こう！'); return; }
+        if (!spendGold(cost)) { alert(`ゴールドが足りません（${cost}G 必要）`); return; }
+        closeGachaChoiceModal();
+        triggerGachaCore(null, mode);
     }
 
     /* ---- タブ解禁ロジック ----
@@ -5822,23 +5901,17 @@ const Cloud = (function () {
         });
     }
 
-    function triggerGachaCore(onDone) {
+    function triggerGachaCore(onDone, mode) {
         if (cardsData.length === 0) { alert("カードデータがありません。"); return; }
 
-        // 解禁済みタブのカードプールから未取得カードのみ抽選
-        const unlockedCount = getUnlockedTabCount();
-        const end     = Math.min(unlockedCount * COLLECTION_PAGE_SIZE, cardsData.length);
-        const tabPool = cardsData.slice(0, end);
-        const uncollectedPool = tabPool.filter(c => !isOwned(c.id));
-        const drawPool = uncollectedPool.length > 0 ? uncollectedPool : tabPool;
+        // normal(10G)：解禁済みタブの全カードから（被りあり）／premium(100G)：未取得カードから（被りなし）
+        const pools = gachaPools();
+        const drawPool = (mode === 'premium' && pools.unowned.length > 0) ? pools.unowned : pools.all;
         const randomCard = weightedGachaPick(drawPool);
 
         gachaSession.isGachaMode = false;
         gachaSession.selectedCard = randomCard;
         gachaSession.onDone = onDone || null;
-        // ガチャ回数を消費
-        dailyGachaStorage.count = Math.max(0, dailyGachaStorage.count - 1);
-        localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
         checkAndResetDailyGacha();
 
         // クイズなしで直接カード獲得（レアリティアニメーション→カード表示）
@@ -5885,7 +5958,7 @@ const Cloud = (function () {
                 div.className = 'battle-stage-item' + (isUnlocked ? '' : ' locked');
                 const rewardLabel = stage.reward.type === 'sp'
                     ? `🌱種+${stage.reward.amount}`
-                    : `🎰ガチャ+${stage.reward.amount}`;
+                    : `💰+${stage.reward.amount * GOLD_PER_GACHA}G`;
                 const unlockHint = stage.type === 'mid'
                     ? `${collected}/${needMid}枚収集`
                     : `${collected}/${needFinal}枚＋撃退`;
@@ -6754,7 +6827,7 @@ const Cloud = (function () {
 
             // 報酬付与
             if (stage.reward.type === 'gacha') {
-                dailyGachaStorage.count = (dailyGachaStorage.count || 0) + stage.reward.amount;
+                gold += stage.reward.amount * GOLD_PER_GACHA; localStorage.setItem('gold', String(gold));
                 localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
                 updateDailyGoalDisplay();
             } else if (stage.reward.type === 'sp') {
@@ -6765,7 +6838,7 @@ const Cloud = (function () {
             }
             const rewardMsg = stage.reward.type === 'sp'
                 ? `🌱 強化の種×${stage.reward.amount} 獲得！カードを強化しよう！`
-                : `🎰 ガチャ回数+${stage.reward.amount} 獲得！`;
+                : `💰 ${stage.reward.amount * GOLD_PER_GACHA}G 獲得！`;
 
             titleEl.className = 'battle-result-title win';
             titleEl.textContent = '🎉 勝利！';
@@ -7199,8 +7272,16 @@ const Cloud = (function () {
                 updateCombo(isCorrect);
                 updateSRS(card.id, isCorrect);
                 if (isCorrect) {
-                    addXP(10, btnEl);
-                    trainingSession.totalXP += 10;
+                    // 今日たくさん冒険するほど、XP・ゴールドが増える
+                    const tier = adventureTier();
+                    const gainXP = Math.round(ADVENTURE_BASE.xp * tier.mult);
+                    const gainG  = Math.round(ADVENTURE_BASE.gold * tier.mult);
+                    addXP(gainXP, btnEl);
+                    addGold(gainG, btnEl);
+                    trainingSession.totalXP += gainXP;
+                    trainingSession.totalGold = (trainingSession.totalGold || 0) + gainG;
+                    // 冒険ボーナスの段階が上がった瞬間に知らせる（trainCount はこの直前に加算済み）
+                    if (tier.label && tier.count === tier.from) showChallengeToast(`🔥 ${tier.label}！ 1問 +${gainXP}XP・+${gainG}G に`);
                     trainingSession.correct++;
                     trainingSession.masteredIds.add(card.id);
                     trainingSession.cards = trainingSession.cards.filter(c => c.id !== card.id);
@@ -7507,8 +7588,9 @@ const Cloud = (function () {
     }
 
     function addGachaFromChallenge(count, toastMsg, silent) {
-        dailyGachaStorage.count += count;
-        localStorage.setItem('dailyGachaStorage', JSON.stringify(dailyGachaStorage));
+        // （旧：ガチャ回数）→ 1回 = 100G に換算して付与
+        gold += count * GOLD_PER_GACHA;
+        saveGold();
         checkAndResetDailyGacha();
         showChallengeToast(toastMsg);
         if (!silent) confetti({ particleCount: 80, spread: 60, origin: { y: 0.5 } });
@@ -7520,7 +7602,7 @@ const Cloud = (function () {
         if (dailyChallenges.completed[key]) return;
         dailyChallenges.completed[key] = true;
         localStorage.setItem('dailyChallenges', JSON.stringify(dailyChallenges));
-        addGachaFromChallenge(rewardCount, `🎯 ${label} 達成！ ガチャ+${rewardCount}回`, silent);
+        addGachaFromChallenge(rewardCount, `🎯 ${label} 達成！ +${rewardCount * GOLD_PER_GACHA}G`, silent);
     }
 
     function completeWeeklyChallenge(key, rewardCount, label, silent) {
@@ -7528,7 +7610,7 @@ const Cloud = (function () {
         if (weeklyChallenges.completed[key]) return;
         weeklyChallenges.completed[key] = true;
         localStorage.setItem('weeklyChallenges', JSON.stringify(weeklyChallenges));
-        addGachaFromChallenge(rewardCount, `📆 ${label} 達成！ ガチャ+${rewardCount}回`, silent);
+        addGachaFromChallenge(rewardCount, `📆 ${label} 達成！ +${rewardCount * GOLD_PER_GACHA}G`, silent);
     }
 
     const HOF_REWARDS = {
@@ -7576,13 +7658,13 @@ const Cloud = (function () {
             hallOfFame[level].bestStreak   = hofBossRush.bosses.length;
             localStorage.setItem('hallOfFame', JSON.stringify(hallOfFame));
             const r = HOF_REWARDS[level];
-            addGachaFromChallenge(r.gacha, `🏆 ${level} 殿堂入り！ ${r.badge} ガチャ+${r.gacha}回！`);
+            addGachaFromChallenge(r.gacha, `🏆 ${level} 殿堂入り！ ${r.badge} +${r.gacha * GOLD_PER_GACHA}G！`);
             playSE('hof');
             // 結果オーバーレイを更新
             document.getElementById('battleResultTitle').className = 'battle-result-title win';
             document.getElementById('battleResultTitle').textContent = '🏆 殿堂入り！';
             document.getElementById('battleResultDesc').innerHTML =
-                `全ボスラッシュ制覇！<br>🎖️ 白金の手帖バッジ取得！<br>🎰 ガチャ+${r.gacha}回！` +
+                `全ボスラッシュ制覇！<br>🎖️ 白金の手帖バッジ取得！<br>💰 +${r.gacha * GOLD_PER_GACHA}G！` +
                 (GAS_URL && !Cloud.isLoggedIn() ? '<br><small>ログインすると殿堂入りランキングに名前が載ります</small>' : '');
             Cloud.saveNow();   // ランキングへすぐ反映させる
             document.getElementById('battle-result-overlay').style.display = 'flex';
@@ -7787,30 +7869,30 @@ const Cloud = (function () {
                     <span>📅 デイリーチャレンジ</span>
                     <span style="font-size:12px;color:#a090c0;">${dailyDone}/5 完了</span>
                 </div>
-                ${ciCheck(dc.completed.login,   'ログイン',      0, 0, '+1回')}
-                ${ciCheck(dc.completed.train10, '10枚冒険',  dc.progress.trainCount,  10, '+1回')}
-                ${ciCheck(dc.completed.train20, '20枚冒険',  dc.progress.trainCount,  20, '+1回')}
-                ${ciCheck(dc.completed.train35, '35枚冒険',  dc.progress.trainCount,  35, '+1回')}
-                ${ciCheck(dc.completed.quiz10,  '10問正解',  dc.progress.quizCorrect, 10, '+1回')}
-                ${ciCheck(dc.completed.quiz20,  '20問正解',  dc.progress.quizCorrect, 20, '+1回')}
-                ${ciCheck(dc.completed.quiz30,  '30問正解',  dc.progress.quizCorrect, 30, '+2回')}
-                ${ciCheck(dc.completed.combo3,  '3連続コンボ',dc.progress.currentCombo, 3, '+1回')}
-                ${ciCheck(dc.completed.combo5,  '5連続コンボ',dc.progress.currentCombo, 5, '+1回')}
+                ${ciCheck(dc.completed.login,   'ログイン',      0, 0, '+100G')}
+                ${ciCheck(dc.completed.train10, '10枚冒険',  dc.progress.trainCount,  10, '+100G')}
+                ${ciCheck(dc.completed.train20, '20枚冒険',  dc.progress.trainCount,  20, '+100G')}
+                ${ciCheck(dc.completed.train35, '35枚冒険',  dc.progress.trainCount,  35, '+100G')}
+                ${ciCheck(dc.completed.quiz10,  '10問正解',  dc.progress.quizCorrect, 10, '+100G')}
+                ${ciCheck(dc.completed.quiz20,  '20問正解',  dc.progress.quizCorrect, 20, '+100G')}
+                ${ciCheck(dc.completed.quiz30,  '30問正解',  dc.progress.quizCorrect, 30, '+200G')}
+                ${ciCheck(dc.completed.combo3,  '3連続コンボ',dc.progress.currentCombo, 3, '+100G')}
+                ${ciCheck(dc.completed.combo5,  '5連続コンボ',dc.progress.currentCombo, 5, '+100G')}
             </div>
             <div class="challenge-section">
                 <div class="challenge-section-title">
                     <span>📆 ウィークリーチャレンジ</span>
                     <span style="font-size:12px;color:#a090c0;">${weeklyDone}/11 完了</span>
                 </div>
-                ${ciCheck(wc.completed.train100,  '100枚学習（2日）',    wc.progress.trainCount,  100, '+2回')}
-                ${ciCheck(wc.completed.train200,  '200枚学習（4日）',    wc.progress.trainCount,  200, '+3回')}
-                ${ciCheck(wc.completed.train350,  '350枚学習（フル週）', wc.progress.trainCount,  350, '+6回')}
-                ${ciCheck(wc.completed.quiz70,    '70問正解（3日）',     wc.progress.quizCorrect,  70, '+2回')}
-                ${ciCheck(wc.completed.quiz140,   '140問正解（5日）',    wc.progress.quizCorrect, 140, '+4回')}
-                ${ciCheck(wc.completed.quiz210,   '210問正解（フル週）', wc.progress.quizCorrect, 210, '+6回')}
-                ${ciCheck(wc.completed.combo8,    '8連続コンボ（週ベスト）',  wc.progress.bestCombo||0, 8,  '+2回')}
-                ${ciCheck(wc.completed.combo12,   '12連続コンボ（週ベスト）', wc.progress.bestCombo||0, 12, '+3回')}
-                ${ciCheck(wc.completed.combo15,   '15連続コンボ（週ベスト）', wc.progress.bestCombo||0, 15, '+5回')}
+                ${ciCheck(wc.completed.train100,  '100枚学習（2日）',    wc.progress.trainCount,  100, '+200G')}
+                ${ciCheck(wc.completed.train200,  '200枚学習（4日）',    wc.progress.trainCount,  200, '+300G')}
+                ${ciCheck(wc.completed.train350,  '350枚学習（フル週）', wc.progress.trainCount,  350, '+600G')}
+                ${ciCheck(wc.completed.quiz70,    '70問正解（3日）',     wc.progress.quizCorrect,  70, '+200G')}
+                ${ciCheck(wc.completed.quiz140,   '140問正解（5日）',    wc.progress.quizCorrect, 140, '+400G')}
+                ${ciCheck(wc.completed.quiz210,   '210問正解（フル週）', wc.progress.quizCorrect, 210, '+600G')}
+                ${ciCheck(wc.completed.combo8,    '8連続コンボ（週ベスト）',  wc.progress.bestCombo||0, 8,  '+200G')}
+                ${ciCheck(wc.completed.combo12,   '12連続コンボ（週ベスト）', wc.progress.bestCombo||0, 12, '+300G')}
+                ${ciCheck(wc.completed.combo15,   '15連続コンボ（週ベスト）', wc.progress.bestCombo||0, 15, '+500G')}
                 <div class="challenge-item">
                     <span class="challenge-check">${(wc.completed.streak3||loginStreak.streak>=3) ? '✅' : '☐'}</span>
                     <span class="challenge-label${(wc.completed.streak3||loginStreak.streak>=3) ? ' done' : ''}">3日連続ログイン (${Math.min(loginStreak.streak,3)}/3)</span>
@@ -7833,11 +7915,11 @@ const Cloud = (function () {
                 </div>
                 ${hofRow('金の手帖', hof['金の手帖'])}
                 <div style="font-size:11px;color:#706060;margin-top:8px;">
-                    報酬: ガチャ+30回 / 白金の手帖バッジ＋称号
+                    報酬: 3,000G / 白金の手帖バッジ＋称号
                 </div>
             </div>
             <div style="text-align:center;color:#706080;font-size:11px;padding:8px 0 16px;">
-                チャレンジ達成でガチャ回数が付与されます
+                チャレンジ達成でゴールドがもらえます
             </div>
         </div>`;
     }
@@ -7858,7 +7940,7 @@ const Cloud = (function () {
                 <div style="color:#a090c0;font-size:12px;line-height:1.9;">
                     • 冒険で <strong style="color:#f0c840;">100問連続正解</strong> → 白金の手帖殿堂入り！<br>
                     • 1問でも不正解でカウンターリセット<br>
-                    • 報酬: ガチャ+30回 / 白金の手帖バッジ＋称号<br>
+                    • 報酬: 3,000G / 白金の手帖バッジ＋称号<br>
                     • 進捗は「チャレンジ」タブで確認
                 </div>
             </div>
