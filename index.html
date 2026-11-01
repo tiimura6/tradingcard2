@@ -7863,11 +7863,32 @@ const Cloud = (function () {
     // BGMボタンの表示を同期（メイン画面とバトル画面の2か所）
     function updateBgmButtons() {
         const btn = document.getElementById('bgmBtn');
+        try { sessionStorage.setItem('bgmOn', (bgmOn || _bgmResumePending) ? '1' : '0'); } catch (e) {}
         if (btn) {
-            if (bgmOn) { btn.innerHTML = '🔊 BGM'; btn.style.color = 'rgba(255,210,60,1)'; btn.style.borderColor = 'rgba(255,210,60,0.9)'; btn.style.background = 'rgba(80,50,0,0.85)'; }
+            if (bgmOn || _bgmResumePending) { btn.innerHTML = '🔊 BGM'; btn.style.color = 'rgba(255,210,60,1)'; btn.style.borderColor = 'rgba(255,210,60,0.9)'; btn.style.background = 'rgba(80,50,0,0.85)'; }
             else       { btn.innerHTML = '🔇 BGM'; btn.style.color = 'rgba(220,170,50,0.85)'; btn.style.borderColor = 'rgba(220,170,50,0.7)'; btn.style.background = 'rgba(30,20,5,0.7)'; }
         }
     }
+
+    /* 手帖を切り替える（ページを読み込み直す）と BGM の ON/OFF が戻ってしまうため、
+       同じタブの中では設定を引き継ぐ。ブラウザは操作なしの自動再生を禁止しているので、
+       画面を最初にタップした瞬間に再生を始める（表示は最初から ON のまま） */
+    let _bgmResumePending = false;
+    (function restoreBgmSetting() {
+        let saved = null;
+        try { saved = sessionStorage.getItem('bgmOn'); } catch (e) {}
+        if (saved !== '1') return;
+        _bgmResumePending = true;
+        const resume = (e) => {
+            document.removeEventListener('pointerdown', resume, true);
+            if (!_bgmResumePending) return;
+            _bgmResumePending = false;
+            // BGMボタン自体を押した場合は、そのクリックの処理（OFFにする）に任せる
+            if (e && e.target && e.target.closest && e.target.closest('#bgmBtn')) { bgmOn = true; return; }
+            if (!bgmOn) toggleBGM();
+        };
+        document.addEventListener('pointerdown', resume, true);
+    })();
 
     function toggleBGM() {
         const inBattle = !!(battleSession && battleSession.active);
@@ -8014,6 +8035,7 @@ const Cloud = (function () {
 
     /* ========== INIT ========== */
     applyNotebookTheme();
+    updateBgmButtons();   // 引き継いだBGM設定をボタンに反映
     updateXPDisplay();
     updateSpecialGachaBtn();
     updateDailyGoalDisplay();
