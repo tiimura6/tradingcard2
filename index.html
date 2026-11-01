@@ -4480,35 +4480,90 @@ const Cloud = (function () {
     // バトル勝利記録 (defeated: [tabIndex, ...]) — 倒した敵のタブインデックス
     let battleProgress = safeParse('battleProgress', null) || { defeated: [] };
 
-    // タブごとに中間ボス＋最終ボスの2体構成
-    // 中間ボス: タブ内カードを半分以上収集で解禁
-    // 最終ボス: タブ内カードを全収集 & 中間ボス撃破で解禁 → 倒すと次タブ開放
-    // ボス画像は /boss/ フォルダ内に配置 (例: /boss/slime_general.png)
-    // 画像がない場合は emoji にフォールバック
+    /* ===== 敵：スライムシリーズ =====
+     * 各手帖に1種類の共通スライム。タブが上がるごとに同じスライムの色違いが現れる。
+     * 各タブ：カード40%収集で「撃退戦」（中間）→ 80%収集で「討伐戦」（最後。勝つと次のタブが開く）
+     * 画像：boss/slime_A1.webp 〜 slime_PT.webp（手帖ごと）。無ければ boss/slime_general.webp を使う
+     * 色違いは画像に色フィルターをかけて作る（画像はスライム1枚だけ用意すればよい）
+     */
+    const SLIME_BY_NB = {
+        A1: { name: 'アイアンスライム',   baseHue: 195 },
+        A2: { name: 'カッパースライム',   baseHue: 195 },
+        B1: { name: 'シルバースライム',   baseHue: 195 },
+        B2: { name: 'ゴールドスライム',   baseHue: 195 },
+        PT: { name: 'プラチナスライム',   baseHue: 195 },
+    };
+    // baseHue = 画像のスライムの色相（赤=0, 橙=30, 黄=55, 緑=120, 水色=195, 青=220, 紫=280）。
+    // 画像を読み込んだときに自動で測って上書きするので、通常は変更不要（現在の共通画像は水色=195）
+    const SLIME_FALLBACK_IMG = './boss/slime_general.webp';
+    const SLIME_COLORS = [   // タブ1以降に順番に使う（タブ0は画像そのままの色）
+        { name: '紅',   hue: 0 },   { name: '蒼',   hue: 222 }, { name: '紫',   hue: 278 },
+        { name: '黄',   hue: 52 },  { name: '桃',   hue: 322 }, { name: '水',   hue: 186 },
+        { name: '橙',   hue: 28 },  { name: '翠',   hue: 120 },
+        { name: '白',   f: 'grayscale(1) brightness(1.55) contrast(.9)' },
+        { name: '黒',   f: 'grayscale(1) brightness(.42) contrast(1.35)' },
+        { name: '金',   f: 'sepia(1) saturate(3.2) hue-rotate(-8deg) brightness(1.12)' },
+        { name: '銀',   f: 'grayscale(1) sepia(.35) hue-rotate(170deg) saturate(1.6) brightness(1.05) contrast(1.35)' },
+        { name: '深紅', hue: 350, extra: ' brightness(.7) saturate(1.4)' },
+        { name: '藍',   hue: 236, extra: ' brightness(.65) saturate(1.5)' },
+    ];
+    function slimeBaseHue() {
+        let h = null;
+        try { h = JSON.parse(localStorage.getItem('slimeHue') || '{}')[currentNB.key]; } catch (e) {}
+        return (typeof h === 'number') ? h : (SLIME_BY_NB[currentNB.key] || SLIME_BY_NB.A1).baseHue;
+    }
+    // 画像のスライムの色相を測る（色名と実際の色を一致させるため）
+    function measureSlimeHue(img) {
+        try {
+            const c = document.createElement('canvas'); c.width = 80; c.height = 50;
+            const g = c.getContext('2d'); g.drawImage(img, 0, 0, 80, 50);
+            const d = g.getImageData(0, 0, 80, 50).data, bins = new Array(36).fill(0);
+            for (let i = 0; i < d.length; i += 4) {
+                if (d[i + 3] < 200) continue;
+                const r = d[i] / 255, gg = d[i + 1] / 255, b = d[i + 2] / 255;
+                const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b), v = mx, sat = mx ? (mx - mn) / mx : 0;
+                if (sat < 0.25 || v < 0.4) continue;
+                let h = mx === r ? ((gg - b) / (mx - mn)) % 6 : mx === gg ? (b - r) / (mx - mn) + 2 : (r - gg) / (mx - mn) + 4;
+                h = (h * 60 + 360) % 360;
+                bins[Math.floor(h / 10)]++;
+            }
+            const best = bins.indexOf(Math.max(...bins));
+            if (bins[best] < 20) return;
+            const st = JSON.parse(localStorage.getItem('slimeHue') || '{}');
+            st[currentNB.key] = best * 10 + 5;
+            localStorage.setItem('slimeHue', JSON.stringify(st));
+        } catch (e) {}
+    }
+    function slimeLook(tabIdx) {
+        const base = slimeBaseHue();
+        if (tabIdx === 0) return { color: '', filter: '' };
+        // 元の色に近い色（色違いに見えない）は候補から外す
+        const near = c => c.hue != null && Math.min(Math.abs(c.hue - base), 360 - Math.abs(c.hue - base)) < 25;
+        const list = SLIME_COLORS.filter(c => !near(c));
+        const k = (tabIdx - 1) % list.length;
+        const lap = Math.floor((tabIdx - 1) / list.length);   // 2周目以降は「真・」で強化版
+        const c = list[k];
+        let f = c.f || `hue-rotate(${((c.hue - base) % 360 + 360) % 360}deg) saturate(1.8)${c.extra || ''}`;
+        if (lap > 0) f += ' saturate(1.4) contrast(1.15)';
+        return { color: (lap > 0 ? '真・' : '') + c.name, filter: f };
+    }
+
+    // 敵の強さ（従来のボスの強さの並びをそのまま使う：中間＝撃退戦、最後＝討伐戦）
     const MID_BOSS_TEMPLATES = [
-        { name: 'スライム将軍', emoji: '🟢', hpBase: 350,  atkBase: 12,  img: './boss/slime_general.webp' },
-        { name: 'ゴブリン長',   emoji: '👺', hpBase: 550,  atkBase: 20,  img: './boss/goblin_chief.png' },
-        { name: 'オーク隊長',   emoji: '🪓', hpBase: 800,  atkBase: 30,  img: './boss/orc_captain.png' },
-        { name: 'ダークナイト', emoji: '🗡️', hpBase: 1100, atkBase: 41,  img: './boss/dark_knight.png' },
-        { name: 'ワイバーン',   emoji: '🐲', hpBase: 1500, atkBase: 53,  img: './boss/wyvern.png' },
-        { name: '炎の竜騎士',   emoji: '🔥', hpBase: 2000, atkBase: 65,  img: './boss/flame_rider.png' },
-        { name: 'デスナイト',   emoji: '💀', hpBase: 2600, atkBase: 78,  img: './boss/death_knight.png' },
-        { name: '冥府の将',     emoji: '⚔️', hpBase: 3200, atkBase: 91,  img: './boss/hades_general.png' },
-        { name: '魔将軍',       emoji: '👿', hpBase: 4000, atkBase: 103, img: './boss/demon_general.png' },
-        { name: '冥王',         emoji: '🌑', hpBase: 5000, atkBase: 116, img: './boss/hades_king.png' },
+        { hpBase: 350,  atkBase: 12 }, { hpBase: 550,  atkBase: 20 }, { hpBase: 800,  atkBase: 30 },
+        { hpBase: 1100, atkBase: 41 }, { hpBase: 1500, atkBase: 53 }, { hpBase: 2000, atkBase: 65 },
+        { hpBase: 2600, atkBase: 78 }, { hpBase: 3200, atkBase: 91 }, { hpBase: 4000, atkBase: 103 },
+        { hpBase: 5000, atkBase: 116 },
     ];
     const FINAL_BOSS_TEMPLATES = [
-        { name: 'スライム王',      emoji: '👑', hpBase: 700,   atkBase: 20,  img: './boss/slime_king.png' },
-        { name: 'ゴブリン王',      emoji: '🏰', hpBase: 1100,  atkBase: 33,  img: './boss/goblin_king.png' },
-        { name: 'オーク覇王',      emoji: '⚔️', hpBase: 1700,  atkBase: 50,  img: './boss/orc_overlord.png' },
-        { name: 'ダークエルフ女王', emoji: '🧝', hpBase: 2400,  atkBase: 68,  img: './boss/dark_elf_queen.png' },
-        { name: 'ドラゴンロード',   emoji: '🐉', hpBase: 3200,  atkBase: 88,  img: './boss/dragon_lord.png' },
-        { name: 'ドラゴン皇帝',    emoji: '🔥', hpBase: 4200,  atkBase: 108, img: './boss/dragon_emperor.png' },
-        { name: 'リッチキング',    emoji: '☠️', hpBase: 5400,  atkBase: 128, img: './boss/lich_king.png' },
-        { name: '魔将',            emoji: '🌙', hpBase: 6800,  atkBase: 148, img: './boss/demon_lord.png' },
-        { name: '魔王',            emoji: '👿', hpBase: 8500,  atkBase: 168, img: './boss/maou.png' },
-        { name: '大魔王',          emoji: '🌑', hpBase: 10000, atkBase: 190, img: './boss/dai_maou.png' },
+        { hpBase: 700,  atkBase: 20 },  { hpBase: 1100, atkBase: 33 },  { hpBase: 1700, atkBase: 50 },
+        { hpBase: 2400, atkBase: 68 },  { hpBase: 3200, atkBase: 88 },  { hpBase: 4200, atkBase: 108 },
+        { hpBase: 5400, atkBase: 128 }, { hpBase: 6800, atkBase: 148 }, { hpBase: 8500, atkBase: 168 },
+        { hpBase: 10000, atkBase: 190 },
     ];
+    const BATTLE_MID_RATIO   = 0.4;   // 撃退戦：タブのカード40%
+    const BATTLE_FINAL_RATIO = 0.8;   // 討伐戦：タブのカード80%
+    function battleNeed(total, type) { return Math.ceil(total * (type === 'mid' ? BATTLE_MID_RATIO : BATTLE_FINAL_RATIO)); }
 
     function getBattleStages() {
         const totalTabs = Math.ceil(cardsData.length / COLLECTION_PAGE_SIZE);
@@ -4518,13 +4573,16 @@ const Cloud = (function () {
             const tMid   = MID_BOSS_TEMPLATES[tabIdx % MID_BOSS_TEMPLATES.length];
             const tFinal = FINAL_BOSS_TEMPLATES[tabIdx % FINAL_BOSS_TEMPLATES.length];
             const isLastTab = tabIdx === totalTabs - 1;
+            const look = slimeLook(tabIdx);
+            const slimeName = (look.color ? look.color + 'の' : '') + (SLIME_BY_NB[currentNB.key] || SLIME_BY_NB.A1).name;
+            const slimeImg = `./boss/slime_${currentNB.key}.webp`;
             stages.push({
                 id: `${STAGE_PREFIX}tab${tabIdx}_mid`,
                 tabIdx,
                 type: 'mid',
-                name: tMid.name,
-                emoji: tMid.emoji,
-                img: tMid.img || null,
+                name: slimeName,
+                emoji: '🟢',
+                img: slimeImg, imgFallback: SLIME_FALLBACK_IMG, filter: look.filter,
                 hp:  Math.round(tMid.hpBase * scale),
                 atk: Math.round(tMid.atkBase * scale),
                 tabUnlock: null,   // 中間ボスは次タブを開放しない
@@ -4534,9 +4592,9 @@ const Cloud = (function () {
                 id: `${STAGE_PREFIX}tab${tabIdx}_final`,
                 tabIdx,
                 type: 'final',
-                name: tFinal.name,
-                emoji: tFinal.emoji,
-                img: tFinal.img || null,
+                name: slimeName,
+                emoji: '👑',
+                img: slimeImg, imgFallback: SLIME_FALLBACK_IMG, filter: look.filter,
                 hp:  Math.round(tFinal.hpBase * scale),
                 atk: Math.round(tFinal.atkBase * scale),
                 tabUnlock: isLastTab ? null : tabIdx + 1, // 最終ボスが次タブを開放
@@ -4573,11 +4631,10 @@ const Cloud = (function () {
     function isBattleStageUnlocked(stage) {
         const { tabIdx, type } = stage;
         const { collected, total } = getTabCollectedCount(tabIdx);
-        const half = Math.ceil(total / 2);
         if (type === 'mid') {
-            return collected >= half;
-        } else { // final
-            return collected >= total && battleProgress.defeated.includes(`${STAGE_PREFIX}tab${tabIdx}_mid`);
+            return collected >= battleNeed(total, 'mid');
+        } else { // final（討伐戦）：80%収集＋撃退戦の勝利
+            return collected >= battleNeed(total, 'final') && battleProgress.defeated.includes(`${STAGE_PREFIX}tab${tabIdx}_mid`);
         }
     }
 
@@ -5001,7 +5058,7 @@ const Cloud = (function () {
         const pendingBoss = getPendingBoss();
         if (pendingBoss) {
             btn.classList.add('boss-mode');
-            const typeLabel = pendingBoss.type === 'mid' ? '中間ボス出現！' : '最終ボス出現！';
+            const typeLabel = pendingBoss.type === 'mid' ? 'スライム出現！撃退せよ' : '討伐のとき！';
             icon.textContent = '⚔️';
             lbl.textContent  = typeLabel;
         } else {
@@ -5790,7 +5847,7 @@ const Cloud = (function () {
 
             // タブ収集状況
             const { collected, total } = getTabCollectedCount(tabIdx);
-            const half = Math.ceil(total / 2);
+            const needMid = battleNeed(total, 'mid'), needFinal = battleNeed(total, 'final');
 
             // タブヘッダー
             const header = document.createElement('div');
@@ -5807,14 +5864,14 @@ const Cloud = (function () {
                     ? `🌱種+${stage.reward.amount}`
                     : `🎰ガチャ+${stage.reward.amount}`;
                 const unlockHint = stage.type === 'mid'
-                    ? `${collected}/${half}枚収集`
-                    : `${collected}/${total}枚＋中間撃破`;
+                    ? `${collected}/${needMid}枚収集`
+                    : `${collected}/${needFinal}枚＋撃退`;
                 const statusBadge = alreadyDefeated
-                    ? '<span style="color:#2ecc71;font-weight:bold;font-size:13px">✅ 撃破済</span>'
+                    ? `<span style="color:#2ecc71;font-weight:bold;font-size:13px">✅ ${stage.type === 'mid' ? '撃退済' : '討伐済'}</span>`
                     : isUnlocked
                         ? '<span style="color:#e74c3c;font-size:13px">⚔️ 挑戦可</span>'
                         : `<span style="color:#aaa;font-size:11px">🔒 ${unlockHint}</span>`;
-                const typeLabel = stage.type === 'mid' ? '中間ボス' : '🏆最終ボス';
+                const typeLabel = stage.type === 'mid' ? '撃退戦' : '🏆討伐戦';
                 const tabUnlockNote = stage.tabUnlock != null ? ` → タブ${stage.tabUnlock + 1}解放` : '';
                 div.innerHTML = `
                     <span class="battle-stage-emoji">${stage.emoji}</span>
@@ -5857,7 +5914,11 @@ const Cloud = (function () {
             window.bossBGM.preload = 'auto';
             try { window.bossBGM.load(); } catch (e) {}
         }
-        if (stage.img) { const pre = new Image(); pre.decoding = 'async'; pre.src = stage.img; }
+        if (stage.img) {
+            const pre = new Image(); pre.decoding = 'async';
+            pre.onerror = () => { if (stage.imgFallback) { const p2 = new Image(); p2.src = stage.imgFallback; } };
+            pre.src = stage.img;
+        }
 
         renderFormationSlots();
         renderFormationPool();
@@ -6106,7 +6167,8 @@ const Cloud = (function () {
         setTimeout(() => { sprite.classList.remove('appearing'); sprite.classList.add('floating'); }, 700);
 
         renderBattleUI();
-        addBattleLog(`⚔️ ${stage.emoji} ${stage.name}とのバトル開始！`);
+        addBattleLog(stage.type === 'mid' ? `⚔️ ${stage.name}が現れた！ 撃退せよ！`
+                   : stage.type === 'final' ? `👑 ${stage.name}討伐戦、開始！` : `⚔️ ${stage.emoji} ${stage.name}とのバトル開始！`);
         if (synergy.mult > 1) {
             addBattleLog(synergy.label);
         }
@@ -6128,6 +6190,10 @@ const Cloud = (function () {
         const bossImg = document.getElementById('battleEnemyImg');
         const bossSprite = document.getElementById('battleEnemySprite');
         bossSprite.textContent = stage.emoji;
+        // タブごとの色違い（画像に色フィルター）＋討伐戦は大きく・光らせる
+        bossImg.style.filter = (stage.filter ? stage.filter + ' ' : '') + 'drop-shadow(0 6px 24px rgba(0,0,0,0.8))'
+            + (stage.type === 'final' ? ' drop-shadow(0 0 18px rgba(255,210,90,0.65))' : '');
+        bossImg.style.transform = stage.type === 'final' ? 'scale(1.12)' : '';
         if (stage.img) {
             const loadedOk = bossImg.getAttribute('data-loaded-src') === stage.img
                 && bossImg.complete && bossImg.naturalWidth > 0;
@@ -6143,11 +6209,17 @@ const Cloud = (function () {
                 bossSprite.style.display = 'block';
                 bossImg.onload = () => {
                     if (bossImg.getAttribute('data-want-src') !== stage.img) return;
+                    if (stage.imgFallback) measureSlimeHue(bossImg);
                     bossImg.setAttribute('data-loaded-src', stage.img);
                     bossImg.style.display = 'block';
                     bossSprite.style.display = 'none';
                 };
                 bossImg.onerror = () => {
+                    // 手帖ごとのスライム画像が無ければ共通のスライム画像で代用
+                    if (stage.imgFallback && bossImg.getAttribute('src') !== stage.imgFallback) {
+                        bossImg.src = stage.imgFallback;
+                        return;
+                    }
                     bossImg.setAttribute('data-failed', stage.img);
                     bossImg.style.display = 'none';
                     bossSprite.style.display = 'block';
@@ -6678,18 +6750,18 @@ const Cloud = (function () {
             if (stage.type === 'final' && stage.tabUnlock != null) {
                 // 最終ボス撃破 → 次タブ解放
                 const nextTabNo = stage.tabUnlock + 1;
-                descEl.innerHTML = `${stage.emoji} ${stage.name}を撃破！<br>${rewardMsg}<br><span style="color:#2ecc71;font-weight:bold">🎊 タブ${nextTabNo}が解放されました！</span>`;
-                addBattleLog(`🎉 ${stage.name}撃破！タブ${nextTabNo}解放！`);
+                descEl.innerHTML = `${stage.emoji} ${stage.name}を討伐した！<br>${rewardMsg}<br><span style="color:#2ecc71;font-weight:bold">🎊 タブ${nextTabNo}が解放されました！</span>`;
+                addBattleLog(`🎉 ${stage.name}を討伐！タブ${nextTabNo}解放！`);
                 renderCollectionTabs();
             } else if (stage.type === 'final') {
                 // 最終タブの最終ボス
-                descEl.innerHTML = `${stage.emoji} ${stage.name}を撃破！<br>${rewardMsg}<br><span style="color:#f9ca24;font-weight:bold">🏆 全タブ制覇！マスター達成！</span>`;
-                addBattleLog(`🏆 ${stage.name}撃破！全タブ制覇！`);
+                descEl.innerHTML = `${stage.emoji} ${stage.name}を討伐した！<br>${rewardMsg}<br><span style="color:#f9ca24;font-weight:bold">🏆 全タブ制覇！マスター達成！</span>`;
+                addBattleLog(`🏆 ${stage.name}を討伐！全タブ制覇！`);
             } else {
                 // 中間ボス撃破
                 const { total } = getTabCollectedCount(stage.tabIdx);
-                descEl.innerHTML = `${stage.emoji} ${stage.name}を撃破！<br>${rewardMsg}<br><span style="color:#88aaff">📌 タブ${stage.tabIdx + 1}のカード${total}枚を全収集すると最終ボスに挑戦可！</span>`;
-                addBattleLog(`⚡ 中間ボス ${stage.name}撃破！`);
+                descEl.innerHTML = `${stage.name}を撃退した！ スライムは逃げていった…<br>${rewardMsg}<br><span style="color:#88aaff">📌 タブ${stage.tabIdx + 1}のカードを${battleNeed(total, 'final')}枚（80%）集めると討伐戦に挑める！</span>`;
+                addBattleLog(`⚡ ${stage.name}を撃退！`);
             }
         } else if (playerHP <= 0) {
             titleEl.className = 'battle-result-title lose';
