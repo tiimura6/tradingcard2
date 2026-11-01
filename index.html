@@ -387,6 +387,15 @@
         /* モーダルは冒険中でも表示できるようにする */
         body.adventure-mode #main-page .modal-overlay,
         body.adventure-mode #main-page .modal-overlay * { visibility: visible; pointer-events: auto; }
+        /* 冒険中に開く全画面オーバーレイ（#main-page 内にあるため visibility を戻す。子要素は継承で表示される） */
+        body.adventure-mode #battle-overlay,
+        body.adventure-mode #battle-result-overlay,
+        body.adventure-mode #quiz-judge-overlay,
+        body.adventure-mode #gacha-anim-overlay,
+        body.adventure-mode #gacha-overlay,
+        body.adventure-mode #zoom-overlay,
+        body.adventure-mode #zoom-info-panel,
+        body.adventure-mode #study-overlay { visibility: visible; pointer-events: auto; }
         /* トースト・通知は冒険モードでも表示 */
         body.adventure-mode #comboBonusNotice,
         body.adventure-mode #challengeToast,
@@ -4750,6 +4759,35 @@ const Cloud = (function () {
     bossBGMPreload.preload = 'none';
     window.bossBGM = bossBGMPreload;
 
+    function getAdventureBGM() {
+        if (!adventureBGM) {
+            adventureBGM = new Audio('./bgm/adventure.mp3');
+            adventureBGM.loop = true;
+            adventureBGM.volume = 0.35;
+            adventureBGM.preload = 'auto';
+        }
+        return adventureBGM;
+    }
+
+    /* iOS Safari では、一度もユーザー操作の中で再生していない audio 要素は
+       後から play() しても拒否される。最初のタップで冒険BGMを無音で一瞬再生して解錠しておく。 */
+    let _bgmUnlocked = false;
+    function unlockBgmElements() {
+        if (_bgmUnlocked) return;
+        _bgmUnlocked = true;
+        // ボスBGM(4MB)は編成確定のタップ内で再生するので解錠不要（初回タップでの大きな通信を避ける）
+        [getAdventureBGM()].forEach(a => {
+            if (!a || !a.paused) return;
+            a.muted = true;
+            const p = a.play();
+            const done = () => { if (a.muted) { a.pause(); a.currentTime = 0; a.muted = false; } };
+            if (p && p.then) p.then(done).catch(() => { a.muted = false; _bgmUnlocked = false; });
+            else done();
+        });
+    }
+    document.addEventListener('pointerdown', unlockBgmElements, { capture: true });
+    document.addEventListener('touchend', unlockBgmElements, { capture: true });
+
     // BGM再開ヘルパー（visibilitychange / focus / pageshow で共通使用）
     function resumeActiveBGM() {
         if (!bgmOn) return;
@@ -4792,6 +4830,15 @@ const Cloud = (function () {
         adventureActive = true;
         const fade = document.getElementById('adventure-fade');
 
+        // BGM切り替え：iOS Safari はタップ直後（同期）でないと再生を許可しないため、フェード前に開始する
+        if (bgmOn) {
+            if (bgmAudio) bgmAudio.pause();
+            if (bgmCtx) bgmCtx.suspend();
+            const adv = getAdventureBGM();
+            adv.currentTime = 0;
+            adv.play().catch(e => console.warn('adventureBGM play failed:', e));
+        }
+
         // フェードアウト
         fade.style.pointerEvents = 'all';
         fade.style.opacity = '1';
@@ -4799,19 +4846,6 @@ const Cloud = (function () {
         setTimeout(() => {
             // 背景・シーン切り替え（bg-layerに画像を直接セット）
             document.body.classList.add('adventure-mode');
-
-            // BGM切り替え
-            if (bgmOn) {
-                if (bgmAudio) bgmAudio.pause();
-                if (bgmCtx) bgmCtx.suspend();
-                if (!adventureBGM) {
-                    adventureBGM = new Audio('./bgm/adventure.mp3');
-                    adventureBGM.loop = true;
-                    adventureBGM.volume = 0.35;
-                }
-                adventureBGM.currentTime = 0;
-                adventureBGM.play().catch(() => {});
-            }
 
             // フェードイン
             fade.style.opacity = '0';
@@ -7017,7 +7051,7 @@ const Cloud = (function () {
         hofBossRush.bossIndex = 0;
         hofBossRush.active = true;
         // フォーメーション選択から開始
-        showFormationModal(hofBossRush.bosses[0]);
+        openBattleFormationModal(hofBossRush.bosses[0]);
     }
 
     function advanceHofBossRush() {
@@ -7044,7 +7078,7 @@ const Cloud = (function () {
         } else {
             // 次のボスへ
             const nextBoss = hofBossRush.bosses[hofBossRush.bossIndex];
-            showFormationModal(nextBoss);
+            openBattleFormationModal(nextBoss);
         }
     }
 
@@ -7335,22 +7369,24 @@ const Cloud = (function () {
 
     function buildBGM() {
         if (bgmAudio || bgmCtx) return;
-        // MP3を試みる
+        // MP3を試みる。iOS Safari はタップ中に同期で play() しないと再生できないため、
+        // 読み込み完了（canplaythrough）を待たずにここで再生を開始する
         const testAudio = new Audio('./bgm/main.mp3');
         testAudio.loop = true;
         testAudio.volume = 0.35;
-        testAudio.addEventListener('canplaythrough', () => {
-            bgmAudio = testAudio;
-            // 冒険中・バトル中はメインBGMを自動再生しない（非同期ロード完了時の誤再生防止）
-            if (!adventureActive && !(battleSession && battleSession.active)) {
-                bgmAudio.play().catch(() => {});
-            }
-        }, { once: true });
+        testAudio.preload = 'auto';
+        bgmAudio = testAudio;
         testAudio.addEventListener('error', () => {
             // フォールバック: Web Audio API
+            if (bgmAudio === testAudio) bgmAudio = null;
             buildWebAudioBGM();
         }, { once: true });
-        testAudio.load();
+        // 冒険中・バトル中はメインBGMを鳴らさない
+        if (!adventureActive && !(battleSession && battleSession.active)) {
+            testAudio.play().catch(e => console.warn('main BGM play failed:', e));
+        } else {
+            testAudio.load();
+        }
         return;
     }
 
@@ -7407,8 +7443,8 @@ const Cloud = (function () {
                 window.bossBGM.loop = true;
                 window.bossBGM.play().catch(() => {});
                 if (!bgmAudio && !bgmCtx) buildBGM();   // 戻ったときのためにメインBGMを読み込んでおく
-            } else if (adventureActive && adventureBGM) {
-                adventureBGM.play().catch(() => {});
+            } else if (adventureActive) {
+                getAdventureBGM().play().catch(() => {});
             } else if (bgmAudio) {
                 // 既にロード済み → currentTimeをリセットして確実に再生
                 bgmAudio.currentTime = 0;
