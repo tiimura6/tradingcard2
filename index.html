@@ -5054,6 +5054,10 @@ const Cloud = (function () {
             adventureBGM.loop = true;
             adventureBGM.volume = 0.35;
             adventureBGM.preload = 'auto';
+            // 安全策：冒険中でなければ冒険BGMは鳴らさない（端末の再開処理などで勝手に鳴った場合も止める）
+            adventureBGM.addEventListener('playing', () => {
+                if (!adventureActive || (battleSession && battleSession.active)) adventureBGM.pause();
+            });
         }
         return adventureBGM;
     }
@@ -5065,13 +5069,16 @@ const Cloud = (function () {
         if (_bgmUnlocked) return;
         _bgmUnlocked = true;
         // ボスBGM(4MB)は編成確定のタップ内で再生するので解錠不要（初回タップでの大きな通信を避ける）
+        // 以前は「消音で再生 → 再生開始後に停止」していたが、iPhone では消音が効かず
+        // メイン画面で冒険BGMが鳴り続けることがあった。タップ内で play() 直後に同期で pause() すれば
+        // 音は出ずに解錠だけされる（再生 Promise は中断扱いになるが問題ない）
         [getAdventureBGM()].forEach(a => {
-            if (!a || !a.paused) return;
-            a.muted = true;
-            const p = a.play();
-            const done = () => { if (a.muted) { a.pause(); a.currentTime = 0; a.muted = false; } };
-            if (p && p.then) p.then(done).catch(() => { a.muted = false; _bgmUnlocked = false; });
-            else done();
+            if (!a || !a.paused || adventureActive) return;
+            try {
+                const p = a.play();
+                a.pause();
+                if (p && p.catch) p.catch(() => {});
+            } catch (e) {}
         });
     }
     document.addEventListener('pointerdown', unlockBgmElements, { capture: true });
@@ -7813,6 +7820,10 @@ const Cloud = (function () {
         testAudio.volume = 0.35;
         testAudio.preload = 'auto';
         bgmAudio = testAudio;
+        // 安全策：冒険中・バトル中はメインBGMを鳴らさない
+        testAudio.addEventListener('playing', () => {
+            if (adventureActive || (battleSession && battleSession.active)) testAudio.pause();
+        });
         testAudio.addEventListener('error', () => {
             // フォールバック: Web Audio API
             if (bgmAudio === testAudio) bgmAudio = null;
