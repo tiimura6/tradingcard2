@@ -1802,21 +1802,6 @@
         .battle-action-btn.def.active-def { background: linear-gradient(135deg,#225522,#112211); border-color:#88ff88; box-shadow:0 0 8px rgba(100,255,100,0.3); }
 
         /* 文法クイズ専用表示 */
-        .grammar-quiz-box {
-            background: rgba(20,20,60,0.95); border: 2px solid rgba(100,100,255,0.4);
-            border-radius: 14px; padding: 14px; margin-bottom: 8px;
-            font-size: 13px; color: #ccccff; line-height: 1.7;
-        }
-        .grammar-quiz-label { font-size: 10px; color: #7777cc; margin-bottom: 6px; font-weight: bold; letter-spacing: 1px; }
-        .grammar-quiz-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .grammar-choice-btn {
-            padding: 8px 6px; border-radius: 8px; font-size: 12px; cursor: pointer;
-            background: rgba(60,60,120,0.6); border: 1px solid rgba(100,100,200,0.4);
-            color: #ccccff; transition: all 0.15s; font-family: 'Noto Serif JP', serif;
-        }
-        .grammar-choice-btn:hover { background: rgba(80,80,160,0.8); }
-        .grammar-choice-btn.correct { background: rgba(40,120,40,0.7); border-color: #44cc44; color: #aaffaa; }
-        .grammar-choice-btn.wrong   { background: rgba(120,30,30,0.7); border-color: #cc4444; color: #ffaaaa; }
     
         /* ===== アカウント（ログイン・同期） ===== */
         #accountChip {
@@ -2058,7 +2043,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-2135</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-2150</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -2095,10 +2080,6 @@
     <button class="action-btn btn-study" id="adventureBattleBtn" onclick="adventureOrBattle()" style="grid-column:span 2;">
         <span class="btn-icon" id="adventureBattleBtnIcon">🗺️</span><span id="adventureBattleBtnLabel">冒険</span>
     </button>
-    <button class="action-btn" id="spGachaBtn" onclick="openSPEnhanceModal()"
-        style="display:none;grid-column:1/-1;background:linear-gradient(150deg,#104060,#082840);color:#a0d8ff;border:1px solid rgba(80,160,255,0.5);">
-        <span class="btn-icon">🌱</span><span id="spGachaLabel">強化の種 <span id="spPointBadge" style="background:rgba(80,160,255,0.3);border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px;">0個</span></span>
-    </button>
     <button class="action-btn" id="hofBtn" onclick="showHallOfFameModal()"
         style="grid-column:1/-1;background:linear-gradient(150deg,#4a3010,#2a1800);color:#f0d080;border:1px solid rgba(200,150,30,0.4);">
         <span class="btn-icon">🏆</span>殿堂入りへの道
@@ -2107,18 +2088,6 @@
 
 <!-- Gacha Choice Modal -->
 <!-- SP強化モーダル -->
-<div id="sp-enhance-modal" class="modal-overlay" style="display:none;">
-    <div class="custom-box" style="width:92%;max-width:380px;max-height:80vh;display:flex;flex-direction:column;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <h3 style="margin:0;color:#a0d8ff;font-family:'Noto Serif JP',serif;">🌱 強化の種</h3>
-            <button onclick="closeSPEnhanceModal()" style="background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:0 4px;">✕</button>
-        </div>
-        <p id="spEnhanceDesc" style="font-size:12px;color:#80a0c0;margin:0 0 10px;text-align:center;"></p>
-        <p style="font-size:11px;color:#607090;margin:0 0 10px;text-align:center;">強化の種を使うカードを選択（ATK/DEF +10）</p>
-        <div id="spEnhanceCardList" style="overflow-y:auto;flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 2px;"></div>
-        <button onclick="closeSPEnhanceModal()" style="margin-top:12px;background:rgba(40,60,80,0.8);border:1px solid rgba(80,120,160,0.4);border-radius:8px;color:#80a0c0;padding:8px;font-size:13px;cursor:pointer;font-family:'Noto Serif JP',serif;">閉じる</button>
-    </div>
-</div>
 
 <!-- 手帖えらび -->
 <div id="nb-picker" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeNotebookPicker()">
@@ -4128,7 +4097,6 @@ const Cloud = (function () {
         localStorage.setItem('unlockedCards', JSON.stringify(unlockedCards));
         checkNotebookUnlocks();
     }
-    let currentSingleCard = null;
 
     let gachaSession = { isGachaMode: false, selectedCard: null, userAnswer: "", onDone: null };
 
@@ -4161,7 +4129,6 @@ const Cloud = (function () {
         "伝説の魔法使い","魔法界の英雄","世界樹の守者","時空の探求者","不死の賢者"
     ];
     const XP_PER_LEVEL = 100;
-    const SP_TICKET_XP  = 500;   // 累積500XPごとに強化の種1個
 
     let xpData = safeParse('xpData', null) || { xp: 0, level: 1, totalXP: 0 };
     if (!xpData.totalXP) xpData.totalXP = 0;  // 旧データ互換
@@ -4199,44 +4166,9 @@ const Cloud = (function () {
         if (label) label.textContent = `${xpData.xp}/${XP_PER_LEVEL} XP ｜ 次のLvまで${XP_PER_LEVEL - xpData.xp}XP`;
     }
 
-    function updateSpecialGachaBtn() {
-        const btn   = document.getElementById('spGachaBtn');
-        const badge = document.getElementById('spPointBadge');
-        if (!btn) return;
-        btn.style.display = 'none';   // 強化の種は廃止
-        return;
-        if (specialTickets > 0) {
-            btn.style.display = '';
-            if (badge) badge.textContent = `${specialTickets}個`;
-        } else {
-            btn.style.display = 'none';
-        }
-    }
-
-    function showSPTicketToast(count) {
-        const t = document.getElementById('levelupToast');
-        if (!t) return;
-        t.textContent = `🌱 強化の種 ×${count} 獲得！`;
-        t.classList.add('show');
-        setTimeout(() => t.classList.remove('show'), 3000);
-        confetti({ particleCount: 80, spread: 70, origin: { y: 0.4 } });
-    }
+    function updateSpecialGachaBtn() {}   // 強化の種は廃止（呼び出し元の互換のため残す）
 
     /* ========== SP強化モーダル ========== */
-    function openSPEnhanceModal() {
-        if (specialTickets <= 0) return;
-        const desc = document.getElementById('spEnhanceDesc');
-        if (desc) desc.textContent = `強化の種 残り: ${specialTickets}個`;
-        renderSPEnhanceCardList();
-        const modal = document.getElementById('sp-enhance-modal');
-        if (modal) { modal.style.display = 'flex'; modal.classList.add('modal-animate'); }
-    }
-
-    function closeSPEnhanceModal() {
-        const modal = document.getElementById('sp-enhance-modal');
-        if (modal) { modal.classList.remove('modal-animate'); modal.style.display = 'none'; }
-    }
-
     function renderSPEnhanceCardList() {
         const list = document.getElementById('spEnhanceCardList');
         if (!list) return;
@@ -4263,34 +4195,6 @@ const Cloud = (function () {
                     ${enhCount > 0 ? `<div style="position:absolute;top:4px;right:4px;font-size:9px;background:rgba(0,100,200,0.5);border-radius:6px;padding:1px 4px;color:#a0d8ff;">🌱${pctLabel}</div>` : ''}
                 </div>`;
             }).join('');
-    }
-
-    function applySPEnhance(cardId) {
-        if (specialTickets <= 0) { closeSPEnhanceModal(); return; }
-        if (!spEnhanceData[cardId]) spEnhanceData[cardId] = { count: 0 };
-        // 旧フォーマット(atk/def)からcountへ移行
-        if (spEnhanceData[cardId].count === undefined) {
-            spEnhanceData[cardId].count = Math.round((spEnhanceData[cardId].atk || 0) / 10);
-            delete spEnhanceData[cardId].atk;
-            delete spEnhanceData[cardId].def;
-        }
-        spEnhanceData[cardId].count++;
-        specialTickets--;
-        localStorage.setItem('specialTickets', specialTickets);
-        localStorage.setItem('spEnhanceData', JSON.stringify(spEnhanceData));
-        updateSpecialGachaBtn();
-        // 演出
-        confetti({ particleCount: 50, spread: 50, origin: { y: 0.5 } });
-        const t = document.getElementById('levelupToast');
-        const newCount = spEnhanceData[cardId].count;
-        if (t) { t.textContent = `🌱 強化成功！ATK/DEF +${newCount * 10}%`; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
-        if (specialTickets > 0) {
-            const desc = document.getElementById('spEnhanceDesc');
-            if (desc) desc.textContent = `強化の種 残り: ${specialTickets}個`;
-            renderSPEnhanceCardList();
-        } else {
-            closeSPEnhanceModal();
-        }
     }
 
     function showLevelUpToast(lv) {
@@ -4380,11 +4284,6 @@ const Cloud = (function () {
     }
 
     /* ========== CHALLENGE / TRAINING STATE ========== */
-    const LEVEL_GROUPS = {
-        '2級':  [4, 6, 7, 8, 9, 10, 13, 14, 16, 17, 29, 72, 80, 101, 167, 169, 219, 225, 230, 251, 266, 282, 284, 293, 308, 309, 314, 320, 323, 351, 431, 439, 472, 473, 504, 508, 514, 519, 557, 593, 594, 595, 603, 620, 621, 652, 658, 663, 668, 670, 675, 692, 818, 824, 851],
-        '準1級': [1, 2, 3, 5, 12, 15, 19, 20, 21, 22, 25, 26, 27, 28, 30, 31, 33, 34, 35, 37, 39, 40, 41, 42, 43, 46, 47, 48, 49, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 63, 64, 65, 66, 67, 68, 69, 71, 73, 74, 75, 76, 78, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 102, 103, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 161, 162, 163, 164, 166, 168, 170, 172, 173, 175, 178, 179, 180, 181, 183, 184, 185, 186, 187, 188, 189, 191, 194, 196, 197, 198, 200, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 220, 221, 222, 223, 224, 226, 227, 228, 229, 231, 232, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 252, 253, 254, 255, 256, 257, 258, 259, 260, 262, 263, 264, 265, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 278, 279, 280, 281, 283, 286, 287, 288, 289, 291, 294, 296, 297, 298, 299, 300, 301, 302, 303, 305, 306, 307, 310, 312, 315, 316, 318, 319, 321, 322, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 336, 337, 338, 339, 340, 341, 342, 343, 345, 346, 347, 348, 349, 350, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 387, 388, 389, 390, 391, 392, 393, 394, 395, 396, 397, 398, 399, 400, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 419, 420, 421, 422, 423, 425, 426, 427, 428, 430, 432, 433, 435, 437, 438, 440, 441, 442, 443, 444, 445, 446, 447, 448, 449, 450, 451, 452, 453, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 465, 468, 469, 471, 475, 476, 477, 478, 480, 481, 484, 485, 486, 489, 490, 492, 493, 494, 496, 499, 500, 502, 503, 505, 509, 510, 511, 512, 513, 515, 516, 517, 518, 520, 521, 522, 523, 525, 527, 528, 529, 530, 531, 532, 533, 535, 536, 537, 538, 539, 540, 541, 542, 543, 544, 546, 547, 548, 549, 550, 551, 552, 553, 554, 555, 556, 558, 559, 560, 561, 563, 564, 566, 567, 568, 569, 571, 572, 573, 575, 576, 577, 579, 581, 583, 584, 585, 586, 587, 588, 589, 591, 592, 596, 597, 598, 599, 600, 601, 602, 604, 605, 606, 607, 608, 609, 611, 612, 613, 614, 615, 616, 617, 618, 619, 622, 623, 624, 625, 626, 627, 628, 629, 630, 632, 633, 635, 637, 638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 649, 651, 653, 654, 655, 656, 657, 660, 661, 662, 664, 665, 666, 667, 669, 671, 672, 673, 674, 676, 677, 678, 679, 680, 681, 682, 683, 684, 686, 687, 688, 690, 695, 696, 697, 698, 699, 700, 701, 702, 703, 705, 706, 707, 708, 709, 710, 711, 712, 713, 714, 715, 717, 719, 720, 721, 722, 723, 724, 725, 726, 727, 728, 730, 731, 732, 733, 734, 735, 736, 737, 738, 739, 740, 741, 742, 743, 744, 745, 746, 747, 748, 749, 750, 751, 752, 753, 755, 756, 757, 758, 759, 760, 762, 764, 765, 767, 768, 769, 770, 771, 772, 773, 774, 775, 777, 778, 779, 780, 782, 783, 785, 786, 789, 790, 791, 792, 793, 794, 795, 796, 797, 798, 799, 800, 801, 802, 804, 805, 806, 807, 808, 809, 810, 812, 813, 814, 815, 816, 817, 820, 821, 823, 825, 829, 830, 831, 832, 833, 834, 835, 836, 837, 838, 839, 840, 841, 842, 843, 845, 846, 847, 849, 850, 852, 853, 855, 856, 857, 858, 859, 860, 861, 862, 863],
-        '1級':  [11, 18, 23, 24, 32, 36, 38, 44, 45, 50, 62, 70, 77, 79, 104, 119, 148, 160, 165, 171, 174, 176, 177, 182, 190, 192, 193, 195, 199, 201, 233, 261, 277, 285, 290, 292, 295, 304, 311, 313, 317, 334, 335, 344, 401, 424, 429, 434, 436, 466, 467, 470, 474, 479, 482, 483, 487, 488, 491, 495, 497, 498, 501, 506, 507, 524, 526, 534, 545, 562, 565, 570, 574, 578, 580, 582, 590, 610, 631, 634, 636, 648, 650, 659, 685, 689, 691, 693, 694, 704, 716, 718, 729, 754, 761, 763, 766, 776, 781, 784, 787, 788, 803, 811, 819, 822, 826, 827, 828, 844, 848, 854]
-    };
 
     let dailyChallenges = safeParse('dailyChallenges', null) || {
         date: "",
@@ -4573,19 +4472,6 @@ const Cloud = (function () {
         return { color: (lap > 0 ? '真・' : '') + c.name, filter: f };
     }
 
-    // 敵の強さ（従来のボスの強さの並びをそのまま使う：中間＝撃退戦、最後＝討伐戦）
-    const MID_BOSS_TEMPLATES = [
-        { hpBase: 350,  atkBase: 12 }, { hpBase: 550,  atkBase: 20 }, { hpBase: 800,  atkBase: 30 },
-        { hpBase: 1100, atkBase: 41 }, { hpBase: 1500, atkBase: 53 }, { hpBase: 2000, atkBase: 65 },
-        { hpBase: 2600, atkBase: 78 }, { hpBase: 3200, atkBase: 91 }, { hpBase: 4000, atkBase: 103 },
-        { hpBase: 5000, atkBase: 116 },
-    ];
-    const FINAL_BOSS_TEMPLATES = [
-        { hpBase: 700,  atkBase: 20 },  { hpBase: 1100, atkBase: 33 },  { hpBase: 1700, atkBase: 50 },
-        { hpBase: 2400, atkBase: 68 },  { hpBase: 3200, atkBase: 88 },  { hpBase: 4200, atkBase: 108 },
-        { hpBase: 5400, atkBase: 128 }, { hpBase: 6800, atkBase: 148 }, { hpBase: 8500, atkBase: 168 },
-        { hpBase: 10000, atkBase: 190 },
-    ];
     const BATTLE_MID_RATIO   = 0.4;   // 撃退戦：タブのカード40%
     const BATTLE_FINAL_RATIO = 0.8;   // 討伐戦：タブのカード80%
     function battleNeed(total, type) { return Math.ceil(total * (type === 'mid' ? BATTLE_MID_RATIO : BATTLE_FINAL_RATIO)); }
@@ -5875,7 +5761,6 @@ const Cloud = (function () {
         document.getElementById('zoom-info-panel').classList.remove('open');
     }
 
-    /* ========== CAMERA / QR ========== */
     /* ========== GACHA CHOICE MODAL ========== */
     function openGachaChoiceModal() {
         checkAndResetDailyGacha();
@@ -5987,12 +5872,6 @@ const Cloud = (function () {
         return h < 24 ? `約${h}時間後` : `約${Math.round(h / 24)}日後`;
     }
 
-    function getSRSBadgeHTML(cardId) {
-        const e = getSRSEntry(cardId);
-        const label = SRS_LABELS[e.level] || 'New';
-        const color = SRS_COLORS[e.level] || '#888';
-        return `<span style="background:${color};color:#fff;font-size:9px;padding:2px 5px;border-radius:8px;font-family:monospace;vertical-align:middle;">${label}</span>`;
-    }
     function sortCardsBySRS(cards) {
         const now = Date.now();
         // 優先順：①忘れかけ（覚えた単語で復習日を過ぎたもの）→ ②まだ覚えていない単語 → ③復習日前の単語
@@ -7443,32 +7322,9 @@ const Cloud = (function () {
                 quizOv.classList.remove('battle-quiz-mode');
                 logEvent('battle', card, isCorrect);
                 processBattleAnswer(isCorrect, card);
-            } else if (gachaSession.isGachaMode) {
-                // 実力ガチャ: 正解 → カード獲得 & アニメーション / 不正解 → ポイント付与
-                logEvent('gacha', card, isCorrect);
-                updateCombo(isCorrect);
-                updateSRS(card.id, isCorrect);
-                if (isCorrect) {
-                    addXP(20, btnEl);
-                    const rarity = getRarity(card.no);
-                    playRarityAnimation(rarity, () => {
-                        evaluateAndShowGachaResult(true);
-                        if (gachaSession.onDone) gachaSession.onDone();
-                    });
-                } else {
-                    evaluateAndShowGachaResult(false);
-                }
             } else {
-                logEvent('challenge', card, isCorrect);
-                updateCombo(isCorrect);
-                if (isCorrect) {
-                    alert("正解！カードをゲットしたよ！");
-                    jumpToCardTab(currentSingleCard.no);
-                    startSingleGet(currentSingleCard);
-                } else {
-                    alert(`残念！正解は「${card.quiz.answer}」でした。また挑戦してね！`);
-                }
-                currentSingleCard = null;
+                // （旧：実力ガチャ・QRカード取得の出題。現在はどちらも使われていない）
+                document.getElementById('quiz-overlay').style.display = 'none';
             }
         }, 700);
     }
@@ -7543,47 +7399,6 @@ const Cloud = (function () {
             }, 500);
         }
         setTimeout(() => { document.getElementById('gachaCloseBtn').style.display = 'block'; }, 1200);
-    }
-
-    /* ========== SINGLE CARD GET (QR scan, with rarity) ========== */
-    function startSingleGet(card) {
-        const container = document.getElementById('gachaContainer');
-        container.innerHTML = '';
-        document.getElementById('gachaCloseBtn').style.display = 'none';
-        // タイトルを非表示にリセット
-        const titleEl = document.getElementById('gachaResultTitle');
-        if (titleEl) { titleEl.style.opacity = '0'; titleEl.innerText = ''; }
-        document.getElementById('gacha-overlay').style.display = 'flex';
-
-        const rarity = getRarity(card.no);
-        const rc = RARITY_CONFIG[rarity];
-        setGachaTitle(`${rc.emoji} ${rc.resultTitle}`, 1000);
-
-        if (!isOwned(card.id)) {
-            unlockedCards.push(card.id);
-            saveUnlocked();
-        }
-
-        const gachaCardEl = document.createElement('div');
-        gachaCardEl.className = 'gacha-card';
-        gachaCardEl.id = 'gachaCard-0';
-        const st2 = getCardStats(card);
-        gachaCardEl.innerHTML = `
-            <div class="gacha-face gacha-back ${rc.backClass}">？</div>
-            <div class="gacha-face gacha-front ${rc.frontClass}">
-                <div class="gacha-rarity-badge gacha-rarity-badge-${rarity}">${rc.label}</div>
-                <img src="${card.img}" onerror="imgFallback(this,'${card.id}')">
-                <div class="gacha-info">No.${card.no}　${card.quiz.answer}<br><span style="font-size:10px;font-weight:normal;color:#d0c090;">${card.quiz.meaning}</span></div>
-                <div class="gacha-stats"><span>⚔️ Power:${st2.atk}</span><span>🛡️ Guard:${st2.def}</span></div>
-            </div>
-        `;
-        container.appendChild(gachaCardEl);
-
-        setTimeout(() => {
-            document.getElementById('gachaCard-0').classList.add('do-flip');
-            fireRarityConfetti(rarity);
-            document.getElementById('gachaCloseBtn').style.display = 'block';
-        }, 500);
     }
 
     /* ========== CLOSE GACHA ========== */
@@ -7974,127 +7789,7 @@ const Cloud = (function () {
     }
 
     /* ========== RENDER CHALLENGE TAB ========== */
-    function renderChallengeTab() {
-        checkDailyChallengeReset();
-        checkWeeklyChallengeReset();
-        const grid = document.getElementById('collectionGrid');
-        const dc = dailyChallenges;
-        const wc = weeklyChallenges;
-        const hof = hallOfFame;
-        const dailyDone  = Object.values(dc.completed).filter(Boolean).length;
-        const weeklyDone = Object.values(wc.completed).filter(Boolean).length;
-
-        function ciCheck(done, label, cur, target, reward) {
-            const pText = (!done && target > 0) ? ` (${Math.min(cur, target)}/${target})` : '';
-            return `<div class="challenge-item">
-                <span class="challenge-check">${done ? '✅' : '☐'}</span>
-                <span class="challenge-label${done ? ' done' : ''}">${label}${pText}</span>
-                <span class="challenge-reward">${reward}</span>
-            </div>`;
-        }
-
-        function hofRow(level, data) {
-            const pct = Math.min(100, (data.currentStreak / 100) * 100);
-            const streakLabel = data.achieved
-                ? '<span style="color:#f0c840;font-size:11px;margin-left:4px;">殿堂入り！</span>'
-                : ` ${data.currentStreak}/100`;
-            return `<div class="hof-item">
-                <span class="challenge-check">${data.achieved ? '🏆' : '☐'}</span>
-                <span class="hof-label">${level}${streakLabel}</span>
-                <div class="hof-streak-bar"><div class="hof-streak-fill" style="width:${pct}%"></div></div>
-                <div style="font-size:10px;color:#907080;flex-shrink:0;">最高${data.bestStreak}</div>
-                ${!data.achieved ? `<button class="hof-challenge-btn" onclick="openTrainingMode('all')">挑戦</button>` : ''}
-            </div>`;
-        }
-
-        const weeklyStreak = loginStreak.streak;
-        const wkStreakDone = wc.completed.streak7;
-        const wkStreakPText = !wkStreakDone ? ` (${Math.min(weeklyStreak,7)}/7)` : '';
-
-        grid.innerHTML = `<div class="challenge-container" style="grid-column:1/-1;">
-            <div class="challenge-section">
-                <div class="challenge-section-title">
-                    <span>📅 デイリーチャレンジ</span>
-                    <span style="font-size:12px;color:#a090c0;">${dailyDone}/5 完了</span>
-                </div>
-                ${ciCheck(dc.completed.login,   'ログイン',      0, 0, '+100G')}
-                ${ciCheck(dc.completed.train10, '10枚冒険',  dc.progress.trainCount,  10, '+100G')}
-                ${ciCheck(dc.completed.train20, '20枚冒険',  dc.progress.trainCount,  20, '+100G')}
-                ${ciCheck(dc.completed.train35, '35枚冒険',  dc.progress.trainCount,  35, '+100G')}
-                ${ciCheck(dc.completed.quiz10,  '10問正解',  dc.progress.quizCorrect, 10, '+100G')}
-                ${ciCheck(dc.completed.quiz20,  '20問正解',  dc.progress.quizCorrect, 20, '+100G')}
-                ${ciCheck(dc.completed.quiz30,  '30問正解',  dc.progress.quizCorrect, 30, '+200G')}
-                ${ciCheck(dc.completed.combo3,  '3連続コンボ',dc.progress.currentCombo, 3, '+100G')}
-                ${ciCheck(dc.completed.combo5,  '5連続コンボ',dc.progress.currentCombo, 5, '+100G')}
-            </div>
-            <div class="challenge-section">
-                <div class="challenge-section-title">
-                    <span>📆 ウィークリーチャレンジ</span>
-                    <span style="font-size:12px;color:#a090c0;">${weeklyDone}/11 完了</span>
-                </div>
-                ${ciCheck(wc.completed.train100,  '100枚学習（2日）',    wc.progress.trainCount,  100, '+200G')}
-                ${ciCheck(wc.completed.train200,  '200枚学習（4日）',    wc.progress.trainCount,  200, '+300G')}
-                ${ciCheck(wc.completed.train350,  '350枚学習（フル週）', wc.progress.trainCount,  350, '+600G')}
-                ${ciCheck(wc.completed.quiz70,    '70問正解（3日）',     wc.progress.quizCorrect,  70, '+200G')}
-                ${ciCheck(wc.completed.quiz140,   '140問正解（5日）',    wc.progress.quizCorrect, 140, '+400G')}
-                ${ciCheck(wc.completed.quiz210,   '210問正解（フル週）', wc.progress.quizCorrect, 210, '+600G')}
-                ${ciCheck(wc.completed.combo8,    '8連続コンボ（週ベスト）',  wc.progress.bestCombo||0, 8,  '+200G')}
-                ${ciCheck(wc.completed.combo12,   '12連続コンボ（週ベスト）', wc.progress.bestCombo||0, 12, '+300G')}
-                ${ciCheck(wc.completed.combo15,   '15連続コンボ（週ベスト）', wc.progress.bestCombo||0, 15, '+500G')}
-                <div class="challenge-item">
-                    <span class="challenge-check">${(wc.completed.streak3||loginStreak.streak>=3) ? '✅' : '☐'}</span>
-                    <span class="challenge-label${(wc.completed.streak3||loginStreak.streak>=3) ? ' done' : ''}">3日連続ログイン (${Math.min(loginStreak.streak,3)}/3)</span>
-                    <span class="challenge-reward">+2回</span>
-                </div>
-                <div class="challenge-item">
-                    <span class="challenge-check">${wkStreakDone ? '✅' : '☐'}</span>
-                    <span class="challenge-label${wkStreakDone ? ' done' : ''}">7日連続ログイン${wkStreakPText}</span>
-                    <span class="challenge-reward">+5回</span>
-                </div>
-            </div>
-            <div class="challenge-section">
-                <div class="challenge-section-title">
-                    <span>📒 白金の手帖チャレンジ</span>
-                    <span style="font-size:11px;color:#a090c0;">100問連続正解</span>
-                </div>
-                <div style="font-size:11px;color:#807090;margin-bottom:8px;line-height:1.6;">
-                    冒険で100問連続正解すると白金の手帖に殿堂入り！<br>
-                    ※1問でも不正解でカウンターリセット
-                </div>
-                ${hofRow('金の手帖', hof['金の手帖'])}
-                <div style="font-size:11px;color:#706060;margin-top:8px;">
-                    報酬: 3,000G / 白金の手帖バッジ＋称号
-                </div>
-            </div>
-            <div style="text-align:center;color:#706080;font-size:11px;padding:8px 0 16px;">
-                チャレンジ達成でゴールドがもらえます
-            </div>
-        </div>`;
-    }
-
     /* ========== RENDER TRAINING TAB ========== */
-    function renderTrainingTab() {
-        const grid = document.getElementById('collectionGrid');
-        const total = ownedInNotebook();
-        grid.innerHTML = `<div class="training-container" style="grid-column:1/-1;">
-            <div style="color:#e8d070;font-size:17px;font-weight:bold;margin-bottom:6px;font-family:'Noto Serif JP',serif;">🗺️ 冒険モード</div>
-            <div style="color:#a090c0;font-size:13px;margin-bottom:4px;">アンロック済み: ${total}枚 | 無制限で練習</div>
-            <div style="color:#807090;font-size:12px;margin-bottom:20px;">正解数がチャレンジ進捗に反映されます</div>
-
-            <button class="training-start-btn" onclick="openTrainingMode('all')">🎯 全カードで冒険</button>
-
-            <div style="margin-top:22px;padding:14px;background:rgba(20,10,40,0.65);border:1px solid rgba(200,170,50,0.35);border-radius:10px;text-align:left;">
-                <div style="color:#e8d070;font-size:13px;margin-bottom:8px;font-family:'Noto Serif JP',serif;">📒 白金の手帖チャレンジ</div>
-                <div style="color:#a090c0;font-size:12px;line-height:1.9;">
-                    • 冒険で <strong style="color:#f0c840;">100問連続正解</strong> → 白金の手帖殿堂入り！<br>
-                    • 1問でも不正解でカウンターリセット<br>
-                    • 報酬: 3,000G / 白金の手帖バッジ＋称号<br>
-                    • 進捗は「チャレンジ」タブで確認
-                </div>
-            </div>
-        </div>`;
-    }
-
     /* ========== KEYBOARD SHORTCUTS ========== */
     // (answerInput removed — quiz now uses 4-choice buttons)
     document.getElementById('couponInput').addEventListener('keypress', e => { if (e.key === 'Enter') submitCoupon(); });
