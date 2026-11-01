@@ -4,3 +4,4 @@ photo/*.png
 
 # テスト用の依存パッケージ
 node_modules/
+__pycache__/
