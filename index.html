@@ -2043,7 +2043,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.01-2320</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-0010</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -2975,7 +2975,7 @@ const Cloud = (function () {
     const quizList = {
         1: { meaning: '二重線', answer: 'a double line', example: 'The glowing runestones formed a double line through the enchanted forest, their light vanishing into the mist.', pos: 'n.phr.', exMeaning: '光るルーン石が魔法の森を貫く二重線を描き、その光は霧の中へと消えていった。', form: 'a double line' },
         2: { meaning: '〜とはほど遠い', answer: 'a far cry from', example: 'The cold stone dungeon was a far cry from the golden hall of floating candles where she had dined the night before.', pos: 'n.phr.', exMeaning: '冷たい石造りの地下牢は、前の晩に彼女が食事をした、ろうそくの浮かぶ黄金の広間とはほど遠かった。', form: 'a far cry from' },
-        3: { meaning: 'あらゆる境遇・職業の人々', answer: 'a walk of life', example: 'Travelers from every walk of life stopped at the little inn at the edge of the enchanted forest.', pos: 'n.phr.', exMeaning: '魔法の森のはずれにある小さな宿には、あらゆる境遇・職業の旅人たちが立ち寄った。', form: 'walk of life' },
+        3: { meaning: '（社会的な）身分／職業／境遇', answer: 'a walk of life', example: 'Travelers from every walk of life stopped at the little inn at the edge of the enchanted forest.', pos: 'n.phr.', exMeaning: '魔法の森のはずれにある小さな宿には、あらゆる境遇・職業の旅人たちが立ち寄った。', form: 'walk of life' },
         4: { meaning: '捨てる／放棄する', answer: 'abandon', example: 'The enchanted cottage had been abandoned so long that glowing vines had swallowed every wall.', pos: 'v.', exMeaning: 'その魔法のコテージはあまりに長く捨てられたままだったので、光るつるが壁という壁を覆い尽くしていた。', form: 'abandoned' },
         5: { meaning: '異常', answer: 'abnormality', example: 'Scientists noticed an abnormality in the field — a single blue flower glowing among thousands of white ones.', pos: 'n.', exMeaning: '科学者たちは野原の異常に気づいた——何千もの白い花の中で、一輪の青い花だけが光っていたのだ。', form: 'abnormality' },
         6: { meaning: '廃止する', answer: 'abolish', example: 'The townsfolk voted to abolish the old law, and the iron gates that had long blocked the road were finally removed.', pos: 'v.', exMeaning: '町の人々は古い法律を廃止することを投票で決め、長く道をふさいでいた鉄の門はついに取り払われた。', form: 'abolish' },
@@ -2988,12 +2988,12 @@ const Cloud = (function () {
         13: { meaning: '達成する', answer: 'achieve', example: 'After many failed spells, the young witch finally achieved her dream of flying over the castle towers.', pos: 'v.', exMeaning: '何度も呪文に失敗した末、若い魔女はついに城の塔の上を飛ぶという夢を達成した。', form: 'achieved' },
         14: { meaning: '業績', answer: 'achievement', example: 'The glowing trophy in the stone hall stood as a lasting reminder of the achievements of those who came before.', pos: 'n.', exMeaning: '石の広間に輝くトロフィーは、先人たちの業績をいつまでも思い出させるものとしてそこにあった。', form: 'achievements' },
         15: { meaning: '酸', answer: 'acid', example: 'The vivid green liquid bubbling in the flask turned the surrounding stone pale — a powerful acid.', pos: 'n.', exMeaning: 'フラスコの中で泡立つ鮮やかな緑の液体は周りの石を白く変色させた——強力な酸だった。', form: 'acid' },
-        16: { meaning: '習得する／入手する', answer: 'acquire', example: 'Over the years, the old chest had acquired a remarkable collection of glowing gems.', pos: 'v.', exMeaning: '長い年月のうちに、その古い箱には光る宝石の見事なコレクションが手に入っていた。', form: 'acquired' },
+        16: { meaning: '習得する／入手する', answer: 'acquire', example: 'Over the years, the old dragon had acquired a remarkable collection of glowing gems.', pos: 'v.', exMeaning: '長い年月のうちに、年老いたドラゴンは光る宝石の見事なコレクションを手に入れていた。', form: 'acquired' },
         17: { meaning: '適応する', answer: 'adapt', example: 'Like the chameleon-colored lizard blending into enchanted autumn leaves, she learned to adapt to any situation.', pos: 'v.', exMeaning: '魔法の秋の落ち葉に溶け込むカメレオン色のトカゲのように、彼女はどんな状況にも適応することを覚えた。', form: 'adapt' },
         18: { meaning: '適応', answer: 'adaptation', example: 'Thick, water-storing stems are a remarkable adaptation that lets the cactus survive in the dry desert.', pos: 'n.', exMeaning: '水をたくわえる太い茎は、サボテンが乾いた砂漠で生き延びることを可能にする見事な適応だ。', form: 'adaptation' },
         19: { meaning: '〜に加える', answer: 'add to', example: 'Each new story the old wizard told seemed to add to the mystery of the hidden castle.', pos: 'phr.v.', exMeaning: '年老いた魔法使いが新しい話をするたびに、隠された城の謎がさらに加わっていくようだった。', form: 'add to' },
         20: { meaning: 'これに加えて', answer: 'add to this', example: 'The path was steep and icy; add to this the howling wind, and the journey seemed almost impossible.', pos: 'phr.v.', exMeaning: '道は険しく凍りついていた。これに加えてうなる風もあり、旅はほとんど不可能に思えた。', form: 'add to this' },
-        21: { meaning: '住所／取り組む／話しかける', answer: 'address', example: 'She rose to address the crowd gathered in the stone courtyard, her voice steady in the evening air.', pos: 'v.', exMeaning: '彼女は立ち上がり、石の中庭に集まった群衆に話しかけた。夕暮れの空気の中、その声は落ち着いていた。', form: 'address' },
+        21: { meaning: '取り組む／話しかける／演説する', answer: 'address', example: 'She rose to address the crowd gathered in the stone courtyard, her voice steady in the evening air.', pos: 'v.', exMeaning: '彼女は立ち上がり、石の中庭に集まった群衆に話しかけた。夕暮れの空気の中、その声は落ち着いていた。', form: 'address' },
         22: { meaning: '調整する', answer: 'adjust', example: 'A good navigator must adjust the sails whenever the wind shifts direction without warning.', pos: 'v.', exMeaning: '優れた航海士は、風が予告なく向きを変えるたびに帆を調整しなければならない。', form: 'adjust' },
         23: { meaning: '管理／行政', answer: 'administration', example: 'The enchanted library\'s careful administration was evident in the rows of perfectly ordered leather-bound books.', pos: 'n.', exMeaning: '魔法の図書館の行き届いた管理ぶりは、完璧に整頓された革装丁の本の列にはっきりと表れていた。', form: 'administration' },
         24: { meaning: '称賛', answer: 'admiration', example: 'She gazed at the ancient tree with quiet admiration, wondering how many centuries it had stood there.', pos: 'n.', exMeaning: '彼女は静かな称賛の念を抱いてその古木を見つめ、何世紀そこに立ち続けてきたのだろうと思った。', form: 'admiration' },
@@ -3041,7 +3041,7 @@ const Cloud = (function () {
         66: { meaning: '途方に暮れて', answer: 'at a loss', example: 'She stood at a loss before the crossroads in the enchanted fog, her traveler\'s bag at her feet.', pos: 'adj.phr.', exMeaning: '魔法の霧の中、彼女は旅の鞄を足元に置き、分かれ道の前で途方に暮れて立ちつくした。', form: 'at a loss' },
         67: { meaning: '〜の絶頂期に', answer: 'at the height of', example: 'At the height of summer, the ancient tree blazed with golden light above every other tree in the enchanted grove.', pos: 'prep.phr.', exMeaning: '夏の盛りには、その古木は魔法の林のどの木よりも高く金色の光を放って燃えるように輝いた。', form: 'At the height of' },
         68: { meaning: '愛着', answer: 'attachment', example: 'The old knight felt a deep attachment to the sword his father had given him.', pos: 'n.', exMeaning: '老騎士は父から贈られた剣に深い愛着を感じていた。', form: 'attachment' },
-        69: { meaning: '達成する', answer: 'attain', example: 'To attain true mastery of magic, the apprentice studied every night for ten years.', pos: 'v.', exMeaning: '魔法を真に極めることを達成するため、弟子は十年間毎晩勉強した。', form: 'attain' },
+        69: { meaning: '達成する', answer: 'attain', example: 'To attain true mastery of magic, the apprentice studied every night for ten years.', pos: 'v.', exMeaning: '魔法を真に極めるため、弟子は十年間毎晩勉強した。', form: 'attain' },
         70: { meaning: '達成可能な', answer: 'attainable', example: 'The far side of the enchanted stream suddenly looked attainable, with the stepping stones revealed in the light.', pos: 'adj.', exMeaning: '光の中に飛び石が現れると、魔法の小川の向こう岸が急に達成可能な目標に見えた。', form: 'attainable' },
         71: { meaning: '達成', answer: 'attainment', example: 'The small flag on the glowing mossy hill at sunrise marked the quiet attainment of a long-held goal.', pos: 'n.', exMeaning: '日の出の光に輝く苔むした丘の小さな旗は、長年の目標の静かな達成を示していた。', form: 'attainment' },
         72: { meaning: '試みる／試み', answer: 'attempt', example: 'In its first brave attempt to grow, the magical seedling pushed up through the hard, cracked stone.', pos: 'v./n.', exMeaning: '育とうとする最初の勇敢な試みとして、魔法の苗は固くひび割れた石を押し上げて伸びた。', form: 'attempt' },
@@ -3061,7 +3061,7 @@ const Cloud = (function () {
         86: { meaning: '市場', answer: 'bazaar', example: 'At dusk, the colorful lanterns of the bazaar hung still over empty stalls, waiting for dawn.', pos: 'n.', exMeaning: '夕暮れ時、市場の色とりどりのランタンは空っぽの屋台の上で静かに揺れもせず、夜明けを待っていた。', form: 'bazaar' },
         87: { meaning: '〜で告発される', answer: 'be accused of', example: 'The young servant was accused of stealing the queen\'s silver mirror, but he was innocent.', pos: 'v.phr.', exMeaning: '若い召使いは女王の銀の鏡を盗んだとして告発されたが、彼は無実だった。', form: 'was accused of' },
         88: { meaning: '〜に取り組んでいる', answer: 'be committed to', example: 'Like roots gripping bedrock, she was committed to the work, no matter what lay ahead.', pos: 'v.phr.', exMeaning: '岩盤をつかむ根のように、彼女はこの先何が待っていようとその仕事に取り組んでいた。', form: 'was committed to' },
-        89: { meaning: '〜に関係している', answer: 'be concerned with', example: 'The first chapter of the spell book is concerned with the history of fire magic.', pos: 'v.phr.', exMeaning: '呪文の本の第一章は、炎の魔法の歴史に関係している。', form: 'is concerned with' },
+        89: { meaning: '〜に関係している／〜を扱う', answer: 'be concerned with', example: 'The first chapter of the spell book is concerned with the history of fire magic.', pos: 'v.phr.', exMeaning: '呪文の本の第一章は、炎の魔法の歴史を扱っている。', form: 'is concerned with' },
         90: { meaning: '〜によって形作られる', answer: 'be conditioned by', example: 'The plant\'s shape was entirely conditioned by the narrow stone pot it had grown in for years.', pos: 'v.phr.', exMeaning: 'その植物の形は、何年も育ってきた狭い石の鉢によってすっかり形作られていた。', form: 'was entirely conditioned by' },
         91: { meaning: '〜に満足している', answer: 'be contented with', example: 'The old hermit was contented with a simple life of bread, books, and birdsong.', pos: 'v.phr.', exMeaning: '年老いた隠者は、パンと本と鳥のさえずりのある質素な暮らしに満足していた。', form: 'was contented with' },
         92: { meaning: '〜を備えている', answer: 'be equipped with', example: 'Every tool arranged neatly on the ancient stone workbench showed that the craftsman was fully equipped with what he needed.', pos: 'v.phr.', exMeaning: '古い石の作業台にきちんと並んだ道具の数々は、その職人が必要なものを十分に備えていることを示していた。', form: 'was fully equipped with' },
@@ -3087,9 +3087,9 @@ const Cloud = (function () {
         112: { meaning: '体組織', answer: 'body tissue', example: 'The healer\'s magic could repair damaged body tissue, closing even deep wounds overnight.', pos: 'n.', exMeaning: '治療師の魔法は傷ついた体組織を修復でき、深い傷でさえ一晩でふさいだ。', form: 'body tissue' },
         113: { meaning: '報奨金', answer: 'bounty', example: 'The king offered a large bounty to anyone who could capture the dragon that burned the wheat fields.', pos: 'n.', exMeaning: '王は、小麦畑を焼いたドラゴンを捕らえた者に多額の報奨金を出すと申し出た。', form: 'bounty' },
         114: { meaning: '点字', answer: 'Braille', example: 'She traced the raised Braille dots on the paper, reading each one in the warm enchanted lamplight.', pos: 'n.', exMeaning: '彼女は紙の上の盛り上がった点字をなぞり、暖かな魔法のランプの光の中でひとつずつ読んでいった。', form: 'Braille' },
-        115: { meaning: '蒸し焼きにする（ブレイズ）', answer: 'braise', example: 'The castle cook liked to braise the beef slowly in a rich broth with herbs for hours.', pos: 'v.', exMeaning: '城の料理人は、牛肉をハーブ入りの濃いスープで何時間もかけてじっくり蒸し煮（ブレイズ）にするのが好きだった。', form: 'braise' },
+        115: { meaning: '蒸し煮にする（ブレイズ）', answer: 'braise', example: 'The castle cook liked to braise the beef slowly in a rich broth with herbs for hours.', pos: 'v.', exMeaning: '城の料理人は、牛肉をハーブ入りの濃いスープで何時間もかけてじっくり蒸し煮（ブレイズ）にするのが好きだった。', form: 'braise' },
         116: { meaning: '拡大する', answer: 'branch out', example: 'The small bakery began to branch out, selling enchanted pies in three neighboring villages.', pos: 'phr.v.', exMeaning: '小さなパン屋は事業を拡大し始め、近くの三つの村で魔法のパイを売るようになった。', form: 'branch out' },
-        117: { meaning: '破る／違反', answer: 'breach', example: 'A breach in the ancient wall had let wildflowers in, turning stone into a living garden.', pos: 'v./n.', exMeaning: '古い壁の裂け目から野の花が入り込み、石を生きた庭へと変えていた。', form: 'breach' },
+        117: { meaning: '破る／違反', answer: 'breach', example: 'Opening the sealed gate would be a breach of the ancient treaty between the elves and the dwarves.', pos: 'v./n.', exMeaning: '封印された門を開けることは、エルフとドワーフの間の古い条約への違反になるだろう。', form: 'breach' },
         118: { meaning: '〜から離れる', answer: 'break away from', example: 'The feather, caught briefly on the branch, finally broke away from it, carried off by the enchanted wind.', pos: 'phr.v.', exMeaning: '一瞬枝に引っかかった羽根は、ついにそこから離れ、魔法の風に運ばれていった。', form: 'broke away from' },
         119: { meaning: '突破口', answer: 'breakthrough', example: 'After years of failed experiments, the alchemist finally made a breakthrough in turning sunlight into ink.', pos: 'n.', exMeaning: '何年も実験に失敗した末、錬金術師はついに日光をインクに変えることで突破口を開いた。', form: 'breakthrough' },
         120: { meaning: '育てる／品種', answer: 'breed', example: 'The nest of eggs hidden in the glowing mossy hollow was where this species had come to breed each spring.', pos: 'v./n.', exMeaning: '光る苔むしたくぼみに隠れた卵の巣は、この種が毎年春に繁殖しにやって来る場所だった。', form: 'breed' },
@@ -3099,7 +3099,7 @@ const Cloud = (function () {
         124: { meaning: 'パンフレット', answer: 'brochure', example: 'The travel brochure promised floating gardens, singing waterfalls, and a castle made of clouds.', pos: 'n.', exMeaning: '旅行パンフレットには、空に浮かぶ庭園、歌う滝、雲でできた城が約束されていた。', form: 'brochure' },
         125: { meaning: '予算', answer: 'budget', example: 'The neat piles of old coins on the ancient wooden table in candlelight told of a carefully managed budget.', pos: 'n.', exMeaning: 'ろうそくの光に照らされた古い木のテーブルの上のきちんと積まれた古銭は、注意深く管理された予算を物語っていた。', form: 'budget' },
         126: { meaning: '積み上げる', answer: 'build up', example: 'Over centuries, layers of sediment had built up in the cliff face, forming bands of vivid color.', pos: 'phr.v.', exMeaning: '何世紀もかけて崖に堆積物の層が積み上がり、鮮やかな色の縞模様ができていた。', form: 'built up' },
-        127: { meaning: '大量', answer: 'bulk', example: 'The massive boulder in the enchanted stream dwarfed the pebbles around it — its sheer bulk was undeniable.', pos: 'n.', exMeaning: '魔法の小川の巨大な岩はまわりの小石を小さく見せた——その圧倒的な量感（大きさ）は否定しようがなかった。', form: 'bulk' },
+        127: { meaning: 'かさ／大きさ／大量', answer: 'bulk', example: 'The massive boulder in the enchanted stream dwarfed the pebbles around it — its sheer bulk was undeniable.', pos: 'n.', exMeaning: '魔法の小川の巨大な岩はまわりの小石を小さく見せた——その圧倒的な量感（大きさ）は否定しようがなかった。', form: 'bulk' },
         128: { meaning: '防弾の', answer: 'bulletproof', example: 'The thick iron-reinforced door of the castle looked practically bulletproof, dark and immovable.', pos: 'adj.', exMeaning: '鉄で補強された城の分厚い扉は、黒々として動かず、ほとんど防弾のように見えた。', form: 'bulletproof' },
         129: { meaning: 'ぶつかる', answer: 'bump', example: 'In the dark tunnel, she bumped her head on a low wooden beam.', pos: 'v./n.', exMeaning: '暗いトンネルの中で、彼女は低い木の梁に頭をぶつけた。', form: 'bumped' },
         130: { meaning: '偶然出会う', answer: 'bump into', example: 'While shopping at the market, she happened to bump into her old teacher from the magic school.', pos: 'phr.v.', exMeaning: '市場で買い物をしているとき、彼女は魔法学校の昔の先生に偶然出会った。', form: 'bump into' },
@@ -3119,7 +3119,7 @@ const Cloud = (function () {
         144: { meaning: '確かな／ある〜', answer: 'certain', example: 'It was certain — the compass needle had stopped and now pointed firmly, steadily north.', pos: 'adj.', exMeaning: 'それは確かだった——羅針盤の針は止まり、今はしっかりと揺るがず北を指していた。', form: 'certain' },
         145: { meaning: '認定する', answer: 'certify', example: 'The wax seal was pressed to certify the contents of the aged parchment in the golden candlelight.', pos: 'v.', exMeaning: '金色のろうそくの光の中、古びた羊皮紙の内容を認定するために封蝋が押された。', form: 'certify' },
         146: { meaning: '議長', answer: 'chairperson', example: 'The carved chair at the head of the long table was still empty — the chairperson had not yet arrived.', pos: 'n.', exMeaning: '長いテーブルの上座にある彫刻の施された椅子はまだ空いていた——議長がまだ到着していなかったのだ。', form: 'chairperson' },
-        147: { meaning: '挑戦的な', answer: 'challenging', example: 'The steep mountain path disappearing into the enchanted storm clouds ahead looked genuinely challenging.', pos: 'adj.', exMeaning: '前方の魔法の嵐雲の中へ消えていく険しい山道は、本当に挑戦しがいがありそうに見えた。', form: 'challenging' },
+        147: { meaning: 'やりがいのある／困難な', answer: 'challenging', example: 'The steep mountain path disappearing into the enchanted storm clouds ahead looked genuinely challenging.', pos: 'adj.', exMeaning: '前方の魔法の嵐雲の中へ消えていく険しい山道は、本当に挑戦しがいがありそうに見えた。', form: 'challenging' },
         148: { meaning: '特徴', answer: 'characteristic', example: 'The single differently colored leaf was the most characteristic thing about that particular enchanted branch.', pos: 'n./adj.', exMeaning: '一枚だけ色の違う葉が、その魔法の枝のいちばんの特徴だった。', form: 'characteristic' },
         149: { meaning: '慢性的な', answer: 'chronic', example: 'The old king suffered from chronic back pain after years of riding in heavy armor.', pos: 'adj.', exMeaning: '年老いた王は、重い鎧を着て何年も馬に乗ってきたせいで慢性的な腰痛に苦しんでいた。', form: 'chronic' },
         150: { meaning: '引用する', answer: 'cite', example: 'In her report to the council, the young scholar cited a passage from an ancient spellbook.', pos: 'v.', exMeaning: '評議会への報告の中で、若い学者は古い魔法書の一節を引用した。', form: 'cited' },
@@ -3128,7 +3128,7 @@ const Cloud = (function () {
         153: { meaning: '集まり', answer: 'cluster', example: 'A cluster of glowing mushrooms gathered at the base of the old tree, lit by their own soft light.', pos: 'n.', exMeaning: '光るキノコの集まりが古木の根もとに寄り添い、自らのやわらかな光に照らされていた。', form: 'cluster' },
         154: { meaning: '一貫した', answer: 'coherent', example: 'Though he was exhausted, the messenger gave a clear and coherent account of the battle.', pos: 'adj.', exMeaning: '疲れきっていたが、使者は戦いについて明快で一貫した報告をした。', form: 'coherent' },
         155: { meaning: '崩壊する', answer: 'collapse', example: 'The ancient arch had begun to collapse, its stones falling one by one into the mystical river at sunset.', pos: 'v.', exMeaning: '夕暮れの中、古いアーチは崩壊し始め、その石がひとつずつ神秘的な川へと落ちていった。', form: 'collapse' },
-        156: { meaning: '組み合わせる', answer: 'combine', example: 'The two rivers combined in the mystical valley, joining into one wide, unhurried stream.', pos: 'v.', exMeaning: '二つの川は神秘的な谷で組み合わさり、ひとつの広くゆったりとした流れになった。', form: 'combined' },
+        156: { meaning: '組み合わせる', answer: 'combine', example: 'The two rivers combined in the mystical valley, joining into one wide, unhurried stream.', pos: 'v.', exMeaning: '二つの川は神秘的な谷で合わさり、ひとつの広くゆったりとした流れになった。', form: 'combined' },
         157: { meaning: '結局〜になる', answer: 'come down to', example: 'In the end, the contest came down to a single question that only the youngest wizard could answer.', pos: 'phr.v.', exMeaning: '結局、その競技はいちばん若い魔法使いにしか答えられないたった一つの問題で決まることになった。', form: 'came down to' },
         158: { meaning: '商業的な', answer: 'commercial', example: 'The harbor town grew into a busy commercial center where traders sold silk, spices, and magic lamps.', pos: 'adj.', exMeaning: '港町は、商人たちが絹や香辛料や魔法のランプを売るにぎやかな商業の中心地へと成長した。', form: 'commercial' },
         159: { meaning: '説得力のある', answer: 'compelling', example: 'The detective presented compelling evidence that the missing crown had never left the castle.', pos: 'adj.', exMeaning: '探偵は、消えた王冠が一度も城から出ていないという説得力のある証拠を示した。', form: 'compelling' },
@@ -3144,7 +3144,7 @@ const Cloud = (function () {
         169: { meaning: '行う／指揮する／行為', answer: 'conduct', example: 'The open score on the music stand in the magically lit hall was ready for someone to conduct the piece.', pos: 'v./n.', exMeaning: '魔法の光に照らされた広間で、譜面台の開かれた楽譜は誰かがその曲を指揮するのを待っていた。', form: 'conduct' },
         170: { meaning: '協議する', answer: 'confer', example: 'The two wizards conferred quietly in the corner before deciding how to break the curse.', pos: 'v.', exMeaning: '二人の魔法使いは、呪いの解き方を決める前に隅で静かに協議した。', form: 'conferred' },
         171: { meaning: '確認', answer: 'confirmation', example: 'The golden seal pressed into the magical wax was the only confirmation needed that the ancient scroll was genuine.', pos: 'n.', exMeaning: '魔法の蝋に押された金の印章だけで、古い巻物が本物であることの確認には十分だった。', form: 'confirmation' },
-        172: { meaning: '順応', answer: 'conformity', example: 'The flock of birds at sunset seemed to move in perfect conformity with one another.', pos: 'n.', exMeaning: '夕暮れの鳥の群れは、互いに完璧に順応し合って動いているようだった。', form: 'conformity' },
+        172: { meaning: '順応', answer: 'conformity', example: 'In the strict old village, conformity was expected, and anyone who dressed differently was stared at.', pos: 'n.', exMeaning: '厳格な古い村では周りに順応することが求められ、違う服装をする者はじろじろ見られた。', form: 'conformity' },
         173: { meaning: '混乱させる', answer: 'confuse', example: 'The tangle of glowing threads in the dark room was enough to confuse anyone trying to follow them.', pos: 'v.', exMeaning: '暗い部屋に絡まった光る糸は、たどろうとする誰をも混乱させるのに十分だった。', form: 'confuse' },
         174: { meaning: '含意', answer: 'connotation', example: 'In this village, the word \'witch\' has a positive connotation, suggesting wisdom and kindness.', pos: 'n.', exMeaning: 'この村では「魔女」という言葉は良い含意を持ち、知恵と優しさを感じさせる。', form: 'connotation' },
         175: { meaning: '征服', answer: 'conquest', example: 'The flag planted on the enchanted summit, with the vast landscape below, was the mark of a quiet conquest.', pos: 'n.', exMeaning: '眼下に広大な景色を望む魔法の頂に立てられた旗は、静かな征服のしるしだった。', form: 'conquest' },
@@ -3156,9 +3156,9 @@ const Cloud = (function () {
         181: { meaning: '絶え間ない／一定の', answer: 'constant', example: 'The mystical river\'s path through stone had been constant for so long that it had carved a canyon.', pos: 'adj.', exMeaning: '神秘的な川の石の中の流れ道は長いあいだずっと一定だったので、峡谷を刻んでいた。', form: 'constant' },
         182: { meaning: '建設', answer: 'construction', example: 'The bamboo scaffolding around the ancient temple marked a careful process of construction and repair.', pos: 'n.', exMeaning: '古い寺院を囲む竹の足場は、丁寧な建設と修復の作業を示していた。', form: 'construction' },
         183: { meaning: '〜と相談する', answer: 'consult with', example: 'Before choosing a path, she consulted with the old guide who knew every trail in the mountains.', pos: 'phr.v.', exMeaning: '道を選ぶ前に、彼女は山のあらゆる道を知る年老いた案内人と相談した。', form: 'consulted with' },
-        184: { meaning: '消費する', answer: 'consume', example: 'The fire consumed the fallen leaves on the enchanted forest floor in a slow, warm, crackling sweep.', pos: 'v.', exMeaning: '火は魔法の森の地面の落ち葉を、ゆっくりと暖かくパチパチと音を立てながら消費していった（焼き尽くした）。', form: 'consumed' },
+        184: { meaning: '消費する', answer: 'consume', example: 'The great lanterns of the castle consumed so much oil that the servants refilled them every evening.', pos: 'v.', exMeaning: '城の大きなランタンは油をとても多く消費したので、召使いたちは毎晩それを補充した。', form: 'consumed' },
         185: { meaning: '消費', answer: 'consumption', example: 'The castle\'s consumption of firewood doubled during the long, bitter winter.', pos: 'n.', exMeaning: '長く厳しい冬の間、城の薪の消費量は二倍になった。', form: 'consumption' },
-        186: { meaning: '含む／封じ込める', answer: 'contain', example: 'The sealed glass bottle on the shelf seemed to contain a tiny glowing world within.', pos: 'v.', exMeaning: '棚の上の封をされたガラス瓶は、中に小さな光る世界を含んでいるようだった。', form: 'contain' },
+        186: { meaning: '含む／封じ込める', answer: 'contain', example: 'The sealed glass bottle on the shelf seemed to contain a tiny glowing world within.', pos: 'v.', exMeaning: '棚の上の封をされたガラス瓶には、中に小さな光る世界が入っているようだった。', form: 'contain' },
         187: { meaning: '軽蔑', answer: 'contempt', example: 'The proud knight looked at the shabby traveler with contempt, not knowing he was the king in disguise.', pos: 'n.', exMeaning: '高慢な騎士はみすぼらしい旅人を軽蔑の目で見たが、それが変装した王だとは知らなかった。', form: 'contempt' },
         188: { meaning: '大陸の', answer: 'continental', example: 'The vast topographic relief on the ancient stone table showed every rise and fall of the continental landmass.', pos: 'adj.', exMeaning: '古い石のテーブルの上の広大な立体地形図は、大陸の陸地の起伏をすべて示していた。', form: 'continental' },
         189: { meaning: '絶えず', answer: 'continually', example: 'Water dripped continually from the leaf tip after the rain, one perfect drop after another.', pos: 'adv.', exMeaning: '雨上がり、葉の先から水が絶えずしたたり落ち、完璧なしずくが次々と続いた。', form: 'continually' },
@@ -3202,7 +3202,7 @@ const Cloud = (function () {
         227: { meaning: '欠陥のある', answer: 'defective', example: 'The cracked clay pot was defective — water seeped from the break no matter how often it was filled.', pos: 'adj.', exMeaning: 'ひびの入った素焼きの壺には欠陥があった——何度水を入れても割れ目からしみ出してしまうのだ。', form: 'defective' },
         228: { meaning: '防御的な', answer: 'defensive', example: 'The castle wall, thick with centuries of ivy, had been built in a purely defensive spirit.', pos: 'adj.', exMeaning: '何世紀分ものツタに厚く覆われた城壁は、純粋に防御的な目的で築かれていた。', form: 'defensive' },
         229: { meaning: '不足／赤字', answer: 'deficit', example: 'The kingdom\'s treasury ran a large deficit after years of building bridges and towers.', pos: 'n.', exMeaning: '何年も橋や塔を建て続けた結果、王国の財政は大きな赤字になった。', form: 'deficit' },
-        230: { meaning: '定義する', answer: 'define', example: 'The sharp edge between sunlight and shadow on the ancient stone wall seemed to define two separate worlds.', pos: 'v.', exMeaning: '古い石壁の上の日なたと日陰のくっきりした境目は、二つの別々の世界を定義しているように見えた。', form: 'define' },
+        230: { meaning: '定義する', answer: 'define', example: 'The old wizard asked his students to define the word \'magic\' in their own words.', pos: 'v.', exMeaning: '年老いた魔法使いは、生徒たちに「魔法」という言葉を自分の言葉で定義するよう求めた。', form: 'define' },
         231: { meaning: '遅らせる', answer: 'delay', example: 'Heavy snow in the mountain pass delayed the royal messenger by three days.', pos: 'v.', exMeaning: '山の峠の大雪が、王の使者を三日遅らせた。', form: 'delayed' },
         232: { meaning: '取り壊す', answer: 'demolish', example: 'The new lord ordered his men to demolish the crumbling tower before it fell on the village.', pos: 'v.', exMeaning: '新しい領主は、崩れかけた塔が村の上に倒れる前に取り壊すよう部下に命じた。', form: 'demolish' },
         233: { meaning: '実演／デモ活動', answer: 'demonstration', example: 'The young alchemist gave a demonstration of how to turn water into glittering ice.', pos: 'n.', exMeaning: '若い錬金術師は、水をきらめく氷に変える方法を実演した。', form: 'demonstration' },
@@ -3213,18 +3213,18 @@ const Cloud = (function () {
         238: { meaning: 'うつ病／不況／落ち込み', answer: 'depression', example: 'The long, dark winter left the young poet in a deep depression until the first spring flowers bloomed.', pos: 'n.', exMeaning: '長く暗い冬のせいで、若い詩人は春の最初の花が咲くまでひどく落ち込んでいた（うつ状態だった）。', form: 'depression' },
         239: { meaning: '見捨てる／砂漠', answer: 'desert', example: 'The endless golden dunes under the blazing enchanted sky were the image of a true desert.', pos: 'v./n.', exMeaning: '燃えるような魔法の空の下に果てしなく続く黄金の砂丘は、まさに砂漠そのものだった。', form: 'desert' },
         240: { meaning: '人気のない', answer: 'deserted', example: 'The village square with its overgrown cobblestones was entirely deserted in the evening light.', pos: 'adj.', exMeaning: '草の生えた石畳の村の広場は、夕方の光の中で人気がまったくなかった。', form: 'deserted' },
-        241: { meaning: 'AをするようにBを設計する', answer: 'design A to do', example: 'The building had been designed to let in light at exactly this angle — the blueprint proved it.', pos: 'v.constr.', exMeaning: 'その建物はちょうどこの角度で光を取り込むように設計されていた——設計図がそれを証明していた。', form: 'designed to' },
+        241: { meaning: 'Aが〜するように設計する', answer: 'design A to do', example: 'The building had been designed to let in light at exactly this angle — the blueprint proved it.', pos: 'v.constr.', exMeaning: 'その建物はちょうどこの角度で光を取り込むように設計されていた——設計図がそれを証明していた。', form: 'designed to' },
         242: { meaning: '望ましい', answer: 'desirable', example: 'The single perfect fruit glowing on the branch in evening light was the most desirable of all.', pos: 'adj.', exMeaning: '夕方の光の中で枝に輝くひとつの完璧な果実は、何よりも望ましいものだった。', form: 'desirable' },
         243: { meaning: '必死な', answer: 'desperate', example: 'The lone lighthouse burning through the terrible storm was the act of a desperate but determined keeper.', pos: 'adj.', exMeaning: 'ひどい嵐の中で灯り続けるたったひとつの灯台は、必死で、しかし決意の固い灯台守の行いだった。', form: 'desperate' },
         244: { meaning: '〜にもかかわらず', answer: 'despite', example: 'Despite the surrounding ice, the enchanted flower had found a way to bloom, its petals bright against the frost.', pos: 'prep.', exMeaning: 'まわりが氷に覆われているにもかかわらず、魔法の花は咲く道を見つけ、その花びらは霜を背に鮮やかだった。', form: 'Despite' },
         245: { meaning: '破壊する', answer: 'destroy', example: 'The storm had done its best to destroy the enchanted forest — fallen trees lay scattered in the mist.', pos: 'v.', exMeaning: '嵐は魔法の森を破壊しようと猛威をふるった——倒れた木々が霧の中に散らばっていた。', form: 'destroy' },
-        246: { meaning: '検知する', answer: 'detect', example: 'The magnifying glass over the small footprints in the enchanted mud helped to detect which way the animal had gone.', pos: 'v.', exMeaning: '魔法の泥に残る小さな足跡にかざした虫眼鏡は、その動物がどちらへ行ったかを検知するのに役立った。', form: 'detect' },
+        246: { meaning: '検知する', answer: 'detect', example: 'The magnifying glass over the small footprints in the enchanted mud helped to detect which way the animal had gone.', pos: 'v.', exMeaning: '魔法の泥に残る小さな足跡にかざした虫眼鏡は、その動物がどちらへ行ったかを見つけ出すのに役立った。', form: 'detect' },
         247: { meaning: '決定する／突き止める', answer: 'determine', example: 'She had to determine which direction to take, and the compass needle finally settled the question.', pos: 'v.', exMeaning: '彼女はどちらの方向へ進むかを決定しなければならなかったが、ついに羅針盤の針がその問題に決着をつけた。', form: 'determine' },
         248: { meaning: '迂回路', answer: 'detour', example: 'The enchanted forest path took a long detour around the enormous fallen tree before continuing on.', pos: 'n.', exMeaning: '魔法の森の小道は巨大な倒木のまわりを大きく迂回してから、さらに先へ続いていた。', form: 'detour' },
         249: { meaning: '壊滅させる', answer: 'devastate', example: 'The flood had devastated the mystical landscape — uprooted trees lay scattered across the silent ground.', pos: 'v.', exMeaning: '洪水が神秘的な土地を壊滅させていた——根こそぎになった木々が静まり返った地面に散らばっていた。', form: 'devastated' },
         250: { meaning: '打ちのめされた', answer: 'devastated', example: 'The young prince was devastated when his loyal horse disappeared in the storm.', pos: 'adj.', exMeaning: '忠実な愛馬が嵐の中で姿を消し、若い王子は打ちのめされた。', form: 'devastated' },
-        251: { meaning: '発達する／開発する', answer: 'develop', example: 'The enchanted flower had developed from a tight magical bud into full glowing bloom by morning light.', pos: 'v.', exMeaning: '魔法の花は、朝の光が差すころには固く閉じた魔法のつぼみから光り輝く満開の花へと発達していた。', form: 'developed' },
-        252: { meaning: '捧げる', answer: 'devote', example: 'She devoted the long night to her work, the enchanted lantern burning steadily beside the open book.', pos: 'v.', exMeaning: '彼女は長い夜を仕事に捧げ、そのそばでは魔法のランタンが開いた本の横で静かに燃え続けていた。', form: 'devoted' },
+        251: { meaning: '発達する／開発する', answer: 'develop', example: 'The enchanted flower had developed from a tight magical bud into full glowing bloom by morning light.', pos: 'v.', exMeaning: '魔法の花は、朝の光が差すころには固く閉じた魔法のつぼみから光り輝く満開の花へと成長していた。', form: 'developed' },
+        252: { meaning: '捧げる', answer: 'devote', example: 'She devoted the long night to her work, the enchanted lantern burning steadily beside the open book.', pos: 'v.', exMeaning: '彼女は長い夜を仕事に捧げ、開いた本の横では魔法のランタンが静かに燃え続けていた。', form: 'devoted' },
         253: { meaning: '糖尿病', answer: 'diabetes', example: 'The royal doctor warned the king that eating so many sweets could lead to diabetes.', pos: 'n.', exMeaning: '王室の医師は、そんなに甘い物を食べると糖尿病になりかねないと王に警告した。', form: 'diabetes' },
         254: { meaning: 'おむつ', answer: 'diaper', example: 'The young father changed the baby\'s diaper while the magical music box played a lullaby.', pos: 'n.', exMeaning: '魔法のオルゴールが子守歌を奏でる中、若い父親は赤ちゃんのおむつを替えた。', form: 'diaper' },
         255: { meaning: '命令する', answer: 'dictate', example: 'The emperor tried to dictate every detail of his people\'s lives, even the color of their doors.', pos: 'v.', exMeaning: '皇帝は民の暮らしの細部に至るまで、扉の色さえも命令しようとした。', form: 'dictate' },
@@ -3233,13 +3233,13 @@ const Cloud = (function () {
         258: { meaning: '勤勉な', answer: 'diligent', example: 'She was as diligent as a bee, working from dawn to dusk in the castle library.', pos: 'adj.', exMeaning: '彼女はハチのように勤勉で、城の図書館で夜明けから日暮れまで働いた。', form: 'diligent' },
         259: { meaning: '障害', answer: 'disability', example: 'Despite his disability, the old wizard traveled to every corner of the kingdom in his flying chair.', pos: 'n.', exMeaning: '障害がありながらも、年老いた魔法使いは空飛ぶ椅子で王国の隅々まで旅をした。', form: 'disability' },
         260: { meaning: '捨てられた', answer: 'discarded', example: 'The objects in the forgotten corner of the enchanted garden had been discarded long ago and were now reclaimed by moss.', pos: 'adj.', exMeaning: '魔法の庭の忘れられた片隅にある物たちはずっと前に捨てられたもので、今では苔に覆われていた。', form: 'discarded' },
-        261: { meaning: 'やる気をなくさせる', answer: 'discourage', example: 'The gathering storm clouds over the enchanted flower field were enough to discourage any further plans for the day.', pos: 'v.', exMeaning: '魔法の花畑の上に集まる嵐雲は、その日のこれ以上の予定をやる気をなくさせる（あきらめさせる）のに十分だった。', form: 'discourage' },
+        261: { meaning: 'やる気をなくさせる', answer: 'discourage', example: 'The gathering storm clouds were enough to discourage the travelers from continuing their journey that day.', pos: 'v.', exMeaning: '集まってくる嵐雲は、旅人たちにその日旅を続ける気をなくさせるのに十分だった。', form: 'discourage' },
         262: { meaning: '病気の', answer: 'diseased', example: 'The spotted leaf hanging in the enchanted autumn light was clearly diseased, its surface marked with dark patches.', pos: 'adj.', exMeaning: '魔法の秋の光の中にぶら下がる斑点のある葉は明らかに病気で、表面には黒い斑が浮かんでいた。', form: 'diseased' },
         263: { meaning: '嫌悪', answer: 'disgust', example: 'The rotten fruit on the mossy ground was met with visible disgust by anyone who happened to pass.', pos: 'n./v.', exMeaning: '苔むした地面の腐った果実は、通りかかった誰からもあからさまな嫌悪の目で見られた。', form: 'disgust' },
         264: { meaning: '解散させる／却下する', answer: 'dismiss', example: 'The teacher dismissed the class early so the students could watch the dragons fly south.', pos: 'v.', exMeaning: '先生は生徒たちがドラゴンの南への渡りを見られるように、授業を早めに解散させた。', form: 'dismissed' },
         265: { meaning: '混乱', answer: 'disorder', example: 'The tangled wildflowers growing in every direction were a beautiful example of natural disorder.', pos: 'n.', exMeaning: '四方八方に伸びる絡み合った野の花は、自然の混乱（無秩序）の美しい例だった。', form: 'disorder' },
         266: { meaning: '表示する／展示', answer: 'display', example: 'The artifacts glowing under individual spotlights in the dark hall were displayed with great care.', pos: 'v./n.', exMeaning: '暗い広間でひとつずつスポットライトを浴びて輝く工芸品は、とても丁寧に展示されていた。', form: 'displayed' },
-        267: { meaning: '処分する', answer: 'dispose', example: 'The castle staff were told to dispose of the broken potion bottles safely.', pos: 'v.', exMeaning: '城の使用人たちは、割れた薬瓶を安全に処分するよう言われた。', form: 'dispose' },
+        267: { meaning: '（ofを伴って）処分する', answer: 'dispose', example: 'The castle staff were told to dispose of the broken potion bottles safely.', pos: 'v.', exMeaning: '城の使用人たちは、割れた薬瓶を安全に処分するよう言われた。', form: 'dispose' },
         268: { meaning: '明確な', answer: 'distinct', example: 'The single red leaf among the green ones was the most distinct thing on the entire enchanted branch.', pos: 'adj.', exMeaning: '緑の葉の中の一枚の赤い葉は、魔法の枝全体でいちばんはっきりと目立つものだった。', form: 'distinct' },
         269: { meaning: '歪める', answer: 'distort', example: 'The reflection in the curved puddle distorted the mystical landscape above it into something dreamlike.', pos: 'v.', exMeaning: '湾曲した水たまりに映る像は、その上の神秘的な景色を夢のようなものへと歪めた。', form: 'distorted' },
         270: { meaning: '苦悩', answer: 'distress', example: 'The sailors sent up a red flare as a signal of distress when their ship struck the rocks.', pos: 'n.', exMeaning: '船が岩に乗り上げたとき、船乗りたちは苦境（遭難）を知らせる合図として赤い信号弾を打ち上げた。', form: 'distress' },
@@ -3250,7 +3250,7 @@ const Cloud = (function () {
         275: { meaning: '寄付する', answer: 'donate', example: 'The overflowing collection box in the ethereal soft light showed how generously the villagers had chosen to donate.', pos: 'v.', exMeaning: '幻想的なやわらかい光の中であふれんばかりの募金箱は、村人たちがどれほど気前よく寄付したかを示していた。', form: 'donate' },
         276: { meaning: '引きずる', answer: 'drag', example: 'The anchor dragged along the seabed, its heavy chain stretching upward through the blue water.', pos: 'v.', exMeaning: '錨は海底を引きずられ、その重い鎖は青い水の中を上へと伸びていた。', form: 'dragged' },
         277: { meaning: '劇的に', answer: 'dramatically', example: 'The single cherry tree had blossomed dramatically against the dark spring sky.', pos: 'adv.', exMeaning: '一本の桜の木が、春の暗い空を背に劇的に花開いていた。', form: 'dramatically' },
-        278: { meaning: '作成する', answer: 'draw up', example: 'She began to draw up a plan, her enchanted quill scratching slowly beside the magical ink well.', pos: 'phr.v.', exMeaning: '彼女は計画を作成し始め、魔法の羽ペンが魔法のインク壺のそばでゆっくりと音を立てた。', form: 'draw up' },
+        278: { meaning: '作成する', answer: 'draw up', example: 'She began to draw up a plan, her enchanted quill scratching slowly beside the magical inkwell.', pos: 'phr.v.', exMeaning: '彼女は計画を作成し始め、魔法の羽ペンが魔法のインク壺のそばでゆっくりと音を立てた。', form: 'draw up' },
         279: { meaning: '欠点', answer: 'drawback', example: 'The only drawback of the beautiful ancient stone path was the hidden muddy section that appeared without warning.', pos: 'n.', exMeaning: '美しい古い石畳の道の唯一の欠点は、前触れなく現れる隠れたぬかるみだった。', form: 'drawback' },
         280: { meaning: '〜を怒らせる／悩ませる', answer: 'drive ~ crazy', example: 'The moth circling the lamp over and over was enough to drive her crazy.', pos: 'v.phr.', exMeaning: 'ランプのまわりを何度も何度も回る蛾は、彼女をいらいらさせるのに十分だった。', form: 'drive her crazy' },
         281: { meaning: '〜のために', answer: 'due to', example: 'The crack in the dam wall had grown due to years of pressure building quietly behind it.', pos: 'prep.phr.', exMeaning: 'ダムの壁のひびは、その裏で何年も静かにかかり続けた圧力のために大きくなっていた。', form: 'due to' },
@@ -3269,7 +3269,7 @@ const Cloud = (function () {
         294: { meaning: '制定する', answer: 'enact', example: 'The seal pressed into the wax was all it took to enact the ancient decree.', pos: 'v.', exMeaning: '蝋に印章を押すだけで、その古い法令を制定することができた。', form: 'enact' },
         295: { meaning: '危険にさらすこと', answer: 'endangerment', example: 'The knight was punished for the endangerment of the villagers when he led the dragon toward their homes.', pos: 'n.', exMeaning: '騎士はドラゴンを村人の家のほうへ導き、彼らを危険にさらしたことで罰せられた。', form: 'endangerment' },
         296: { meaning: '永続的な', answer: 'enduring', example: 'The rune-carved stone ruins standing firm while trees had grown around them were proof of an enduring structure.', pos: 'adj.', exMeaning: 'まわりに木々が育ってもなおしっかりと立つルーン文字の刻まれた石の遺跡は、永続的な建造物であることの証だった。', form: 'enduring' },
-        297: { meaning: '施行する', answer: 'enforce', example: 'The iron gates on the ancient bridge were built to enforce the boundary between the two kingdoms.', pos: 'v.', exMeaning: '古い橋の鉄の門は、二つの王国の境界を施行する（守らせる）ために造られた。', form: 'enforce' },
+        297: { meaning: '施行する／守らせる', answer: 'enforce', example: 'The iron gates on the ancient bridge were built to enforce the boundary between the two kingdoms.', pos: 'v.', exMeaning: '古い橋の鉄の門は、二つの王国の境界を守らせるために造られた。', form: 'enforce' },
         298: { meaning: '〜に関わる', answer: 'engage with', example: 'The old wizard loved to engage with the village children, answering all their curious questions.', pos: 'phr.v.', exMeaning: '年老いた魔法使いは村の子どもたちと関わるのが大好きで、好奇心いっぱいの質問すべてに答えた。', form: 'engage with' },
         299: { meaning: '高める', answer: 'enhance', example: 'A thin stream of water flowing over the plain stone greatly enhanced its beauty.', pos: 'v.', exMeaning: '平凡な石の上を流れる細い水の流れは、その美しさを大いに高めた。', form: 'enhanced' },
         300: { meaning: '記念する／大切に守る', answer: 'enshrine', example: 'The enchanted crystal case with its single magical beam seemed to enshrine whatever was placed inside.', pos: 'v.', exMeaning: '一筋の魔法の光が差す魔法の水晶ケースは、中に置かれたものを何でも大切に守っているように見えた。', form: 'enshrine' },
@@ -3281,14 +3281,14 @@ const Cloud = (function () {
         306: { meaning: 'エスカレートする', answer: 'escalate', example: 'The argument between the two giants began to escalate until the whole mountain shook.', pos: 'v.', exMeaning: '二人の巨人の口げんかはエスカレートし始め、ついには山全体が揺れた。', form: 'escalate' },
         307: { meaning: '不可欠な', answer: 'essential', example: 'The keystone was essential — without it, the entire arch would have fallen long ago.', pos: 'adj.', exMeaning: '要石は不可欠だった——それがなければ、アーチ全体はとうの昔に崩れていただろう。', form: 'essential' },
         308: { meaning: '設立する', answer: 'establish', example: 'The brave settlers established a small village on the far side of the enchanted forest.', pos: 'v.', exMeaning: '勇敢な開拓者たちは、魔法の森の向こう側に小さな村を設立した。', form: 'established' },
-        309: { meaning: '評価する', answer: 'evaluate', example: 'She used the ancient stone scale to carefully evaluate the weight of what she had found.', pos: 'v.', exMeaning: '彼女は古い石の天秤を使って、見つけたものの重さを注意深く評価した。', form: 'evaluate' },
+        309: { meaning: '評価する', answer: 'evaluate', example: 'She used the ancient stone scale to carefully evaluate the worth of the gems she had found.', pos: 'v.', exMeaning: '彼女は古い石の天秤を使って、見つけた宝石の価値を注意深く評価した。', form: 'evaluate' },
         310: { meaning: 'ついに', answer: 'eventually', example: 'After many hours of searching, they eventually found the hidden door behind the waterfall.', pos: 'adv.', exMeaning: '何時間も探した末に、彼らはついに滝の裏の隠し扉を見つけた。', form: 'eventually' },
         311: { meaning: '進化', answer: 'evolution', example: 'The fossils in the cliff\'s rock layers told the long story of evolution, from oldest to newest.', pos: 'n.', exMeaning: '崖の岩の層にある化石は、最も古いものから新しいものまで、進化の長い物語を語っていた。', form: 'evolution' },
         312: { meaning: '進化する', answer: 'evolve', example: 'Over millions of years, some dinosaurs evolved into the birds we see today.', pos: 'v.', exMeaning: '何百万年もかけて、一部の恐竜は今日私たちが目にする鳥へと進化した。', form: 'evolved' },
         313: { meaning: '誇張する', answer: 'exaggerate', example: 'The old sailor liked to exaggerate, claiming the sea monster he saw was as big as an island.', pos: 'v.', exMeaning: '年老いた船乗りは誇張するのが好きで、見た海の怪物は島ほどの大きさだったと言い張った。', form: 'exaggerate' },
         314: { meaning: '超える', answer: 'exceed', example: 'The number of visitors to the enchanted festival exceeded ten thousand for the first time.', pos: 'v.', exMeaning: '魔法の祭りの来場者数が初めて一万人を超えた。', form: 'exceeded' },
         315: { meaning: '過度の', answer: 'excessive', example: 'The wooden barrel overflowing in the storm was a clear sign of excessive rain with nowhere left to go.', pos: 'adj.', exMeaning: '嵐の中であふれる木の樽は、行き場のない過度の雨のはっきりしたしるしだった。', form: 'excessive' },
-        316: { meaning: '既存の', answer: 'existing', example: 'The existing ruins had stood for so long that the enchanted forest had grown entirely around them.', pos: 'adj.', exMeaning: '既存の遺跡はあまりにも長くそこに建っていたので、魔法の森がすっかりそのまわりを囲んで育っていた。', form: 'existing' },
+        316: { meaning: '既存の', answer: 'existing', example: 'The villagers decided to repair the existing bridge rather than build a new one over the river.', pos: 'adj.', exMeaning: '村人たちは川に新しい橋を架けるのではなく、既存の橋を修理することにした。', form: 'existing' },
         317: { meaning: '期待', answer: 'expectation', example: 'The wrapped gift on the stone step filled the morning air with quiet expectation.', pos: 'n.', exMeaning: '石段の上の包まれた贈り物が、朝の空気を静かな期待で満たしていた。', form: 'expectation' },
         318: { meaning: '費用', answer: 'expense', example: 'The gold coins arranged on the ancient wooden table represented the expense of the journey ahead.', pos: 'n.', exMeaning: '古い木のテーブルに並べられた金貨は、これからの旅の費用を表していた。', form: 'expense' },
         319: { meaning: '明確な', answer: 'explicit', example: 'The queen gave explicit instructions that no one should open the silver box before dawn.', pos: 'adj.', exMeaning: '女王は、夜明け前には誰も銀の箱を開けてはならないと明確な指示を出した。', form: 'explicit' },
@@ -3296,7 +3296,7 @@ const Cloud = (function () {
         321: { meaning: '輸出する', answer: 'export', example: 'The ships loaded with crates in the harbor at golden dawn were ready to export the enchanted harvest.', pos: 'v./n.', exMeaning: '金色の夜明けの港で木箱を積んだ船は、魔法の収穫物を輸出する準備が整っていた。', form: 'export' },
         322: { meaning: 'さらす', answer: 'expose', example: 'The crumbling wall began to expose the hidden mosaic beneath, fragment by fragment.', pos: 'v.', exMeaning: '崩れかけた壁は、その下に隠れていたモザイクを少しずつさらし始めた。', form: 'expose' },
         323: { meaning: '延ばす', answer: 'extend', example: 'The bridge was extended further across the mystical valley, each span added with care.', pos: 'v.', exMeaning: '橋は神秘的な谷をさらに越えて延ばされ、一つひとつの橋桁が丁寧に加えられた。', form: 'extended' },
-        324: { meaning: '延長', answer: 'extension', example: 'The tree\'s roots were an extension of itself, spreading far beyond what was visible above ground.', pos: 'n.', exMeaning: 'その木の根は木自身の延長であり、地上に見えている部分よりはるか遠くまで広がっていた。', form: 'extension' },
+        324: { meaning: '延長', answer: 'extension', example: 'The tree\'s roots were an extension of the tree itself, spreading far beyond what was visible above ground.', pos: 'n.', exMeaning: 'その木の根は木そのものの延長であり、地上に見えている部分よりはるか遠くまで広がっていた。', form: 'extension' },
         325: { meaning: '外部の', answer: 'external', example: 'The external walls of the castle were frosted in the early morning, cold and grey.', pos: 'adj.', exMeaning: '早朝、城の外部の壁は霜に覆われ、冷たく灰色だった。', form: 'external' },
         326: { meaning: '抽出する', answer: 'extract', example: 'The healer was able to extract a precious oil from the petals of the moonflower.', pos: 'v.', exMeaning: '治療師は月下草の花びらから貴重な油を抽出することができた。', form: 'extract' },
         327: { meaning: '極めて', answer: 'extremely', example: 'The central mountain was extremely tall, towering above every surrounding peak in the range.', pos: 'adv.', exMeaning: '中央の山は極めて高く、山脈のまわりのどの峰よりもそびえ立っていた。', form: 'extremely' },
@@ -3318,43 +3318,43 @@ const Cloud = (function () {
         343: { meaning: '封建時代', answer: 'feudal age', example: 'The crumbling battlements wrapped in morning mist seemed to belong to a distant feudal age.', pos: 'n.', exMeaning: '朝霧に包まれた崩れかけの胸壁は、遠い封建時代のもののように見えた。', form: 'feudal age' },
         344: { meaning: '架空の', answer: 'fictitious', example: 'The tiny world inside the enchanted snow globe was entirely fictitious, yet impossible not to believe in.', pos: 'adj.', exMeaning: '魔法のスノードームの中の小さな世界はまったくの架空のものだったが、信じずにはいられなかった。', form: 'fictitious' },
         345: { meaning: '指先', answer: 'fingertip', example: 'A tiny fairy landed on her fingertip, as light as a falling snowflake.', pos: 'n.', exMeaning: '小さな妖精が、舞い落ちる雪のひとひらのように軽く彼女の指先にとまった。', form: 'fingertip' },
-        346: { meaning: 'しっかりした／会社', answer: 'firm', example: 'The enchanted granite boulder in the rushing stream was completely firm, unmoved by centuries of current.', pos: 'adj.', exMeaning: '激しい流れの中の魔法の花崗岩の巨岩は完全にしっかりしていて、何世紀もの流れにもびくともしなかった。', form: 'firm' },
+        346: { meaning: 'しっかりした／堅い', answer: 'firm', example: 'The enchanted granite boulder in the rushing stream was completely firm, unmoved by centuries of current.', pos: 'adj.', exMeaning: '激しい流れの中の魔法の花崗岩の巨岩は完全にしっかりしていて、何世紀もの流れにもびくともしなかった。', form: 'firm' },
         347: { meaning: '断固として', answer: 'firmly', example: 'The princess firmly refused to marry the greedy prince.', pos: 'adv.', exMeaning: '王女は欲深い王子との結婚を断固として拒んだ。', form: 'firmly' },
         348: { meaning: '釣り糸', answer: 'fishing line', example: 'The fishing line disappeared into the still, glassy water at dawn without a ripple.', pos: 'n.', exMeaning: '夜明けの静かで鏡のような水面に、釣り糸が波紋ひとつ立てずに消えていった。', form: 'fishing line' },
         349: { meaning: '柔軟な', answer: 'flexible', example: 'The bamboo stalk bent in the strong wind but did not break — it was completely flexible.', pos: 'adj.', exMeaning: '竹の茎は強い風にしなったが折れなかった——それはとても柔軟だった。', form: 'flexible' },
         350: { meaning: '浮かぶ', answer: 'float', example: 'The glowing enchanted leaf floated gently on the still surface of the mystical pond.', pos: 'v.', exMeaning: '光る魔法の葉が、神秘的な池の静かな水面にそっと浮かんでいた。', form: 'floated' },
-        351: { meaning: '集中する', answer: 'focus', example: 'A single beam of light had found its focus — one flower in a clearing, all others in shadow.', pos: 'v./n.', exMeaning: '一筋の光がその焦点を見つけていた——空き地の一輪の花だけを照らし、ほかはすべて影の中だった。', form: 'focus' },
+        351: { meaning: '集中する', answer: 'focus', example: 'The young wizard closed her eyes to focus on the words of the ancient spell.', pos: 'v./n.', exMeaning: '若い魔法使いは目を閉じ、古い呪文の言葉に集中した。', form: 'focus' },
         352: { meaning: '食物連鎖', answer: 'food chain', example: 'In the forest\'s food chain, the owl hunts the mouse, and the mouse eats the seeds.', pos: 'n.', exMeaning: '森の食物連鎖では、フクロウがネズミを狩り、ネズミが種を食べる。', form: 'food chain' },
         353: { meaning: '予知する', answer: 'foresee', example: 'The old seer claimed she could foresee the future in the swirling smoke of her fire.', pos: 'v.', exMeaning: '年老いた予言者は、たき火の渦巻く煙の中に未来を予知できると言った。', form: 'foresee' },
         354: { meaning: '策定する', answer: 'formulate', example: 'The council met to formulate a plan for protecting the village from the coming storm.', pos: 'v.', exMeaning: '評議会は、迫り来る嵐から村を守る計画を策定するために集まった。', form: 'formulate' },
         355: { meaning: '設立する', answer: 'found', example: 'The first queen founded the school of magic over a thousand years ago.', pos: 'v.', exMeaning: '初代の女王は千年以上前に魔法学校を設立した。', form: 'founded' },
         356: { meaning: '一部', answer: 'fraction', example: 'Only a fraction of the dragon\'s treasure was ever found; the rest is still hidden.', pos: 'n.', exMeaning: 'ドラゴンの財宝のうち見つかったのはほんの一部で、残りは今も隠されたままだ。', form: 'fraction' },
         357: { meaning: '断片', answer: 'fragment', example: 'The ancient pottery had been reduced to fragments, each piece arranged carefully on the wooden surface.', pos: 'n.', exMeaning: '古い陶器は断片になってしまい、その一つひとつが木の台の上に丁寧に並べられていた。', form: 'fragments' },
-        358: { meaning: '枠組み', answer: 'framework', example: 'The ancient wooden skeleton of the building under construction was the visible framework before the walls came in.', pos: 'n.', exMeaning: '建設中の建物の古い木の骨組みは、壁が入る前の目に見える枠組みだった。', form: 'framework' },
-        359: { meaning: '頻度', answer: 'frequency', example: 'The circular waves from the tuning fork in water illustrated perfectly the concept of frequency.', pos: 'n.', exMeaning: '水に入れた音叉から広がる円い波は、頻度（周波数）という概念を完璧に表していた。', form: 'frequency' },
+        358: { meaning: '枠組み', answer: 'framework', example: 'The wooden framework of the new barn stood ready, waiting for the villagers to add the walls.', pos: 'n.', exMeaning: '新しい納屋の木の枠組みが立ち、村人たちが壁を付けるのを待っていた。', form: 'framework' },
+        359: { meaning: '頻度', answer: 'frequency', example: 'The frequency of dragon sightings increased each summer, worrying the farmers in the valley.', pos: 'n.', exMeaning: '毎年夏になるとドラゴンの目撃の頻度が増え、谷の農民たちを不安にさせた。', form: 'frequency' },
         360: { meaning: '頻繁な', answer: 'frequent', example: 'The moonlit stone path through the magical meadow had grown well worn from frequent use over many seasons.', pos: 'adj.', exMeaning: '魔法の草原を通る月明かりの石の小道は、何季節にもわたる頻繁な利用ですっかりすり減っていた。', form: 'frequent' },
         361: { meaning: '頻繁に', answer: 'frequently', example: 'Water had dripped here so frequently that it had carved smooth grooves deep into the rune-carved stone.', pos: 'adv.', exMeaning: 'ここには水が頻繁にしたたり落ちていたので、ルーン文字の刻まれた石に深くなめらかな溝が刻まれていた。', form: 'frequently' },
         362: { meaning: 'それ以来', answer: 'from that day forward', example: 'From that day forward, the villagers left a bowl of milk outside for the forest spirits.', pos: 'prep.phr.', exMeaning: 'それ以来、村人たちは森の精霊のために外にミルクを一杯置いておくようになった。', form: 'From that day forward' },
         363: { meaning: 'その瞬間から', answer: 'from that moment on', example: 'From that moment on, the shy boy and the little dragon were best friends.', pos: 'prep.phr.', exMeaning: 'その瞬間から、内気な少年と小さなドラゴンは親友になった。', form: 'From that moment on' },
         364: { meaning: '果たす', answer: 'fulfill', example: 'The knight fulfilled his promise to return the lost crown to the queen.', pos: 'v.', exMeaning: '騎士は失われた王冠を女王に返すという約束を果たした。', form: 'fulfilled' },
-        365: { meaning: '機能する', answer: 'function', example: 'The gears of the ancient clock turned smoothly — each piece serving its function in quiet cooperation.', pos: 'v./n.', exMeaning: '古い時計の歯車はなめらかに回っていた——一つひとつの部品が静かに協力し合い、それぞれの機能を果たしていた。', form: 'function' },
+        365: { meaning: '機能する', answer: 'function', example: 'Even after a thousand years, the gears of the ancient clock still functioned perfectly.', pos: 'v./n.', exMeaning: '千年たった今も、古い時計の歯車は完璧に機能していた。', form: 'function' },
         366: { meaning: '資金を提供する', answer: 'fund', example: 'The queen agreed to fund the young inventor\'s plan to build a flying ship.', pos: 'v./n.', exMeaning: '女王は、空飛ぶ船を造るという若い発明家の計画に資金を提供することに同意した。', form: 'fund' },
         367: { meaning: '根本的な', answer: 'fundamental', example: 'The great tree\'s roots were fundamental — without them, nothing above could have stood.', pos: 'adj.', exMeaning: '大木の根は根本的なものだった——それがなければ、地上の何ひとつ立っていられなかっただろう。', form: 'fundamental' },
         368: { meaning: '菌類の', answer: 'fungal', example: 'A cluster of glowing fungal growths on the old log lit the forest floor from below.', pos: 'adj.', exMeaning: '古い丸太の上に群がる光る菌類の塊が、森の地面を下から照らしていた。', form: 'fungal' },
-        369: { meaning: '激怒した', answer: 'furious', example: 'The storm was furious — waves crashing against the ancient enchanted cliff in lightning flashes.', pos: 'adj.', exMeaning: '嵐は激怒していた——稲妻のひらめく中、波が古の魔法の崖に打ちつけていた。', form: 'furious' },
+        369: { meaning: '激怒した', answer: 'furious', example: 'The dragon was furious when it discovered that thieves had stolen its golden egg.', pos: 'adj.', exMeaning: '盗賊に金の卵を盗まれたと知って、ドラゴンは激怒した。', form: 'furious' },
         370: { meaning: '備え付ける', answer: 'furnish', example: 'The cozy room furnished with wooden pieces glowed warmly in the candlelight.', pos: 'v.', exMeaning: '木の家具が備え付けられた居心地のよい部屋は、ろうそくの光の中で暖かく輝いていた。', form: 'furnished' },
         371: { meaning: 'さらに', answer: 'furthermore', example: 'The castle was cold and dark; furthermore, a ghost was said to wander its halls at night.', pos: 'adv.', exMeaning: 'その城は寒くて暗かった。さらに、夜には幽霊が廊下をさまようと言われていた。', form: 'furthermore' },
         372: { meaning: '集まり', answer: 'gathering', example: 'Every winter, a gathering of wizards takes place in the snowy hall on the mountaintop.', pos: 'n.', exMeaning: '毎年冬になると、山頂の雪に覆われた広間で魔法使いたちの集まりが開かれる。', form: 'gathering' },
-        373: { meaning: '測定する', answer: 'gauge', example: 'Sailors watched the clouds to gauge how strong the coming storm would be.', pos: 'v./n.', exMeaning: '船乗りたちは雲を観察して、近づく嵐がどれほど強いかを測定した。', form: 'gauge' },
+        373: { meaning: '測る／判断する', answer: 'gauge', example: 'Sailors watched the clouds to gauge how strong the coming storm would be.', pos: 'v./n.', exMeaning: '船乗りたちは雲を観察して、近づく嵐がどれほど強いかを推し量った。', form: 'gauge' },
         374: { meaning: 'じっと見つめる', answer: 'gaze', example: 'She gazed up at the night sky, searching for the star her grandmother had named after her.', pos: 'v./n.', exMeaning: '彼女は夜空をじっと見つめ、祖母が自分の名をつけてくれた星を探した。', form: 'gazed' },
         375: { meaning: '遺伝子', answer: 'gene', example: 'A single gene decides whether the magical rabbit\'s fur turns white or silver in winter.', pos: 'n.', exMeaning: 'たったひとつの遺伝子が、魔法のウサギの毛が冬に白くなるか銀色になるかを決める。', form: 'gene' },
         376: { meaning: '生み出す', answer: 'generate', example: 'The waterwheel\'s steady turning was enough to generate the energy needed by the whole mill.', pos: 'v.', exMeaning: '水車の安定した回転は、粉ひき小屋全体に必要なエネルギーを生み出すのに十分だった。', form: 'generate' },
         377: { meaning: '遺伝的な', answer: 'genetic', example: 'The healers discovered that the prince\'s strange illness had a genetic cause passed down from his grandfather.', pos: 'adj.', exMeaning: '治療師たちは、王子の奇妙な病気には祖父から受け継がれた遺伝的な原因があることを突き止めた。', form: 'genetic' },
         378: { meaning: '遺伝的に', answer: 'genetically', example: 'The twin flowers growing from the same enchanted stem were genetically identical in every way.', pos: 'adv.', exMeaning: '同じ魔法の茎から咲いた双子の花は、あらゆる点で遺伝的に同一だった。', form: 'genetically' },
         379: { meaning: '昇進する', answer: 'get a promotion', example: 'After saving the princess, the young guard got a promotion to captain of the royal knights.', pos: 'v.phr.', exMeaning: '王女を救ったあと、若い衛兵は王立騎士団の隊長へと昇進した。', form: 'got a promotion' },
-        380: { meaning: '言いたいことを言う', answer: 'get at', example: 'I don\'t understand what you\'re getting at — are you saying the map is a fake?', pos: 'phr.v.', exMeaning: '何が言いたいのかわからないよ——その地図が偽物だと言っているのかい？', form: 'getting at' },
-        381: { meaning: '乗り越える', answer: 'get past', example: 'The narrow path curved around the massive fallen tree, the only way to get past.', pos: 'phr.v.', exMeaning: '細い小道は巨大な倒木のまわりを曲がっており、そこを乗り越える（通り抜ける）唯一の道だった。', form: 'get past' },
-        382: { meaning: '取り除く', answer: 'get rid of', example: 'The farmer used a magic whistle to get rid of the crows eating his corn.', pos: 'phr.v.', exMeaning: '農夫は魔法の笛を使って、トウモロコシを食べるカラスを取り除いた。', form: 'get rid of' },
+        380: { meaning: 'ほのめかす／言おうとする', answer: 'get at', example: 'I don\'t understand what you\'re getting at — are you saying the map is a fake?', pos: 'phr.v.', exMeaning: '何が言いたいのかわからないよ——その地図が偽物だと言っているのかい？', form: 'getting at' },
+        381: { meaning: '通り抜ける／乗り越える', answer: 'get past', example: 'The narrow path curved around the massive fallen tree, the only way to get past.', pos: 'phr.v.', exMeaning: '細い小道は巨大な倒木のまわりを曲がっており、そこが通り抜ける唯一の道だった。', form: 'get past' },
+        382: { meaning: '取り除く', answer: 'get rid of', example: 'The farmer used a magic whistle to get rid of the crows eating his corn.', pos: 'phr.v.', exMeaning: '農夫は魔法の笛を使って、トウモロコシを食べるカラスを追い払った。', form: 'get rid of' },
         383: { meaning: '〜にはまり込む', answer: 'get stuck in', example: 'The enchanted branch had got stuck in the fast-moving current and could not break free.', pos: 'v.phr.', exMeaning: '魔法の枝は速い流れにはまり込み、抜け出せなくなっていた。', form: 'got stuck in' },
         384: { meaning: 'くすくす笑う', answer: 'giggle', example: 'The little fairies began to giggle when the cat tried to catch them with its paws.', pos: 'v.', exMeaning: '猫が前足で捕まえようとすると、小さな妖精たちはくすくす笑い始めた。', form: 'giggle' },
         385: { meaning: '放つ', answer: 'give off', example: 'The bioluminescent plants gave off a soft glow that filled the darkest part of the enchanted forest.', pos: 'phr.v.', exMeaning: '発光する植物はやわらかな光を放ち、魔法の森のいちばん暗い場所を満たしていた。', form: 'gave off' },
@@ -3369,7 +3369,7 @@ const Cloud = (function () {
         394: { meaning: 'ゴンドラの船頭', answer: 'gondolier', example: 'The ancient empty gondola tied to the striped post in the still canal water waited for its gondolier.', pos: 'n.', exMeaning: '静かな運河の水面で縞模様の杭につながれた古い空のゴンドラは、その船頭を待っていた。', form: 'gondolier' },
         395: { meaning: '治める／支配する', answer: 'govern', example: 'The wise queen governed the island kingdom with kindness for fifty years.', pos: 'v.', exMeaning: '賢い女王は五十年にわたり、優しさをもって島の王国を治めた。', form: 'governed' },
         396: { meaning: '与える', answer: 'grant', example: 'The fairy agreed to grant the girl three wishes in return for her kindness.', pos: 'v.', exMeaning: '妖精は少女の親切へのお礼に、三つの願いを与えることにした。', form: 'grant' },
-        397: { meaning: '放牧する', answer: 'graze', example: 'The grass in the magical meadow had been grazed in soft circles, the animals long since moved on.', pos: 'v.', exMeaning: '魔法の草原の草はやわらかな円を描くように食まれていた（放牧されていた）が、動物たちはとっくに移動していた。', form: 'grazed' },
+        397: { meaning: '放牧する', answer: 'graze', example: 'The shepherd let his sheep graze on the hillside below the old castle.', pos: 'v.', exMeaning: '羊飼いは古城の下の丘の斜面に羊を放牧した。', form: 'graze' },
         398: { meaning: '格子／グリッド', answer: 'grid', example: 'The rune-carved stone paths in the ancient garden formed a precise grid, visible from the hill above.', pos: 'n.', exMeaning: '古い庭のルーン文字が刻まれた石の小道は正確な格子を描いていて、上の丘から見ることができた。', form: 'grid' },
         399: { meaning: 'にやりと笑う', answer: 'grin', example: 'The cat gave a wide grin, as if it knew exactly where the missing key was hidden.', pos: 'v./n.', exMeaning: '猫はにやりと大きく笑った。まるで、なくなった鍵がどこに隠されているかをちゃんと知っているかのように。', form: 'grin' },
         400: { meaning: '握る', answer: 'grip', example: 'The ivy gripped every inch of the ancient stone wall as if it would never let go.', pos: 'n./v.', exMeaning: 'ツタは決して離すまいとするかのように、古い石壁を隅々までしっかり握っていた。', form: 'gripped' },
@@ -3379,9 +3379,9 @@ const Cloud = (function () {
         404: { meaning: '受け継がせる', answer: 'hand down', example: 'The ancient carved chest had been handed down through the family for generations.', pos: 'phr.v.', exMeaning: 'その古い彫刻入りの箱は、何世代にもわたって一族に受け継がれてきた。', form: 'handed down' },
         405: { meaning: 'しっかり持っている', answer: 'hang onto', example: 'Through the strong autumn wind, a single leaf managed to hang onto its branch.', pos: 'phr.v.', exMeaning: '強い秋風の中、一枚の葉が枝にしっかりしがみついていた。', form: 'hang onto' },
         406: { meaning: '嫌がらせをする', answer: 'harass', example: 'The naughty crows would harass the scarecrow every morning, pulling straw from his hat.', pos: 'v.', exMeaning: 'いたずらなカラスたちは毎朝かかしに嫌がらせをして、帽子からわらを引き抜いた。', form: 'harass' },
-        407: { meaning: '傷つける', answer: 'harm', example: 'The lightning had struck the ancient enchanted tree, leaving a black scar — the harm done in a single moment.', pos: 'v./n.', exMeaning: '雷が古の魔法の木を打ち、黒い傷跡を残した——一瞬で与えられた傷だった。', form: 'harm' },
+        407: { meaning: '傷つける', answer: 'harm', example: 'The good dragon promised never to harm the sheep that grazed near its cave.', pos: 'v./n.', exMeaning: 'その善良なドラゴンは、洞窟の近くで草を食む羊を決して傷つけないと約束した。', form: 'harm' },
         408: { meaning: '有害な', answer: 'harmful', example: 'The vivid red liquid spilled on the stone floor was harmful to everything it touched.', pos: 'adj.', exMeaning: '石の床にこぼれた鮮やかな赤い液体は、触れたものすべてに有害だった。', form: 'harmful' },
-        409: { meaning: '収穫する', answer: 'harvest', example: 'The golden wheat fields in late afternoon light promised an excellent enchanted harvest.', pos: 'v./n.', exMeaning: '夕方の光に輝く黄金の小麦畑は、すばらしい魔法の収穫を約束していた。', form: 'harvest' },
+        409: { meaning: '収穫する', answer: 'harvest', example: 'In autumn, the whole village worked together to harvest the golden wheat before the first frost.', pos: 'v./n.', exMeaning: '秋になると、村じゅうが力を合わせて、初霜が降りる前に黄金の小麦を収穫した。', form: 'harvest' },
         410: { meaning: '慌てた', answer: 'hasty', example: 'The uneven footprints in the enchanted mud showed that the departure had been hasty.', pos: 'adj.', exMeaning: '魔法の泥に残る不ぞろいな足跡は、慌てた出発だったことを示していた。', form: 'hasty' },
         411: { meaning: '〜より優先される', answer: 'have precedence over', example: 'In this kingdom, the safety of the people has precedence over the wishes of the king.', pos: 'v.phr.', exMeaning: 'この王国では、民の安全は王の望みより優先される。', form: 'has precedence over' },
         412: { meaning: '危険', answer: 'hazard', example: 'The glowing red mushroom in the dark forest was a natural hazard, beautiful but dangerous.', pos: 'n.', exMeaning: '暗い森の光る赤いキノコは、美しいが危ない自然の危険物だった。', form: 'hazard' },
@@ -3392,15 +3392,15 @@ const Cloud = (function () {
         417: { meaning: '遺産', answer: 'heritage', example: 'The ancient carved walls in the enchanted forest were part of a shared heritage no one had tried to erase.', pos: 'n.', exMeaning: '魔法の森の古い彫刻の壁は、誰も消し去ろうとしなかった共有の遺産の一部だった。', form: 'heritage' },
         418: { meaning: 'かかっている', answer: 'hinge', example: 'The fate of the whole kingdom would hinge on the young knight\'s choice.', pos: 'v.', exMeaning: '王国全体の運命は、若い騎士の選択にかかっていた。', form: 'hinge' },
         419: { meaning: '急ブレーキをかける', answer: 'hit the brakes', example: 'The deep skid marks on the wet forest road showed exactly where the enchanted wooden cart had hit the brakes.', pos: 'v.phr.', exMeaning: '濡れた森の道の深いスリップ跡は、魔法の木の荷車がどこで急ブレーキをかけたかをはっきり示していた。', form: 'hit the brakes' },
-        420: { meaning: '持ちこたえる', answer: 'hold up', example: 'The strong wooden beam had been holding up the stone archway for centuries.', pos: 'phr.v.', exMeaning: '頑丈な木の梁は、何世紀にもわたって石のアーチを持ちこたえさせてきた。', form: 'holding up' },
-        421: { meaning: '延期する', answer: 'hold off', example: 'The storm held off at the mystical valley\'s edge, the dark clouds stalled above the far ridge.', pos: 'phr.v.', exMeaning: '嵐は神秘的な谷の端で足止めされ（先延ばしになり）、黒い雲は遠くの尾根の上で止まっていた。', form: 'held off' },
+        420: { meaning: '支える／持ちこたえる', answer: 'hold up', example: 'The strong wooden beam had been holding up the stone archway for centuries.', pos: 'phr.v.', exMeaning: '頑丈な木の梁は、何世紀にもわたって石のアーチを支えてきた。', form: 'holding up' },
+        421: { meaning: '延期する', answer: 'hold off', example: 'The king decided to hold off on the wedding until the snow had melted from the mountain passes.', pos: 'phr.v.', exMeaning: '王は、山道の雪が解けるまで結婚式を延期することにした。', form: 'hold off' },
         422: { meaning: 'フック／引っ掛ける', answer: 'hook', example: 'The fishing hook hung above the dark, still pond in the morning mist, waiting in silence.', pos: 'n./v.', exMeaning: '朝霧の中、釣り針は暗く静かな池の上にぶら下がり、黙って待っていた。', form: 'hook' },
-        423: { meaning: 'できれば', answer: 'hopefully', example: 'Hopefully, the snow will melt before the spring festival begins next week.', pos: 'adv.', exMeaning: 'できれば、来週春祭りが始まる前に雪が解けてほしい。', form: 'Hopefully' },
+        423: { meaning: 'うまくいけば／願わくは', answer: 'hopefully', example: 'Hopefully, the snow will melt before the spring festival begins next week.', pos: 'adv.', exMeaning: 'うまくいけば、来週春祭りが始まる前に雪が解けるだろう。', form: 'Hopefully' },
         424: { meaning: '入院', answer: 'hospitalization', example: 'The quiet white room with a garden view had been her home during a long hospitalization.', pos: 'n.', exMeaning: '庭が見える静かな白い部屋は、長い入院の間の彼女の住まいだった。', form: 'hospitalization' },
         425: { meaning: '敵意', answer: 'hostility', example: 'The two tribes had lived in hostility for centuries until a great flood forced them to cooperate.', pos: 'n.', exMeaning: '二つの部族は何世紀も敵意を抱き合って暮らしていたが、大洪水によって協力せざるを得なくなった。', form: 'hostility' },
         426: { meaning: '飢え', answer: 'hunger', example: 'The empty bowl on the ancient wooden table in the afternoon light was a quiet symbol of hunger.', pos: 'n.', exMeaning: '午後の光の中、古い木のテーブルに置かれた空の器は、飢えの静かな象徴だった。', form: 'hunger' },
         427: { meaning: '障害', answer: 'hurdle', example: 'The fallen log across the path was the main hurdle, but a narrow trail around it offered a way through.', pos: 'n.', exMeaning: '小道をふさぐ倒木が最大の障害だったが、そのまわりの細い道が抜け道となった。', form: 'hurdle' },
-        428: { meaning: '傷つける', answer: 'hurtful', example: 'The giant\'s hurtful words made the little elf cry, so he apologized at once.', pos: 'adj.', exMeaning: '巨人の人を傷つける言葉に小さなエルフは泣き出してしまい、巨人はすぐに謝った。', form: 'hurtful' },
+        428: { meaning: '人を傷つけるような', answer: 'hurtful', example: 'The giant\'s hurtful words made the little elf cry, so he apologized at once.', pos: 'adj.', exMeaning: '巨人の人を傷つける言葉に小さなエルフは泣き出してしまい、巨人はすぐに謝った。', form: 'hurtful' },
         429: { meaning: '仮定の', answer: 'hypothetical', example: 'The chalkboard full of question marks in the ancient empty classroom was devoted to hypothetical problems.', pos: 'adj.', exMeaning: '古い無人の教室の疑問符だらけの黒板は、仮定の問題に充てられていた。', form: 'hypothetical' },
         430: { meaning: '同一の', answer: 'identical', example: 'The two leaves from the same enchanted branch were identical in every measurement and color.', pos: 'adj.', exMeaning: '同じ魔法の枝から取った二枚の葉は、大きさも色もすべて同一だった。', form: 'identical' },
         431: { meaning: '特定する', answer: 'identify', example: 'The single glowing object in the beam of light was easy to identify among the many.', pos: 'v.', exMeaning: '光の筋の中で輝くひとつの物は、たくさんの物の中から特定するのが簡単だった。', form: 'identify' },
@@ -3437,21 +3437,21 @@ const Cloud = (function () {
         462: { meaning: '〜の名において', answer: 'in the name of', example: 'The knight swore in the name of the king to protect the village from all harm.', pos: 'prep.phr.', exMeaning: '騎士は王の名において、村をあらゆる危険から守ると誓った。', form: 'in the name of' },
         463: { meaning: '短期的には', answer: 'in the short term', example: 'In the short term, a quick spring shower was all the magical meadow needed.', pos: 'prep.phr.', exMeaning: '短期的には、魔法の草原に必要なのはさっと降る春のにわか雨だけだった。', form: 'In the short term' },
         464: { meaning: '無駄に', answer: 'in vain', example: 'The enchanted water poured in vain into the cracked vessel, spilling away before it could rise.', pos: 'prep.phr.', exMeaning: '魔法の水はひびの入った器に無駄に注がれ、たまる前にこぼれ出てしまった。', form: 'in vain' },
-        465: { meaning: '不活動の', answer: 'inactive', example: 'The watermill stood inactive in the summer calm, its wheel perfectly still.', pos: 'adj.', exMeaning: '夏の静けさの中、水車小屋は動かず不活動のまま立っており、その車輪はぴたりと止まっていた。', form: 'inactive' },
+        465: { meaning: '不活動の', answer: 'inactive', example: 'The watermill stood inactive in the summer calm, its wheel perfectly still.', pos: 'adj.', exMeaning: '夏の静けさの中、水車小屋は稼働しておらず、その車輪はぴたりと止まっていた。', form: 'inactive' },
         466: { meaning: '傾向／意向', answer: 'inclination', example: 'The castle cats had a natural inclination to sleep in warm, sunny windows.', pos: 'n.', exMeaning: '城の猫たちには、暖かく日の当たる窓辺で眠るという生まれつきの傾向があった。', form: 'inclination' },
         467: { meaning: '取り入れる', answer: 'incorporate', example: 'The baker incorporated wild berries from the enchanted forest into her famous bread.', pos: 'v.', exMeaning: 'パン屋は魔法の森で採れた野いちごを、自慢のパンに取り入れた。', form: 'incorporated' },
         468: { meaning: '信じられない', answer: 'incredible', example: 'The enchanted waterfall was incredible — its height was impossible to guess from below.', pos: 'adj.', exMeaning: '魔法の滝は信じられない光景だった。下からではその高さを推し量ることさえできなかった。', form: 'incredible' },
         469: { meaning: '確かに', answer: 'indeed', example: 'Indeed, the sundial confirmed the hour — the magical shadow fell exactly as predicted.', pos: 'adv.', exMeaning: '確かに、日時計はその時刻を裏づけた。魔法の影は予測どおりの位置に落ちていた。', form: 'Indeed' },
         470: { meaning: '独立して', answer: 'independently', example: 'The lone tree on the rocky island grew independently, needing nothing from the mainland.', pos: 'adv.', exMeaning: '岩だらけの島に一本だけ立つその木は、本土に何も頼らず独立して育っていた。', form: 'independently' },
         471: { meaning: '指標', answer: 'indicator', example: 'The weathervane on the rune-carved stone tower was the most reliable indicator of the coming weather.', pos: 'n.', exMeaning: 'ルーンの刻まれた石の塔の風見は、これからの天気を知るもっとも信頼できる指標だった。', form: 'indicator' },
-        472: { meaning: '個人', answer: 'individual', example: 'Every individual in the village was asked to bring one lantern to the midsummer festival.', pos: 'n./adj.', exMeaning: '村の個人一人ひとりが、夏至祭にランタンを一つずつ持ってくるよう頼まれた。', form: 'individual' },
+        472: { meaning: '個人', answer: 'individual', example: 'Every individual in the village was asked to bring one lantern to the midsummer festival.', pos: 'n./adj.', exMeaning: '村人一人ひとりが、夏至祭にランタンを一つずつ持ってくるよう頼まれた。', form: 'individual' },
         473: { meaning: '個性', answer: 'individuality', example: 'The single differently colored flower in the enchanted field expressed a kind of quiet individuality.', pos: 'n.', exMeaning: '魔法の野原にぽつんと咲く色の違う一輪の花は、静かな個性を表していた。', form: 'individuality' },
         474: { meaning: '効果がない', answer: 'ineffective', example: 'The tiny umbrella in the enchanted storm was almost completely ineffective against the driving rain.', pos: 'adj.', exMeaning: '魔法の嵐の中では、小さな傘は打ちつける雨に対してほとんどまったく効果がなかった。', form: 'ineffective' },
         475: { meaning: '不器用な', answer: 'inept', example: 'The inept young knight dropped his sword twice before the training even began.', pos: 'adj.', exMeaning: '不器用な若い騎士は、訓練が始まる前から二度も剣を落としてしまった。', form: 'inept' },
         476: { meaning: '幼児', answer: 'infant', example: 'The queen gently held the sleeping infant as the castle bells rang out across the valley.', pos: 'n.', exMeaning: '城の鐘が谷じゅうに鳴り響く中、女王は眠っている幼児をそっと抱いていた。', form: 'infant' },
         477: { meaning: '感染させる', answer: 'infect', example: 'A strange fungus began to infect the oldest trees in the forest, turning their leaves black.', pos: 'v.', exMeaning: '奇妙な菌が森でいちばん古い木々を感染させ始め、その葉を黒く変えていった。', form: 'infect' },
         478: { meaning: '感染', answer: 'infection', example: 'The dark veins spreading through the damaged leaf were visible signs of a deep infection.', pos: 'n.', exMeaning: '傷んだ葉に広がる黒い葉脈は、深い感染の目に見える兆候だった。', form: 'infection' },
-        479: { meaning: '伝染性の', answer: 'infectious', example: 'The little fairy\'s laughter was so infectious that soon the whole forest was laughing with her.', pos: 'adj.', exMeaning: '小さな妖精の笑い声はとても伝染性が強く、やがて森じゅうが一緒に笑い出した。', form: 'infectious' },
+        479: { meaning: '伝染性の', answer: 'infectious', example: 'The little fairy\'s laughter was so infectious that soon the whole forest was laughing with her.', pos: 'adj.', exMeaning: '小さな妖精の笑い声はとてもうつりやすく、やがて森じゅうが一緒に笑い出した。', form: 'infectious' },
         480: { meaning: '無限の', answer: 'infinite', example: 'The enchanted mirror reflecting another mirror created what seemed like an infinite corridor of repetition.', pos: 'adj.', exMeaning: '向かい合わせの魔法の鏡は、どこまでも繰り返す無限の回廊のようなものを生み出していた。', form: 'infinite' },
         481: { meaning: '与える（苦痛を）', answer: 'inflict', example: 'The lightning had inflicted a deep wound in the ancient tree, splitting it at the trunk.', pos: 'v.', exMeaning: '雷は古木に深い傷を与え、幹のところで裂いてしまった。', form: 'inflicted' },
         482: { meaning: 'インフラ', answer: 'infrastructure', example: 'The Roman aqueduct\'s stone arches were still standing — some of the oldest infrastructure in the mystical valley.', pos: 'n.', exMeaning: 'ローマ時代の水道橋の石のアーチは今も立っており、神秘の谷で最も古いインフラの一つだった。', form: 'infrastructure' },
@@ -3459,7 +3459,7 @@ const Cloud = (function () {
         484: { meaning: '受け継いだ', answer: 'inherited', example: 'The enchanted flower bore the exact same pattern as its parent — a beautifully inherited characteristic.', pos: 'adj.', exMeaning: '魔法の花は親とまったく同じ模様をしていた。見事に受け継いだ特徴だった。', form: 'inherited' },
         485: { meaning: '妨げる', answer: 'inhibit', example: 'The dam had been built to inhibit the mystical river from flooding the lower fields each spring.', pos: 'v.', exMeaning: 'そのダムは、毎年春に神秘の川が下流の畑にあふれるのを妨げるために造られていた。', form: 'inhibit' },
         486: { meaning: '最初は', answer: 'initially', example: 'Initially, only the mountain\'s peak caught the light, while the rest remained in predawn shadow.', pos: 'adv.', exMeaning: '最初は山頂だけが光を受け、残りは夜明け前の影の中にあった。', form: 'Initially' },
-        487: { meaning: '開始する', answer: 'initiate', example: 'The striking match in the enchanted darkness was the act that would initiate everything that followed.', pos: 'v.', exMeaning: '魔法の暗闇で擦られたマッチは、その後に続くすべてを開始する行為だった。', form: 'initiate' },
+        487: { meaning: '開始する', answer: 'initiate', example: 'Striking a single match in the enchanted darkness was the act that would initiate everything that followed.', pos: 'v.', exMeaning: '魔法の暗闇でマッチを一本擦ったことが、その後に続くすべてを開始させる行為となった。', form: 'initiate' },
         488: { meaning: '主導権', answer: 'initiative', example: 'When the captain fell ill, the youngest sailor took the initiative and steered the ship home.', pos: 'n.', exMeaning: '船長が病に倒れると、いちばん若い船乗りが主導権を握り、船を故郷へと導いた。', form: 'initiative' },
         489: { meaning: '調査', answer: 'inquiry', example: 'The magnifying glass over the inscription on the rune-carved stone was the beginning of a long inquiry.', pos: 'n.', exMeaning: 'ルーンの刻まれた石の碑文にかざされた虫眼鏡は、長い調査の始まりだった。', form: 'inquiry' },
         490: { meaning: '挿入する', answer: 'insert', example: 'She moved to insert the key into the ancient lock, the door\'s iron cold under her hand.', pos: 'v.', exMeaning: '彼女は古い錠に鍵を挿入しようとした。扉の鉄は手に冷たかった。', form: 'insert' },
@@ -3488,7 +3488,7 @@ const Cloud = (function () {
         513: { meaning: 'がらくた', answer: 'junk', example: 'The abandoned machinery in the corner of the enchanted field was pure junk, slowly lost to wildflowers.', pos: 'n.', exMeaning: '魔法の野原の隅に捨てられた機械はただのがらくたで、少しずつ野の花に埋もれていった。', form: 'junk' },
         514: { meaning: '正当化する', answer: 'justify', example: 'The prince tried to justify breaking the rule by saying he had only wanted to help the dragon.', pos: 'v.', exMeaning: '王子は、竜を助けたかっただけだと言って、規則を破ったことを正当化しようとした。', form: 'justify' },
         515: { meaning: '〜に追いつく', answer: 'keep up with', example: 'The smaller enchanted stream had to run quickly to keep up with the larger mystical river beside it.', pos: 'phr.v.', exMeaning: '小さな魔法の小川は、隣を流れる大きな神秘の川に追いつくために急いで流れなければならなかった。', form: 'keep up with' },
-        516: { meaning: 'ラベルを貼る', answer: 'label', example: 'Each glass jar on the ancient enchanted shelf had a hand-written label naming the herb it contained.', pos: 'v./n.', exMeaning: '古い魔法の棚に並ぶガラス瓶にはどれも、中のハーブの名前を書いた手書きのラベルが貼られていた。', form: 'label' },
+        516: { meaning: 'ラベルを貼る', answer: 'label', example: 'The young herbalist carefully labeled each glass jar with the name of the herb inside.', pos: 'v./n.', exMeaning: '若い薬草師は、ガラス瓶の一つひとつに中のハーブの名前を書いたラベルを丁寧に貼った。', form: 'label' },
         517: { meaning: '労働', answer: 'labor', example: 'The deep furrows in the freshly plowed enchanted field showed the extent of the morning\'s labor.', pos: 'n.', exMeaning: '耕したばかりの魔法の畑に刻まれた深い畝は、朝の労働の大きさを物語っていた。', form: 'labor' },
         518: { meaning: '労働者', answer: 'laborer', example: 'The worn tools hanging on the enchanted workshop wall were a tribute to every laborer who had used them.', pos: 'n.', exMeaning: '魔法の作業場の壁に掛けられた使い古しの道具は、それを使ってきたすべての労働者への敬意の証だった。', form: 'laborer' },
         519: { meaning: '欠く', answer: 'lack', example: 'The little village lacked clean water, so the young witch dug a well with a single spell.', pos: 'v./n.', exMeaning: '小さな村はきれいな水を欠いていたので、若い魔女は呪文一つで井戸を掘った。', form: 'lacked' },
@@ -3507,7 +3507,7 @@ const Cloud = (function () {
         532: { meaning: '読み書き能力', answer: 'literacy', example: 'The child\'s first open book beside the enchanted quill pen was the beginning of a lifetime of literacy.', pos: 'n.', exMeaning: '魔法の羽ペンのそばに開かれた子どもの初めての本は、一生続く読み書き能力の始まりだった。', form: 'literacy' },
         533: { meaning: '読み書きができる', answer: 'literate', example: 'The well-read books with pressed flowers as bookmarks showed a deeply literate home.', pos: 'adj.', exMeaning: '押し花をしおりにした読み込まれた本の数々は、そこが読み書きができ、本に深く親しむ家庭であることを示していた。', form: 'literate' },
         534: { meaning: '文学', answer: 'literature', example: 'The towering bookshelves in the amber light held the full weight of centuries of literature.', pos: 'n.', exMeaning: '琥珀色の光の中にそびえる本棚には、何世紀分もの文学の重みが詰まっていた。', form: 'literature' },
-        535: { meaning: '散らかす', answer: 'litter', example: 'The autumn leaves had littered the cobblestone path with gold and red.', pos: 'v./n.', exMeaning: '秋の落ち葉が、石畳の小道を金色と赤に散らかしていた。', form: 'littered' },
+        535: { meaning: '散らかす／散らばる', answer: 'litter', example: 'The autumn leaves had littered the cobblestone path with gold and red.', pos: 'v./n.', exMeaning: '秋の落ち葉が石畳の小道一面に散らばり、金色と赤に染めていた。', form: 'littered' },
         536: { meaning: '実現する', answer: 'live out', example: 'After years of hard work, the old baker finally lived out his dream of opening a shop by the sea.', pos: 'phr.v.', exMeaning: '長年の努力の末、年老いたパン職人はついに海辺に店を開くという夢を実現した。', form: 'lived out' },
         537: { meaning: '長距離の', answer: 'long-range', example: 'The enchanted telescope aimed at the distant mountain range was designed for long-range observation.', pos: 'adj.', exMeaning: '遠くの山並みに向けられた魔法の望遠鏡は、長距離の観測のために作られていた。', form: 'long-range' },
         538: { meaning: '見下す', answer: 'look down on', example: 'The proud prince used to look down on the farmers until they saved his life during the storm.', pos: 'phr.v.', exMeaning: '傲慢な王子は農民たちを見下していたが、嵐の中で彼らに命を救われた。', form: 'look down on' },
@@ -3521,7 +3521,7 @@ const Cloud = (function () {
         546: { meaning: '哺乳類', answer: 'mammal', example: 'The large tracks in the fresh snow were those of a mammal — leading deep into the enchanted forest.', pos: 'n.', exMeaning: '新雪に残る大きな足跡は哺乳類のもので、魔法の森の奥深くへと続いていた。', form: 'mammal' },
         547: { meaning: '義務的な', answer: 'mandatory', example: 'Attendance at the morning lesson was mandatory for every young wizard at the academy.', pos: 'adj.', exMeaning: '学院のすべての若い魔法使いにとって、朝の授業への出席は義務的なものだった。', form: 'mandatory' },
         548: { meaning: '計画を立てる', answer: 'map out', example: 'She had mapped out the entire route on the hand-drawn map spread across the ancient wooden table.', pos: 'phr.v.', exMeaning: '彼女は古い木のテーブルに広げた手描きの地図の上で、全行程の計画を立てていた。', form: 'mapped out' },
-        549: { meaning: 'チェックする', answer: 'mark off', example: 'Each notch carved into the old stone wall marked off another day of the long count.', pos: 'phr.v.', exMeaning: '古い石壁に刻まれた刻み目の一つ一つが、長い日数のうちのまた一日をチェックしていた。', form: 'marked off' },
+        549: { meaning: 'チェックする／印をつける', answer: 'mark off', example: 'Each notch carved into the old stone wall marked off another day of the long count.', pos: 'phr.v.', exMeaning: '古い石壁の刻み目は一つずつ、長く数え続けた日々のまた一日に印をつけていた。', form: 'marked off' },
         550: { meaning: '市場性のある', answer: 'marketable', example: 'The brightest potion bottle on the market stall was clearly the most marketable.', pos: 'adj.', exMeaning: '市場の屋台で一番明るく輝くポーションの瓶は、明らかに最も市場性があった。', form: 'marketable' },
         551: { meaning: '大量／集合的な', answer: 'mass', example: 'A mass of golden leaves drifted down the stream after the autumn wind swept through the forest.', pos: 'n./adj.', exMeaning: '秋風が森を吹き抜けたあと、大量の金色の葉が小川を流れていった。', form: 'mass' },
         552: { meaning: '巨大な', answer: 'massive', example: 'The ancient redwood was massive — nothing else in the enchanted forest came close to its height.', pos: 'adj.', exMeaning: 'そのセコイアの古木は巨大で、魔法の森のどの木もその高さには及ばなかった。', form: 'massive' },
@@ -3559,7 +3559,7 @@ const Cloud = (function () {
         584: { meaning: '指名する', answer: 'nominate', example: 'The villagers nominated the brave young shepherd to lead the search for the missing unicorn.', pos: 'v.', exMeaning: '村人たちは、行方不明のユニコーンの捜索を率いる者として、勇敢な若い羊飼いを指名した。', form: 'nominated' },
         585: { meaning: 'それでもなお', answer: 'nonetheless', example: 'The little plant stood upright nonetheless, still reaching for the light even with snow pressing it down.', pos: 'adv.', exMeaning: '雪に押さえつけられながらも、小さな植物はそれでもなお、まっすぐ立って光に向かって伸びていた。', form: 'nonetheless' },
         586: { meaning: '概念', answer: 'notion', example: 'The notion that dragons could be friendly seemed strange to the villagers at first.', pos: 'n.', exMeaning: '竜が人なつこくなりうるという概念は、最初、村人たちには奇妙に思えた。', form: 'notion' },
-        587: { meaning: '小説／斬新な', answer: 'novel', example: 'The spiral-shaped plant growing among conventional ones offered a genuinely novel form.', pos: 'adj.', exMeaning: 'ありふれた植物の間に生えた渦巻き形の植物は、まさに斬新な形をしていた。', form: 'novel' },
+        587: { meaning: '小説／斬新な', answer: 'novel', example: 'The spiral-shaped plant growing among conventional ones offered a genuinely novel form.', pos: 'n./adj.', exMeaning: 'ありふれた植物の間に生えた渦巻き形の植物は、まさに斬新な形をしていた。', form: 'novel' },
         588: { meaning: '多数の', answer: 'numerous', example: 'Numerous fireflies filled the magical dark forest, each one a tiny star moving through the undergrowth.', pos: 'adj.', exMeaning: '多数のホタルが魔法の暗い森を満たし、その一匹一匹が下草の間を動く小さな星のようだった。', form: 'Numerous' },
         589: { meaning: '栄養', answer: 'nutrition', example: 'The rich dark soil in cross-section showed all the layers that provided nutrition to the ancient magical roots.', pos: 'n.', exMeaning: '豊かな黒い土の断面には、古い魔法の根に栄養を与えるすべての層が見えていた。', form: 'nutrition' },
         590: { meaning: '栄養的な', answer: 'nutritional', example: 'The variety of seeds arranged on the ancient wooden table represented a wide range of nutritional value.', pos: 'adj.', exMeaning: '古い木のテーブルに並べられたさまざまな種は、幅広い栄養的な価値を表していた。', form: 'nutritional' },
@@ -3572,7 +3572,7 @@ const Cloud = (function () {
         597: { meaning: 'それどころか', answer: 'on the contrary', example: 'The dragon was not dangerous at all; on the contrary, it loved playing with the village children.', pos: 'prep.phr.', exMeaning: 'その竜はまったく危険ではなかった。それどころか、村の子どもたちと遊ぶのが大好きだった。', form: 'on the contrary' },
         598: { meaning: '前へ', answer: 'onward', example: 'The ancient cobblestone road continued onward over the hill, leading straight into the golden light beyond.', pos: 'adv.', exMeaning: '古い石畳の道は丘を越えて前へと続き、その先の金色の光の中へまっすぐ延びていた。', form: 'onward' },
         599: { meaning: '反対する', answer: 'oppose', example: 'Many villagers opposed the king\'s plan to cut down the ancient forest for timber.', pos: 'v.', exMeaning: '多くの村人が、材木を得るために古い森を切り倒すという王の計画に反対した。', form: 'opposed' },
-        600: { meaning: '抑圧的な', answer: 'oppressive', example: 'The heavy enchanted storm clouds pressed low over the mystical valley in a way that felt oppressive.', pos: 'adj.', exMeaning: '重い魔法の嵐雲が神秘の谷の上に低く垂れこめ、抑圧的な重苦しさを感じさせた。', form: 'oppressive' },
+        600: { meaning: '抑圧的な／重苦しい', answer: 'oppressive', example: 'The heavy enchanted storm clouds pressed low over the mystical valley in a way that felt oppressive.', pos: 'adj.', exMeaning: '重い魔法の嵐雲が神秘の谷の上に低く垂れこめ、抑圧的な重苦しさを感じさせた。', form: 'oppressive' },
         601: { meaning: '楽観的な', answer: 'optimistic', example: 'Even after the storm destroyed her garden, the old witch stayed optimistic and planted new seeds.', pos: 'adj.', exMeaning: '嵐に庭を壊されたあとも、年老いた魔女は楽観的なままで、新しい種をまいた。', form: 'optimistic' },
         602: { meaning: '生物体', answer: 'organism', example: 'The glowing shape visible through the old brass microscope was a living organism.', pos: 'n.', exMeaning: '古い真鍮の顕微鏡を通して見える光る形は、生きた生物体だった。', form: 'organism' },
         603: { meaning: '組織する', answer: 'organize', example: 'The young queen organized a group of volunteers to rebuild the bridge after the flood.', pos: 'v.', exMeaning: '若い女王は、洪水のあと橋を再建するためにボランティアの一団を組織した。', form: 'organized' },
@@ -3583,7 +3583,7 @@ const Cloud = (function () {
         608: { meaning: '時代遅れの', answer: 'outdated', example: 'The moss-covered sundial in the neglected garden had been outdated long before the ivy claimed it.', pos: 'adj.', exMeaning: '手入れされていない庭の苔むした日時計は、ツタに覆われるずっと前から時代遅れになっていた。', form: 'outdated' },
         609: { meaning: '数で上回る', answer: 'outnumber', example: 'The army of ants surrounding the single beetle outnumbered it by thousands to one.', pos: 'v.', exMeaning: '一匹の甲虫を取り囲むアリの大群は、数千対一で数で上回っていた。', form: 'outnumbered' },
         610: { meaning: '辺鄙な', answer: 'out-of-the-way', example: 'The witch lived in an out-of-the-way cottage deep in the forest, where few travelers ever came.', pos: 'adj.', exMeaning: '魔女は森の奥深くの辺鄙な小屋に住んでいて、そこを訪れる旅人はほとんどいなかった。', form: 'out-of-the-way' },
-        611: { meaning: '出力', answer: 'output', example: 'The mill\'s steady wheel turning in the magical golden light produced a reliable daily output of flour.', pos: 'n.', exMeaning: '魔法の金色の光の中で着実に回る水車は、毎日安定した出力で小麦粉を生み出していた。', form: 'output' },
+        611: { meaning: '生産高／出力', answer: 'output', example: 'The mill\'s steady wheel turning in the magical golden light produced a reliable daily output of flour.', pos: 'n.', exMeaning: '魔法の金色の光の中で着実に回る水車は、毎日安定した量の小麦粉を生み出していた。', form: 'output' },
         612: { meaning: '〜より重要である', answer: 'outweigh', example: 'For the young knight, the safety of the village outweighed any reward the king could offer.', pos: 'v.', exMeaning: '若い騎士にとって、村の安全は王が与えうるどんな褒美よりも重要だった。', form: 'outweighed' },
         613: { meaning: '遅れている', answer: 'overdue', example: 'The library book about dragons was three weeks overdue, so the young wizard hurried to return it.', pos: 'adj.', exMeaning: '竜についての図書館の本は返却が三週間遅れていたので、若い魔法使いは急いで返しに行った。', form: 'overdue' },
         614: { meaning: '所有権', answer: 'ownership', example: 'The name carved into the base of the ancient post established ownership that had survived the centuries.', pos: 'n.', exMeaning: '古い柱の根元に刻まれた名前は、何世紀も生き延びてきた所有権を示していた。', form: 'ownership' },
@@ -3597,7 +3597,7 @@ const Cloud = (function () {
         622: { meaning: '仕切り', answer: 'partition', example: 'The low stone wall created a neat partition between the two halves of the enchanted garden.', pos: 'n.', exMeaning: '低い石壁が、魔法の庭の二つの区画の間にきちんとした仕切りを作っていた。', form: 'partition' },
         623: { meaning: '〜を〜として通す', answer: 'pass off', example: 'The sly merchant tried to pass off painted glass as real diamonds.', pos: 'phr.v.', exMeaning: 'ずる賢い商人は、色を塗ったガラスを本物のダイヤモンドとして通そうとした。', form: 'pass off' },
         624: { meaning: '趣味', answer: 'pastime', example: 'Fishing by the river was his favorite pastime, and he went there rain or shine.', pos: 'n.', exMeaning: '川辺での釣りは彼の大好きな趣味で、雨の日も晴れの日も出かけた。', form: 'pastime' },
-        625: { meaning: '経路', answer: 'pathway', example: 'The winding stone pathway through the morning mist led toward the enchanted garden\'s oldest corner.', pos: 'n.', exMeaning: '朝霧の中を曲がりくねる石の経路は、魔法の庭の最も古い一角へと続いていた。', form: 'pathway' },
+        625: { meaning: '小道／経路', answer: 'pathway', example: 'The winding stone pathway through the morning mist led toward the enchanted garden\'s oldest corner.', pos: 'n.', exMeaning: '朝霧の中を曲がりくねる石の小道は、魔法の庭の最も古い一角へと続いていた。', form: 'pathway' },
         626: { meaning: '頂点', answer: 'peak', example: 'The mountain peak, glowing gold above the storm clouds at sunrise, was the highest point for fifty miles.', pos: 'n.', exMeaning: '日の出に嵐雲の上で金色に輝くその山の頂点は、五十マイル四方で最も高い地点だった。', form: 'peak' },
         627: { meaning: '知覚する', answer: 'perceive', example: 'The reflection in the enchanted still pond helped her perceive the sky from an entirely new angle.', pos: 'v.', exMeaning: '魔法の静かな池に映る姿のおかげで、彼女はまったく新しい角度から空を知覚することができた。', form: 'perceive' },
         628: { meaning: '許可された', answer: 'permissible', example: 'The open gate in the enchanted garden wall made it clear that entry was permissible here.', pos: 'adj.', exMeaning: '魔法の庭の塀の門が開いていることは、ここへの立ち入りが許可されていることをはっきり示していた。', form: 'permissible' },
@@ -3610,7 +3610,7 @@ const Cloud = (function () {
         635: { meaning: 'テントを張る', answer: 'pitch a tent', example: 'The traveler found a tent stake and mallet at the enchanted edge of the clearing and began to pitch a tent.', pos: 'v.phr.', exMeaning: '旅人は魔法の空き地の端でテントの杭と木づちを見つけ、テントを張り始めた。', form: 'pitch a tent' },
         636: { meaning: '毒のある', answer: 'poisonous', example: 'The brilliantly red mushroom glowing in the enchanted forest undergrowth was highly poisonous.', pos: 'adj.', exMeaning: '魔法の森の下草の中で光る真っ赤なキノコには、強い毒があった。', form: 'poisonous' },
         637: { meaning: '熟考する', answer: 'ponder', example: 'She sat beside the still pond in the evening and began to ponder, a smooth stone cool in her hand.', pos: 'v.', exMeaning: '夕方、彼女は静かな池のほとりに座って熟考し始めた。手の中のなめらかな石はひんやりしていた。', form: 'ponder' },
-        638: { meaning: '共有する', answer: 'pool', example: 'The villagers decided to pool their money to buy a new boat for the fishermen.', pos: 'v./n.', exMeaning: '村人たちはお金を共有して出し合い、漁師たちのために新しい舟を買うことにした。', form: 'pool' },
+        638: { meaning: '（資金などを）出し合う', answer: 'pool', example: 'The villagers decided to pool their money to buy a new boat for the fishermen.', pos: 'v./n.', exMeaning: '村人たちはお金を出し合って、漁師たちのために新しい舟を買うことにした。', form: 'pool' },
         639: { meaning: '部分', answer: 'portion', example: 'A single portion of the round loaf had been cut away, revealing the soft interior.', pos: 'n.', exMeaning: '丸いパンの一部分が切り取られ、柔らかな中身がのぞいていた。', form: 'portion' },
         640: { meaning: '姿勢', answer: 'posture', example: 'The tall straight pine among the leaning ones in the wind had the best posture of the enchanted grove.', pos: 'n.', exMeaning: '風の中で傾く木々の間にまっすぐ立つ背の高い松は、魔法の木立で一番姿勢がよかった。', form: 'posture' },
         641: { meaning: '潜在能力', answer: 'potential', example: 'The sealed cocoon held enormous potential — the wing pattern was barely visible through the casing.', pos: 'n./adj.', exMeaning: '閉じたまゆは莫大な潜在能力を秘めていた。殻越しに羽の模様がかすかに見えていた。', form: 'potential' },
@@ -3618,7 +3618,7 @@ const Cloud = (function () {
         643: { meaning: '貧困', answer: 'poverty', example: 'The kind princess gave away her jewels to help the families living in poverty outside the castle walls.', pos: 'n.', exMeaning: '優しい王女は、城壁の外で貧困の中に暮らす家族を助けるために、自分の宝石を手放した。', form: 'poverty' },
         644: { meaning: '実用的な', answer: 'practical', example: 'The simple tools laid out on the old workbench were completely practical in their purpose.', pos: 'adj.', exMeaning: '古い作業台に並べられた簡素な道具は、どれもまったく実用的なものだった。', form: 'practical' },
         645: { meaning: '正確に', answer: 'precisely', example: 'A careful hand placed the quill tip precisely on the single marked point on the ancient map.', pos: 'adv.', exMeaning: '注意深い手が、羽ペンの先を古い地図上のただ一つの印に正確に置いた。', form: 'precisely' },
-        646: { meaning: '予言する', answer: 'predict', example: 'The weathervanes all aligned before the enchanted storm — anyone could predict what was coming.', pos: 'v.', exMeaning: '魔法の嵐の前に風見がすべて同じ向きにそろった。何が来るのかは誰にでも予言できた。', form: 'predict' },
+        646: { meaning: '予測する／予言する', answer: 'predict', example: 'The weathervanes all aligned before the enchanted storm — anyone could predict what was coming.', pos: 'v.', exMeaning: '魔法の嵐の前に風見がすべて同じ向きにそろった。何が来るのかは誰にでも予測できた。', form: 'predict' },
         647: { meaning: '未就学児', answer: 'preschooler', example: 'The tiny muddy boot print beside the large one showed that a preschooler had come this way.', pos: 'n.', exMeaning: '大きな足跡の横にある小さな泥だらけの長靴の跡は、未就学児がここを通ったことを示していた。', form: 'preschooler' },
         648: { meaning: '処方箋', answer: 'prescription', example: 'The village doctor wrote a prescription for a herbal medicine that would cure the prince\'s cough.', pos: 'n.', exMeaning: '村の医者は、王子の咳を治す薬草の薬の処方箋を書いた。', form: 'prescription' },
         649: { meaning: '提示する', answer: 'present', example: 'The young knight presented the stolen crown to the queen as proof of his success.', pos: 'v.', exMeaning: '若い騎士は、成功の証として盗まれた王冠を女王に提示した。', form: 'presented' },
@@ -3628,7 +3628,7 @@ const Cloud = (function () {
         653: { meaning: '以前の', answer: 'previous', example: 'The previous footprints in the dried mud had been made before the magical rain — they were already fading.', pos: 'adj.', exMeaning: '乾いた泥に残る以前の足跡は魔法の雨の前につけられたもので、もう消えかけていた。', form: 'previous' },
         654: { meaning: '原始的な', answer: 'primitive', example: 'The charcoal drawings on the ancient cavern wall were primitive, but their message was clear.', pos: 'adj.', exMeaning: '古い洞窟の壁に描かれた木炭の絵は原始的だったが、伝えたいことははっきりしていた。', form: 'primitive' },
         655: { meaning: '校長／主要な', answer: 'principal', example: 'The largest tree in the enchanted grove was the principal source of magical light for everything around it.', pos: 'n./adj.', exMeaning: '魔法の木立で一番大きな木は、周りのすべてを照らす魔法の光の主要な源だった。', form: 'principal' },
-        656: { meaning: '大切にする', answer: 'prize', example: 'The glowing trophy on the empty amphitheater\'s podium was the most coveted prize in the mystical valley.', pos: 'v./n.', exMeaning: '誰もいない円形劇場の表彰台に置かれた光るトロフィーは、神秘の谷で最も望まれる賞だった。', form: 'prize' },
+        656: { meaning: '賞／大切にする', answer: 'prize', example: 'The glowing trophy on the empty amphitheater\'s podium was the most coveted prize in the mystical valley.', pos: 'v./n.', exMeaning: '誰もいない円形劇場の表彰台に置かれた光るトロフィーは、神秘の谷で最も望まれる賞だった。', form: 'prize' },
         657: { meaning: '進む', answer: 'proceed', example: 'Once the fallen tree was cleared, the travelers were free to proceed into the forest beyond.', pos: 'v.', exMeaning: '倒木が取り除かれると、旅人たちはその先の森へ自由に進むことができた。', form: 'proceed' },
         658: { meaning: '過程', answer: 'process', example: 'The stages of bread-making laid out on the ancient wooden table showed each step of the long process.', pos: 'n.', exMeaning: '古い木のテーブルに並べられたパン作りの各工程は、長い過程の一つ一つの段階を示していた。', form: 'process' },
         659: { meaning: '熟練度', answer: 'proficiency', example: 'The enchanted instrument worn smooth from expert handling showed a level of proficiency built over years.', pos: 'n.', exMeaning: '熟練した手に扱われてなめらかにすり減った魔法の楽器は、何年もかけて築かれた熟練度を示していた。', form: 'proficiency' },
@@ -3655,7 +3655,7 @@ const Cloud = (function () {
         680: { meaning: '激怒', answer: 'rage', example: 'The giant shouted in rage when he discovered that his golden harp had been stolen.', pos: 'n.', exMeaning: '巨人は金のハープが盗まれたことに気づくと、激怒して叫んだ。', form: 'rage' },
         681: { meaning: '範囲', answer: 'range', example: 'The healer\'s garden grew a wide range of herbs, from mint to rare moonflowers.', pos: 'n.', exMeaning: '治療師の庭では、ミントから珍しい月光花まで、幅広い範囲の薬草が育っていた。', form: 'range' },
         682: { meaning: '急速に', answer: 'rapidly', example: 'The enchanted waterfall descended rapidly, its torrent crashing into the pool far below.', pos: 'adv.', exMeaning: '魔法の滝は急速に流れ落ち、その激流ははるか下の滝つぼに打ちつけていた。', form: 'rapidly' },
-        683: { meaning: '珍しい', answer: 'rare', example: 'The single exotic flower blooming in the vast plain was genuinely rare — perhaps one of a few.', pos: 'adj.', exMeaning: '広大な平原に咲く一輪の異国の花は本当に珍しく、世界に数本しかないものかもしれなかった。', form: 'rare' },
+        683: { meaning: '珍しい', answer: 'rare', example: 'The single exotic flower blooming in the vast plain was genuinely rare, perhaps one of only a few in the world.', pos: 'adj.', exMeaning: '広大な平原に咲く一輪の異国の花は本当に珍しく、世界に数本しかないものかもしれなかった。', form: 'rare' },
         684: { meaning: '比率', answer: 'ratio', example: 'The recipe for the potion called for a ratio of three drops of honey to one drop of dew.', pos: 'n.', exMeaning: 'その薬の作り方では、はちみつ三滴に対して露一滴という比率が必要だった。', form: 'ratio' },
         685: { meaning: '合理化する', answer: 'rationalize', example: 'The new mayor decided to rationalize the town\'s old system of collecting taxes.', pos: 'v.', exMeaning: '新しい町長は、町の古い徴税の仕組みを合理化することにした。', form: 'rationalize' },
         686: { meaning: '荒廃させる', answer: 'ravage', example: 'The flood had ravaged the enchanted forest path — debris lay everywhere across the exposed ground.', pos: 'v.', exMeaning: '洪水が魔法の森の小道を荒廃させ、むき出しになった地面一面にがれきが散らばっていた。', form: 'ravaged' },
@@ -3668,7 +3668,7 @@ const Cloud = (function () {
         693: { meaning: '回復可能な', answer: 'recoverable', example: 'The healer said the injured unicorn\'s wing was badly hurt but still recoverable.', pos: 'adj.', exMeaning: '治療師は、けがをしたユニコーンの翼はひどく傷ついているが、まだ回復可能だと言った。', form: 'recoverable' },
         694: { meaning: '娯楽', answer: 'recreation', example: 'The hammock between the old trees by the lake was the perfect spot for summer recreation.', pos: 'n.', exMeaning: '湖のほとりの古い木々の間に吊られたハンモックは、夏の娯楽にぴったりの場所だった。', form: 'recreation' },
         695: { meaning: '取り戻す', answer: 'redeem', example: 'The knight who had lost the battle hoped to redeem his honor by saving the princess.', pos: 'v.', exMeaning: '戦いに敗れた騎士は、王女を救うことで名誉を取り戻したいと願った。', form: 'redeem' },
-        696: { meaning: '洗練させる', answer: 'refine', example: 'She slowly refined the clay pot on the potter\'s wheel, removing imperfections with each turn.', pos: 'v.', exMeaning: '彼女はろくろの上で粘土の器をゆっくりと洗練させ、回すたびに不完全な部分を取り除いていった。', form: 'refined' },
+        696: { meaning: '洗練させる／磨きをかける', answer: 'refine', example: 'She slowly refined the clay pot on the potter\'s wheel, removing imperfections with each turn.', pos: 'v.', exMeaning: '彼女はろくろの上で粘土の器にゆっくりと磨きをかけ、回すたびに不完全な部分を取り除いていった。', form: 'refined' },
         697: { meaning: '〜を振り返る', answer: 'reflect on', example: 'At the end of the long journey, the old traveler sat by the fire to reflect on all he had seen.', pos: 'phr.v.', exMeaning: '長い旅の終わりに、年老いた旅人は暖炉のそばに座り、見てきたすべてを振り返った。', form: 'reflect on' },
         698: { meaning: '改革派', answer: 'reformist', example: 'The young reformist queen wanted every child in the kingdom to learn to read.', pos: 'n./adj.', exMeaning: '改革派の若い女王は、王国のすべての子どもが読み書きを学べるようにしたいと考えていた。', form: 'reformist' },
         699: { meaning: '返金', answer: 'refund', example: 'The magic wand was broken, so the shopkeeper gave the boy a full refund.', pos: 'n./v.', exMeaning: '魔法の杖が壊れていたので、店主は少年に全額返金した。', form: 'refund' },
@@ -3684,9 +3684,9 @@ const Cloud = (function () {
         709: { meaning: '気乗りしないこと', answer: 'reluctance', example: 'With great reluctance, the young dragon left its warm cave to face the winter wind.', pos: 'n.', exMeaning: 'ひどく気乗りしないまま、若い竜は暖かい洞窟を出て冬の風に立ち向かった。', form: 'reluctance' },
         710: { meaning: '気乗りしない', answer: 'reluctant', example: 'The enchanted flower bud was reluctant to open on the cold morning, keeping its petals tightly folded.', pos: 'adj.', exMeaning: '寒い朝、魔法の花のつぼみは開くのに気乗りしない様子で、花びらをきつく閉じたままだった。', form: 'reluctant' },
         711: { meaning: '〜に頼る', answer: 'rely on', example: 'The climbing vine relied on the old stone wall to support its growth.', pos: 'phr.v.', exMeaning: 'つる植物は、成長を支えるのに古い石壁に頼っていた。', form: 'relied on' },
-        712: { meaning: '遠隔地の', answer: 'remote', example: 'The old wizard lived in a remote tower far beyond the mountains, where no road could reach.', pos: 'adj.', exMeaning: '年老いた魔法使いは、山々のはるか向こう、道も通じない遠隔地の塔に住んでいた。', form: 'remote' },
+        712: { meaning: '遠く離れた／遠隔地の', answer: 'remote', example: 'The old wizard lived in a remote tower far beyond the mountains, where no road could reach.', pos: 'adj.', exMeaning: '年老いた魔法使いは、山々のはるか向こう、道も通じない人里離れた塔に住んでいた。', form: 'remote' },
         713: { meaning: '取り除く', answer: 'remove', example: 'She carefully removed the oldest stone from the castle wall and found a tiny key behind it.', pos: 'v.', exMeaning: '彼女は城壁からいちばん古い石を慎重に取り除き、その奥に小さな鍵を見つけた。', form: 'removed' },
-        714: { meaning: '更新する', answer: 'renew', example: 'The ancient wood in the building had been renewed, each beam replaced with fresh timber.', pos: 'v.', exMeaning: '建物の古い木材は更新され、梁は一本ずつ新しい材木に取り替えられていた。', form: 'renewed' },
+        714: { meaning: '更新する／新しくする', answer: 'renew', example: 'The ancient wood in the building had been renewed, each beam replaced with fresh timber.', pos: 'v.', exMeaning: '建物の古い木材は新しくされ、梁は一本ずつ新しい材木に取り替えられていた。', form: 'renewed' },
         715: { meaning: '再生可能な', answer: 'renewable', example: 'The waterwheel in the flowing stream was the simplest renewable energy source in the mystical valley.', pos: 'adj.', exMeaning: '流れる小川の水車は、神秘の谷で最も簡単な再生可能エネルギー源だった。', form: 'renewable' },
         716: { meaning: '改装', answer: 'renovation', example: 'The careful renovation of the old stone walls was clear from the fresh mortar between the blocks.', pos: 'n.', exMeaning: '古い石壁の丁寧な改装は、石の間の新しいしっくいを見れば明らかだった。', form: 'renovation' },
         717: { meaning: '代表する', answer: 'represent', example: 'Three brave students were chosen to represent their school at the great magic tournament.', pos: 'v.', exMeaning: '三人の勇敢な生徒が、大魔法大会で学校を代表する者として選ばれた。', form: 'represent' },
@@ -3710,9 +3710,9 @@ const Cloud = (function () {
         735: { meaning: 'さびた', answer: 'rusty', example: 'The ancient gate was rusty and beautiful — its surface a texture of orange and brown in the morning dew.', pos: 'adj.', exMeaning: '古い門はさびていて美しく、その表面は朝露の中でオレンジと茶色の模様を見せていた。', form: 'rusty' },
         736: { meaning: '避難所', answer: 'sanctuary', example: 'The hidden glade with its ring of trees and beam of magical golden light was a natural sanctuary.', pos: 'n.', exMeaning: '木々の輪と魔法の金色の光の筋に囲まれた隠れた空き地は、自然の避難所だった。', form: 'sanctuary' },
         737: { meaning: '節約', answer: 'saving', example: 'Walking instead of taking the carriage meant a saving of three silver coins a week.', pos: 'n.', exMeaning: '馬車に乗らずに歩けば、週に銀貨三枚の節約になった。', form: 'saving' },
-        738: { meaning: '測る／規模', answer: 'scale', example: 'No one in the village had ever seen a flood on such a scale before.', pos: 'v./n.', exMeaning: '村の誰もが、これほどの規模の洪水をそれまで見たことがなかった。', form: 'scale' },
+        738: { meaning: '規模／よじ登る', answer: 'scale', example: 'No one in the village had ever seen a flood on such a scale before.', pos: 'v./n.', exMeaning: '村の誰もが、これほどの規模の洪水をそれまで見たことがなかった。', form: 'scale' },
         739: { meaning: '追い払う', answer: 'scare away', example: 'The ancient scarecrow in the grain field had been built to scare away birds at dusk.', pos: 'phr.v.', exMeaning: '麦畑の古いかかしは、夕暮れに鳥を追い払うために作られていた。', form: 'scare away' },
-        740: { meaning: '散らばる', answer: 'scatter', example: 'The dandelion scattered its seeds across the magical meadow in one long, drifting breath of wind.', pos: 'v.', exMeaning: 'タンポポは、長く吹き抜ける一陣の風に乗せて、魔法の草原じゅうに種を散らばらせた。', form: 'scattered' },
+        740: { meaning: '散らばる／まき散らす', answer: 'scatter', example: 'The dandelion scattered its seeds across the magical meadow in one long, drifting breath of wind.', pos: 'v.', exMeaning: 'タンポポは、長く吹き抜ける一陣の風に乗せて、魔法の草原じゅうに種をまき散らした。', form: 'scattered' },
         741: { meaning: 'シナリオ', answer: 'scenario', example: 'The glass model landscape on the ancient stone table was built to show different possible scenarios.', pos: 'n.', exMeaning: '古い石のテーブルの上のガラスの風景模型は、さまざまな起こりうるシナリオを示すために作られていた。', form: 'scenarios' },
         742: { meaning: '範囲', answer: 'scope', example: 'The panoramic view from the lookout gave the full scope of what lay in the mystical valley below.', pos: 'n.', exMeaning: '見晴らし台からのパノラマの眺めは、下に広がる神秘の谷の全範囲を見せてくれた。', form: 'scope' },
         743: { meaning: '軽蔑する', answer: 'scorn', example: 'The proud knights looked at the poor shepherd with scorn, but he was the one who defeated the dragon.', pos: 'v./n.', exMeaning: '誇り高い騎士たちは貧しい羊飼いを軽蔑の目で見たが、竜を倒したのは彼だった。', form: 'scorn' },
@@ -3722,7 +3722,7 @@ const Cloud = (function () {
         747: { meaning: '掴む', answer: 'seize', example: 'The eagle swooped down to seize the fish from the river with its sharp claws.', pos: 'v.', exMeaning: 'ワシは急降下し、鋭い爪で川の魚を掴んだ。', form: 'seize' },
         748: { meaning: '分ける', answer: 'separate', example: 'The stone wall was built to separate the two sides of the enchanted garden into distinct worlds.', pos: 'v./adj.', exMeaning: '石壁は、魔法の庭の二つの側をまったく別の世界に分けるために築かれていた。', form: 'separate' },
         749: { meaning: '順序', answer: 'sequence', example: 'The fossils on the ancient stone table had been arranged in sequence, from the oldest layer to the most recent.', pos: 'n.', exMeaning: '古い石のテーブルの上の化石は、最も古い地層のものから最も新しいものまで順序どおりに並べられていた。', form: 'in sequence' },
-        750: { meaning: '移動する', answer: 'shift', example: 'The sailors watched the wind shift to the north as the storm drew closer.', pos: 'v./n.', exMeaning: '嵐が近づくにつれ、船乗りたちは風向きが北へ移動するのを見守った。', form: 'shift' },
+        750: { meaning: '移る／変わる', answer: 'shift', example: 'The sailors watched the wind shift to the north as the storm drew closer.', pos: 'v./n.', exMeaning: '嵐が近づくにつれ、船乗りたちは風向きが北へ変わるのを見守った。', form: 'shift' },
         751: { meaning: '重要な', answer: 'significant', example: 'The keystone was the most significant element — without it, the entire arch would fall.', pos: 'adj.', exMeaning: 'かなめ石は最も重要な要素だった。それがなければ、アーチ全体が崩れてしまうのだ。', form: 'significant' },
         752: { meaning: 'シミュレートする', answer: 'simulate', example: 'The sand model on the enchanted workshop table was built to simulate the behavior of the real coastline.', pos: 'v.', exMeaning: '魔法の作業場のテーブルの上の砂の模型は、本物の海岸線のふるまいをシミュレートするために作られていた。', form: 'simulate' },
         753: { meaning: '特別に選ぶ', answer: 'single out', example: 'The spotlight singled out one artifact in the magical dark museum hall, leaving all others in shadow.', pos: 'phr.v.', exMeaning: '魔法の暗い博物館の広間で、スポットライトがただ一つの遺物を特別に選んで照らし出し、ほかはすべて影の中に残された。', form: 'singled out' },
@@ -3738,11 +3738,11 @@ const Cloud = (function () {
         763: { meaning: '専門にする', answer: 'specialize', example: 'The old healer chose to specialize in medicines made from rare mountain flowers.', pos: 'v.', exMeaning: '年老いた治療師は、珍しい山の花から作る薬を専門にすることを選んだ。', form: 'specialize' },
         764: { meaning: '明記する', answer: 'specify', example: 'The letter did not specify where the treasure was hidden, only that it lay beneath an old oak.', pos: 'v.', exMeaning: '手紙には宝がどこに隠されているかは明記されておらず、古い樫の木の下にあるとだけ書かれていた。', form: 'specify' },
         765: { meaning: '回転させる', answer: 'spin', example: 'The little boy used a string to spin the wooden top on the smooth stone floor.', pos: 'v.', exMeaning: '小さな男の子はひもを使って、なめらかな石の床の上で木のこまを回転させた。', form: 'spin' },
-        766: { meaning: '自発的な', answer: 'spontaneous', example: 'The wildflower that grew where no magical seed had been planted was entirely spontaneous.', pos: 'adj.', exMeaning: '魔法の種がまかれていない場所に咲いた野の花は、まったく自発的なものだった。', form: 'spontaneous' },
-        767: { meaning: '広がる', answer: 'spread', example: 'The dry magical seed pod exploded, spreading its contents in every direction at once.', pos: 'v.', exMeaning: '乾いた魔法の種のさやがはじけ、中身を一度に四方八方へ広げた。', form: 'spreading' },
+        766: { meaning: '自発的な／自然発生的な', answer: 'spontaneous', example: 'The wildflower that grew where no magical seed had been planted was entirely spontaneous.', pos: 'adj.', exMeaning: '魔法の種がまかれていない場所に咲いた野の花は、まったく自然発生的なものだった。', form: 'spontaneous' },
+        767: { meaning: '広がる／広げる', answer: 'spread', example: 'The dry magical seed pod exploded, spreading its contents in every direction at once.', pos: 'v.', exMeaning: '乾いた魔法の種のさやがはじけ、中身を一度に四方八方へ広げた。', form: 'spreading' },
         768: { meaning: '安定させる', answer: 'stabilize', example: 'The ancient cornerstone placed at the base had been enough to stabilize the tilting structure.', pos: 'v.', exMeaning: '土台に置かれた古い礎石だけで、傾いた建物を安定させるのに十分だった。', form: 'stabilize' },
         769: { meaning: 'よろめく', answer: 'stagger', example: 'The exhausted traveler began to stagger through the snow toward the light of the distant inn.', pos: 'v.', exMeaning: '疲れ果てた旅人は、遠くの宿の明かりを目指して雪の中をよろめきながら進み始めた。', form: 'stagger' },
-        770: { meaning: '代表する', answer: 'stand for', example: 'The flag planted at the enchanted summit stood for everyone who had ever tried and failed to reach it.', pos: 'phr.v.', exMeaning: '魔法の山頂に立てられた旗は、そこを目指して挑み、敗れたすべての人々を代表していた。', form: 'stood for' },
+        770: { meaning: '〜を表す／象徴する', answer: 'stand for', example: 'The flag planted at the enchanted summit stood for everyone who had ever tried and failed to reach it.', pos: 'phr.v.', exMeaning: '魔法の山頂に立てられた旗は、そこを目指して挑み、敗れたすべての人々を象徴していた。', form: 'stood for' },
         771: { meaning: '飢餓', answer: 'starvation', example: 'Without the farmers\' help, many animals in the forest would have faced starvation that winter.', pos: 'n.', exMeaning: '農民たちの助けがなければ、森の多くの動物たちはその冬、飢餓に直面していただろう。', form: 'starvation' },
         772: { meaning: '操舵する', answer: 'steer', example: 'The enchanted vessel\'s wheel stood alone on the ancient empty deck — whoever steered had gone below.', pos: 'v.', exMeaning: '古くがらんとした甲板に、魔法の船の舵輪だけが立っていた。操舵していた者は下へ降りていったのだ。', form: 'steered' },
         773: { meaning: '刺激（複数形）', answer: 'stimuli', example: 'Young puppies learn quickly by reacting to new stimuli such as sounds, smells, and lights.', pos: 'n.', exMeaning: '子犬は、音やにおい、光といった新しい刺激に反応することで、すばやく学んでいく。', form: 'stimuli' },
@@ -3765,7 +3765,7 @@ const Cloud = (function () {
         790: { meaning: '疑念', answer: 'suspicion', example: 'The locked box with the strange light around its edges was enough to arouse suspicion.', pos: 'n.', exMeaning: '縁から奇妙な光が漏れる鍵のかかった箱は、疑念を抱かせるのに十分だった。', form: 'suspicion' },
         791: { meaning: '象徴する', answer: 'symbolize', example: 'The dove carved into the entrance stone of the old temple was meant to symbolize peace.', pos: 'v.', exMeaning: '古い神殿の入口の石に彫られたハトは、平和を象徴するためのものだった。', form: 'symbolize' },
         792: { meaning: '少し骨が折れる', answer: 'take a bit of doing', example: 'Getting the heavy gate to open had taken a bit of doing — the magical vine had sealed it completely.', pos: 'v.phr.', exMeaning: '重い門を開けるのは少し骨が折れた。魔法のつるが門を完全にふさいでいたのだ。', form: 'taken a bit of doing' },
-        793: { meaning: '〜の価値を損なう', answer: 'take away from', example: 'The rainy weather did not take away from the joy of the midsummer festival.', pos: 'phr.v.', exMeaning: '雨模様の天気も、夏至祭の楽しさの価値を損なうことはなかった。', form: 'take away from' },
+        793: { meaning: '〜の価値を損なう', answer: 'take away from', example: 'The rainy weather did not take away from the joy of the midsummer festival.', pos: 'phr.v.', exMeaning: '雨模様の天気も、夏至祭の楽しさを損なうことはなかった。', form: 'take away from' },
         794: { meaning: '定着する', answer: 'take hold', example: 'Once the ivy began to take hold on the bare wall, it spread without stopping.', pos: 'v.phr.', exMeaning: 'むき出しの壁にツタがいったん定着し始めると、止まることなく広がっていった。', form: 'take hold' },
         795: { meaning: '理解する', answer: 'take in', example: 'It took the young prince a long moment to take in the news that he would be king.', pos: 'phr.v.', exMeaning: '若い王子は、自分が王になるという知らせを理解するのにしばらく時間がかかった。', form: 'take in' },
         796: { meaning: '引き受ける', answer: 'take on', example: 'The brave young witch agreed to take on the difficult task of guarding the sacred flame.', pos: 'phr.v.', exMeaning: '勇敢な若い魔女は、聖なる炎を守るという難しい仕事を引き受けることに同意した。', form: 'take on' },
@@ -3775,12 +3775,12 @@ const Cloud = (function () {
         800: { meaning: '退屈な', answer: 'tedious', example: 'The identical stepping stones stretching to the misty horizon made the journey feel tedious.', pos: 'adj.', exMeaning: '霧のかかった地平線まで続く同じような飛び石のせいで、旅は退屈に感じられた。', form: 'tedious' },
         801: { meaning: '魅力的な', answer: 'tempting', example: 'The single perfect fruit glowing deep in the dark orchard was far too tempting to ignore.', pos: 'adj.', exMeaning: '暗い果樹園の奥で光るただ一つの完璧な果実は、無視するにはあまりにも魅力的だった。', form: 'tempting' },
         802: { meaning: '〜する傾向がある', answer: 'tend to do', example: 'This plant tended to grow toward the window; it always found the light, whatever the room.', pos: 'v.constr.', exMeaning: 'この植物は窓のほうへ伸びる傾向があった。どの部屋に置いても、いつも光を見つけ出したのだ。', form: 'tended to grow' },
-        803: { meaning: '慎重な', answer: 'tentative', example: 'The fawn\'s first steps on the frozen lake were tentative, as if it feared the ice would break.', pos: 'adj.', exMeaning: '凍った湖の上での子ジカの最初の足取りは、氷が割れるのを恐れるかのように慎重だった。', form: 'tentative' },
+        803: { meaning: 'ためらいがちな／仮の', answer: 'tentative', example: 'The fawn\'s first steps on the frozen lake were tentative, as if it feared the ice would break.', pos: 'adj.', exMeaning: '凍った湖の上での子ジカの最初の足取りは、氷が割れるのを恐れるかのようにためらいがちだった。', form: 'tentative' },
         804: { meaning: 'それによって', answer: 'thereby', example: 'She tipped the first domino, thereby causing the entire line to fall one after another across the floor.', pos: 'adv.', exMeaning: '彼女は最初のドミノを倒し、それによって列全体が床の上で次々と倒れていった。', form: 'thereby' },
         805: { meaning: 'したがって', answer: 'therefore', example: 'Water flows downhill; therefore, the river had always found its way to the valley below.', pos: 'adv.', exMeaning: '水は低いほうへ流れる。したがって、川はいつも下の谷へと流れ着いてきたのだ。', form: 'therefore' },
         806: { meaning: '徹底的に', answer: 'thoroughly', example: 'The carved pattern covered the stone surface so thoroughly that not one area had been missed.', pos: 'adv.', exMeaning: '彫られた模様は石の表面を徹底的に覆っており、彫り残された部分は一つもなかった。', form: 'thoroughly' },
-        807: { meaning: '脅かす', answer: 'threaten', example: 'The dark clouds gathering over the valley threatened to ruin the harvest festival.', pos: 'v.', exMeaning: '谷の上に集まる暗い雲が、収穫祭を台無しにしようと脅かしていた。', form: 'threatened' },
-        808: { meaning: '繁栄する', answer: 'thrive', example: 'The most abundant tree in the enchanted forest thrived in full summer leaf, tall above all the others.', pos: 'v.', exMeaning: '魔法の森で最もよく見られるその木は、夏の葉を茂らせて繁栄し、ほかのどの木よりも高くそびえていた。', form: 'thrived' },
+        807: { meaning: '脅かす／〜するおそれがある', answer: 'threaten', example: 'The dark clouds gathering over the valley threatened to ruin the harvest festival.', pos: 'v.', exMeaning: '谷の上に集まる暗い雲が、今にも収穫祭を台無しにしそうだった。', form: 'threatened' },
+        808: { meaning: '繁栄する／よく育つ', answer: 'thrive', example: 'The most abundant tree in the enchanted forest thrived in full summer leaf, tall above all the others.', pos: 'v.', exMeaning: '魔法の森で最もよく見られるその木は、夏の葉を茂らせてよく育ち、ほかのどの木よりも高くそびえていた。', form: 'thrived' },
         809: { meaning: 'したがって', answer: 'thus', example: 'Water flows to the lowest point — thus, the enchanted stream had carved its way to the mystical valley floor.', pos: 'adv.', exMeaning: '水は最も低い所へ流れる。したがって、魔法の小川は神秘の谷底まで道を刻んできたのだ。', form: 'thus' },
         810: { meaning: '結びつける', answer: 'tie together', example: 'The old sailor showed the children how to tie together two ropes with a strong knot.', pos: 'phr.v.', exMeaning: '年老いた水夫は、二本のロープを丈夫な結び目で結びつける方法を子どもたちに教えた。', form: 'tie together' },
         811: { meaning: '時間がかかる', answer: 'time-consuming', example: 'Copying the old spell book by hand was a time-consuming task that took the monks many years.', pos: 'adj.', exMeaning: '古い呪文の書を手で写すのは時間がかかる作業で、修道士たちは何年も費やした。', form: 'time-consuming' },
@@ -3801,13 +3801,13 @@ const Cloud = (function () {
         826: { meaning: '満場一致で', answer: 'unanimously', example: 'The council of elves voted unanimously to protect the ancient forest from the king\'s woodcutters.', pos: 'adv.', exMeaning: 'エルフの評議会は、王のきこりたちから古い森を守ることを満場一致で可決した。', form: 'unanimously' },
         827: { meaning: '型破りな', answer: 'unconventional', example: 'The plant growing sideways from the cliff face was entirely unconventional, and entirely alive.', pos: 'adj.', exMeaning: '崖の表面から横向きに生えるその植物は、まったく型破りで、それでいて生き生きとしていた。', form: 'unconventional' },
         828: { meaning: '損なう', answer: 'undermine', example: 'The water seeping under the foundation had been slowly undermining the old stone wall for years.', pos: 'v.', exMeaning: '土台の下にしみ込む水が、何年もかけて古い石壁をじわじわと損なってきていた。', form: 'undermining' },
-        829: { meaning: '引き受ける', answer: 'undertake', example: 'She looked at the ancient cobblestone road beginning at the gate and chose to undertake the long climb toward the mountain.', pos: 'v.', exMeaning: '彼女は門から始まる古い石畳の道を見つめ、山へ向かう長い登りを引き受けることにした。', form: 'undertake' },
+        829: { meaning: '引き受ける／取りかかる', answer: 'undertake', example: 'She looked at the ancient cobblestone road beginning at the gate and chose to undertake the long climb toward the mountain.', pos: 'v.', exMeaning: '彼女は門から始まる古い石畳の道を見つめ、山へ向かう長い登りに取りかかることにした。', form: 'undertake' },
         830: { meaning: '間違いなく', answer: 'undoubtedly', example: 'Undoubtedly, the enchanted sun was rising — the mystical grey landscape was beginning to fill with color.', pos: 'adv.', exMeaning: '間違いなく、魔法の太陽が昇りつつあった。灰色だった神秘の風景が色で満たされ始めていた。', form: 'Undoubtedly' },
         831: { meaning: '団結', answer: 'unity', example: 'The many small streams merging into one powerful mystical river were a picture of unity in motion.', pos: 'n.', exMeaning: '多くの小さな流れが一本の力強い神秘の川へと合流する様子は、動いている団結の姿だった。', form: 'unity' },
         832: { meaning: '普遍的な', answer: 'universal', example: 'The love of stories is universal; children in every land gather by the fire to hear them.', pos: 'adj.', exMeaning: '物語を愛する心は普遍的なものだ。どの国の子どもたちも、炎のそばに集まって物語に耳を傾ける。', form: 'universal' },
         833: { meaning: '開錠する', answer: 'unlock', example: 'The key turned and unlocked the ancient stone door, releasing a flood of light from the room beyond.', pos: 'v.', exMeaning: '鍵が回って古い石の扉が開錠され、向こうの部屋からあふれるように光が流れ出した。', form: 'unlocked' },
         834: { meaning: '都市の', answer: 'urban', example: 'The rooftops and chimneys seen from above at enchanted dusk were the clearest portrait of an urban landscape.', pos: 'adj.', exMeaning: '魔法の夕暮れに上から眺めた屋根と煙突は、都市の風景を最もはっきりと描き出していた。', form: 'urban' },
-        835: { meaning: 'AにするよううにBを促す', answer: 'urge A to do', example: 'The old wizard urged the young knight to rest before facing the dragon.', pos: 'v.constr.', exMeaning: '老魔法使いは若い騎士に、竜に立ち向かう前に休むよう促した。', form: 'urged' },
+        835: { meaning: 'Aに〜するよう促す', answer: 'urge A to do', example: 'The old wizard urged the young knight to rest before facing the dragon.', pos: 'v.constr.', exMeaning: '老魔法使いは若い騎士に、竜に立ち向かう前に休むよう促した。', form: 'urged' },
         836: { meaning: '空いている', answer: 'vacant', example: 'The stone room was vacant: dusty floors, bare shelves, and a single window letting the light fall in.', pos: 'adj.', exMeaning: 'その石の部屋は空いていた。ほこりっぽい床、空の棚、そして光を差し込ませる窓が一つあるだけだった。', form: 'vacant' },
         837: { meaning: '有効な', answer: 'valid', example: 'The seal was intact and unbroken — the ancient scroll was still valid by any measure.', pos: 'adj.', exMeaning: '封印は無傷で破られていなかった。その古い巻物は、どの基準から見てもまだ有効だった。', form: 'valid' },
         838: { meaning: '価値のある', answer: 'valuable', example: 'The single gem embedded in the raw rock face was clearly the most valuable thing in the ancient cavern.', pos: 'adj.', exMeaning: '荒い岩肌に埋まったただ一つの宝石は、明らかに古い洞窟の中で最も価値のあるものだった。', form: 'valuable' },
@@ -3815,7 +3815,7 @@ const Cloud = (function () {
         840: { meaning: '広大な', answer: 'vast', example: 'The plain stretched to the misty magical horizon in every direction — a vast, unbroken expanse.', pos: 'adj.', exMeaning: '平原は霧のかかった魔法の地平線まで四方に広がっていた。広大で、途切れることのない広がりだった。', form: 'vast' },
         841: { meaning: '乗り物', answer: 'vehicle', example: 'The old wooden cart was the only vehicle in the village, so everyone borrowed it on market day.', pos: 'n.', exMeaning: '古い木の荷車は村で唯一の乗り物だったので、市の日には誰もがそれを借りた。', form: 'vehicle' },
         842: { meaning: '犠牲者', answer: 'victim', example: 'The small flower bent under the heavy rune-carved stone was the silent victim of the last storm.', pos: 'n.', exMeaning: '重いルーンの刻まれた石の下で曲がった小さな花は、この前の嵐の物言わぬ犠牲者だった。', form: 'victim' },
-        843: { meaning: '精力的な', answer: 'vigorous', example: 'The enchanted waterfall in full strength was vigorous — crashing and spraying into the pool below.', pos: 'adj.', exMeaning: '水量いっぱいの魔法の滝は精力的で、下の滝つぼに激しく打ちつけ、しぶきを上げていた。', form: 'vigorous' },
+        843: { meaning: '精力的な／力強い', answer: 'vigorous', example: 'The enchanted waterfall in full strength was vigorous — crashing and spraying into the pool below.', pos: 'adj.', exMeaning: '水量いっぱいの魔法の滝は力強く、下の滝つぼに激しく打ちつけ、しぶきを上げていた。', form: 'vigorous' },
         844: { meaning: '違反', answer: 'violation', example: 'The fence pulled down to allow entry into the forbidden area was a clear violation.', pos: 'n.', exMeaning: '立ち入り禁止の区域に入るために引き倒された柵は、明らかな違反だった。', form: 'violation' },
         845: { meaning: '鮮明な', answer: 'vivid', example: 'The tropical flowers against the magical dark foliage were the most vivid things in the entire forest.', pos: 'adj.', exMeaning: '魔法の暗い葉を背にした熱帯の花々は、森全体で最も鮮明な色彩を放っていた。', form: 'vivid' },
         846: { meaning: '自発的な', answer: 'voluntary', example: 'The single bee choosing the most distant flower had made a voluntary decision.', pos: 'adj.', exMeaning: 'いちばん遠くの花を選んだ一匹のミツバチは、自発的な決断を下したのだった。', form: 'voluntary' },
@@ -3829,7 +3829,7 @@ const Cloud = (function () {
         854: { meaning: '広範囲にわたる', answer: 'wide-ranging', example: 'The old tree\'s roots were wide-ranging, extending far beyond any visible part of the trunk above ground.', pos: 'adj.', exMeaning: '古い木の根は広範囲にわたっており、地上に見える幹のどの部分よりもはるか遠くまで伸びていた。', form: 'wide-ranging' },
         855: { meaning: '広まった', answer: 'widespread', example: 'There was widespread joy in the kingdom when the lost princess finally returned home.', pos: 'adj.', exMeaning: '行方不明だった王女がついに帰ってくると、喜びが王国じゅうに広まった。', form: 'widespread' },
         856: { meaning: '全力で', answer: 'with all one\'s might', example: 'The little boy pulled the rope with all his might, and the heavy gate slowly opened.', pos: 'prep.phr.', exMeaning: '少年が全力でロープを引くと、重い門がゆっくりと開いた。', form: 'with all his might' },
-        857: { meaning: '撤退／引き出し', answer: 'withdrawal', example: 'The tide\'s withdrawal from the shore at sunset left a glistening stretch of exposed sand.', pos: 'n.', exMeaning: '夕暮れ、潮が岸から撤退すると、きらめく砂浜が広くあらわになった。', form: 'withdrawal' },
+        857: { meaning: '撤退／後退／引き出し', answer: 'withdrawal', example: 'The tide\'s withdrawal from the shore at sunset left a glistening stretch of exposed sand.', pos: 'n.', exMeaning: '夕暮れに潮が岸から後退すると、きらめく砂浜が広くあらわになった。', form: 'withdrawal' },
         858: { meaning: 'うまくいく', answer: 'work out', example: 'The young couple\'s plan to open a bakery in the village worked out better than they had hoped.', pos: 'phr.v.', exMeaning: '村にパン屋を開くという若い夫婦の計画は、期待していた以上にうまくいった。', form: 'worked out' },
         859: { meaning: '作業量', answer: 'workload', example: 'The pile of heavy rune-carved stones waiting to be moved gave a visible sense of the day\'s workload.', pos: 'n.', exMeaning: '運ばれるのを待つ重いルーンの刻まれた石の山は、その日の作業量を目に見える形で示していた。', form: 'workload' },
         860: { meaning: 'やりがいのある', answer: 'worthwhile', example: 'The overflowing harvest basket made every month of careful tending feel completely worthwhile.', pos: 'adj.', exMeaning: 'あふれんばかりの収穫かごを見ると、何か月もの丁寧な世話がすべてやりがいのあるものに感じられた。', form: 'worthwhile' },
@@ -3865,7 +3865,7 @@ const Cloud = (function () {
      * 鉄〜金 = CEFR-J A1〜B2（データは data/nb_*.json、カードIDは a1-N など）
      * 前の手帖のカードを全部集めると次の手帖が開く。既存ユーザーは白金も最初から開いている。
      */
-    const NB_DATA_VERSION = '20261101f';
+    const NB_DATA_VERSION = '20261102a';
     const NOTEBOOKS = [
         { key: 'A1', name: '鉄の手帖',   level: 'CEFR-J A1', sub: 'はじまりの扉　基礎の英単語', count: 1166, prefix: 'a1',
           c: ['#eef0f3', '#8c939d', '#5d636b'], gem: '⚙️' },
@@ -5690,74 +5690,58 @@ const Cloud = (function () {
         closeZoomInfoPanel();
     }
 
+    /* ===== 単語ガイドの解説データ（発音記号・意味の広がり・語源・成り立ち・コロケーション・派生語・間違い・豆知識）=====
+     * data/detail_{手帖}.json（No順の配列）。単語ガイドを開いたとき、または手帖を開いた少し後に読み込む */
+    const _detailCache = {};
+    function loadDetails(nbKey) {
+        if (_detailCache[nbKey]) return _detailCache[nbKey];
+        _detailCache[nbKey] = fetch(`data/detail_${nbKey}.json?v=${NB_DATA_VERSION}`)
+            .then(r => r.ok ? r.json() : [])
+            .catch(() => { delete _detailCache[nbKey]; return []; });
+        return _detailCache[nbKey];
+    }
+    function getDetailSync(card) {
+        const c = _detailCache[card.nb || currentNB.key];
+        return (c && c._ready && c._data[card.no - 1]) || null;
+    }
+    function warmDetails(nbKey) {
+        loadDetails(nbKey).then(d => { const p = _detailCache[nbKey]; if (p) { p._ready = true; p._data = d; } });
+    }
+
     function showZoomInfoPanel(cardNo) {
         const card = cardsData.find(c => c.no === cardNo);
         if (!card) return;
-        const details = isPT ? CARD_DETAILS[cardNo] : null;
-        const pos = (card.quiz && card.quiz.pos) ? card.quiz.pos : '';
-        const meaning = (card.quiz && card.quiz.meaning) ? card.quiz.meaning : '';
-        const answer = (card.quiz && card.quiz.answer) ? card.quiz.answer : `No.${cardNo}`;
+        const content = document.getElementById('zoomInfoContent');
+        content.innerHTML = '<div style="text-align:center;color:#9070c0;padding:30px;">読み込み中…</div>';
+        document.getElementById('zoom-info-panel').classList.add('open');
+        loadDetails(card.nb || currentNB.key).then(list => renderWordGuide(card, (list && list[card.no - 1]) || {}));
+    }
 
+    function renderWordGuide(card, d) {
+        const E = t => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        const q = card.quiz || {};
+        const old = (isPT && typeof CARD_DETAILS !== 'undefined') ? (CARD_DETAILS[card.no] || {}) : {};
+        const sec = (label, body) => body ? `<div class="zip-section"><div class="zip-label">${label}</div><div class="zip-value">${body}</div></div>` : '';
+        const list = arr => (arr && arr.length) ? `<ul class="zip-phrases">${arr.map(x => `<li>${E(x)}</li>`).join('')}</ul>` : '';
         let html = `
             <div class="zip-word">
-                <div class="zip-word-en">${answer}</div>
-                ${meaning ? `<div class="zip-word-ja">${meaning}</div>` : ''}
-            </div>
-        `;
-
-        if (pos) {
-            html += `<div class="zip-section">
-                <div class="zip-label">🔤 品詞</div>
-                <div class="zip-value"><span class="zip-pos-badge">${pos}</span></div>
+                <div class="zip-word-en">${E(q.answer || ('No.' + card.no))}</div>
+                ${d.i ? `<div style="font-size:15px;color:#c8b8f0;font-family:'Lucida Sans Unicode','Arial Unicode MS','Segoe UI',sans-serif;margin-top:2px;">${E(d.i)}</div>` : ''}
+                <div class="zip-word-ja">${q.pos ? `<span class="zip-pos-badge">${E(q.pos)}</span> ` : ''}${E(q.meaning || '')}</div>
             </div>`;
-        }
-
-        if (details) {
-            if (details.etymology) {
-                html += `<div class="zip-section">
-                    <div class="zip-label">📖 語源</div>
-                    <div class="zip-value">${details.etymology}</div>
-                </div>`;
-            }
-            if (details.affixes) {
-                html += `<div class="zip-section">
-                    <div class="zip-label">🔡 接頭辞・接尾辞</div>
-                    <div class="zip-value">${details.affixes}</div>
-                </div>`;
-            }
-            if (details.nuance) {
-                html += `<div class="zip-section">
-                    <div class="zip-label">💡 ニュアンス</div>
-                    <div class="zip-value">${details.nuance}</div>
-                </div>`;
-            }
-            if (details.phrases) {
-                const plist = details.phrases.split(' / ').map(p => `<li>${p}</li>`).join('');
-                html += `<div class="zip-section">
-                    <div class="zip-label">🗣️ よく使うフレーズ</div>
-                    <ul class="zip-phrases">${plist}</ul>
-                </div>`;
-            }
-            if (details.mistake) {
-                html += `<div class="zip-section">
-                    <div class="zip-label">⚠️ 誤用注意</div>
-                    <div class="zip-mistake">${details.mistake}</div>
-                </div>`;
-            }
-        } else if (card.quiz && card.quiz.example) {
-            const ex = String(card.quiz.example).replace(/&/g, '&amp;').replace(/</g, '&lt;');
-            html += `<div class="zip-section"><div class="zip-label">📖 例文</div>
-                <div style="font-size:13px;line-height:1.7;">${ex}</div>
-                ${card.quiz.exMeaning ? `<div style="font-size:12px;line-height:1.7;color:#8a7a9a;margin-top:4px;">${String(card.quiz.exMeaning).replace(/</g, '&lt;')}</div>` : ''}</div>`;
-        } else {
-            html += `<div class="zip-section" style="text-align:center;color:#604880;padding:30px 16px;">
-                <div style="font-size:28px;margin-bottom:8px;">🔮</div>
-                <div style="font-size:12px;">この単語の詳細情報は<br>準備中です</div>
-            </div>`;
-        }
-
+        html += sec('🗣️ 発音のポイント', E(d.p));
+        html += sec('🌈 ほかの意味', list(d.s));
+        if (q.example) html += sec('📖 例文', `<div style="font-family:Georgia,'Noto Serif JP',serif;line-height:1.6;">${E(q.example)}</div>`
+            + (q.exMeaning ? `<div style="font-size:12px;color:#8a7a9a;margin-top:3px;line-height:1.6;">${E(q.exMeaning)}</div>` : ''));
+        html += sec('🧩 成り立ち（接頭辞・語根・接尾辞）', E(d.a || old.affixes));
+        html += sec('📜 語源', E(d.e || old.etymology));
+        html += sec('🔗 よく一緒に使う語', list(d.c) || (old.phrases ? list(old.phrases.split(' / ')) : ''));
+        html += sec('🌱 仲間の単語（派生語）', list(d.d));
+        html += sec('⚖️ 似た語との違い', E(d.n || old.nuance));
+        if (d.m || old.mistake) html += `<div class="zip-section"><div class="zip-label">⚠️ よくある間違い</div><div class="zip-mistake">${E(d.m || old.mistake)}</div></div>`;
+        html += sec('💡 豆知識', E(d.t));
+        if (!d.i && !q.example) html += `<div class="zip-section" style="text-align:center;color:#604880;padding:24px 16px;"><div style="font-size:12px;">解説を読み込めませんでした。通信状態を確認してください</div></div>`;
         document.getElementById('zoomInfoContent').innerHTML = html;
-        document.getElementById('zoom-info-panel').classList.add('open');
     }
     function closeZoomInfoPanel() {
         document.getElementById('zoom-info-panel').classList.remove('open');
@@ -7295,7 +7279,7 @@ const Cloud = (function () {
                 meaningEl.innerHTML = `
                     <div style="text-align:center;font-size:16px;font-weight:bold;color:${resultColor};margin-bottom:10px;">${resultIcon}</div>
                     <div style="background:${resultBg};border:1px solid ${resultBorder};border-radius:12px;padding:12px 14px;">
-                        <div style="font-size:14px;font-weight:bold;color:${textMain};margin-bottom:6px;">💡 ${card.quiz.answer}</div>
+                        <div style="font-size:14px;font-weight:bold;color:${textMain};margin-bottom:6px;">💡 ${card.quiz.answer}${(() => { const dd = getDetailSync(card); return dd && dd.i ? ` <span style="font-weight:normal;font-size:12px;opacity:.85;">${dd.i}</span>` : ''; })()}</div>
                         <div style="font-size:12px;color:${textSub};margin-bottom:${exMeaning ? '8px' : '0'};">${card.quiz.meaning}</div>
                         ${card.quiz.example && card.quiz.exMeaning ? `<div style="font-size:12.5px;color:${textMain};line-height:1.6;border-top:1px solid ${borderEx};padding-top:8px;font-family:Georgia,'Noto Serif JP',serif;">📖 ${String(card.quiz.example).replace(/</g, '&lt;')}</div>` : ''}
                         ${exMeaning ? `<div style="font-size:12px;color:${textEx};line-height:1.7;${card.quiz.example && card.quiz.exMeaning ? 'margin-top:3px;' : `border-top:1px solid ${borderEx};padding-top:8px;`}">${card.quiz.example && card.quiz.exMeaning ? '' : '📖 '}${exMeaning}</div>` : ''}
@@ -8043,6 +8027,7 @@ const Cloud = (function () {
                 trainingSession = { active: false, cards: [], index: 0, levelFilter: 'all', masteredIds: new Set(), correct: 0, incorrect: 0, totalXP: 0 };
                 applyNotebookTheme(fromKey);
                 if (window.applyNotebookBackground) window.applyNotebookBackground();
+                setTimeout(() => warmDetails(nb.key), 1200);
                 renderCollection();
                 updateDailyGoalDisplay();
                 updateAdventureBattleBtn();
@@ -8120,6 +8105,7 @@ const Cloud = (function () {
 
     /* ========== INIT ========== */
     applyNotebookTheme();
+    setTimeout(() => warmDetails(currentNB.key), 2500);   // 単語ガイド・冒険の発音記号用（起動の邪魔をしないよう少し後に）
     updateBgmButtons();   // 引き継いだBGM設定をボタンに反映
     updateXPDisplay();
     updateSpecialGachaBtn();

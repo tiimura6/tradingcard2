@@ -224,6 +224,17 @@ test('殿堂入りボタンは白金の手帖だけに表示／ボスラッシ�
   assert(!(await p.evaluate(() => document.body.classList.contains('battle-mode'))), 'キャンセル後もバトル背景のまま');
 });
 
+test('単語ガイド：発音記号・成り立ち・例文訳が表示される（金の手帖 exaggerate）', async b => {
+  const p = await openApp(b, { seed: { notebookState: { unlocked: ['A1', 'A2', 'B1', 'B2', 'PT'], current: 'B2' } } });
+  await p.waitForTimeout(800);
+  await p.evaluate(() => { const c = cardsData.find(c => c.quiz.answer === 'exaggerate'); showZoomInfoPanel(c.no); });
+  await p.waitForTimeout(1500);
+  const txt = await p.evaluate(() => document.getElementById('zoomInfoContent').innerText);
+  assert(txt.includes('/ɪɡˈzædʒəreɪt/'), 'IPAなし: ' + txt.slice(0, 120));
+  assert(txt.includes('成り立ち') && txt.includes('誇張'), txt.slice(0, 200));
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
 test('小さい画面（幅360px）で主な画面が横にはみ出さない', async b => {
   const p = await openApp(b, { viewport: { width: 360, height: 740 }, seed: { unlockedCards: ids('a1', 1, 50) } });
   const steps = ['openStudyMode("all")', 'closeStudyMode()', 'showHallOfFameModal()', 'closeChallengeModal()',
