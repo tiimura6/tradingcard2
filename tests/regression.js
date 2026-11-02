@@ -411,10 +411,15 @@ test('冒険：地域ごとに背景が変わる・正解で演出が出る／�
   const day = await p.evaluate(() => { window.__todHour = 12; advApplyTimeOfDay(); return getComputedStyle(document.body).getPropertyValue('--tod-op').trim(); });
   assert(night === 'multiply' && day === '0', `時間帯 ${night} ${day}`);
   // 時間帯ごとの絵がある「はじまりの草原」は、絵が切り替わり色合いはかけない
-  const m = await p.evaluate(() => { advSetBackground(0); window.__todHour = 22; advApplyTimeOfDay();
-    return { bg: document.body.style.getPropertyValue('--adv-bg'), op: document.body.style.getPropertyValue('--tod-op') }; });
+  await p.evaluate(() => { window.__todHour = 22; advSetBackground(0); });
+  const mid = await p.evaluate(() => document.getElementById('bg-layer').style.opacity);
+  await p.waitForTimeout(1400);
+  const m = await p.evaluate(() => ({ bg: document.body.style.getPropertyValue('--adv-bg'), op: document.body.style.getPropertyValue('--tod-op'), layer: document.getElementById('bg-layer').style.opacity }));
+  assert(mid === '0' && m.layer === '1', `フェードアウト→イン ${mid} → ${m.layer}`);
   assert(m.bg.includes('adv_meadow_night.jpg') && m.op === '0', JSON.stringify(m));
-  const e = await p.evaluate(() => { window.__todHour = 17; advApplyTimeOfDay(); return document.body.style.getPropertyValue('--adv-bg'); });
+  await p.evaluate(() => { window.__todHour = 17; advApplyTimeOfDay(); });
+  await p.waitForTimeout(1400);
+  const e = await p.evaluate(() => document.body.style.getPropertyValue('--adv-bg'));
   assert(e.includes('adv_meadow_evening.jpg'), e);
   await p.evaluate(() => { trainingSession.qCount = 0; document.querySelector('.quiz-choice-btn[data-correct]').click(); }); await p.waitForTimeout(150);
   assert(await p.evaluate(() => !!document.querySelector('#advFx .fx-word')), '正解の演出が出ない');

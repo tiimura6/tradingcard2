@@ -2187,7 +2187,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-1540</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-1550</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -5631,6 +5631,9 @@ const Cloud = (function () {
         setTimeout(() => {
             // 背景を元に戻す
             document.body.classList.remove('adventure-mode');
+            // 背景のフェードの途中で冒険を出ても、メイン画面の背景が消えたままにならないように
+            _advSwapId++;
+            { const L = document.getElementById('bg-layer'); if (L) { L.style.opacity = ''; L.style.transition = ''; } }
 
             // BGMを元に戻す
             if (adventureBGM) adventureBGM.pause();
@@ -8284,7 +8287,6 @@ const Cloud = (function () {
     }
     function advSetBackground(i) {
         _advAreaShown = i;
-        document.body.style.setProperty('--adv-bg', `url('${advBgUrl(i, timeOfDay())}')`);
         advApplyTimeOfDay();
         // 次の地域の絵を先に読み込んでおく（切り替えのときに一瞬空白にならないように）
         try { new Image().src = advBgUrl((i + 1) % ADV_AREAS.length, timeOfDay()); } catch (e) {}
@@ -8305,16 +8307,43 @@ const Cloud = (function () {
         const tod = timeOfDay(), t = TOD[tod], A = ADV_AREAS[_advAreaShown] || {};
         // その時間帯の絵がある地域は、絵を切り替えるだけで色合いはかけない
         const hasImg = (A.imgs || []).includes(tod);
-        const want = `url('${advBgUrl(_advAreaShown, tod)}')`;
-        if (document.body.style.getPropertyValue('--adv-bg') !== want) document.body.style.setProperty('--adv-bg', want);
+        const src = advBgUrl(_advAreaShown, tod);
         const k = hasImg ? 0 : (A.tod ?? 1);
+        const lab = document.querySelector('#advTrail .adv-tod'); if (lab) lab.textContent = t.label;
+        advSwapBg(src, () => applyTint(t, k));
+    }
+    /* 背景の入れ替え：暗くフェードアウト → 絵を入れ替え（新しい絵の読み込みを待つ）→ フェードイン。
+       冒険に入る瞬間や同じ絵のときは、そのまま切り替える */
+    let _advBgSrc = null, _advSwapId = 0;
+    function advSwapBg(src, apply) {
+        const st = document.body.style, layer = document.getElementById('bg-layer');
+        const now = () => { st.setProperty('--adv-bg', `url('${src}')`); _advBgSrc = src; apply(); };
+        if (src === _advBgSrc) { apply(); return; }
+        const visible = layer && document.body.classList.contains('adventure-mode') && _advBgSrc;
+        const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!visible || reduce) { now(); return; }
+        const id = ++_advSwapId;
+        layer.style.transition = 'opacity .45s ease';
+        layer.style.opacity = '0';
+        const img = new Image();
+        let loaded = false, faded = false;
+        const fadeIn = () => {
+            if (id !== _advSwapId || !loaded || !faded) return;
+            now();
+            requestAnimationFrame(() => { layer.style.transition = 'opacity .7s ease'; layer.style.opacity = '1'; });
+        };
+        img.onload = img.onerror = () => { loaded = true; fadeIn(); };
+        img.src = src;
+        setTimeout(() => { faded = true; fadeIn(); }, 450);
+        setTimeout(() => { if (!loaded) { loaded = true; fadeIn(); } }, 2500);   // 読み込みが遅くても2.5秒で戻す
+    }
+    function applyTint(t, k) {
         const st = document.body.style;
         st.setProperty('--tod-grad', t.grad);
         st.setProperty('--tod-blend', t.blend);
         st.setProperty('--tod-op', String(t.op * k));
         // 強さ k に合わせて明るさ・彩度の変化も弱める
         st.setProperty('--tod-filter', k >= 1 ? t.filter : t.filter.replace(/(brightness|saturate)\(([\d.]+)\)/g, (m, f, v) => `${f}(${(1 + (parseFloat(v) - 1) * k).toFixed(3)})`).replace(/sepia\(([\d.]+)\)/, (m, v) => `sepia(${(parseFloat(v) * k).toFixed(3)})`));
-        const lab = document.querySelector('#advTrail .adv-tod'); if (lab) lab.textContent = t.label;
     }
     // 冒険中は5分ごとに時間帯を確かめる（夕方から夜に変わる、など）
     setInterval(() => { if (typeof adventureActive !== 'undefined' && adventureActive) advApplyTimeOfDay(); }, 300000);
