@@ -471,7 +471,7 @@ function hofRanking_() {
 /* ================= 先生用メニュー ================= */
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('英単語図鑑')
-    .addItem('初期セットアップ', 'setup')
+    .addItem('初期セットアップ', 'setupFromMenu')
     .addSeparator()
     .addItem('選択中の生徒のPINをリセット', 'resetPinForSelectedUser')
     .addItem('期限切れのログイン情報を削除', 'cleanupSessions')
@@ -529,8 +529,14 @@ function setup() {
   const def = ss.getSheetByName('シート1') || ss.getSheetByName('Sheet1');
   if (def && ss.getSheets().length > 1 && def.getLastRow() === 0) ss.deleteSheet(def);
 
-  try { SpreadsheetApp.getUi().alert('セットアップが完了しました。次は「デプロイ > 新しいデプロイ」でウェブアプリとして公開してください。'); }
-  catch (e) { /* エディタから実行した場合はUIなし */ }
+  // エディタから実行したときは画面にダイアログを出さない（スプレッドシート側で OK を押すまで止まり、6分で時間切れになるため）
+  console.log('セットアップが完了しました。次は「デプロイ > 新しいデプロイ」でウェブアプリとして公開してください。');
+}
+
+/** スプレッドシートのメニューから実行したとき用（その場で完了を知らせる） */
+function setupFromMenu() {
+  setup();
+  SpreadsheetApp.getUi().alert('セットアップが完了しました。次は「デプロイ > 新しいデプロイ」でウェブアプリとして公開してください。');
 }
 
 /** ユーザーシートで生徒の行を選んでから実行 */
