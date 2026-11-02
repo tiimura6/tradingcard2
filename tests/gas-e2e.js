@@ -5,7 +5,7 @@ const { makeEnv } = require('./gas-mock.js');
 const { ctx: gas, sheets } = makeEnv();
 gas.setup();
 const FAKE = 'https://script.google.com/macros/s/FAKE/exec';
-const html = fs.readFileSync(require('path').join(__dirname, '..', 'index.html'), 'utf8').replace("const GAS_URL = '';", `const GAS_URL = '${FAKE}';`);
+const html = fs.readFileSync(require('path').join(__dirname, '..', 'index.html'), 'utf8').replace(/const GAS_URL = '[^']*';/, `const GAS_URL = '${FAKE}';`);
 async function newDevice(b, name) {
   const c = await b.newContext({ viewport: { width: 390, height: 844 } });
   await c.addInitScript(() => { window.confetti = () => {}; });

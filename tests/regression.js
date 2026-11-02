@@ -53,6 +53,12 @@ async function openApp(browser, { seed, viewport, ignoreMute } = {}) {
       sessionStorage.setItem('__seeded', '1');
     }
   }, { seed: seed || null, ignoreMute: !!ignoreMute });
+  // ログイン機能（GAS）は切った状態でテストする（本番のサーバーにはつながない）
+  await ctx.route(/\/index\.html(\?.*)?$/, async r => {
+    const res = await r.fetch();
+    const body = (await res.text()).replace(/const GAS_URL = '[^']*';/, "const GAS_URL = '';");
+    await r.fulfill({ response: res, body });
+  });
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
