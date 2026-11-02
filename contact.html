@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>問い合わせ ｜ ひみつ手帖</title>
+<style>
+  :root { --bg: #f7f1e3; --card: #fffaf0; --ink: #3a2c18; --sub: #6f5d40; --line: #e3d3ad; --accent: #8a5a10; --err: #a03020; --ok: #2f6b35; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #17120c; --card: #221a10; --ink: #f1e6cf; --sub: #c9b896; --line: #4a3b22; --accent: #e8c070; --err: #ff9a80; --ok: #9be0a0; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic', sans-serif; line-height: 1.8; }
+  main { max-width: 640px; margin: 0 auto; padding: 28px 16px 48px; }
+  h1 { font-family: 'Hiragino Mincho ProN', 'Noto Serif JP', serif; font-size: 24px; margin: 0 0 18px; color: var(--accent); }
+  form, .done { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+  label { display: block; font-size: 14px; font-weight: bold; margin: 0 0 4px; }
+  label small { font-weight: normal; color: var(--sub); }
+  select, textarea, input { width: 100%; font: inherit; font-size: 16px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; margin: 0 0 14px; }
+  textarea { min-height: 150px; resize: vertical; }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  button { width: 100%; font: inherit; font-size: 16px; font-weight: bold; color: #fff; background: var(--accent); border: 0; border-radius: 10px; padding: 12px; cursor: pointer; }
+  button:disabled { opacity: .55; cursor: default; }
+  .msg { min-height: 1.4em; font-size: 14px; margin: 10px 0 0; }
+  .msg.err { color: var(--err); }
+  .spin { display: inline-block; width: 15px; height: 15px; vertical-align: -2px; margin-right: 6px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--accent); animation: sp .9s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  .done { text-align: center; display: none; }
+  .done p { margin: 0 0 6px; }
+  a { color: var(--accent); }
+  .links { margin-top: 14px; font-size: 14px; display: flex; gap: 16px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>問い合わせ</h1>
+  <form id="f" novalidate>
+    <label for="type">種類</label>
+    <select id="type">
+      <option>使い方の質問</option>
+      <option>不具合の報告</option>
+      <option>記録の削除の依頼</option>
+      <option>パスワードを忘れた</option>
+      <option>その他</option>
+    </select>
+    <label for="message">内容</label>
+    <textarea id="message" maxlength="2000" required></textarea>
+    <label for="loginId">ログインID <small>（任意）</small></label>
+    <input id="loginId" maxlength="16" autocomplete="username" autocapitalize="off" spellcheck="false">
+    <label for="email">返信先のメールアドレス <small>（任意・返信が必要なとき）</small></label>
+    <input id="email" type="email" maxlength="100" autocomplete="email">
+    <div class="hp" aria-hidden="true"><label for="website">website</label><input id="website" tabindex="-1" autocomplete="off"></div>
+    <button id="send" type="submit">送信する</button>
+    <p class="msg" id="msg" role="status"></p>
+  </form>
+  <div class="done" id="done">
+    <p><strong>送信しました。</strong></p>
+    <p>内容を確認のうえ、必要に応じて返信します。</p>
+  </div>
+  <div class="links"><a href="./">← アプリに戻る</a><a href="privacy.html">プライバシーについて</a></div>
+</main>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const ERR = {
+    contact_short: '内容を5文字以上入力してください。',
+    contact_email: 'メールアドレスの形が正しくありません。',
+    rate_limited: '送信が続いています。しばらく待ってからもう一度お試しください。',
+    unknown_action: '現在、問い合わせを受け付けられません。時間をおいてお試しください。',
+    network: '通信できませんでした。電波の良い場所でもう一度お試しください。',
+  };
+  // サーバーのURLはアプリ本体（index.html）と同じものを使う
+  let gasUrl = null;
+  async function getGasUrl() {
+    if (gasUrl !== null) return gasUrl;
+    try {
+      const t = await fetch('index.html', { cache: 'no-cache' }).then(r => r.text());
+      const m = t.match(/const GAS_URL = '([^']*)'/);
+      gasUrl = m ? m[1] : '';
+    } catch (e) { gasUrl = ''; }
+    return gasUrl;
+  }
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  try { const s = JSON.parse(lsGet('authSession') || 'null'); if (s && s.loginId) $('loginId').value = s.loginId; } catch (e) {}
+  const show = (t, err) => { $('msg').textContent = t; $('msg').className = 'msg' + (err ? ' err' : ''); };
+
+  $('f').addEventListener('submit', async e => {
+    e.preventDefault();
+    const message = $('message').value.trim();
+    const email = $('email').value.trim();
+    if (message.length < 5) return show(ERR.contact_short, true);
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return show(ERR.contact_email, true);
+    const url = await getGasUrl();
+    if (!url) return show(ERR.unknown_action, true);
+    $('send').disabled = true; $('msg').className = 'msg'; $('msg').innerHTML = '<span class="spin"></span>送信しています…';
+    let res;
+    try {
+      res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'contact', type: $('type').value, message: message, email: email,
+          loginId: $('loginId').value.trim(), clientId: lsGet('researchUserId') || '', website: $('website').value }) }).then(r => r.json());
+    } catch (err) { res = { ok: false, error: 'network' }; }
+    $('send').disabled = false;
+    if (!res.ok) return show(ERR[res.error] || ERR.unknown_action, true);
+    $('f').style.display = 'none';
+    $('done').style.display = 'block';
+  });
+})();
+</script>
+</body>
+</html>

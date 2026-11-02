@@ -112,6 +112,19 @@ async function newDevice(b, gas, name) {
     check(stamps.size === 4 && copied && copied.data.length === sheets['ユーザー'].data.length, `バックアップは別ファイルに4回分（${stamps.size}回分）`);
     gas.installWeeklyBackup(); gas.installWeeklyBackup();
     check(triggers.length === 1 && triggers[0].getHandlerFunction() === 'weeklyBackup', '毎週のバックアップのトリガーは1つだけ');
+    // 問い合わせ
+    Object.keys(cache).forEach(k => delete cache[k]);
+    check(call({ action: 'contact', type: '不具合の報告', message: 'カードが表示されません', email: 'a@example.com', clientId: 'c1' }).ok, '問い合わせを受け付ける');
+    const ct = sheets['問い合わせ'].data[1] || [];
+    check(ct[1] === '不具合の報告' && ct[2] === 'カードが表示されません' && ct[6] === '未対応', '「問い合わせ」シートに記録（対応状況＝未対応）');
+    check(call({ action: 'contact', message: 'abc' }).error === 'contact_short', '短すぎる問い合わせははじく');
+    check(call({ action: 'contact', message: 'こんにちは、質問です', email: 'bad@' }).error === 'contact_email', '形の正しくないメールアドレスははじく');
+    const nBefore = sheets['問い合わせ'].data.length;
+    check(call({ action: 'contact', message: '自動投稿のスパムです', website: 'http://spam' }).ok && sheets['問い合わせ'].data.length === nBefore, '見えない欄が埋まった自動投稿は記録しない');
+    let cl = 0; for (let i = 0; i < 4; i++) if (call({ action: 'contact', message: '連続で送る問い合わせ', clientId: 'c2' }).error === 'rate_limited') cl++;
+    check(cl === 1, '同じ端末からの問い合わせは10分に3件まで');
+    call({ action: 'contact', message: '=HYPERLINK("http://x")だよ', clientId: 'c3' });
+    check(!String(sheets['問い合わせ'].data.slice(-1)[0][2]).startsWith('='), '問い合わせの内容も数式として書き込まれない');
     // データ削除
     const before = sheets['学習ログ'].data.filter(r => r[1] === 'cheat').length;
     call({ action: 'log', token: call({ action: 'login', loginId: 'cheat', password: 'abcd1234' }).token, sessionId: 's', events: ev(3) });
@@ -178,6 +191,14 @@ async function newDevice(b, gas, name) {
   await B.p.evaluate(() => Cloud.closeModal());
   await B.p.evaluate(() => { Cloud.logout(); }); await B.p.waitForTimeout(2500);
   check(await B.p.evaluate(() => JSON.parse(localStorage.getItem('unlockedCards') || '[]').length) === 0, 'ログアウトするとその端末の記録が消える');
+  // 問い合わせページ（アプリと同じサーバーへ送る）
+  const before = sheetRows('問い合わせ').length;
+  await A.p.goto('http://localhost:8765/contact.html'); await A.p.waitForTimeout(800);
+  await A.c.route('**/contact.html*', r => r.continue());
+  await A.p.selectOption('#type', '使い方の質問'); await A.p.fill('#message', '冒険の始め方を教えてください');
+  await A.p.click('#send'); await A.p.waitForTimeout(1500);
+  check(await A.p.evaluate(() => getComputedStyle(document.getElementById('done')).display) === 'block'
+        && sheetRows('問い合わせ').length === before + 1, '問い合わせページから送信できる');
   // 共用の端末：しばらく使わないと、次に開いたとき自動でログアウト（記録は保存してから）
   const C = await newDevice(b, gas, 'C');
   await C.p.evaluate(() => Cloud.openModal('login')); await C.p.waitForTimeout(300);

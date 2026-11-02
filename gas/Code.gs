@@ -42,6 +42,8 @@ const RATE = {
   logMember:  [1000, 600],   // 会員のログ：1人10分に1000件
   save:       [20, 60],      // 進捗の保存：1人1分に20回
   admin:      [5, 600],      // 管理者キー：1人10分に5回
+  contactOne: [3, 600],      // 問い合わせ：1台10分に3件
+  contactAll: [30, 3600],    // 問い合わせ：全体で1時間に30件
 };
 const CHUNK_SIZE      = 45000; // 1セルに入れる文字数（上限50,000）
 const MAX_CHUNKS      = 20;    // 進捗データの最大分割数（約90万文字まで）
@@ -57,6 +59,7 @@ const SHEET = {
   STATUS:   '取り組み状況',
   HOF:      '殿堂入り',
   CLASS:    'クラス別集計',
+  CONTACT:  '問い合わせ',
 };
 const BACKUP_KEEP = 4;   // バックアップを何回分残すか（毎週なら約1か月）
 
@@ -74,6 +77,7 @@ const HEADERS = {
              '連続ログイン', '撃破ボス数', '習得語数', '殿堂入り', '殿堂入り日', '進捗更新',
              '開いている手帖', '鉄（枚）', '銅（枚）', '銀（枚）', '金（枚）', '白金（枚）', '要確認'],
   HOF:      ['達成日時', 'ログインID', 'ニックネーム', '区分'],
+  CONTACT:  ['受付日時', '種類', '内容', '返信先', 'ログインID', '端末ID', '対応状況'],
   CLASS:    ['クラス', '人数', '直近7日に利用した人数', '利用率', '直近7日の回答数', '1人あたり累計回答数', '正答率', '1人あたりカード', '1人あたり習得語数'],
 };
 
@@ -108,6 +112,7 @@ function doPost(e) {
       case 'log':          return json_(log_(req));
       case 'adminUnlock':  return json_(adminUnlock_(req));
       case 'setPrefs':     return json_(setPrefs_(req));
+      case 'contact':      return json_(contact_(req));
       default:             return json_({ ok: false, error: 'unknown_action' });
     }
   } catch (err) {
@@ -212,6 +217,41 @@ function me_(req) {
   const row = findRow_(users, 1, loginId);
   return { ok: true, loginId: loginId, nickname: row ? users.getRange(row, 2).getValue() : '',
            hideRanking: row ? String(users.getRange(row, 12).getValue() || '').trim() !== '' : false };
+}
+
+/** 問い合わせフォーム → 「問い合わせ」シート（通知先が設定されていればメールでも知らせる） */
+const CONTACT_TYPES = ['使い方の質問', '不具合の報告', '記録の削除の依頼', 'パスワードを忘れた', 'その他'];
+function contact_(req) {
+  if (String(req.website || '') !== '') return { ok: true };   // 自動投稿よけ（人には見えない欄が埋まっていたら捨てる）
+  const type = CONTACT_TYPES.indexOf(req.type) >= 0 ? req.type : 'その他';
+  const message = cleanText_(String(req.message || '').replace(/\r?\n/g, ' ／ '), 2000);
+  const email = String(req.email || '').trim().slice(0, 100);
+  const loginId = normId_(req.loginId).slice(0, 16);
+  const client = cleanText_(req.clientId, 40);
+  if (message.length < 5) return { ok: false, error: 'contact_short' };
+  if (email && !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email)) return { ok: false, error: 'contact_email' };
+  if (!rateOk_('contact:' + (client || 'x'), RATE.contactOne) || !rateOk_('contact', RATE.contactAll)) return { ok: false, error: 'rate_limited' };
+  withLock_(() => {
+    appendRow_(sheet_(SHEET.CONTACT), [new Date(), type, message, cleanText_(email, 100), loginId, client, '未対応'], [2, 3, 4, 5, 6]);
+  });
+  const to = PropertiesService.getScriptProperties().getProperty('CONTACT_NOTIFY');
+  if (to) {
+    try { MailApp.sendEmail(to, '【ひみつ手帖】問い合わせ：' + type, type + '\n\n' + message + '\n\n返信先：' + (email || 'なし') + '\nログインID：' + (loginId || 'なし')); }
+    catch (e) { console.error('通知メールを送れませんでした', e); }
+  }
+  return { ok: true };
+}
+
+/** 問い合わせが来たときの通知先メールアドレス（メニューから。空にすると通知しない） */
+function setContactNotify() {
+  const ui = SpreadsheetApp.getUi();
+  const res = ui.prompt('問い合わせの通知先', '問い合わせが届いたときに知らせるメールアドレスを入力してください（空欄で通知しない）。', ui.ButtonSet.OK_CANCEL);
+  if (res.getSelectedButton() !== ui.Button.OK) return;
+  const v = res.getResponseText().trim();
+  if (v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { ui.alert('メールアドレスの形が正しくありません。'); return; }
+  const props = PropertiesService.getScriptProperties();
+  v ? props.setProperty('CONTACT_NOTIFY', v) : props.deleteProperty('CONTACT_NOTIFY');
+  ui.alert(v ? v + ' に通知します。' : '通知しないようにしました。');
 }
 
 /** 生徒の設定（いまは「ランキングに載せない」だけ） */
@@ -549,6 +589,7 @@ function onOpen() {
     .addItem('毎週の自動バックアップを開始', 'installWeeklyBackup')
     .addSeparator()
     .addItem('管理者キーを設定・変更', 'setAdminKey')
+    .addItem('問い合わせの通知先を設定', 'setContactNotify')
     .addToUi();
 }
 
@@ -750,7 +791,7 @@ function deleteUserData_(loginId) {
     let total = 0;
     // [シート, ログインIDの列]
     [[SHEET.USERS, 1], [SHEET.SESSIONS, 2], [SHEET.PROGRESS, 1], [SHEET.STATUS, 1],
-     [SHEET.LOG, 2], [SHEET.DAILY, 2], [SHEET.HOF, 2]].forEach(([name, col]) => {
+     [SHEET.LOG, 2], [SHEET.DAILY, 2], [SHEET.HOF, 2], [SHEET.CONTACT, 5]].forEach(([name, col]) => {
       const sh = sheet_(name);
       const last = sh.getLastRow();
       if (last < 2) return;
