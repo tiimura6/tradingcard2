@@ -8987,7 +8987,7 @@ const Cloud = (function () {
     /* ========== バトル：手帖ごとの背景と演出 ==========
        背景画像は1枚を共通で使い、手帖ごとに色合いを変える（鉄＝鋼色、銅＝赤銅、銀＝青白、金＝黄金、白金＝真珠色）
        ボスラッシュ（殿堂入り）は白金の背景・演出 */
-    const BATTLE_BG_FILE = null;   // 例：'battle.jpg'（bgm/battle/ に置く）。未設定のあいだは共通の boss-bg.jpg
+    const BATTLE_BG_FILE = 'battle.jpg';   // bgm/battle/ に置く。null にすると共通の boss-bg.jpg
     const BATTLE_FX_COUNT = { A1: 26, A2: 22, B1: 46, B2: 24, PT: 40 };
     let _boltTimer = null;
     function battleFxKey() { return (typeof hofBossRush !== 'undefined' && hofBossRush.active) ? 'PT' : advNbKey(); }
