@@ -1,5 +1,5 @@
 /**
- * 金の手帖（ハイレベル英単語図鑑） — バックエンド
+ * ハイレベル英単語図鑑（鉄・銅・銀・金・白金の手帖） — バックエンド
  * Google Apps Script（スプレッドシートにバインド）
  *
  * 機能
@@ -9,12 +9,20 @@
  *   - 「取り組み状況」シート：先生が生徒ごとの状況を一覧できる
  *   - 殿堂入りランキング（ニックネーム表示）
  *
- * 初回のみ：メニュー「金の手帖 > 初期セットアップ」を実行してからデプロイする。
+ * 初回のみ：関数 setup を実行（またはメニュー「英単語図鑑 > 初期セットアップ」）を実行してからデプロイする。
  * 手順の詳細は gas/README.md を参照。
  */
 
 /* ================= 設定 ================= */
-const TOTAL_CARDS     = 863;   // 図鑑の総カード数（収集率の計算用）
+const TOTAL_CARDS     = 8324;  // 全手帖の総カード数（収集率の計算用）
+// 手帖ごとのカード数と、カードIDの接頭辞（a1-12 / card-5 など）
+const NOTEBOOKS = [
+  { key: 'A1', name: '鉄',   prefix: 'a1-',   count: 1067 },
+  { key: 'A2', name: '銅',   prefix: 'a2-',   count: 1352 },
+  { key: 'B1', name: '銀',   prefix: 'b1-',   count: 2353 },
+  { key: 'B2', name: '金',   prefix: 'b2-',   count: 2689 },
+  { key: 'PT', name: '白金', prefix: 'card-', count: 863 },
+];
 const TOKEN_DAYS      = 180;   // ログイン状態の有効日数
 const MAX_FAIL        = 5;     // PINをこの回数間違えるとロック
 const LOCK_MINUTES    = 10;    // ロック時間（分）
@@ -39,11 +47,12 @@ const HEADERS = {
   PROGRESS: ['ログインID', '更新日時', 'リビジョン', '分割数'].concat(
               Array.from({ length: MAX_CHUNKS }, (_, i) => 'データ' + (i + 1))),
   LOG:      ['タイムスタンプ', 'ユーザー', '区分', 'セッションID', 'イベント', 'カードNo', '英単語', '意味',
-             'レベル', '正誤', '回答時間(秒)', '取得カード数', '連続正解'],
+             'レベル', '正誤', '回答時間(秒)', '取得カード数', '連続正解', '手帖'],
   DAILY:    ['日付', 'ログインID', '回答数', '正解数', 'キー'],
   STATUS:   ['ログインID', 'ニックネーム', '氏名', 'クラス', '登録日', '最終利用', '未利用日数', '利用日数',
              '直近7日の回答数', '累計回答数', '正解数', '正答率', '獲得カード', '収集率', 'レベル', '累計XP',
-             '連続ログイン', '撃破ボス数', '習得語数', '殿堂入り', '殿堂入り日', '進捗更新'],
+             '連続ログイン', '撃破ボス数', '習得語数', '殿堂入り', '殿堂入り日', '進捗更新',
+             '開いている手帖', '鉄（枚）', '銅（枚）', '銀（枚）', '金（枚）', '白金（枚）'],
   HOF:      ['達成日時', 'ログインID', 'ニックネーム', '区分'],
 };
 
@@ -52,6 +61,7 @@ const ST = {
   ID: 1, NICK: 2, NAME: 3, CLASS: 4, CREATED: 5, LAST: 6, IDLE: 7, DAYS: 8, WEEK: 9,
   TOTAL: 10, CORRECT: 11, RATE: 12, CARDS: 13, CARD_RATE: 14, LEVEL: 15, XP: 16,
   STREAK: 17, BOSSES: 18, MASTERED: 19, HOF: 20, HOF_DATE: 21, PROG_UPDATED: 22,
+  NB_CUR: 23, NB_FIRST: 24,   // 24〜28 = 鉄・銅・銀・金・白金の所持枚数
 };
 
 // 回答として数えるイベント
@@ -260,7 +270,7 @@ function saveProgress_(req) {
     upsertStatus_(loginId, Object.assign({ progressUpdated: now }, summary));
 
     // 殿堂入りの記録（初回のみ）
-    if (summary.hofAchieved) recordHof_(loginId, '金の手帖');
+    if (summary.hofAchieved) recordHof_(loginId, '白金の手帖');
 
     return { ok: true, rev: newRev, updatedAt: now.toISOString() };
   });
@@ -275,6 +285,7 @@ function summarize_(data) {
   const battle   = parse('battleProgress', {});
   const hof      = parse('hallOfFame', {});
   const srs      = parse('srsData', {});
+  const nbState  = parse('notebookState', {});
 
   let mastered = 0;
   Object.keys(srs || {}).forEach(k => { if ((srs[k] && srs[k].level || 0) >= MASTERED_LEVEL) mastered++; });
@@ -286,7 +297,10 @@ function summarize_(data) {
     streak:      Number(streak.streak) || 0,
     bosses:      battle && Array.isArray(battle.defeated) ? battle.defeated.length : 0,
     mastered:    mastered,
+    // アプリ内部では殿堂入り（白金の手帖のボスラッシュ）のキーが歴史的に「金の手帖」のまま
     hofAchieved: !!(hof && hof['金の手帖'] && hof['金の手帖'].achieved),
+    nbCurrent:   ((NOTEBOOKS.find(n => n.key === (nbState && nbState.current)) || {}).name || '') ,
+    nbCounts:    NOTEBOOKS.map(n => (Array.isArray(unlocked) ? unlocked : []).filter(id => String(id).indexOf(n.prefix) === 0).length),
   };
 }
 
@@ -311,6 +325,7 @@ function log_(req) {
     ev.cardNo || '', cleanText_(ev.word, 60), cleanText_(ev.meaning, 80), cleanText_(ev.level, 20),
     typeof ev.isCorrect === 'boolean' ? (ev.isCorrect ? '正解' : '不正解') : '-',
     ev.responseTime || '', ev.totalUnlocked || '', ev.combo || '',
+    ((NOTEBOOKS.find(n => n.key === ev.notebook) || {}).name || ''),
   ]);
 
   return withLock_(() => {
@@ -382,6 +397,8 @@ function upsertStatus_(loginId, f) {
   set(ST.BOSSES, f.bosses);
   set(ST.MASTERED, f.mastered);
   set(ST.PROG_UPDATED, f.progressUpdated);
+  if (f.nbCurrent) set(ST.NB_CUR, f.nbCurrent);
+  if (Array.isArray(f.nbCounts)) s.getRange(row, ST.NB_FIRST, 1, f.nbCounts.length).setValues([f.nbCounts]);
 
   if (f.addTotal || f.addCorrect) {
     const cur = s.getRange(row, ST.TOTAL, 1, 2).getValues()[0];
@@ -453,7 +470,7 @@ function hofRanking_() {
 
 /* ================= 先生用メニュー ================= */
 function onOpen() {
-  SpreadsheetApp.getUi().createMenu('金の手帖')
+  SpreadsheetApp.getUi().createMenu('英単語図鑑')
     .addItem('初期セットアップ', 'setup')
     .addSeparator()
     .addItem('選択中の生徒のPINをリセット', 'resetPinForSelectedUser')
