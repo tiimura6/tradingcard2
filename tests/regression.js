@@ -48,8 +48,10 @@ async function openApp(browser, { seed, viewport, ignoreMute } = {}) {
     const P = HTMLMediaElement.prototype, op = P.play;
     P.play = function () { if (!window.__media.includes(this)) window.__media.push(this); return op.call(this); };
     if (ignoreMute) Object.defineProperty(P, 'muted', { get() { return false; }, set() {} });   // iPhone相当（消音が効かない）
+    // レベル判定テストは、そのテストでだけ出す（ほかのテストでは画面をふさぐため受験済みにしておく）
+    if (!sessionStorage.getItem('__seeded') && !(seed && seed.__placement)) localStorage.setItem('placementDone', 'test');
     if (seed && !sessionStorage.getItem('__seeded')) {
-      Object.entries(seed).forEach(([k, v]) => localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)));
+      Object.entries(seed).forEach(([k, v]) => { if (k !== '__placement') localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)); });
       sessionStorage.setItem('__seeded', '1');
     }
   }, { seed: seed || null, ignoreMute: !!ignoreMute });
@@ -356,6 +358,51 @@ test('存在しないタブの撃破記録を削除（鉄のタブ12など）／
   assert(JSON.stringify(d) === JSON.stringify(['a1_tab10_final', 'a1_tab3_mid', 'b2_tab26_final', 'hof_tab8_final', 'tab8_final']), JSON.stringify(d));
   const credit = await p.evaluate(() => document.getElementById('nb-picker').innerText);
   assert(credit.includes('CEFR-J Wordlist') && credit.includes('投野'), '出典表記がない');
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('レベル判定テスト：はじめての人に自動で出る／全問正解で白金まで開く／スキップできる', async b => {
+  const p = await openApp(b, { seed: { __placement: true, cardMergeV1: '1' } });
+  await p.waitForTimeout(1500);
+  assert(await p.evaluate(() => getComputedStyle(document.getElementById('placement-overlay')).display === 'flex'), '自動で出ない');
+  await p.click('#placementBox .pl-start');
+  for (let i = 0; i < 20; i++) {
+    await p.waitForTimeout(700);
+    const done = await p.evaluate(() => !!document.querySelector('#placementBox .pl-result-nb'));
+    if (done) break;
+    await p.evaluate(() => { const it = placement.queue[placement.qi]; const k = it.choices.indexOf(it.q.meaning);
+      document.querySelectorAll('#placementBox .pl-choices button')[k].click(); });
+  }
+  const r = await p.evaluate(() => ({ nb: document.querySelector('#placementBox .pl-result-nb').textContent, asked: placement.asked }));
+  assert(r.nb === '白金の手帖' && r.asked === 12, JSON.stringify(r));
+  await p.click('#placementBox .pl-start'); await p.waitForTimeout(2600);
+  const st = await p.evaluate(() => ({ cur: currentNB.key, un: notebookState.unlocked.join(','), done: localStorage.getItem('placementDone') }));
+  assert(st.cur === 'PT' && st.un === 'A1,A2,B1,B2,PT' && st.done === '1', JSON.stringify(st));
+  // スキップ
+  const p2 = await openApp(b, { seed: { __placement: true, cardMergeV1: '1' } });
+  await p2.waitForTimeout(1500);
+  await p2.click('#placementBox .pl-skip'); await p2.waitForTimeout(300);
+  const s2 = await p2.evaluate(() => ({ shown: getComputedStyle(document.getElementById('placement-overlay')).display, cur: currentNB.key, done: localStorage.getItem('placementDone') }));
+  assert(s2.shown === 'none' && s2.cur === 'A1' && s2.done === 'skip', JSON.stringify(s2));
+  // 全問「わからない」→ 鉄
+  const p3 = await openApp(b, { seed: { __placement: true, cardMergeV1: '1' } });
+  await p3.waitForTimeout(1500);
+  await p3.click('#placementBox .pl-start');
+  for (let i = 0; i < 20; i++) { await p3.waitForTimeout(700); if (await p3.evaluate(() => !!document.querySelector('#placementBox .pl-result-nb'))) break; await p3.evaluate(() => document.querySelector('#placementBox .pl-idk').click()); }
+  assert((await p3.evaluate(() => document.querySelector('#placementBox .pl-result-nb').textContent)) === '鉄の手帖', '鉄にならない');
+  assert(p.__errors.length + p2.__errors.length + p3.__errors.length === 0, [...p.__errors, ...p2.__errors].join(' / '));
+});
+
+test('冒険：地域ごとに背景が変わる・正解で演出が出る／時間ボーナスは「時間をあけて」の表記', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1', advArea: '3' } });
+  await p.evaluate(() => enterAdventureMode()); await p.waitForTimeout(1500);
+  const txt = await p.evaluate(() => document.getElementById('trainingModalContent').innerText);
+  assert(txt.includes('時間をあけて') && !txt.includes('8時間後冒険'), '時間ボーナスの表記');
+  await p.evaluate(() => { closeTrainingModal(false); openTrainingMode(); }); await p.waitForTimeout(500);
+  const bg = await p.evaluate(() => getComputedStyle(document.getElementById('bg-layer')).backgroundImage);
+  assert(bg.includes('adv_area3.jpg'), '背景: ' + bg);
+  await p.evaluate(() => { trainingSession.qCount = 0; document.querySelector('.quiz-choice-btn[data-correct]').click(); }); await p.waitForTimeout(150);
+  assert(await p.evaluate(() => !!document.querySelector('#advFx .fx-word')), '正解の演出が出ない');
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
