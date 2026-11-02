@@ -230,7 +230,7 @@ test('殿堂入りボタンは白金の手帖だけに表示／ボスラッシ�
   assert((await p.evaluate(() => getComputedStyle(document.getElementById('hofBtn')).display)) !== 'none', '白金で殿堂入りボタンが見えない');
   await p.evaluate(() => startHofBossRush()); await p.waitForTimeout(400);
   const bg = await p.evaluate(() => getComputedStyle(document.getElementById('bg-layer')).backgroundImage);
-  assert(bg.includes('boss-bg'), '編成中の背景: ' + bg);
+  assert(bg.includes('battle/battle.jpg'), '編成中の背景: ' + bg);
   await p.evaluate(() => closeFormationModal()); await p.waitForTimeout(300);
   assert(!(await p.evaluate(() => document.body.classList.contains('battle-mode'))), 'キャンセル後もバトル背景のまま');
 });
