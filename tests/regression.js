@@ -406,12 +406,10 @@ test('冒険：地域ごとに背景が変わる・正解で演出が出る／�
   await p.evaluate(() => { closeTrainingModal(false); openTrainingMode(); }); await p.waitForTimeout(500);
   const bg = await p.evaluate(() => getComputedStyle(document.getElementById('bg-layer')).backgroundImage);
   assert(bg.includes('adv_ruins_'), '背景（以前の3＝遺跡は、草原を先頭に足したので4に移る）: ' + bg);
-  // 時間帯：夜（22時）は暗い色合い・昼（12時）はそのまま
-  // 時間帯の絵がまだない地域（天空の城）は、昼の絵に色合いをかける
-  await p.evaluate(() => { window.__todHour = 12; advSetBackground(6); }); await p.waitForTimeout(1400);
-  const night = await p.evaluate(() => { window.__todHour = 22; advApplyTimeOfDay(); return getComputedStyle(document.body).getPropertyValue('--tod-blend').trim(); });
-  const day = await p.evaluate(() => { window.__todHour = 12; advApplyTimeOfDay(); return getComputedStyle(document.body).getPropertyValue('--tod-op').trim(); });
-  assert(night === 'multiply' && day === '0', `時間帯 ${night} ${day}`);
+  // 天空の城：夜（22時）は夜の絵、色合いはかけない
+  await p.evaluate(() => { window.__todHour = 22; advSetBackground(6); }); await p.waitForTimeout(1400);
+  const c = await p.evaluate(() => ({ bg: document.body.style.getPropertyValue('--adv-bg'), op: document.body.style.getPropertyValue('--tod-op') }));
+  assert(c.bg.includes('adv_castle_night.jpg') && c.op === '0', '天空の城の夜: ' + JSON.stringify(c));
   // 時間帯ごとの絵がある「はじまりの草原」は、絵が切り替わり色合いはかけない
   await p.evaluate(() => { window.__todHour = 22; advSetBackground(0); });
   const mid = await p.evaluate(() => document.getElementById('bg-layer').style.opacity);
