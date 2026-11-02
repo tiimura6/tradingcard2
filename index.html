@@ -1934,6 +1934,11 @@
         #battle-trans.exit .bt-iris { display: block; animation: bt-iris 1.3s ease-in-out forwards; }
         #battle-trans.exit .bt-home { animation: bt-home 1.3s ease forwards; }
         #battle-trans.exit .bt-ring { animation: bt-ring 1.3s ease-out forwards; }
+        /* 逃げる：暗くフェードアウト → 元の画面にフェードイン */
+        #battle-trans.flee { display: block; }
+        #battle-trans.flee .bt-iris { display: block; clip-path: none; background: #05030a; animation: bt-fade 1.4s ease-in-out forwards; }
+        #battle-trans.flee .bt-home { animation: bt-home 1.4s ease forwards; }
+        @keyframes bt-fade { 0% { opacity: 0 } 38%, 62% { opacity: 1 } 100% { opacity: 0 } }
         @keyframes bt-flash { 0% { opacity: .9 } 100% { opacity: 0 } }
         @keyframes bt-in-top { 0% { transform: translateX(-110%) skewY(-6deg) } 30%, 70% { transform: translateX(0) skewY(-6deg) } 100% { transform: translateX(110%) skewY(-6deg) } }
         @keyframes bt-in-bot { 0% { transform: translateX(110%) skewY(-6deg) } 30%, 70% { transform: translateX(0) skewY(-6deg) } 100% { transform: translateX(-110%) skewY(-6deg) } }
@@ -1953,7 +1958,39 @@
         #multi-draw-overlay .md-sub { color: #d8c8f0; font-size: 12px; margin: 4px 0 10px; }
         #multi-draw-overlay .md-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; }
         @media (max-width: 400px) { #multi-draw-overlay .md-grid { gap: 5px; } }
-        .md-card { position: relative; border-radius: 7px; opacity: 0; transform: rotateY(90deg) scale(.8); animation: md-flip .45s ease-out forwards; }
+        /* まとめて探す：魔法陣 → 裏向きのカードが飛び出して並ぶ → 1枚ずつめくれる（タップで全部めくる） */
+        #multi-draw-overlay .md-box { position: relative; }
+        .md-circle { position: absolute; left: 50%; top: 46%; width: 260px; height: 260px; margin: -130px 0 0 -130px; border-radius: 50%; pointer-events: none;
+            border: 3px solid var(--mdc); box-shadow: 0 0 30px var(--mdc), inset 0 0 30px var(--mdc); opacity: 0; animation: md-circle 1.25s ease-out forwards; }
+        .md-circle::before, .md-circle::after { content: ''; position: absolute; inset: 22px; border-radius: 50%; border: 2px dashed var(--mdc); animation: md-spin 1.2s linear infinite; }
+        .md-circle::after { inset: 52px; border-style: dotted; animation-direction: reverse; }
+        .md-circle.ur { --mdc: #ff80ff; border-image: none; animation: md-circle 1.25s ease-out forwards, md-hue 1s linear infinite; }
+        @keyframes md-circle { 0% { opacity: 0; transform: scale(.2) rotate(0); } 35% { opacity: 1; } 75% { opacity: 1; transform: scale(1.05) rotate(120deg); } 100% { opacity: 0; transform: scale(1.6) rotate(160deg); } }
+        @keyframes md-spin { to { transform: rotate(360deg); } }
+        @keyframes md-hue { to { filter: hue-rotate(360deg); } }
+        .md-flash { position: absolute; inset: -40px; pointer-events: none; background: radial-gradient(circle at 50% 46%, var(--mdc) 0%, transparent 55%); opacity: 0; animation: md-flashk .6s ease-out .95s forwards; }
+        @keyframes md-flashk { 30% { opacity: .9; } 100% { opacity: 0; } }
+        #mdTitle, #mdSub, #mdClose { transition: opacity .35s; }
+        #multi-draw-overlay.summoning #mdTitle, #multi-draw-overlay.summoning #mdSub, #multi-draw-overlay.summoning #mdClose { opacity: 0; pointer-events: none; }
+        .md-skip { position: absolute; right: 8px; bottom: 6px; font-size: 11px; color: #cbb8f0; opacity: .8; pointer-events: none; }
+        .md-card { position: relative; border-radius: 7px; perspective: 600px; opacity: 0;
+            transform: translate(var(--fx, 0), var(--fy, 0)) scale(.25) rotate(-25deg); animation: md-fly .5s cubic-bezier(.2,.9,.3,1.15) forwards; }
+        @keyframes md-fly { to { opacity: 1; transform: none; } }
+        .md-inner { position: relative; transform-style: preserve-3d; transition: transform .5s cubic-bezier(.3,1.4,.5,1); transform: rotateY(180deg); }
+        .md-card.open .md-inner { transform: none; }
+        .md-front, .md-back { backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 7px; }
+        .md-back { position: absolute; inset: 0; transform: rotateY(180deg); display: flex; align-items: center; justify-content: center; font-size: 20px; color: #ffe9a8;
+            background: repeating-linear-gradient(45deg, rgba(255,255,255,.06) 0 6px, transparent 6px 12px), linear-gradient(145deg, #4b2f86, #1d1238); border: 2px solid #c9a75a; box-sizing: border-box;
+            box-shadow: inset 0 0 10px rgba(0,0,0,.6); }
+        .md-card.shiver .md-back { animation: md-shiver .12s linear infinite; }
+        @keyframes md-shiver { 0%,100% { transform: rotateY(180deg) translateX(0); } 50% { transform: rotateY(180deg) translateX(2px); } }
+        .md-card .md-burst { position: absolute; inset: -60%; pointer-events: none; border-radius: 50%; opacity: 0;
+            background: conic-gradient(from 0deg, transparent, var(--mdc) 8%, transparent 16%, var(--mdc) 24%, transparent 32%, var(--mdc) 40%, transparent 48%, var(--mdc) 56%, transparent 64%, var(--mdc) 72%, transparent 80%, var(--mdc) 88%, transparent);
+            -webkit-mask: radial-gradient(circle, #000 20%, transparent 62%); mask: radial-gradient(circle, #000 20%, transparent 62%); }
+        .md-card.open.burst .md-burst { animation: md-burstk .9s ease-out forwards; }
+        @keyframes md-burstk { 0% { opacity: 0; transform: scale(.3) rotate(0); } 25% { opacity: 1; } 100% { opacity: 0; transform: scale(1.3) rotate(90deg); } }
+        .md-card:not(.open) { box-shadow: none !important; }
+        .md-card:not(.open) .md-new, .md-card:not(.open) .md-w { visibility: hidden; }
         .md-card img { width: 100%; display: block; border-radius: 7px; }
         .md-card.dup img { filter: saturate(.45) brightness(.75); }
         .md-card .md-r { position: absolute; top: 3px; left: 3px; font-size: 9px; font-weight: bold; padding: 1px 4px; border-radius: 4px; background: rgba(0,0,0,.6); }
@@ -1963,7 +2000,6 @@
         .md-card.r-UR { box-shadow: 0 0 12px 2px rgba(255,128,255,.85); }
         .md-card.r-SR { box-shadow: 0 0 10px 1px rgba(240,200,64,.8); }
         .md-card.r-R  { box-shadow: 0 0 8px rgba(106,168,255,.7); }
-        @keyframes md-flip { to { opacity: 1; transform: none; } }
         /* ===== 冒険：地域ごとの背景と、正解したときの壮大な演出 ===== */
         body.adventure-mode #bg-layer { background-image: var(--adv-bg, url('./bgm/adv/adv_meadow_day.jpg')) !important; transition: filter 1.5s; }
         #advFx { position: fixed; inset: 0; z-index: 9500; pointer-events: none; overflow: hidden; }
@@ -2576,7 +2612,7 @@ const Cloud = (function () {
         'unlockedCards', 'srsData', 'dailyGachaStorage', 'loginStreak', 'xpData',
         'specialTickets', 'spEnhanceData', 'dailyStudyData', 'dailyChallenges',
         'weeklyChallenges', 'hallOfFame', 'battleProgress', 'notebookState', 'gold', 'awakened',
-        'cardMergeV1', 'advArea', 'advAreaV2', 'advStep', 'advMiss', 'placementDone', 'placementResult',   // カード番号移行済みの印（別端末で取り込んだときに二重移行しないため）／冒険の道の地域
+        'cardMergeV1', 'advArea', 'advAreaV2', 'advStep', 'advMiss', 'advProg', 'placementDone', 'placementResult',   // カード番号移行済みの印（別端末で取り込んだときに二重移行しないため）／冒険の道の地域
     ];
     const K = { SESSION: 'authSession', GUEST: 'authGuest', DIRTY: 'authDirty', QUEUE: 'logQueue', LAST: 'authLastSync', ACTIVE: 'authLastActive' };
     // 共用の端末：最後の操作からこの時間がたったら、次に開いたとき自動でログアウトする（記録は保存してから）
@@ -6221,19 +6257,79 @@ const Cloud = (function () {
         document.getElementById('mdSub').textContent = `${n}回探した（${n * DRAW_COST[mode]}G）` +
             (tabAfter > tabBefore ? `　🎉 タブ${tabAfter + 1}解禁！` : '') + `　今日の新カード あと${newCardsLeftToday()}枚`;
         const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        const RC = { UR: '#ff80ff', SR: '#f0c840', R: '#6aa8ff', N: '#cfe6ff' };
         document.getElementById('mdGrid').innerHTML = results.map((r, k) => `
-            <div class="md-card r-${r.rarity} ${r.isNew ? '' : 'dup'}" style="animation-delay:${(k * 0.12).toFixed(2)}s">
-                <img src="${r.card.thumb}" alt="" onerror="imgFallback(this,'${r.card.id}')">
-                <span class="md-r" style="color:${{ UR: '#ff80ff', SR: '#f0c840', R: '#6aa8ff', N: '#ddd' }[r.rarity]}">${r.rarity}</span>
+            <div class="md-card r-${r.rarity} ${r.isNew ? '' : 'dup'}" style="--mdc:${RC[r.rarity]};animation-delay:${(1.0 + k * 0.06).toFixed(2)}s">
+                <div class="md-burst"></div>
+                <div class="md-inner"><div class="md-front">
+                    <img src="${r.card.thumb}" alt="" onerror="imgFallback(this,'${r.card.id}')">
+                    <span class="md-r" style="color:${RC[r.rarity]}">${r.rarity}</span></div>
+                    <div class="md-back">✦</div></div>
                 ${r.isNew ? '<span class="md-new">NEW</span>' : ''}
                 <div class="md-w">${esc(r.card.quiz.answer)}</div></div>`).join('');
         const ov = document.getElementById('multi-draw-overlay');
         ov.style.display = 'flex';
-        playSE(news.length ? 'unlock' : 'correct');
-        if (news.length) setTimeout(() => fireRarityConfetti(best), n * 120 + 300);   // 紙吹雪は新しいカードがあるときだけ
+        mdRunReveal(ov, results, best, news.length > 0);
         if (news.length) jumpToCardTab(news[0].card.no);
     }
+    // 演出：一番よいレアリティの色で魔法陣が光る（予兆）→ カードが中央から飛び出して並ぶ → 1枚ずつめくる。
+    // SR以上は少し間をおいて、光の放射とともにめくれる。画面をタップすると残りを全部めくる
+    let _mdTimers = [];
+    function mdRunReveal(ov, results, best, hasNew) {
+        _mdTimers.forEach(clearTimeout); _mdTimers = [];
+        const order = { UR: 4, SR: 3, R: 2, N: 1 };
+        const top = results.reduce((m, r) => (order[r.rarity] > order[m] ? r.rarity : m), 'N');
+        const RC = { UR: '#ff80ff', SR: '#f0c840', R: '#6aa8ff', N: '#cfe6ff' };
+        const box = ov.querySelector('.md-box');
+        box.querySelectorAll('.md-circle,.md-flash,.md-skip').forEach(e => e.remove());
+        box.style.setProperty('--mdc', RC[top]);
+        box.insertAdjacentHTML('afterbegin', `<div class="md-circle ${top === 'UR' ? 'ur' : ''}"></div><div class="md-flash"></div><div class="md-skip">タップで全部めくる</div>`);
+        ov.classList.add('summoning');
+        // 各カードの飛び出し位置（グリッドの中央から）
+        const grid = document.getElementById('mdGrid'), gr = grid.getBoundingClientRect();
+        const cards = [...grid.querySelectorAll('.md-card')];
+        cards.forEach(c => {
+            const r = c.getBoundingClientRect();
+            c.style.setProperty('--fx', Math.round(gr.left + gr.width / 2 - (r.left + r.width / 2)) + 'px');
+            c.style.setProperty('--fy', Math.round(gr.top + gr.height / 2 - (r.top + r.height / 2)) + 'px');
+        });
+        playSE('correct');
+        let done = false;
+        const flip = (c, i) => {
+            if (c.classList.contains('open')) return;
+            c.classList.remove('shiver');
+            c.classList.add('open');
+            const rar = results[i].rarity;
+            if (rar === 'SR' || rar === 'UR') { c.classList.add('burst'); if (!done) playSE('unlock'); }
+        };
+        const finish = () => {
+            if (done) return; done = true;
+            _mdTimers.forEach(clearTimeout); _mdTimers = [];
+            cards.forEach(flip);
+            ov.classList.remove('summoning');
+            box.querySelectorAll('.md-skip').forEach(e => e.remove());
+            ov.onclick = null;
+            playSE(hasNew ? 'unlock' : 'correct');
+            if (hasNew) setTimeout(() => fireRarityConfetti(best), 250);   // 紙吹雪は新しいカードがあるときだけ
+        };
+        let t = 1000 + cards.length * 60 + 450;   // 飛び出しが終わってからめくり始める
+        cards.forEach((c, i) => {
+            const rar = results[i].rarity;
+            if (rar === 'SR' || rar === 'UR') {   // 期待させる「ため」
+                _mdTimers.push(setTimeout(() => c.classList.add('shiver'), t));
+                t += rar === 'UR' ? 650 : 380;
+            }
+            _mdTimers.push(setTimeout(() => flip(c, i), t));
+            t += 170;
+        });
+        _mdTimers.push(setTimeout(finish, t + 350));
+        // 魔法陣の途中ではスキップしない（誤タップ防止）
+        _mdTimers.push(setTimeout(() => { if (!done) ov.onclick = e => { if (e.target.id !== 'mdClose') finish(); }; }, 400));
+        ov.__mdFinish = finish;
+    }
     function closeMultiDraw() {
+        const ov0 = document.getElementById('multi-draw-overlay');
+        _mdTimers.forEach(clearTimeout); _mdTimers = []; ov0.onclick = null; ov0.classList.remove('summoning');
         fadeScreen(function() {
             document.getElementById('multi-draw-overlay').style.display = 'none';
             renderCollection();
@@ -6661,15 +6757,16 @@ const Cloud = (function () {
         setTimeout(() => { el.classList.remove('enter'); run(); }, 1500);
     }
     /* バトルから帰還する演出：闇が輪のように広がって画面を包み「帰還…」→ 光の輪が広がってメイン画面へ */
-    function battleExitTransition(fn) {
+    function battleExitTransition(fn, flee) {
         const el = document.getElementById('battle-trans');
         if (!el) { fadeScreen(fn); return; }
-        el.querySelector('.bt-home').textContent = adventureActive ? '🗺️ 冒険へ戻る…' : '🏠 帰還…';
-        el.classList.remove('enter', 'exit'); void el.offsetWidth; el.classList.add('exit');
+        el.querySelector('.bt-home').textContent = flee ? '💨 なんとか逃げきった…' : adventureActive ? '🗺️ 冒険へ戻る…' : '🏠 帰還…';
+        const cls = flee ? 'flee' : 'exit';
+        el.classList.remove('enter', 'exit', 'flee'); void el.offsetWidth; el.classList.add(cls);
         let done = false;
         const run = () => { if (done) return; done = true; try { fn(); } catch (e) { console.error(e); } };
-        setTimeout(run, 600);
-        setTimeout(() => { el.classList.remove('exit'); run(); }, 1350);
+        setTimeout(run, flee ? 650 : 600);   // 真っ暗になったところで画面を切り替える
+        setTimeout(() => { el.classList.remove(cls); run(); }, flee ? 1450 : 1350);
     }
 
     function startBattle(stage) {
@@ -7351,7 +7448,7 @@ const Cloud = (function () {
             document.getElementById('battle-result-overlay').style.display = 'none';
             document.getElementById('battle-overlay').style.display = 'none';
             stopBossBGM();
-        });
+        }, true);
     }
 
     function setGachaTitle(text, delay = 0) {
@@ -8243,7 +8340,11 @@ const Cloud = (function () {
     let _awakenAttempt = false;
     /* ========== 冒険の道（問題を解くたびに旅が進む演出） ==========
        正解した数だけ進む（不正解では進まない）。必要な正解数は地域ごとに倍：草原5→森10→洞窟20→丘40→遺跡80→山脈160→城320。
-       城の次は草原（5）に戻る。地域と進み具合は前回の続きから（advArea／advStep に保存）。報酬は変えない */
+       手帖ごとに行ける地域が決まっていて（鉄＝1〜3面、銅＝1〜4面、銀＝1〜5面、金＝1〜6面、白金＝1〜7面）、
+       最終面に着いたらそれ以降はその地域にとどまる。進み具合は手帖ごとに advProg に保存。報酬は変えない */
+    const ADV_LAST = { A1: 2, A2: 3, B1: 4, B2: 5, PT: 6 };
+    function advNbKey() { return (typeof currentNB !== 'undefined' && currentNB && currentNB.key) || 'A1'; }
+    function advLast() { const v = ADV_LAST[advNbKey()]; return v == null ? 6 : v; }
     const ADV_BASE = 5;
     function advNeed(i) { return ADV_BASE * Math.pow(2, i); }
     const ADV_AREAS = [
@@ -8256,7 +8357,7 @@ const Cloud = (function () {
         { key: 'castle',   imgs: ['morning', 'day', 'evening', 'night'], tod: 1,   name: '天空の城',     icon: '🏰', goal: '👑', tint: '#80e0ff', enc: ['☁️ 雲の門番が合言葉を問う', '👑 王の書庫で不思議な本を見つけた', '🕊️ 白い鳩が手紙を運んできた', '🔔 塔の鐘に言葉が刻まれている'] },
     ];
     // 保存されている地域（「はじまりの草原」を先頭に追加したので、以前の番号は1つずらす）
-    function advStoredArea() {
+    function advLegacyArea() {
         let v = parseInt(localStorage.getItem('advArea'), 10) || 0;
         if (!localStorage.getItem('advAreaV2')) {
             if (localStorage.getItem('advArea') !== null) v = v + 1;
@@ -8265,14 +8366,31 @@ const Cloud = (function () {
         }
         return v % ADV_AREAS.length;
     }
+    // 手帖ごとの進み具合。初回は、以前の（手帖共通の）進み具合を今の手帖に引き継ぐ
+    function advProgAll() {
+        let all = null;
+        try { all = JSON.parse(localStorage.getItem('advProg') || 'null'); } catch (e) {}
+        if (!all || typeof all !== 'object') {
+            all = {};
+            let area = 0, step = 0, miss = 0;
+            try { area = advLegacyArea(); step = Math.max(0, parseInt(localStorage.getItem('advStep'), 10) || 0); miss = Math.max(0, parseInt(localStorage.getItem('advMiss'), 10) || 0); } catch (e) {}
+            if (area > advLast()) { area = advLast(); step = 0; miss = 0; }
+            all[advNbKey()] = { area, step, miss };
+            try { localStorage.setItem('advProg', JSON.stringify(all)); } catch (e) {}
+        }
+        return all;
+    }
+    function advProg() {
+        const p = advProgAll()[advNbKey()] || {};
+        const area = Math.min(Math.max(0, p.area | 0), advLast());
+        return { area, step: Math.min(Math.max(0, p.step | 0), advNeed(area)), miss: Math.max(0, p.miss | 0) };
+    }
+    function advStoredArea() { return advProg().area; }
     function advState() {
         const s = trainingSession;
-        if (!s.adv) {
-            let area = 0;
-            try { area = advStoredArea(); } catch (e) {}
-            let step = 0, miss = 0;
-            try { step = Math.max(0, parseInt(localStorage.getItem('advStep'), 10) || 0); miss = Math.max(0, parseInt(localStorage.getItem('advMiss'), 10) || 0); } catch (e) {}
-            s.adv = { area, step: Math.min(step, advNeed(area)), miss, streak: 0 };
+        if (!s.adv || s.adv.nb !== advNbKey()) {
+            const p = advProg();
+            s.adv = { nb: advNbKey(), area: p.area, step: p.step, miss: p.miss, streak: 0 };
         }
         return s.adv;
     }
@@ -8404,7 +8522,9 @@ const Cloud = (function () {
         const a = advState();
         if (a.step >= advNeed(a.area)) {
             const A = ADV_AREAS[a.area], ok = advNeed(a.area), miss = a.miss;
-            a.area = (a.area + 1) % ADV_AREAS.length; a.step = 0; a.miss = 0;
+            const atLast = a.area >= advLast();   // 最終面：その地にとどまって、もう一周
+            if (!atLast) a.area = a.area + 1;
+            a.step = 0; a.miss = 0;
             advSave(a);
             const N = ADV_AREAS[a.area];
             const ov = document.createElement('div');
@@ -8414,7 +8534,7 @@ const Cloud = (function () {
             ov.style.animationDuration = '3s';
             ov.innerHTML = `<div class="rays"></div><div class="chest">🎁</div><div class="t1">🏁 ${A.name} 踏破！</div>
                 <div class="t2">${ok}問正解で到達${miss === 0 ? '　✨ ノーミス！' : `（ミス ${miss}）`}</div>
-                <div class="t3">次の地へ … ${N.icon} ${N.name}（${advNeed(a.area)}問）</div>`;
+                <div class="t3">${atLast ? `👑 この手帖の最終地点！ ${N.icon} ${N.name}で修行を続けよう` : `次の地へ … ${N.icon} ${N.name}（${advNeed(a.area)}問）`}</div>`;
             const old = document.getElementById('advClear'); if (old) old.remove();
             document.body.appendChild(ov);
             // 宝箱が開いて地域の宝が現れる → 背景が次の地域に変わる
@@ -8430,7 +8550,11 @@ const Cloud = (function () {
         if (box) { box.classList.remove('adv-unfurl', 'adv-shake'); void box.offsetWidth; box.classList.add('adv-unfurl'); }
     }
     function advSave(a) {
-        try { localStorage.setItem('advArea', String(a.area)); localStorage.setItem('advStep', String(a.step)); localStorage.setItem('advMiss', String(a.miss)); } catch (e) {}
+        try {
+            const all = advProgAll();
+            all[a.nb || advNbKey()] = { area: a.area, step: a.step, miss: a.miss };
+            localStorage.setItem('advProg', JSON.stringify(all));
+        } catch (e) {}
     }
     // 答えたあと：正解なら主人公が1歩進む（ジャンプときらめき）。不正解はその場でつまずき、進まない
     function advAfterAnswer(ok) {

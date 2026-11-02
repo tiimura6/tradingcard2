@@ -314,7 +314,7 @@ test('バトル突入・帰還の演出／ボスは下位の手帖ほど小さ�
     sizes[nb] = await p.evaluate(() => parseInt(document.getElementById('battleEnemyImg').style.maxHeight, 10));
     await p.evaluate(() => confirmCloseBattle());
     await p.waitForTimeout(300);
-    assert((await p.evaluate(() => document.getElementById('battle-trans').className)).includes('exit'), '帰還演出なし');
+    assert((await p.evaluate(() => document.getElementById('battle-trans').className)).includes('flee'), '逃げる演出なし');
     await p.waitForTimeout(1300);
     assert(await p.evaluate(() => document.getElementById('battle-overlay').style.display === 'none' && !document.body.classList.contains('battle-mode')), '帰還後にバトル画面が残っている');
     assert(p.__errors.length === 0, p.__errors.join(' / '));
@@ -347,6 +347,15 @@ test('まとめて探す：最大10回・ゴールドと今日の残り回数を
   const r = await p.evaluate(() => { gold = 1200; saveGold(); const before = unlockedCards.length; drawMulti('normal');
     return { gold, cards: document.querySelectorAll('#mdGrid .md-card').length, shown: document.getElementById('multi-draw-overlay').style.display, gained: unlockedCards.length - before }; });
   assert(r.gold === 700 && r.cards === 10 && r.shown === 'flex' && r.gained >= 1, JSON.stringify(r));
+  // 演出：最初は裏向き・OKは隠れている → 順にめくれて、最後にOKが出る。タップで全部めくれる
+  const s0 = await p.evaluate(() => ({ open: document.querySelectorAll('#mdGrid .md-card.open').length, sum: document.getElementById('multi-draw-overlay').classList.contains('summoning'), circle: !!document.querySelector('.md-circle') }));
+  assert(s0.open === 0 && s0.sum && s0.circle, '開始 ' + JSON.stringify(s0));
+  await p.waitForTimeout(2300);
+  const s1 = await p.evaluate(() => document.querySelectorAll('#mdGrid .md-card.open').length);
+  assert(s1 >= 1, '順にめくれない ' + s1);
+  await p.click('#mdGrid'); await p.waitForTimeout(100);
+  const s2 = await p.evaluate(() => ({ open: document.querySelectorAll('#mdGrid .md-card.open').length, sum: document.getElementById('multi-draw-overlay').classList.contains('summoning') }));
+  assert(s2.open === 10 && !s2.sum, 'タップで全部 ' + JSON.stringify(s2));
   const r2 = await p.evaluate(() => { gold = 250; dailyGachaStorage.draws = 0; return multiDrawCount('premium'); });
   assert(r2 === 2, 'premium count ' + r2);
   assert(p.__errors.length === 0, p.__errors.join(' / '));
@@ -405,7 +414,8 @@ test('冒険：地域ごとに背景が変わる・正解で演出が出る／�
   assert(txt.includes('時間をあけて') && !txt.includes('8時間後冒険'), '時間ボーナスの表記');
   await p.evaluate(() => { closeTrainingModal(false); openTrainingMode(); }); await p.waitForTimeout(500);
   const bg = await p.evaluate(() => getComputedStyle(document.getElementById('bg-layer')).backgroundImage);
-  assert(bg.includes('adv_ruins_'), '背景（以前の3＝遺跡は、草原を先頭に足したので4に移る）: ' + bg);
+  // 以前の3＝遺跡（草原を先頭に足して4）だが、鉄の手帖は1〜3面までなので3面（洞窟）にとどまる
+  assert(bg.includes('adv_cave_'), '背景（鉄の手帖は洞窟まで）: ' + bg);
   // 天空の城：夜（22時）は夜の絵、色合いはかけない
   await p.evaluate(() => { window.__todHour = 22; advSetBackground(6); }); await p.waitForTimeout(1400);
   const c = await p.evaluate(() => ({ bg: document.body.style.getPropertyValue('--adv-bg'), op: document.body.style.getPropertyValue('--tod-op') }));
@@ -430,18 +440,26 @@ test('冒険：地域ごとに背景が変わる・正解で演出が出る／�
     advAfterAnswer(false);
     const afterNg = document.querySelector('#advTrail .adv-count').textContent;
     advAfterAnswer(true);
-    return { before, afterNg, afterOk: document.querySelector('#advTrail .adv-count').textContent, saved: localStorage.getItem('advStep'), miss: localStorage.getItem('advMiss'), need: [0,1,6].map(advNeed) };
+    return { before, afterNg, afterOk: document.querySelector('#advTrail .adv-count').textContent, saved: JSON.parse(localStorage.getItem('advProg')).A1.step, miss: JSON.parse(localStorage.getItem('advProg')).A1.miss, need: [0,1,6].map(advNeed) };
   });
-  assert(r.before === '3 / 10' && r.afterNg === '3 / 10' && r.afterOk === '4 / 10' && r.saved === '4' && r.miss === '1', JSON.stringify(r));
+  assert(r.before === '3 / 10' && r.afterNg === '3 / 10' && r.afterOk === '4 / 10' && r.saved === 4 && r.miss === 1, JSON.stringify(r));
   assert(r.need.join() === '5,10,320', r.need.join());
-  // 長い道はゲージ表示、踏破すると次の地域へ（進み具合は0から）
+  // 長い道はゲージ表示。鉄の手帖の最終面（3面・洞窟）を踏破しても、その地にとどまる
   const g = await p.evaluate(() => {
     const a = advState(); a.area = 2; a.step = 19; advRender('');
     const fill = !!document.querySelector('#advTrail .adv-fill') && document.querySelectorAll('#advTrail .adv-node').length === 0;
     advAfterAnswer(true); advBeforeQuestion();
-    return { fill, area: advState().area, step: localStorage.getItem('advStep'), t: (document.querySelector('#advClear .t3') || {}).textContent };
+    return { fill, area: advState().area, step: JSON.parse(localStorage.getItem('advProg')).A1.step, t: (document.querySelector('#advClear .t3') || {}).textContent };
   });
-  assert(g.fill && g.area === 3 && g.step === '0' && g.t.includes('40問'), JSON.stringify(g));
+  assert(g.fill && g.area === 2 && g.step === 0 && g.t.includes('最終地点'), JSON.stringify(g));
+  // 金の手帖は6面まで行ける（進み具合は手帖ごと）。4面→5面へ進む
+  const g2 = await p.evaluate(() => {
+    currentNB = NB_BY_KEY.B2; const a = advState(); const fresh = a.area === 0 && a.step === 0;
+    a.area = 3; a.step = 39; advRender(''); advAfterAnswer(true); advBeforeQuestion();
+    const r = { fresh, area: advState().area, last: advLast(), t: document.querySelector('#advClear .t3').textContent };
+    currentNB = NB_BY_KEY.A1; r.a1 = advState().area; return r;
+  });
+  assert(g2.fresh && g2.area === 4 && g2.last === 5 && g2.t.includes('80問') && g2.a1 === 2, JSON.stringify(g2));
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
