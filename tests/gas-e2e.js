@@ -35,11 +35,12 @@ async function newDevice(b, gas, name) {
     const call = o => JSON.parse(gas.doPost({ postData: { contents: JSON.stringify(o) } }).getContent());
     check(call({ action: 'register', loginId: 'aaa', nickname: 'a', password: '12345678' }).error === 'invalid_password', '数字だけのパスワードは登録できない');
     check(call({ action: 'register', loginId: 'aaa', nickname: 'a', password: 'abc12' }).error === 'invalid_password', '8文字未満のパスワードは登録できない');
-    const r = call({ action: 'register', loginId: 'aaa', nickname: '  =HYPERLINK("x")', klass: '＝1+1', password: 'secret123' });
+    const r = call({ action: 'register', loginId: 'aaa', nickname: '  =HYPERLINK("x")', password: 'secret123' });
+    const r0 = call({ action: 'register', loginId: 'bbb', nickname: '＝1+1', password: 'secret123' });
     check(r.ok, '英字と数字を含む8文字以上で登録できる');
-    const u = sheets['ユーザー'].data[1];
-    check(String(u[1]).startsWith('HYPERLINK') && u[3] === '1+1', `先頭に空白があっても数式の記号を除去（${u[1]} / ${u[3]}）`);
-    check(u[2] === '' && String(u[4]).startsWith('v2$') && !String(u[4]).includes('secret'), '氏名は保存しない・パスワードは繰り返しハッシュで保存');
+    const u = sheets['ユーザー'].data[1], u2 = sheets['ユーザー'].data[2];
+    check(String(u[1]).startsWith('HYPERLINK') && u2[1] === '1+1', `先頭の空白・全角でも数式の記号を除去（${u[1]} / ${u2[1]}）`);
+    check(u[2] === '' && u[3] === '' && String(u[4]).startsWith('v2$') && !String(u[4]).includes('secret'), '氏名・クラスは保存しない・パスワードは繰り返しハッシュで保存');
     check(call({ action: 'login', loginId: 'aaa', password: 'secret123' }).ok, '正しいパスワードでログインできる');
     // 段階的なロック
     let last;
@@ -97,8 +98,8 @@ async function newDevice(b, gas, name) {
   const A = await newDevice(b, gas, 'A');
   check(await A.p.evaluate(() => getComputedStyle(document.getElementById('auth-overlay')).display) === 'flex', '起動時にログイン画面が出る');
   await A.p.evaluate(() => Cloud.openModal('register')); await A.p.waitForTimeout(300);
-  check(await A.p.evaluate(() => !document.getElementById('regName') && document.getElementById('regPin').getAttribute('inputmode') !== 'numeric'), '登録画面に氏名欄がなく、パスワードは英数字で入力');
-  await A.p.fill('#regId', 'taro01'); await A.p.fill('#regNick', 'たろう'); await A.p.fill('#regClass', '2-3');
+  check(await A.p.evaluate(() => !document.getElementById('regName') && !document.getElementById('regClass') && !document.querySelector('#authBody .auth-note, #authBody .auth-sub, #authBody small') && document.getElementById('regPin').getAttribute('inputmode') !== 'numeric'), '登録画面に氏名・クラス欄も説明文もなく、パスワードは英数字で入力');
+  await A.p.fill('#regId', 'taro01'); await A.p.fill('#regNick', 'たろう');
   await A.p.fill('#regPin', '12345678'); await A.p.fill('#regPin2', '12345678');
   await A.p.click('button:has-text("登録して始める")'); await A.p.waitForTimeout(800);
   check((await A.p.evaluate(() => document.getElementById('authError').innerText)).includes('英字と数字'), '数字だけのパスワードは画面でもはじく');
@@ -121,6 +122,9 @@ async function newDevice(b, gas, name) {
   const st = sheetRows('取り組み状況')[0] || [];
   check(st[0] === 'taro01' && !st[2] && st[12] === aOwned.length, `取り組み状況に記録（氏名は空・カード${st[12]}枚）`);
   check(sheetRows('学習ログ').length >= 3 && sheetRows('学習ログ').slice(-1)[0][13] === '鉄', '学習ログに手帖つきで記録');
+  // ゴールドのクーポンは廃止
+  await A.p.evaluate(() => { window.__alerts = []; const g = gold; openCouponModal(); document.getElementById('couponInput').value = 'MAGIC5'; submitCoupon(); window.__g = gold - g; });
+  check(await A.p.evaluate(() => window.__g === 0 && window.__alerts.join('').includes('無効')), 'ゴールドのクーポン（MAGIC5）は使えない');
   // 管理者キー（アプリから）
   const s2 = 'adm'; props.ADMIN_KEY_SALT = s2; props.ADMIN_KEY_HASH = gas.passHash_(s2, 'TEACHERKEY01');
   await A.p.evaluate(() => { window.__alerts = []; openCouponModal(); document.getElementById('couponInput').value = 'TEACHERKEY01'; submitCoupon(); });
