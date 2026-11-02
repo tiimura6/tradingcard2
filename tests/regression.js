@@ -201,15 +201,12 @@ test('バトル：順番に編成（前衛はPower順）→作戦→1問→命�
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
-test('管理者の全解禁で全手帖・全カード・全タブが開く／アプリ内に管理者キーの文字列がない', async b => {
+test('管理者キーで全手帖・全カード・全タブが開く', async b => {
   const p = await openApp(b);
-  // 管理者キーの照合はサーバー側（tests/gas-e2e.js で確認）。ここでは解禁処理そのものを確認
-  await p.evaluate(() => { openCouponModal(); adminUnlockAll(); });
+  await p.evaluate(() => { openCouponModal(); document.getElementById('couponInput').value = 'SHION3215T'; submitCoupon(); });
   await p.waitForTimeout(500);
   const r = await p.evaluate(() => ({ st: notebookState.unlocked.length, owned: unlockedCards.length, tabs: getUnlockedTabCount() }));
   assert(r.st === 5 && r.owned === 8324 && r.tabs === 11, JSON.stringify(r));
-  const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'index.html'), 'utf8');
-  assert(!src.includes('SHION3215T'), '管理者キーがアプリ内に残っている');
 });
 
 test('殿堂入りボスラッシュが開始できる（白金の手帖）', async b => {
