@@ -2150,7 +2150,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-1015</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-1100</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -2722,16 +2722,17 @@ const Cloud = (function () {
         server_error: 'サーバーでエラーが起きました。時間をおいてお試しください。',
         invalid_id: 'ログインIDは半角の英小文字・数字・_（アンダーバー）で3〜16文字にしてください。',
         invalid_nickname: 'ニックネームを入力してください（12文字以内）。',
-        invalid_name: '氏名を入力してください。',
-        invalid_pin: 'PINは4〜8桁の数字にしてください。',
-        pin_mismatch: '確認用のPINが一致しません。',
+        invalid_password: 'パスワードは英字と数字を両方含む8〜32文字にしてください（空白は使えません）。',
+        pin_mismatch: '確認用のパスワードが一致しません。',
+        rate_limited: 'アクセスが集中しています。1分ほど待ってからもう一度お試しください。',
+        bad_key: '無効な鍵コードです。',
         id_taken: 'このログインIDはすでに使われています。別のIDにしてください。',
         nickname_taken: 'このニックネームはすでに使われています。別の名前にしてください。',
-        bad_credentials: 'ログインIDまたはPINが違います。',
+        bad_credentials: 'ログインIDまたはパスワードが違います。',
         too_large: 'データが大きすぎて保存できませんでした。先生に知らせてください。',
     };
     function errMsg(res) {
-        if (res.error === 'locked') return `PINを続けて間違えたため、${res.minutes}分間ログインできません。`;
+        if (res.error === 'locked') return `パスワードを続けて間違えたため、${res.minutes >= 60 ? Math.round(res.minutes / 60) + '時間' : res.minutes + '分間'}ログインできません。思い出せないときは先生に伝えてください。`;
         let m = ERR[res.error] || ('エラーが発生しました（' + esc(res.error) + '）');
         if (res.error === 'bad_credentials' && res.remaining) m += `（あと${res.remaining}回でロックされます）`;
         return m;
@@ -2787,11 +2788,11 @@ const Cloud = (function () {
                 <label class="auth-label" for="authId">ログインID</label>
                 <input class="modal-input" id="authId" autocomplete="username" autocapitalize="off" spellcheck="false"
                     oninput="this.value=this.value.toLowerCase()">
-                <label class="auth-label" for="authPin">PIN（数字）</label>
-                <input class="modal-input" id="authPin" type="password" inputmode="numeric" autocomplete="current-password">
+                <label class="auth-label" for="authPin">パスワード</label>
+                <input class="modal-input" id="authPin" type="password" maxlength="32" autocomplete="current-password" autocapitalize="off" spellcheck="false">
                 <button class="modal-btn" type="submit">ログイン</button>
             </form>
-            <p class="auth-note">PINを忘れたときは先生に伝えてください。</p>
+            <p class="auth-note">パスワードを忘れたときは先生に伝えてください。</p>
             ${guestButton()}`;
 
         if (v === 'register') return `
@@ -2805,17 +2806,15 @@ const Cloud = (function () {
                     oninput="this.value=this.value.toLowerCase()">
                 <label class="auth-label" for="regNick">ニックネーム <small>ランキングに表示されます・12文字以内</small></label>
                 <input class="modal-input" id="regNick" maxlength="12" autocomplete="nickname">
-                <label class="auth-label" for="regName">氏名 <small>先生だけが見ます</small></label>
-                <input class="modal-input" id="regName" maxlength="30" autocomplete="name">
                 <label class="auth-label" for="regClass">クラス <small>任意（例: 2-3）</small></label>
                 <input class="modal-input" id="regClass" maxlength="10">
-                <label class="auth-label" for="regPin">PIN <small>4〜8桁の数字・忘れないように</small></label>
-                <input class="modal-input" id="regPin" type="password" inputmode="numeric" maxlength="8" autocomplete="new-password">
-                <label class="auth-label" for="regPin2">PIN（確認）</label>
-                <input class="modal-input" id="regPin2" type="password" inputmode="numeric" maxlength="8" autocomplete="new-password">
+                <label class="auth-label" for="regPin">パスワード <small>英字と数字を両方含む8文字以上・忘れないように</small></label>
+                <input class="modal-input" id="regPin" type="password" maxlength="32" autocomplete="new-password" autocapitalize="off" spellcheck="false">
+                <label class="auth-label" for="regPin2">パスワード（確認）</label>
+                <input class="modal-input" id="regPin2" type="password" maxlength="32" autocomplete="new-password" autocapitalize="off" spellcheck="false">
                 <button class="modal-btn" type="submit">登録して始める</button>
             </form>
-            <p class="auth-note">ニックネームに本名は使わないでください。</p>
+            <p class="auth-note">ログインIDとニックネームに本名は使わないでください。<br>パスワードは誕生日など人に推測されるものを避けよう。</p>
             ${guestButton()}`;
 
         if (v === 'choice') return `
@@ -2854,10 +2853,10 @@ const Cloud = (function () {
     /* ---------- 操作 ---------- */
     async function submitLogin() {
         const loginId = val('authId').trim().toLowerCase();
-        const pin = val('authPin').trim();
-        if (!loginId || !pin) return showError('ログインIDとPINを入力してください。');
+        const password = val('authPin');
+        if (!loginId || !password) return showError('ログインIDとパスワードを入力してください。');
         busy(true);
-        const res = await api('login', { loginId: loginId, pin: pin });
+        const res = await api('login', { loginId: loginId, password: password });
         busy(false);
         if (!res.ok) return showError(errMsg(res));
         await afterAuth(res, false);
@@ -2866,16 +2865,14 @@ const Cloud = (function () {
     async function submitRegister() {
         const loginId = val('regId').trim().toLowerCase();
         const nickname = val('regNick').trim();
-        const realName = val('regName').trim();
         const klass = val('regClass').trim();
-        const pin = val('regPin').trim();
+        const password = val('regPin');
         if (!/^[a-z0-9_]{3,16}$/.test(loginId)) return showError(ERR.invalid_id);
         if (!nickname) return showError(ERR.invalid_nickname);
-        if (!realName) return showError(ERR.invalid_name);
-        if (!/^\d{4,8}$/.test(pin)) return showError(ERR.invalid_pin);
-        if (pin !== val('regPin2').trim()) return showError(ERR.pin_mismatch);
+        if (!/^(?=.*[A-Za-z])(?=.*\d)[\x21-\x7e]{8,32}$/.test(password)) return showError(ERR.invalid_password);
+        if (password !== val('regPin2')) return showError(ERR.pin_mismatch);
         busy(true);
-        const res = await api('register', { loginId: loginId, nickname: nickname, realName: realName, klass: klass, pin: pin });
+        const res = await api('register', { loginId: loginId, nickname: nickname, klass: klass, password: password });
         busy(false);
         if (!res.ok) return showError(errMsg(res));
         await afterAuth(res, true);
@@ -2971,6 +2968,13 @@ const Cloud = (function () {
 
     function chipClick() { openModal(session ? 'account' : 'login'); }
 
+    // 管理者キーの照合（サーバーで行う。ログイン中で、先生が管理者の印を付けたアカウントだけ）
+    async function adminUnlock(key) {
+        if (!GAS_URL || !session) return { ok: false, error: 'need_login' };
+        return api('adminUnlock', { token: session.token, key: key });
+    }
+    function errorText(res) { return errMsg(res); }
+
     /* ---------- 起動 ---------- */
     function start() {
         if (!GAS_URL) return;
@@ -2992,7 +2996,7 @@ const Cloud = (function () {
     }
 
     return {
-        start, log, saveNow, openModal, closeModal, chipClick, playAsGuest,
+        start, log, saveNow, openModal, closeModal, chipClick, playAsGuest, adminUnlock, errorText,
         submitLogin, submitRegister, useServer, useLocal, manualSave, logout,
         isLoggedIn: () => !!session,
         nickname: () => session ? session.nickname : null,
@@ -5258,43 +5262,53 @@ const Cloud = (function () {
     function closeCouponModal() {
         document.getElementById('coupon-overlay').style.display = 'none';
     }
+    // 管理者用：全手帖・全カード・全タブ（全バトル勝利扱い）を解禁（サーバーで管理者キーを確かめたあとに呼ぶ）
+    function adminUnlockAll() {
+        // 管理者用マスターキー：全手帖・全カード・全タブ（全バトル勝利扱い）を解禁。何度でも使える
+        let added = 0;
+        NOTEBOOKS.forEach(nb => {
+            for (let n = 1; n <= nb.count; n++) {
+                const id = `${nb.prefix}-${n}`;
+                if (!isOwned(id)) { unlockedCards.push(id); added++; }
+            }
+            // 全タブの撃退戦・討伐戦を勝利済みにする（タブがすべて開く）
+            const pre = nb.key === 'PT' ? '' : nb.prefix + '_';
+            const tabs = Math.ceil(nb.count / COLLECTION_PAGE_SIZE);
+            for (let t = 0; t < tabs; t++) {
+                [`${pre}tab${t}_mid`, `${pre}tab${t}_final`].forEach(sid => {
+                    if (!battleProgress.defeated.includes(sid)) battleProgress.defeated.push(sid);
+                });
+            }
+        });
+        localStorage.setItem('battleProgress', JSON.stringify(battleProgress));
+        notebookState.unlocked = NOTEBOOKS.map(n => n.key);
+        saveNotebookState();
+        localStorage.setItem('unlockedCards', JSON.stringify(unlockedCards));   // 解禁お知らせは出さない
+        closeCouponModal();
+        confetti({ particleCount: 150, spread: 100, origin: { y: 0.5 } });
+        renderCollection();
+        updateDailyGoalDisplay();
+        updateAdventureBattleBtn();
+        const total = NOTEBOOKS.reduce((a, n) => a + n.count, 0);
+        alert(`🔓 マスターキー解錠！\n5冊の手帖すべて（全${total}枚のカード・全タブ）を解禁しました。\n（今回新たに解禁: ${added}枚）`);
+    }
     function submitCoupon() {
         const inputCode = document.getElementById('couponInput').value.trim().toUpperCase();
         if (inputCode === "") { alert("秘密の鍵を入力してください。"); return; }
 
-        // ===== 管理者テスト用クーポン（リリース時削除予定） =====
-        if (inputCode === "SHION3215T") {
-            // 管理者用マスターキー：全手帖・全カード・全タブ（全バトル勝利扱い）を解禁。何度でも使える
-            let added = 0;
-            NOTEBOOKS.forEach(nb => {
-                for (let n = 1; n <= nb.count; n++) {
-                    const id = `${nb.prefix}-${n}`;
-                    if (!isOwned(id)) { unlockedCards.push(id); added++; }
-                }
-                // 全タブの撃退戦・討伐戦を勝利済みにする（タブがすべて開く）
-                const pre = nb.key === 'PT' ? '' : nb.prefix + '_';
-                const tabs = Math.ceil(nb.count / COLLECTION_PAGE_SIZE);
-                for (let t = 0; t < tabs; t++) {
-                    [`${pre}tab${t}_mid`, `${pre}tab${t}_final`].forEach(sid => {
-                        if (!battleProgress.defeated.includes(sid)) battleProgress.defeated.push(sid);
-                    });
-                }
-            });
-            localStorage.setItem('battleProgress', JSON.stringify(battleProgress));
-            notebookState.unlocked = NOTEBOOKS.map(n => n.key);
-            saveNotebookState();
-            localStorage.setItem('unlockedCards', JSON.stringify(unlockedCards));   // 解禁お知らせは出さない
-            closeCouponModal();
-            confetti({ particleCount: 150, spread: 100, origin: { y: 0.5 } });
-            renderCollection();
-            updateDailyGoalDisplay();
-            updateAdventureBattleBtn();
-            const total = NOTEBOOKS.reduce((a, n) => a + n.count, 0);
-            alert(`🔓 マスターキー解錠！\n5冊の手帖すべて（全${total}枚のカード・全タブ）を解禁しました。\n（今回新たに解禁: ${added}枚）`);
-            return;
-        }
         // ===== 通常の秘密の鍵 =====
-        if (!(inputCode in VALID_COUPONS)) { alert("無効な鍵コードです。"); return; }
+        if (!(inputCode in VALID_COUPONS)) {
+            // 管理者キー：照合はサーバーで行う（キーそのものはアプリに書かない）
+            if (inputCode.length >= 10 && typeof Cloud !== 'undefined' && Cloud.adminUnlock) {
+                Cloud.adminUnlock(inputCode).then(res => {
+                    if (res && res.ok) { adminUnlockAll(); return; }
+                    if (res && res.error === 'need_login') { alert('この鍵はログインしているときだけ使えます。'); return; }
+                    alert(res && res.error && res.error !== 'bad_key' ? Cloud.errorText(res) : '無効な鍵コードです。');
+                });
+                return;
+            }
+            alert("無効な鍵コードです。"); return;
+        }
         if (dailyGachaStorage.usedCoupons.includes(inputCode)) { alert("この鍵はすでに使用されています。"); return; }
         const rewardCount = VALID_COUPONS[inputCode];
         gold += rewardCount * GOLD_PER_GACHA; localStorage.setItem('gold', String(gold));
