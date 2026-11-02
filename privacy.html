@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>プライバシーについて ｜ ひみつ手帖</title>
+<style>
+  :root { --bg: #f7f1e3; --card: #fffaf0; --ink: #3a2c18; --sub: #6f5d40; --line: #e3d3ad; --accent: #8a5a10; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #17120c; --card: #221a10; --ink: #f1e6cf; --sub: #c9b896; --line: #4a3b22; --accent: #e8c070; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic', sans-serif; line-height: 1.8; }
+  main { max-width: 720px; margin: 0 auto; padding: 28px 16px 48px; }
+  h1 { font-family: 'Hiragino Mincho ProN', 'Noto Serif JP', serif; font-size: 24px; margin: 0 0 4px; color: var(--accent); }
+  .date { font-size: 13px; color: var(--sub); margin: 0 0 22px; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; margin: 0 0 14px; }
+  h2 { font-size: 16px; margin: 0 0 8px; }
+  p, li { font-size: 14.5px; margin: 0 0 6px; }
+  ul { margin: 0; padding-left: 1.3em; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; vertical-align: top; padding: 7px 6px; border-bottom: 1px solid var(--line); }
+  th { width: 34%; color: var(--sub); font-weight: normal; }
+  .no { color: var(--sub); }
+  a { color: var(--accent); }
+  .back { display: inline-block; margin-top: 10px; font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>プライバシーについて</h1>
+  <p class="date">ひみつ手帖（ハイレベル英単語図鑑）／2026年11月</p>
+
+  <section>
+    <h2>集める情報</h2>
+    <table>
+      <tr><th>ログインID・ニックネーム</th><td>登録したときに入力したもの</td></tr>
+      <tr><th>パスワード</th><td>元に戻せない形（ハッシュ）に変えて保存します。先生や開発者にも見えません</td></tr>
+      <tr><th>学習の記録</th><td>集めたカード、★、ゴールド、レベル、バトルの記録など、アプリの進み具合</td></tr>
+      <tr><th>回答の記録</th><td>どの単語に、いつ、正解・不正解だったか、答えるまでの時間</td></tr>
+      <tr><th>ゲストで遊ぶとき</th><td>端末ごとのランダムな番号と回答の記録だけ（誰かは分かりません）</td></tr>
+    </table>
+    <p class="no" style="margin-top:8px;">氏名・クラス・メールアドレス・住所・位置情報・写真は集めません。</p>
+  </section>
+
+  <section>
+    <h2>使い道</h2>
+    <ul>
+      <li>家の端末と学校の端末のどちらでも、続きから学習できるようにするため</li>
+      <li>先生が、学習の進み具合を見て支援するため</li>
+      <li>教材を改善するため。また、個人が分からない形にまとめたうえで、学習効果の研究や発表に使うことがあります</li>
+    </ul>
+    <p>広告や販売には使いません。</p>
+  </section>
+
+  <section>
+    <h2>見ることができる人</h2>
+    <ul>
+      <li>学習の記録を見られるのは、アプリを運営する先生だけです</li>
+      <li>殿堂入りランキングには、ニックネームと達成日だけが表示されます。アカウントの画面で「ランキングに載せない」を選べます</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>保存場所と期間</h2>
+    <ul>
+      <li>運営する先生のGoogleアカウントのスプレッドシートに保存します。毎週、別のファイルにバックアップを取ります（約1か月分）</li>
+      <li>卒業・転校したときや、本人や保護者から申し出があったときは、記録をすべて削除します</li>
+      <li>ゲストで遊んだ進み具合は、その端末の中にだけ保存されます</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>安全のための対策</h2>
+    <ul>
+      <li>パスワードを何度も間違えると、しばらくログインできなくなります</li>
+      <li>短い時間に大量の通信があると受け付けません</li>
+      <li>「共用の端末」を選んでログインすると、しばらく使わなかったときに自動でログアウトします（記録は保存されます）</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>問い合わせ・削除の申し出</h2>
+    <p>このアプリを使っている学校の、担当の先生に伝えてください。</p>
+  </section>
+
+  <a class="back" href="./">← アプリに戻る</a>
+</main>
+</body>
+</html>
