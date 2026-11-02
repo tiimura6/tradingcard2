@@ -31,7 +31,12 @@ async function newDevice(b, gas, name) {
   // ---------- サーバー単体：セキュリティ ----------
   console.log('サーバー（Code.gs）');
   {
-    const { ctx: gas, sheets, cache, props } = makeEnv(); gas.setup();
+    const env0 = makeEnv(); const { ctx: gas, sheets, cache, props } = env0; gas.setup();
+    // バックアップの時刻をずらすための仕掛け（同じ分に何回も取るとシート名が重なるため）
+    let fake = new Date('2026-11-01T00:00:00Z').getTime();
+    const RealDate = Date;
+    env0.bump = () => { fake += 7 * 86400000; };
+    gas.Date = class extends RealDate { constructor(...a) { a.length ? super(...a) : super(fake); } static now() { return fake; } };
     const call = o => JSON.parse(gas.doPost({ postData: { contents: JSON.stringify(o) } }).getContent());
     check(call({ action: 'register', loginId: 'aaa', nickname: 'a', password: '12345678' }).error === 'invalid_password', '数字だけのパスワードは登録できない');
     check(call({ action: 'register', loginId: 'aaa', nickname: 'a', password: 'abc12' }).error === 'invalid_password', '8文字未満のパスワードは登録できない');
@@ -88,6 +93,31 @@ async function newDevice(b, gas, name) {
     const st = sheets['取り組み状況'].data.find(rw => rw[0] === 'cheat') || [];
     const flag = String(st[28] || '');
     check(/存在しないカード2枚/.test(flag) && /ゴールド/.test(flag), `要確認に不正の疑いを記録（${flag}）`);
+    // ランキングに載せない
+    Object.keys(cache).forEach(k => delete cache[k]);
+    const tA = call({ action: 'login', loginId: 'aaa', password: 'secret123' }).token;
+    sheets['殿堂入り'].data.push([new gas.Date(), 'aaa', 'a', '白金の手帖']);
+    check(JSON.parse(gas.doGet({ parameter: { action: 'hofRanking' } }).getContent()).ranking.length === 1, '殿堂入りはランキングに出る');
+    check(call({ action: 'setPrefs', token: tA, hideRanking: true }).ok, '「ランキングに載せない」を保存できる');
+    check(JSON.parse(gas.doGet({ parameter: { action: 'hofRanking' } }).getContent()).ranking.length === 0, '載せない設定の生徒はランキングから消える');
+    check(call({ action: 'login', loginId: 'aaa', password: 'secret123' }).hideRanking === true, 'ログインすると設定が返る');
+    // クラス別集計
+    check(String((sheets['クラス別集計'].data[1] || [])[0]).includes('UNIQUE'), 'クラス別集計シートに集計式が入る');
+    // バックアップ（5回取ると4回分だけ残る）
+    const { files, triggers } = env0;
+    for (let i = 0; i < 5; i++) { gas.backupNow(true); env0.bump(); }
+    const bk = files[props.BACKUP_ID];
+    const stamps = new Set(bk.getSheets().map(x => x.getName().split('_').slice(0, 2).join('_')));
+    const copied = bk.getSheets().find(x => /_ユーザー$/.test(x.getName()));
+    check(stamps.size === 4 && copied && copied.data.length === sheets['ユーザー'].data.length, `バックアップは別ファイルに4回分（${stamps.size}回分）`);
+    gas.installWeeklyBackup(); gas.installWeeklyBackup();
+    check(triggers.length === 1 && triggers[0].getHandlerFunction() === 'weeklyBackup', '毎週のバックアップのトリガーは1つだけ');
+    // データ削除
+    const before = sheets['学習ログ'].data.filter(r => r[1] === 'cheat').length;
+    call({ action: 'log', token: call({ action: 'login', loginId: 'cheat', password: 'abcd1234' }).token, sessionId: 's', events: ev(3) });
+    const n = gas.deleteUserData_('cheat');
+    const left = ['ユーザー', 'セッション', '進捗データ', '取り組み状況', '学習ログ', '日別集計'].map(k => sheets[k].data.filter(r => r.includes('cheat')).length).reduce((a, b) => a + b, 0);
+    check(n > 0 && left === 0 && sheets['ユーザー'].data.some(r => r[0] === 'aaa'), `生徒のデータ削除：その生徒の行だけすべて消える（${n}行）`);
   }
 
   // ---------- アプリと通し ----------
@@ -142,9 +172,24 @@ async function newDevice(b, gas, name) {
   await B.p.fill('#authId', 'taro01'); await B.p.fill('#authPin', 'kotoba2026');
   await B.p.click('#authBody button[type=submit]'); await B.p.waitForTimeout(4000);
   check(await B.p.evaluate(() => unlockedCards.length) === 8324, '別の端末でログインすると続きから遊べる');
+  await B.p.evaluate(() => Cloud.openModal('account')); await B.p.waitForTimeout(300);
+  await B.p.click('#prefHideRanking'); await B.p.waitForTimeout(800);
+  check(String(sheets['ユーザー'].data.find(r => r[0] === 'taro01')[11]) === '○', 'アカウント画面で「ランキングに載せない」を選べる');
+  await B.p.evaluate(() => Cloud.closeModal());
   await B.p.evaluate(() => { Cloud.logout(); }); await B.p.waitForTimeout(2500);
   check(await B.p.evaluate(() => JSON.parse(localStorage.getItem('unlockedCards') || '[]').length) === 0, 'ログアウトするとその端末の記録が消える');
-  check(A.p.__errs.length + B.p.__errs.length === 0, 'エラーなし ' + [...A.p.__errs, ...B.p.__errs].join(' / '));
+  // 共用の端末：しばらく使わないと、次に開いたとき自動でログアウト（記録は保存してから）
+  const C = await newDevice(b, gas, 'C');
+  await C.p.evaluate(() => Cloud.openModal('login')); await C.p.waitForTimeout(300);
+  await C.p.fill('#authId', 'taro01'); await C.p.fill('#authPin', 'kotoba2026'); await C.p.check('#authShared');
+  await C.p.click('#authBody button[type=submit]'); await C.p.waitForTimeout(4000);
+  check(await C.p.evaluate(() => JSON.parse(localStorage.getItem('authSession')).shared === true), '「共用の端末」でログインできる');
+  await C.p.evaluate(() => { gold = 777; saveGold(); localStorage.setItem('authLastActive', String(Date.now() - 25 * 60000)); });
+  await C.p.reload(); await C.p.waitForTimeout(5000);
+  const cs = await C.p.evaluate(() => ({ sess: localStorage.getItem('authSession'), owned: JSON.parse(localStorage.getItem('unlockedCards') || '[]').length }));
+  const saved = JSON.parse(gas.doPost({ postData: { contents: JSON.stringify({ action: 'loadProgress', token: gas.issueToken_('taro01') }) } }).getContent());
+  check(!cs.sess && cs.owned === 0 && saved.data && saved.data.gold === '777', '20分使わないと自動でログアウトし、直前の記録はサーバーに保存済み');
+  check(A.p.__errs.length + B.p.__errs.length + C.p.__errs.length === 0, 'エラーなし ' + [...A.p.__errs, ...B.p.__errs, ...C.p.__errs].join(' / '));
   await b.close();
   console.log(failed ? `\n${failed}件 失敗` : '\nすべて成功');
   process.exit(failed ? 1 : 0);

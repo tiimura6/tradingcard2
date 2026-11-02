@@ -6,6 +6,7 @@
  *   - 生徒の自己登録（ログインID + ニックネーム + パスワード）とログイン。氏名・クラスは集めない
  *   - セキュリティ：パスワードはソルト付きで繰り返しハッシュ化、失敗が続くと段階的にロック、
  *     送信回数の制限、スプレッドシートへの数式の埋め込み防止、管理者キーはサーバーで照合、不正な記録の検出
+ *   - 先生用：毎週の自動バックアップ、生徒のデータ削除、クラス別集計、ランキングに載せない設定
  *   - 進捗データの保存・復元（端末をまたいで続きから遊べる）
  *   - 学習ログの受信（まとめ送信）と日別集計
  *   - 「取り組み状況」シート：先生が生徒ごとの状況を一覧できる
@@ -55,11 +56,13 @@ const SHEET = {
   DAILY:    '日別集計',
   STATUS:   '取り組み状況',
   HOF:      '殿堂入り',
+  CLASS:    'クラス別集計',
 };
+const BACKUP_KEEP = 4;   // バックアップを何回分残すか（毎週なら約1か月）
 
 const HEADERS = {
   USERS:    ['ログインID', 'ニックネーム', 'メモ（先生用）', 'クラス（先生用）', 'パスワードハッシュ', 'ソルト', '登録日時', '最終ログイン', '失敗回数', 'ロック解除時刻',
-             '管理者（○で有効）'],
+             '管理者（○で有効）', 'ランキングに載せない'],
   SESSIONS: ['トークンハッシュ', 'ログインID', '有効期限', '発行日時'],
   PROGRESS: ['ログインID', '更新日時', 'リビジョン', '分割数'].concat(
               Array.from({ length: MAX_CHUNKS }, (_, i) => 'データ' + (i + 1))),
@@ -71,6 +74,7 @@ const HEADERS = {
              '連続ログイン', '撃破ボス数', '習得語数', '殿堂入り', '殿堂入り日', '進捗更新',
              '開いている手帖', '鉄（枚）', '銅（枚）', '銀（枚）', '金（枚）', '白金（枚）', '要確認'],
   HOF:      ['達成日時', 'ログインID', 'ニックネーム', '区分'],
+  CLASS:    ['クラス', '人数', '直近7日に利用した人数', '利用率', '直近7日の回答数', '1人あたり累計回答数', '正答率', '1人あたりカード', '1人あたり習得語数'],
 };
 
 // 取り組み状況シートの列番号（1始まり）
@@ -103,6 +107,7 @@ function doPost(e) {
       case 'saveProgress': return json_(saveProgress_(req));
       case 'log':          return json_(log_(req));
       case 'adminUnlock':  return json_(adminUnlock_(req));
+      case 'setPrefs':     return json_(setPrefs_(req));
       default:             return json_({ ok: false, error: 'unknown_action' });
     }
   } catch (err) {
@@ -140,7 +145,7 @@ function register_(req) {
 
     const salt = Utilities.getUuid();
     const now  = new Date();
-    appendRow_(users, [loginId, nickname, '', '', passHash_(salt, password), salt, now, now, 0, '', ''], [1, 2, 3, 4, 5, 6]);
+    appendRow_(users, [loginId, nickname, '', '', passHash_(salt, password), salt, now, now, 0, '', '', ''], [1, 2, 3, 4, 5, 6]);
 
     upsertStatus_(loginId, { nickname: nickname, created: now });
 
@@ -186,7 +191,7 @@ function login_(req) {
     }
     users.getRange(row, 8, 1, 3).setValues([[now, 0, '']]);
     const token = issueToken_(loginId);
-    return { ok: true, token: token, loginId: loginId, nickname: v[1] };
+    return { ok: true, token: token, loginId: loginId, nickname: v[1], hideRanking: String(v[11] || '').trim() !== '' };
   });
 }
 
@@ -205,7 +210,22 @@ function me_(req) {
   if (!loginId) return { ok: false, error: 'auth' };
   const users = sheet_(SHEET.USERS);
   const row = findRow_(users, 1, loginId);
-  return { ok: true, loginId: loginId, nickname: row ? users.getRange(row, 2).getValue() : '' };
+  return { ok: true, loginId: loginId, nickname: row ? users.getRange(row, 2).getValue() : '',
+           hideRanking: row ? String(users.getRange(row, 12).getValue() || '').trim() !== '' : false };
+}
+
+/** 生徒の設定（いまは「ランキングに載せない」だけ） */
+function setPrefs_(req) {
+  const loginId = auth_(req.token);
+  if (!loginId) return { ok: false, error: 'auth' };
+  return withLock_(() => {
+    const users = sheet_(SHEET.USERS);
+    const row = findRow_(users, 1, loginId);
+    if (!row) return { ok: false, error: 'auth' };
+    users.getRange(row, 12).setValue(req.hideRanking ? '○' : '');
+    CacheService.getScriptCache().remove('hofRanking');
+    return { ok: true, hideRanking: !!req.hideRanking };
+  });
 }
 
 function issueToken_(loginId) {
@@ -494,15 +514,15 @@ function hofRanking_() {
   const last = h.getLastRow();
   let ranking = [];
   if (last > 1) {
-    const nickById = {};
+    const nickById = {}, hidden = {};
     const users = sheet_(SHEET.USERS);
     if (users.getLastRow() > 1) {
-      users.getRange(2, 1, users.getLastRow() - 1, 2).getValues()
-        .forEach(r => { nickById[String(r[0])] = r[1]; });
+      users.getRange(2, 1, users.getLastRow() - 1, 12).getValues()
+        .forEach(r => { nickById[String(r[0])] = r[1]; if (String(r[11] || '').trim()) hidden[String(r[0])] = true; });
     }
     const tz = Session.getScriptTimeZone();
     ranking = h.getRange(2, 1, last - 1, 4).getValues()
-      .filter(r => r[0] instanceof Date)
+      .filter(r => r[0] instanceof Date && !hidden[String(r[1])])   // 「ランキングに載せない」生徒は除く
       .sort((a, b) => a[0] - b[0])
       .slice(0, RANKING_LIMIT)
       .map(r => ({
@@ -522,7 +542,11 @@ function onOpen() {
     .addItem('初期セットアップ', 'setupFromMenu')
     .addSeparator()
     .addItem('選択中の生徒のパスワードをリセット', 'resetPasswordForSelectedUser')
+    .addItem('選択中の生徒のデータをすべて削除', 'deleteSelectedUser')
     .addItem('期限切れのログイン情報を削除', 'cleanupSessions')
+    .addSeparator()
+    .addItem('今すぐバックアップ', 'backupNow')
+    .addItem('毎週の自動バックアップを開始', 'installWeeklyBackup')
     .addSeparator()
     .addItem('管理者キーを設定・変更', 'setAdminKey')
     .addToUi();
@@ -571,6 +595,8 @@ function setup() {
   ]);
   st.setColumnWidth(ST.FLAG, 220);
   if (!st.getFilter()) st.getRange(1, 1, Math.max(st.getMaxRows(), 2), HEADERS.STATUS.length).createFilter();
+
+  setupClassSheet_();
 
   // 内部用シートは隠す（パスワードのハッシュ・トークン・進捗の生データ）
   [SHEET.SESSIONS, SHEET.PROGRESS].forEach(n => sheet_(n).hideSheet());
@@ -676,6 +702,118 @@ function checkAnomaly_(loginId, sm, now) {
     }
   }
   return flags;
+}
+
+/** クラス別集計シート：取り組み状況の「クラス（先生用）」列に先生がクラスを書くと、自動で集計される */
+function setupClassSheet_() {
+  const c = sheet_(SHEET.CLASS);
+  const S = "'" + SHEET.STATUS + "'!";
+  // 列：D=クラス G=未利用日数 I=直近7日の回答数 J=累計回答数 K=正解数 M=獲得カード S=習得語数
+  const f = [
+    '=IFERROR(SORT(UNIQUE(FILTER(' + S + 'D2:D, ' + S + 'D2:D<>""))), "")',
+    '=ARRAYFORMULA(IF(A2:A="", "", COUNTIF(' + S + 'D2:D, A2:A)))',
+    '=ARRAYFORMULA(IF(A2:A="", "", COUNTIFS(' + S + 'D2:D, A2:A, ' + S + 'G2:G, "<=7")))',
+    '=ARRAYFORMULA(IF(A2:A="", "", IFERROR(C2:C/B2:B, 0)))',
+    '=ARRAYFORMULA(IF(A2:A="", "", SUMIF(' + S + 'D2:D, A2:A, ' + S + 'I2:I)))',
+    '=ARRAYFORMULA(IF(A2:A="", "", IFERROR(SUMIF(' + S + 'D2:D, A2:A, ' + S + 'J2:J)/B2:B, 0)))',
+    '=ARRAYFORMULA(IF(A2:A="", "", IFERROR(SUMIF(' + S + 'D2:D, A2:A, ' + S + 'K2:K)/SUMIF(' + S + 'D2:D, A2:A, ' + S + 'J2:J), "")))',
+    '=ARRAYFORMULA(IF(A2:A="", "", IFERROR(SUMIF(' + S + 'D2:D, A2:A, ' + S + 'M2:M)/B2:B, 0)))',
+    '=ARRAYFORMULA(IF(A2:A="", "", IFERROR(SUMIF(' + S + 'D2:D, A2:A, ' + S + 'S2:S)/B2:B, 0)))',
+  ];
+  c.getRange(2, 1, 1, f.length).setFormulas([f]);
+  c.getRange('D:D').setNumberFormat('0%');
+  c.getRange('G:G').setNumberFormat('0%');
+  c.getRange('F:F').setNumberFormat('0');
+  c.getRange('H:I').setNumberFormat('0');
+}
+
+/** 選択した生徒のデータをすべて削除（卒業・転校・本人の希望のとき）。元に戻せない */
+function deleteSelectedUser() {
+  const ui = SpreadsheetApp.getUi();
+  const sh = SpreadsheetApp.getActiveSheet();
+  if (sh.getName() !== SHEET.USERS && sh.getName() !== SHEET.STATUS) {
+    ui.alert('「' + SHEET.USERS + '」または「' + SHEET.STATUS + '」シートで生徒の行を選んでから実行してください。');
+    return;
+  }
+  const row = sh.getActiveRange().getRow();
+  const loginId = row > 1 ? String(sh.getRange(row, 1).getValue()) : '';
+  if (!loginId) { ui.alert('生徒の行を選択してください。'); return; }
+  const ok = ui.alert('データの削除', loginId + ' の登録情報・進捗・学習ログ・集計・殿堂入りの記録をすべて削除します。元に戻せません。よろしいですか？', ui.ButtonSet.YES_NO);
+  if (ok !== ui.Button.YES) return;
+  const n = deleteUserData_(loginId);
+  ui.alert(loginId + ' のデータを削除しました（' + n + '行）。');
+}
+
+/** ログインIDに関係する行をすべてのシートから削除。削除した行数を返す */
+function deleteUserData_(loginId) {
+  return withLock_(() => {
+    let total = 0;
+    // [シート, ログインIDの列]
+    [[SHEET.USERS, 1], [SHEET.SESSIONS, 2], [SHEET.PROGRESS, 1], [SHEET.STATUS, 1],
+     [SHEET.LOG, 2], [SHEET.DAILY, 2], [SHEET.HOF, 2]].forEach(([name, col]) => {
+      const sh = sheet_(name);
+      const last = sh.getLastRow();
+      if (last < 2) return;
+      const width = Math.max(HEADERS[Object.keys(SHEET).find(k => SHEET[k] === name)].length, 1);
+      const rng = sh.getRange(2, 1, last - 1, width);
+      const vals = rng.getValues();
+      const keep = vals.filter(r => String(r[col - 1]) !== loginId);
+      const removed = vals.length - keep.length;
+      if (!removed) return;
+      total += removed;
+      if (name === SHEET.STATUS) {
+        // 取り組み状況は数式の列があるので、行ごと削除する（下から）
+        for (let i = vals.length - 1; i >= 0; i--) if (String(vals[i][col - 1]) === loginId) sh.deleteRow(i + 2);
+      } else {
+        rng.clearContent();
+        if (keep.length) sh.getRange(2, 1, keep.length, width).setValues(keep);
+      }
+    });
+    CacheService.getScriptCache().remove('hofRanking');
+    return total;
+  });
+}
+
+/** バックアップ：別のスプレッドシート「英単語図鑑_バックアップ」に、全シートの値を日付つきで写す。古いものは BACKUP_KEEP 回分だけ残す */
+function backupNow(silent) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const props = PropertiesService.getScriptProperties();
+  let bk = null;
+  const id = props.getProperty('BACKUP_ID');
+  if (id) { try { bk = SpreadsheetApp.openById(id); } catch (e) { bk = null; } }
+  if (!bk) {
+    bk = SpreadsheetApp.create('英単語図鑑_バックアップ');
+    props.setProperty('BACKUP_ID', bk.getId());
+  }
+  const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyyMMdd_HHmm');
+  Object.keys(SHEET).forEach(k => {
+    if (k === 'CLASS') return;   // 集計は数式なので不要
+    const src = sheet_(SHEET[k]);
+    const last = src.getLastRow();
+    const width = HEADERS[k].length;
+    const dst = bk.insertSheet(stamp + '_' + SHEET[k]);
+    if (last > 0) dst.getRange(1, 1, last, width).setValues(src.getRange(1, 1, last, width).getValues());
+  });
+  // 古いバックアップを削除
+  const stamps = Array.from(new Set(bk.getSheets().map(sh => sh.getName().split('_').slice(0, 2).join('_'))
+    .filter(n => /^\d{8}_\d{4}$/.test(n)))).sort();
+  stamps.slice(0, Math.max(0, stamps.length - BACKUP_KEEP)).forEach(old => {
+    bk.getSheets().filter(sh => sh.getName().indexOf(old + '_') === 0).forEach(sh => bk.deleteSheet(sh));
+  });
+  const def = bk.getSheetByName('シート1') || bk.getSheetByName('Sheet1');
+  if (def && bk.getSheets().length > 1) bk.deleteSheet(def);
+  console.log('バックアップしました: ' + stamp + '（' + bk.getUrl() + '）');
+  if (silent !== true) {
+    try { SpreadsheetApp.getUi().alert('バックアップしました（' + stamp + '）。\nGoogleドライブの「英単語図鑑_バックアップ」に保存されています。'); } catch (e) {}
+  }
+}
+function weeklyBackup() { backupNow(true); }   // トリガーから呼ぶので名前の最後に _ を付けない
+
+/** 毎週日曜の深夜にバックアップするトリガーを設定（何度実行しても1つだけ） */
+function installWeeklyBackup() {
+  ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'weeklyBackup').forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('weeklyBackup').timeBased().onWeekDay(ScriptApp.WeekDay.SUNDAY).atHour(2).create();
+  try { SpreadsheetApp.getUi().alert('毎週日曜の深夜2時ごろに自動でバックアップするように設定しました。'); } catch (e) {}
 }
 
 function cleanupSessions() {

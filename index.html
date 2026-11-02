@@ -1832,6 +1832,9 @@
             border-radius: 8px; padding: 8px 10px; font-size: 12.5px; margin-bottom: 12px; line-height: 1.5;
         }
         .auth-note { font-size: 11.5px; color: #7a6a50; line-height: 1.6; margin: 10px 0 0; }
+        .auth-check { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #5a4630; margin: 2px 0 10px; cursor: pointer; }
+        .auth-check input { width: 17px; height: 17px; margin: 0; accent-color: #8a5a10; }
+        .auth-privacy { display: block; text-align: center; font-size: 11px; color: #9a8a70; margin-top: 10px; text-decoration: underline; }
         .auth-guest-btn {
             display: block; width: 100%; margin-top: 14px; padding: 10px; font-size: 13px;
             background: transparent; border: 1.5px dashed #b0a080; color: #6a5a40; border-radius: 8px;
@@ -2150,7 +2153,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-1130</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-1200</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -2516,7 +2519,10 @@ const Cloud = (function () {
         'weeklyChallenges', 'hallOfFame', 'battleProgress', 'notebookState', 'gold', 'awakened',
         'cardMergeV1', 'advArea',   // カード番号移行済みの印（別端末で取り込んだときに二重移行しないため）／冒険の道の地域
     ];
-    const K = { SESSION: 'authSession', GUEST: 'authGuest', DIRTY: 'authDirty', QUEUE: 'logQueue', LAST: 'authLastSync' };
+    const K = { SESSION: 'authSession', GUEST: 'authGuest', DIRTY: 'authDirty', QUEUE: 'logQueue', LAST: 'authLastSync', ACTIVE: 'authLastActive' };
+    // 共用の端末：最後の操作からこの時間がたったら、次に開いたとき自動でログアウトする（記録は保存してから）
+    const SHARED_IDLE_MIN = 20;
+    const PRIVACY_LINK = '<a class="auth-privacy" href="privacy.html" target="_blank" rel="noopener">プライバシーについて</a>';
 
     const rawSet    = Storage.prototype.setItem;
     const rawRemove = Storage.prototype.removeItem;
@@ -2789,9 +2795,11 @@ const Cloud = (function () {
                     oninput="this.value=this.value.toLowerCase()">
                 <label class="auth-label" for="authPin">パスワード</label>
                 <input class="modal-input" id="authPin" type="password" maxlength="32" autocomplete="current-password" autocapitalize="off" spellcheck="false">
+                <label class="auth-check"><input type="checkbox" id="authShared">共用の端末</label>
                 <button class="modal-btn" type="submit">ログイン</button>
             </form>
-            ${guestButton()}`;
+            ${guestButton()}
+            ${PRIVACY_LINK}`;
 
         if (v === 'register') return `
             <h3 class="auth-title">はじめての登録</h3>
@@ -2807,9 +2815,11 @@ const Cloud = (function () {
                 <input class="modal-input" id="regPin" type="password" maxlength="32" autocomplete="new-password" autocapitalize="off" spellcheck="false" placeholder="英字と数字を含む8文字以上">
                 <label class="auth-label" for="regPin2">パスワード（確認）</label>
                 <input class="modal-input" id="regPin2" type="password" maxlength="32" autocomplete="new-password" autocapitalize="off" spellcheck="false">
+                <label class="auth-check"><input type="checkbox" id="regShared">共用の端末</label>
                 <button class="modal-btn" type="submit">登録して始める</button>
             </form>
-            ${guestButton()}`;
+            ${guestButton()}
+            ${PRIVACY_LINK}`;
 
         if (v === 'choice') return `
             <h3 class="auth-title">どちらの記録で遊びますか？</h3>
@@ -2835,11 +2845,13 @@ const Cloud = (function () {
             <div class="auth-kv"><span>ニックネーム</span><span>${esc(session.nickname)}</span></div>
             <div class="auth-kv"><span>ログインID</span><span>${esc(session.loginId)}</span></div>
             <div class="auth-kv"><span>同期の状態</span><span>${state}</span></div>
-            <div class="auth-kv" style="margin-bottom:14px;"><span>最後に保存</span><span>${lastStr}</span></div>
+            <div class="auth-kv"><span>最後に保存</span><span>${lastStr}</span></div>
+            ${session.shared ? '<div class="auth-kv"><span>端末</span><span>共用（自動でログアウト）</span></div>' : ''}
+            <label class="auth-check" style="margin:12px 0 14px;"><input type="checkbox" id="prefHideRanking" ${session.hideRanking ? 'checked' : ''} onchange="Cloud.setHideRanking(this.checked)">殿堂入りランキングに載せない</label>
             <button class="modal-btn" onclick="Cloud.manualSave()">☁️ 今すぐ保存</button>
             <button class="modal-btn" style="background:#6a3030;margin-top:10px;" onclick="Cloud.logout()">ログアウト</button>
-            <p class="auth-note">共用の端末ではログアウトしてください。ログアウトすると、この端末の記録は消え、次の人が新しく始められます（記録はアカウントに保存されています）。</p>
-            <button class="modal-cancel-btn" style="display:block;margin:10px auto 0;" onclick="Cloud.closeModal()">閉じる</button>`;
+            <button class="modal-cancel-btn" style="display:block;margin:10px auto 0;" onclick="Cloud.closeModal()">閉じる</button>
+            ${PRIVACY_LINK}`;
         }
         return '';
     }
@@ -2872,8 +2884,11 @@ const Cloud = (function () {
     }
 
     async function afterAuth(res, isRegister) {
-        session = { loginId: res.loginId, nickname: res.nickname, token: res.token, rev: 0 };
+        const sharedEl = document.getElementById(isRegister ? 'regShared' : 'authShared');
+        session = { loginId: res.loginId, nickname: res.nickname, token: res.token, rev: 0,
+                    shared: !!(sharedEl && sharedEl.checked), hideRanking: !!res.hideRanking };
         saveSession();
+        markActive(true);
         lsDel(K.GUEST);
         renderChip();
         flushLogs();
@@ -2947,10 +2962,43 @@ const Cloud = (function () {
             if (!confirm('記録をサーバーに保存できませんでした。このままログアウトすると、最後に保存してからの記録は失われます。ログアウトしますか？')) return;
         }
         api('logout', { token: session.token });
+        clearLocalAndReload();
+    }
+    function clearLocalAndReload() {
         SYNC_KEYS.forEach(k => lsDel(k));
-        lsDel(K.DIRTY); lsDel(K.LAST);
+        lsDel(K.DIRTY); lsDel(K.LAST); lsDel(K.ACTIVE);
         session = null; saveSession();
         location.reload();
+    }
+
+    // 共用の端末：しばらく操作がなかったら、記録を保存してからこの端末の記録を消し、ログイン画面に戻す
+    let _activeAt = 0;
+    function markActive(force) {
+        const now = Date.now();
+        if (!force && now - _activeAt < 30000) return;   // 30秒に1回だけ書く
+        _activeAt = now;
+        lsSet(K.ACTIVE, String(now));
+    }
+    function sharedIdleExpired() {
+        if (!session || !session.shared) return false;
+        const last = Number(lsGet(K.ACTIVE)) || 0;
+        return last > 0 && Date.now() - last > SHARED_IDLE_MIN * 60000;
+    }
+    async function autoLogoutShared() {
+        try {
+            await flushLogs();
+            if (lsGet(K.DIRTY) === '1') await saveNow();
+            api('logout', { token: session.token });
+        } catch (e) {}
+        clearLocalAndReload();
+    }
+
+    async function setHideRanking(on) {
+        if (!session) return;
+        const res = await api('setPrefs', { token: session.token, hideRanking: !!on });
+        if (!res.ok) { showError(errMsg(res)); const el = document.getElementById('prefHideRanking'); if (el) el.checked = !on; return; }
+        session.hideRanking = !!res.hideRanking; saveSession();
+        toast(on ? '殿堂入りランキングに載せないようにしました' : '殿堂入りランキングに載せるようにしました');
     }
 
     function playAsGuest() {
@@ -2973,6 +3021,12 @@ const Cloud = (function () {
         if (!GAS_URL) return;
         renderChip();
         flushLogs();
+        if (session && sharedIdleExpired()) { autoLogoutShared(); return; }
+        if (session) markActive(true);
+        ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { if (session) markActive(false); }, { passive: true, capture: true }));
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && sharedIdleExpired()) autoLogoutShared();
+        });
         if (session) {
             syncOnStartup();
         } else if (lsGet(K.GUEST) !== '1') {
@@ -2989,7 +3043,7 @@ const Cloud = (function () {
     }
 
     return {
-        start, log, saveNow, openModal, closeModal, chipClick, playAsGuest, adminUnlock, errorText,
+        start, log, saveNow, openModal, closeModal, chipClick, playAsGuest, adminUnlock, errorText, setHideRanking,
         submitLogin, submitRegister, useServer, useLocal, manualSave, logout,
         isLoggedIn: () => !!session,
         nickname: () => session ? session.nickname : null,
