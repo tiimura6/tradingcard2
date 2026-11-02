@@ -8339,14 +8339,14 @@ const Cloud = (function () {
 
     let _awakenAttempt = false;
     /* ========== 冒険の道（問題を解くたびに旅が進む演出） ==========
-       正解した数だけ進む（不正解では進まない）。必要な正解数は地域ごとに倍：草原5→森10→洞窟20→丘40→遺跡80→山脈160→城320。
+       正解した数だけ進む（不正解では進まない）。必要な正解数は1面10問、以降10問ずつ増える：草原10→森20→洞窟30→丘40→遺跡50→山脈60→城70。
        手帖ごとに行ける地域が決まっていて（鉄＝1〜3面、銅＝1〜4面、銀＝1〜5面、金＝1〜6面、白金＝1〜7面）、
        最終面に着いたらそれ以降はその地域にとどまる。進み具合は手帖ごとに advProg に保存。報酬は変えない */
     const ADV_LAST = { A1: 2, A2: 3, B1: 4, B2: 5, PT: 6 };
     function advNbKey() { return (typeof currentNB !== 'undefined' && currentNB && currentNB.key) || 'A1'; }
     function advLast() { const v = ADV_LAST[advNbKey()]; return v == null ? 6 : v; }
-    const ADV_BASE = 5;
-    function advNeed(i) { return ADV_BASE * Math.pow(2, i); }
+    const ADV_BASE = 10;
+    function advNeed(i) { return ADV_BASE * (i + 1); }
     const ADV_AREAS = [
         { key: 'meadow',   imgs: ['morning', 'day', 'evening', 'night'], tod: 1, name: 'はじまりの草原', icon: '🌄', goal: '🗺️', tint: '#a8d870', enc: ['🐇 野うさぎが道をふさいだ', '🪧 古い道しるべに文字が刻まれている', '🧚 草原の妖精が問いかけてきた', '🐦 小鳥が手紙をくわえてきた'] },
         { key: 'forest',   imgs: ['morning', 'day', 'evening', 'night'], tod: 1,   name: 'ささやきの森', icon: '🌲', goal: '🏕️', tint: '#8fd060', enc: ['🍄 キノコの精が問いかけてきた', '🦊 森のキツネがなぞなぞを出した', '🌿 木の幹に古い文字が刻まれている', '🦉 フクロウが言葉の意味をたずねた'] },

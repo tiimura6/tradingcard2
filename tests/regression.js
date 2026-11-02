@@ -270,7 +270,7 @@ test('同じつづりの語は1枚：意味ごとの例文を表示／出題は�
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
-test('紙吹雪は新しいカードのときだけ／冒険の道：答えるたびに進み5問で次の地域へ', async b => {
+test('紙吹雪は新しいカードのときだけ／冒険の道：答えるたびに進み10問で次の地域へ', async b => {
   const p = await openApp(b, { seed: { cardMergeV1: '1' } });
   await p.evaluate(() => { window.__cf = 0; window.confetti = () => { window.__cf++; }; });
   const c = await p.evaluate(() => {
@@ -289,6 +289,7 @@ test('紙吹雪は新しいカードのときだけ／冒険の道：答える�
   await p.waitForTimeout(1500);
   await p.evaluate(() => { closeTrainingModal(false); openTrainingMode(); });
   await p.waitForTimeout(400);
+  await p.evaluate(() => { advState().step = 5; });   // 1面は10問：残り5問から
   for (let i = 0; i < 5; i++) {
     await p.evaluate(() => { trainingSession.qCount = 0; const btn = document.querySelector('.quiz-choice-btn[data-correct]'); btn.click(); });
     await p.waitForTimeout(1500);
@@ -433,7 +434,7 @@ test('冒険：地域ごとに背景が変わる・正解で演出が出る／�
   assert(e.includes('adv_meadow_evening.jpg'), e);
   await p.evaluate(() => { trainingSession.qCount = 0; document.querySelector('.quiz-choice-btn[data-correct]').click(); }); await p.waitForTimeout(150);
   assert(await p.evaluate(() => !!document.querySelector('#advFx .fx-word')), '正解の演出が出ない');
-  // 不正解では進まない／必要な正解数は地域ごとに倍（森＝10、城＝320）／進み具合は保存される
+  // 不正解では進まない／必要な正解数は10問ずつ増える（草原10・森20・城70）／進み具合は保存される
   const r = await p.evaluate(() => {
     const a = advState(); a.area = 1; a.step = 3; a.miss = 0; advRender('');
     const before = document.querySelector('#advTrail .adv-count').textContent;
@@ -442,11 +443,11 @@ test('冒険：地域ごとに背景が変わる・正解で演出が出る／�
     advAfterAnswer(true);
     return { before, afterNg, afterOk: document.querySelector('#advTrail .adv-count').textContent, saved: JSON.parse(localStorage.getItem('advProg')).A1.step, miss: JSON.parse(localStorage.getItem('advProg')).A1.miss, need: [0,1,6].map(advNeed) };
   });
-  assert(r.before === '3 / 10' && r.afterNg === '3 / 10' && r.afterOk === '4 / 10' && r.saved === 4 && r.miss === 1, JSON.stringify(r));
-  assert(r.need.join() === '5,10,320', r.need.join());
+  assert(r.before === '3 / 20' && r.afterNg === '3 / 20' && r.afterOk === '4 / 20' && r.saved === 4 && r.miss === 1, JSON.stringify(r));
+  assert(r.need.join() === '10,20,70', r.need.join());
   // 長い道はゲージ表示。鉄の手帖の最終面（3面・洞窟）を踏破しても、その地にとどまる
   const g = await p.evaluate(() => {
-    const a = advState(); a.area = 2; a.step = 19; advRender('');
+    const a = advState(); a.area = 2; a.step = 29; advRender('');
     const fill = !!document.querySelector('#advTrail .adv-fill') && document.querySelectorAll('#advTrail .adv-node').length === 0;
     advAfterAnswer(true); advBeforeQuestion();
     return { fill, area: advState().area, step: JSON.parse(localStorage.getItem('advProg')).A1.step, t: (document.querySelector('#advClear .t3') || {}).textContent };
@@ -459,7 +460,7 @@ test('冒険：地域ごとに背景が変わる・正解で演出が出る／�
     const r = { fresh, area: advState().area, last: advLast(), t: document.querySelector('#advClear .t3').textContent };
     currentNB = NB_BY_KEY.A1; r.a1 = advState().area; return r;
   });
-  assert(g2.fresh && g2.area === 4 && g2.last === 5 && g2.t.includes('80問') && g2.a1 === 2, JSON.stringify(g2));
+  assert(g2.fresh && g2.area === 4 && g2.last === 5 && g2.t.includes('50問') && g2.a1 === 2, JSON.stringify(g2));
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
