@@ -2187,7 +2187,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-1525</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-1540</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -8240,7 +8240,7 @@ const Cloud = (function () {
     const ADV_AREAS = [
         { key: 'meadow',   imgs: ['morning', 'day', 'evening', 'night'], tod: 1, name: 'はじまりの草原', icon: '🌄', goal: '🗺️', tint: '#a8d870', enc: ['🐇 野うさぎが道をふさいだ', '🪧 古い道しるべに文字が刻まれている', '🧚 草原の妖精が問いかけてきた', '🐦 小鳥が手紙をくわえてきた'] },
         { key: 'forest',   imgs: ['morning', 'day', 'evening', 'night'], tod: 1,   name: 'ささやきの森', icon: '🌲', goal: '🏕️', tint: '#8fd060', enc: ['🍄 キノコの精が問いかけてきた', '🦊 森のキツネがなぞなぞを出した', '🌿 木の幹に古い文字が刻まれている', '🦉 フクロウが言葉の意味をたずねた'] },
-        { key: 'cave',     imgs: ['day'], tod: .35, name: '霧の洞窟',     icon: '🦇', goal: '💎', tint: '#8fa0ff', enc: ['🦇 コウモリの群れが道をふさいだ', '🕯️ 壁に光る文字が浮かび上がった', '🗝️ 錆びた扉に謎の言葉が…', '💧 地底湖に言葉が映っている'] },
+        { key: 'cave',     imgs: ['morning', 'day', 'evening', 'night'], tod: .35, name: '霧の洞窟',     icon: '🦇', goal: '💎', tint: '#8fa0ff', enc: ['🦇 コウモリの群れが道をふさいだ', '🕯️ 壁に光る文字が浮かび上がった', '🗝️ 錆びた扉に謎の言葉が…', '💧 地底湖に言葉が映っている'] },
         { key: 'hill',     imgs: ['day'], tod: .3,  name: '星降る丘',     icon: '⛰️', goal: '🔭', tint: '#c9a6ff', enc: ['⭐ 流れ星が言葉を落としていった', '🐑 羊飼いの少年が道をたずねた', '🌙 月の精がささやいた', '🪁 風に乗って手紙が飛んできた'] },
         { key: 'ruins',    imgs: ['day'], tod: 1,   name: '古代の遺跡',   icon: '🏛️', goal: '📜', tint: '#e8b850', enc: ['🗿 石像が口を開いた', '📜 古文書の一節が読めそうだ', '🐍 封印の蛇が合言葉を求めている', '🏺 壺の底に文字が刻まれている'] },
         { key: 'mountain', imgs: ['day'], tod: 1,   name: '竜の山脈',     icon: '🐉', goal: '🥚', tint: '#ff8a60', enc: ['🔥 竜の吐息で道が熱い…', '🦅 大鷲が試練を与えた', '⛏️ 鉱夫が岩に刻んだ言葉を見せた', '🌋 火山の精霊が問いかけた'] },
