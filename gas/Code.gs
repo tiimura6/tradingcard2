@@ -3,7 +3,7 @@
  * Google Apps Script（スプレッドシートにバインド）
  *
  * 機能
- *   - 生徒の自己登録（ログインID + ニックネーム + クラス + パスワード）とログイン。氏名は集めない
+ *   - 生徒の自己登録（ログインID + ニックネーム + パスワード）とログイン。氏名・クラスは集めない
  *   - セキュリティ：パスワードはソルト付きで繰り返しハッシュ化、失敗が続くと段階的にロック、
  *     送信回数の制限、スプレッドシートへの数式の埋め込み防止、管理者キーはサーバーで照合、不正な記録の検出
  *   - 進捗データの保存・復元（端末をまたいで続きから遊べる）
@@ -58,7 +58,7 @@ const SHEET = {
 };
 
 const HEADERS = {
-  USERS:    ['ログインID', 'ニックネーム', 'メモ（先生用）', 'クラス', 'パスワードハッシュ', 'ソルト', '登録日時', '最終ログイン', '失敗回数', 'ロック解除時刻',
+  USERS:    ['ログインID', 'ニックネーム', 'メモ（先生用）', 'クラス（先生用）', 'パスワードハッシュ', 'ソルト', '登録日時', '最終ログイン', '失敗回数', 'ロック解除時刻',
              '管理者（○で有効）'],
   SESSIONS: ['トークンハッシュ', 'ログインID', '有効期限', '発行日時'],
   PROGRESS: ['ログインID', '更新日時', 'リビジョン', '分割数'].concat(
@@ -66,7 +66,7 @@ const HEADERS = {
   LOG:      ['タイムスタンプ', 'ユーザー', '区分', 'セッションID', 'イベント', 'カードNo', '英単語', '意味',
              'レベル', '正誤', '回答時間(秒)', '取得カード数', '連続正解', '手帖'],
   DAILY:    ['日付', 'ログインID', '回答数', '正解数', 'キー'],
-  STATUS:   ['ログインID', 'ニックネーム', 'メモ（先生用）', 'クラス', '登録日', '最終利用', '未利用日数', '利用日数',
+  STATUS:   ['ログインID', 'ニックネーム', 'メモ（先生用）', 'クラス（先生用）', '登録日', '最終利用', '未利用日数', '利用日数',
              '直近7日の回答数', '累計回答数', '正解数', '正答率', '獲得カード', '収集率', 'レベル', '累計XP',
              '連続ログイン', '撃破ボス数', '習得語数', '殿堂入り', '殿堂入り日', '進捗更新',
              '開いている手帖', '鉄（枚）', '銅（枚）', '銀（枚）', '金（枚）', '白金（枚）', '要確認'],
@@ -126,7 +126,6 @@ function doGet(e) {
 function register_(req) {
   const loginId  = normId_(req.loginId);
   const nickname = cleanText_(req.nickname, 12);
-  const klass    = cleanText_(req.klass, 10);
   const password = String(req.password || '');
 
   if (!/^[a-z0-9_]{3,16}$/.test(loginId)) return { ok: false, error: 'invalid_id' };
@@ -141,9 +140,9 @@ function register_(req) {
 
     const salt = Utilities.getUuid();
     const now  = new Date();
-    appendRow_(users, [loginId, nickname, '', klass, passHash_(salt, password), salt, now, now, 0, '', ''], [1, 2, 3, 4, 5, 6]);
+    appendRow_(users, [loginId, nickname, '', '', passHash_(salt, password), salt, now, now, 0, '', ''], [1, 2, 3, 4, 5, 6]);
 
-    upsertStatus_(loginId, { nickname: nickname, klass: klass, created: now });
+    upsertStatus_(loginId, { nickname: nickname, created: now });
 
     const token = issueToken_(loginId);
     return { ok: true, token: token, loginId: loginId, nickname: nickname };
@@ -767,7 +766,7 @@ function withLock_(fn) {
 function testFlow() {
   const call = obj => JSON.parse(doPost({ postData: { contents: JSON.stringify(obj) } }).getContent());
   const id = 'test' + Math.floor(Math.random() * 10000);
-  const reg = call({ action: 'register', loginId: id, nickname: 'テスト' + id, klass: '2-3', password: 'test1234' });
+  const reg = call({ action: 'register', loginId: id, nickname: 'テスト' + id, password: 'test1234' });
   Logger.log(reg);
   Logger.log(call({ action: 'login', loginId: id, password: 'test1234' }));
   Logger.log(call({ action: 'saveProgress', token: reg.token, rev: 0,
