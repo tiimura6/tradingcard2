@@ -5555,6 +5555,7 @@ const Cloud = (function () {
     function getAdventureBGM() {
         if (!adventureBGM) {
             adventureBGM = new Audio('./bgm/adventure.mp3');
+            adventureBGM.dataset.src = './bgm/adventure.mp3';
             adventureBGM.loop = true;
             adventureBGM.volume = 0.35;
             adventureBGM.preload = 'auto';
@@ -5637,6 +5638,7 @@ const Cloud = (function () {
             if (bgmAudio) bgmAudio.pause();
             if (bgmCtx) bgmCtx.suspend();
             const adv = getAdventureBGM();
+            try { advSetBgmSrc(adv, 0); } catch (e) {}   // 冒険はいつも1面（はじまりの草原）から
             adv.currentTime = 0;
             adv.play().catch(e => console.warn('adventureBGM play failed:', e));
         }
@@ -5662,6 +5664,8 @@ const Cloud = (function () {
     function exitAdventureMode() {
         if (!adventureActive) return;
         adventureActive = false;
+        // 冒険をやめたら、次はまた1面（はじまりの草原）から
+        try { advResetProgress(); } catch (e) {}
         const fade = document.getElementById('adventure-fade');
 
         // フェードアウト
@@ -8386,6 +8390,40 @@ const Cloud = (function () {
         return { area, step: Math.min(Math.max(0, p.step | 0), advNeed(area)), miss: Math.max(0, p.miss | 0) };
     }
     function advStoredArea() { return advProg().area; }
+    function advResetProgress() {
+        const all = advProgAll();
+        all[advNbKey()] = { area: 0, step: 0, miss: 0 };
+        localStorage.setItem('advProg', JSON.stringify(all));
+        if (trainingSession) trainingSession.adv = null;
+    }
+    /* 地域ごとのBGM：ファイルを bgm/adv/ に置いて、ここに「地域キー: ファイル名」を足すだけで切り替わる。
+       登録がない地域は共通の bgm/adventure.mp3 */
+    const ADV_BGM = {
+        // meadow: 'bgm_meadow.mp3', forest: 'bgm_forest.mp3', cave: 'bgm_cave.mp3', hill: 'bgm_hill.mp3',
+        // ruins: 'bgm_ruins.mp3', mountain: 'bgm_mountain.mp3', castle: 'bgm_castle.mp3',
+    };
+    function advBgmSrc(i) { const A = ADV_AREAS[i] || ADV_AREAS[0]; return ADV_BGM[A.key] ? './bgm/adv/' + ADV_BGM[A.key] : './bgm/adventure.mp3'; }
+    // 戻り値：曲が変わったら true
+    function advSetBgmSrc(audio, i) {
+        const src = advBgmSrc(i);
+        if (audio.dataset.src === src) return false;
+        audio.dataset.src = src; audio.src = src;
+        return true;
+    }
+    // 地域が変わったとき：曲が違えば、少し小さくしてから切り替える
+    function advSwitchBGM(i) {
+        if (!adventureActive || !bgmOn || (battleSession && battleSession.active)) return;
+        const a = getAdventureBGM();
+        if (a.dataset.src === advBgmSrc(i)) return;
+        const v0 = 0.35; let v = a.volume;
+        const t = setInterval(() => {
+            v = Math.max(0, v - 0.05); a.volume = v;
+            if (v > 0) return;
+            clearInterval(t);
+            advSetBgmSrc(a, i); a.currentTime = 0; a.volume = v0;
+            if (adventureActive && bgmOn) a.play().catch(() => {});
+        }, 60);
+    }
     function advState() {
         const s = trainingSession;
         if (!s.adv || s.adv.nb !== advNbKey()) {
@@ -8539,7 +8577,7 @@ const Cloud = (function () {
             document.body.appendChild(ov);
             // 宝箱が開いて地域の宝が現れる → 背景が次の地域に変わる
             setTimeout(() => { const c = ov.querySelector('.chest'); if (c) { c.className = 'big'; c.textContent = A.goal; } advFx(true, 0, A.tint, '踏破'); }, 700);
-            setTimeout(() => advSetBackground(a.area), 1400);
+            setTimeout(() => { advSetBackground(a.area); advSwitchBGM(a.area); }, 1400);
             ov.onclick = () => ov.remove();
             setTimeout(() => ov.remove(), 3000);
             playSE('unlock');

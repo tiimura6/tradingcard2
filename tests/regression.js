@@ -461,6 +461,10 @@ test('冒険：地域ごとに背景が変わる・正解で演出が出る／�
     currentNB = NB_BY_KEY.A1; r.a1 = advState().area; return r;
   });
   assert(g2.fresh && g2.area === 4 && g2.last === 5 && g2.t.includes('50問') && g2.a1 === 2, JSON.stringify(g2));
+  // 冒険をやめると、次はまた1面から（今の手帖の進み具合を0に）
+  const q = await p.evaluate(() => { const a = advState(); a.area = 2; a.step = 7; advSave(a); adventureActive = true; exitAdventureMode();
+    return { p: JSON.parse(localStorage.getItem('advProg')).A1, s: trainingSession.adv, src: advBgmSrc(3) }; });
+  assert(q.p.area === 0 && q.p.step === 0 && q.s === null && q.src === './bgm/adventure.mp3', JSON.stringify(q));
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
