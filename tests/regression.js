@@ -360,6 +360,13 @@ test('穴埋め問題：例文ごとに確認した固定ダミーから選ぶ�
     return { n: fixed && fixed.length, seen, bad };
   });
   assert(r.n >= 3 && r.seen >= 1 && r.bad.length === 0, JSON.stringify(r));
+  // 俗語の意味（real＝本当に〈口語〉）は穴埋めに出さない／書き直した例文（light）は新しい文と手で選んだダミー
+  const r2 = await p.evaluate(() => {
+    const real = cardsData.find(c => c.id === 'a1-745'); real._si = 1; const skip1 = fbSkip(real); real._si = 0; const skip0 = fbSkip(real);
+    const light = cardsData.find(c => c.id === 'a1-536'); light._si = 0;
+    return { skip1, skip0, ex: light.quiz.example, d: fbDistractors(light) };
+  });
+  assert(r2.skip1 && !r2.skip0 && r2.ex.includes('only one small book') && r2.d.includes('hungry'), JSON.stringify(r2));
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
