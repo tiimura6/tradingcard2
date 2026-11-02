@@ -350,6 +350,15 @@ test('まとめて探す：最大10回・ゴールドと今日の残り回数を
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
+test('存在しないタブの撃破記録を削除（鉄のタブ12など）／出典表記', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1', battleProgress: { defeated: ['a1_tab3_mid', 'a1_tab10_final', 'a1_tab11_final', 'a1_tab11_mid', 'tab8_final', 'tab9_final', 'b2_tab26_final', 'b2_tab27_final', 'hof_tab8_final'] } } });
+  const d = await p.evaluate(() => JSON.parse(localStorage.getItem('battleProgress')).defeated.sort());
+  assert(JSON.stringify(d) === JSON.stringify(['a1_tab10_final', 'a1_tab3_mid', 'b2_tab26_final', 'hof_tab8_final', 'tab8_final']), JSON.stringify(d));
+  const credit = await p.evaluate(() => document.getElementById('nb-picker').innerText);
+  assert(credit.includes('CEFR-J Wordlist') && credit.includes('投野'), '出典表記がない');
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
 test('小さい画面（幅360px）で主な画面が横にはみ出さない', async b => {
   const p = await openApp(b, { viewport: { width: 360, height: 740 }, seed: { unlockedCards: ids('a1', 1, 50) } });
   const steps = ['openStudyMode("all")', 'closeStudyMode()', 'showHallOfFameModal()', 'closeChallengeModal()',

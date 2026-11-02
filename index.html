@@ -2099,7 +2099,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-1250</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-1310</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -2152,6 +2152,7 @@
         <div style="font-size:11px;color:#7a6a50;">前の手帖のカードを8割集めると、次の手帖が開きます</div>
         <div class="nb-list" id="nbList"></div>
         <button class="modal-cancel-btn" onclick="closeNotebookPicker()" style="margin-top:10px;">閉じる</button>
+        <div style="font-size:9.5px;color:#9a8a70;line-height:1.5;margin-top:10px;text-align:center;">鉄〜金の手帖の語彙：CEFR-J Wordlist Version 1.6（東京外国語大学 投野由紀夫研究室 編）<br>日本語訳・例文・解説は本アプリのオリジナルです</div>
     </div>
 </div>
 <!-- 手帖解禁のお知らせ -->
@@ -4633,6 +4634,18 @@ const Cloud = (function () {
 
     // バトル勝利記録 (defeated: [tabIndex, ...]) — 倒した敵のタブインデックス
     let battleProgress = safeParse('battleProgress', null) || { defeated: [] };
+    // カードの統合でタブが減った手帖の、存在しないタブの撃破記録を削除（例：鉄のタブ12）
+    (function pruneBattleProgress() {
+        if (!Array.isArray(battleProgress.defeated)) { battleProgress.defeated = []; return; }
+        const before = battleProgress.defeated.length;
+        battleProgress.defeated = battleProgress.defeated.filter(id => {
+            const m = /^(?:(a1|a2|b1|b2)_)?tab(\d+)_/.exec(id);
+            if (!m) return true;
+            const nb = NOTEBOOKS.find(n => (m[1] ? n.prefix === m[1] : n.key === 'PT'));
+            return !nb || +m[2] < Math.ceil(nb.count / COLLECTION_PAGE_SIZE);
+        });
+        if (battleProgress.defeated.length !== before) localStorage.setItem('battleProgress', JSON.stringify(battleProgress));
+    })();
 
     /* ===== 敵：スライムシリーズ =====
      * 各手帖に1種類の共通スライム。タブが上がるごとに同じスライムの色違いが現れる。
