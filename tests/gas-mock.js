@@ -26,7 +26,7 @@ function makeEnv() {
     getMaxRows() { return Math.max(1000, this.data.length); }
     deleteRow(r) { this.data.splice(r - 1, 1); }
     getFilter() { return this.filter ? {} : null; }
-    setFrozenRows() {} setFrozenColumns() {} setColumnWidths() {} setConditionalFormatRules() {} hideSheet() {}
+    setFrozenRows() {} setFrozenColumns() {} setColumnWidths() {} setColumnWidth() {} setConditionalFormatRules() {} hideSheet() {}
   }
   const ss = {
     getSheetByName: n => sheets[n] || null, insertSheet: n => (sheets[n] = new Sheet(n)), getSheets: () => Object.values(sheets),
@@ -34,7 +34,7 @@ function makeEnv() {
     getActiveSheet: () => Object.values(sheets)[0], getActiveRange: () => null,
   };
   const rule = () => { const o = {}; ['whenNumberGreaterThanOrEqualTo','whenNumberLessThan','whenFormulaSatisfied','whenTextEqualTo','setBackground','setFontColor','setRanges','setBold'].forEach(m => o[m] = () => o); o.build = () => ({}); return o; };
-  const cache = {};
+  const cache = {}, props = {};
   const ctx = {
     SpreadsheetApp: { getActiveSpreadsheet: () => ss, newConditionalFormatRule: rule, getUi: () => ({ createMenu: () => ({ addItem() { return this; }, addSeparator() { return this; }, addToUi() {} }) }) },
     Utilities: { getUuid: () => crypto.randomUUID(), formatDate: (d, tz, f) => { const z = new Date(d.getTime() + 9 * 3600000); const p = n => String(n).padStart(2, '0');
@@ -45,10 +45,11 @@ function makeEnv() {
     LockService: { getScriptLock: () => ({ waitLock() {}, tryLock: () => true, releaseLock() {} }) },
     CacheService: { getScriptCache: () => ({ get: k => cache[k] || null, put: (k, v) => { cache[k] = v; }, remove: k => { delete cache[k]; } }) },
     ContentService: { createTextOutput: t => ({ _t: t, setMimeType() { return this; }, getContent() { return this._t; } }), MimeType: { JSON: 'json' } },
-    Logger: { log: (...a) => console.log('[Logger]', ...a) }, console, Date, JSON, Math, String, Number, Array, Object, Error,
+    PropertiesService: { getScriptProperties: () => ({ getProperty: k => props[k] || null, setProperties: o => Object.assign(props, o), setProperty: (k, v) => { props[k] = v; } }) },
+    Logger: { log: (...a) => {} }, console, Date, JSON, Math, String, Number, Array, Object, Error,
   };
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync(require('path').join(__dirname, '..', 'gas', 'Code.gs'), 'utf8'), ctx);
-  return { ctx, sheets };
+  return { ctx, sheets, cache, props };
 }
 module.exports = { makeEnv };
