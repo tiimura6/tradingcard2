@@ -423,6 +423,25 @@ test('冒険：地域ごとに背景が変わる・正解で演出が出る／�
   assert(e.includes('adv_meadow_evening.jpg'), e);
   await p.evaluate(() => { trainingSession.qCount = 0; document.querySelector('.quiz-choice-btn[data-correct]').click(); }); await p.waitForTimeout(150);
   assert(await p.evaluate(() => !!document.querySelector('#advFx .fx-word')), '正解の演出が出ない');
+  // 不正解では進まない／必要な正解数は地域ごとに倍（森＝10、城＝320）／進み具合は保存される
+  const r = await p.evaluate(() => {
+    const a = advState(); a.area = 1; a.step = 3; a.miss = 0; advRender('');
+    const before = document.querySelector('#advTrail .adv-count').textContent;
+    advAfterAnswer(false);
+    const afterNg = document.querySelector('#advTrail .adv-count').textContent;
+    advAfterAnswer(true);
+    return { before, afterNg, afterOk: document.querySelector('#advTrail .adv-count').textContent, saved: localStorage.getItem('advStep'), miss: localStorage.getItem('advMiss'), need: [0,1,6].map(advNeed) };
+  });
+  assert(r.before === '3 / 10' && r.afterNg === '3 / 10' && r.afterOk === '4 / 10' && r.saved === '4' && r.miss === '1', JSON.stringify(r));
+  assert(r.need.join() === '5,10,320', r.need.join());
+  // 長い道はゲージ表示、踏破すると次の地域へ（進み具合は0から）
+  const g = await p.evaluate(() => {
+    const a = advState(); a.area = 2; a.step = 19; advRender('');
+    const fill = !!document.querySelector('#advTrail .adv-fill') && document.querySelectorAll('#advTrail .adv-node').length === 0;
+    advAfterAnswer(true); advBeforeQuestion();
+    return { fill, area: advState().area, step: localStorage.getItem('advStep'), t: (document.querySelector('#advClear .t3') || {}).textContent };
+  });
+  assert(g.fill && g.area === 3 && g.step === '0' && g.t.includes('40問'), JSON.stringify(g));
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 

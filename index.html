@@ -1873,6 +1873,10 @@
             background: rgba(20,20,20,.75); border: 2px solid var(--adv-tint); transition: background .3s, transform .3s; }
         #advTrail .adv-node.ok { background: var(--adv-tint); transform: scale(1.12); }
         #advTrail .adv-node.ng { background: #803030; border-color: #d06060; }
+        #advTrail .adv-fill { position: absolute; left: 0; top: 19px; height: 7px; border-radius: 4px; background: var(--adv-tint); box-shadow: 0 0 8px var(--adv-tint); transition: width .5s ease; }
+        #advTrail .adv-mark { position: absolute; top: 15px; width: 11px; height: 11px; margin-left: -5.5px; transform: rotate(45deg); border: 2px solid rgba(255,255,255,.7); background: rgba(0,0,0,.45); box-sizing: border-box; }
+        #advTrail .adv-mark.ok { background: var(--adv-tint); }
+        #advTrail .adv-enc.adv-block { color: #ffb0a0; }
         #advTrail .adv-goal { position: absolute; right: -20px; top: 4px; font-size: 22px; filter: drop-shadow(0 0 4px var(--adv-tint)); }
         #advTrail .adv-goal.near { animation: adv-glow 1s ease-in-out infinite alternate; }
         #advTrail .adv-hero { position: absolute; top: -3px; font-size: 22px; margin-left: -11px; transition: left .55s cubic-bezier(.3,1.4,.6,1);
@@ -2572,7 +2576,7 @@ const Cloud = (function () {
         'unlockedCards', 'srsData', 'dailyGachaStorage', 'loginStreak', 'xpData',
         'specialTickets', 'spEnhanceData', 'dailyStudyData', 'dailyChallenges',
         'weeklyChallenges', 'hallOfFame', 'battleProgress', 'notebookState', 'gold', 'awakened',
-        'cardMergeV1', 'advArea', 'advAreaV2', 'placementDone', 'placementResult',   // カード番号移行済みの印（別端末で取り込んだときに二重移行しないため）／冒険の道の地域
+        'cardMergeV1', 'advArea', 'advAreaV2', 'advStep', 'advMiss', 'placementDone', 'placementResult',   // カード番号移行済みの印（別端末で取り込んだときに二重移行しないため）／冒険の道の地域
     ];
     const K = { SESSION: 'authSession', GUEST: 'authGuest', DIRTY: 'authDirty', QUEUE: 'logQueue', LAST: 'authLastSync', ACTIVE: 'authLastActive' };
     // 共用の端末：最後の操作からこの時間がたったら、次に開いたとき自動でログアウトする（記録は保存してから）
@@ -8238,8 +8242,10 @@ const Cloud = (function () {
 
     let _awakenAttempt = false;
     /* ========== 冒険の道（問題を解くたびに旅が進む演出） ==========
-       5問で1つの地域を踏破 → 次の地域へ（草原→森→洞窟→丘→遺跡→山脈→城→草原…）。地域は前回の続きから（advArea に保存）。報酬は変えない */
-    const ADV_STEPS = 5;
+       正解した数だけ進む（不正解では進まない）。必要な正解数は地域ごとに倍：草原5→森10→洞窟20→丘40→遺跡80→山脈160→城320。
+       城の次は草原（5）に戻る。地域と進み具合は前回の続きから（advArea／advStep に保存）。報酬は変えない */
+    const ADV_BASE = 5;
+    function advNeed(i) { return ADV_BASE * Math.pow(2, i); }
     const ADV_AREAS = [
         { key: 'meadow',   imgs: ['morning', 'day', 'evening', 'night'], tod: 1, name: 'はじまりの草原', icon: '🌄', goal: '🗺️', tint: '#a8d870', enc: ['🐇 野うさぎが道をふさいだ', '🪧 古い道しるべに文字が刻まれている', '🧚 草原の妖精が問いかけてきた', '🐦 小鳥が手紙をくわえてきた'] },
         { key: 'forest',   imgs: ['morning', 'day', 'evening', 'night'], tod: 1,   name: 'ささやきの森', icon: '🌲', goal: '🏕️', tint: '#8fd060', enc: ['🍄 キノコの精が問いかけてきた', '🦊 森のキツネがなぞなぞを出した', '🌿 木の幹に古い文字が刻まれている', '🦉 フクロウが言葉の意味をたずねた'] },
@@ -8264,7 +8270,9 @@ const Cloud = (function () {
         if (!s.adv) {
             let area = 0;
             try { area = advStoredArea(); } catch (e) {}
-            s.adv = { area, step: 0, res: [], streak: 0 };
+            let step = 0, miss = 0;
+            try { step = Math.max(0, parseInt(localStorage.getItem('advStep'), 10) || 0); miss = Math.max(0, parseInt(localStorage.getItem('advMiss'), 10) || 0); } catch (e) {}
+            s.adv = { area, step: Math.min(step, advNeed(area)), miss, streak: 0 };
         }
         return s.adv;
     }
@@ -8377,24 +8385,27 @@ const Cloud = (function () {
         advSetBackground(a.area);
         el.style.display = '';
         el.style.setProperty('--adv-tint', A.tint);
-        const pos = k => (k / ADV_STEPS * 100).toFixed(1) + '%';
+        const need = advNeed(a.area);
+        const pos = k => (k / need * 100).toFixed(1) + '%';
+        // 10歩までは丸い道しるべ、それより長い道はゲージ（1/4ごとの目印つき）
         let nodes = '';
-        for (let k = 0; k < ADV_STEPS; k++) nodes += `<div class="adv-node ${a.res[k] === true ? 'ok' : a.res[k] === false ? 'ng' : ''}" style="left:${pos(k)}"></div>`;
+        if (need <= 10) for (let k = 0; k < need; k++) nodes += `<div class="adv-node ${k < a.step ? 'ok' : ''}" style="left:${pos(k)}"></div>`;
+        else nodes = `<div class="adv-fill" style="width:${pos(a.step)}"></div>` + [1, 2, 3].map(q => `<div class="adv-mark ${a.step >= need * q / 4 ? 'ok' : ''}" style="left:${q * 25}%"></div>`).join('');
         el.innerHTML = `
-            <div class="adv-head"><span>${A.icon} ${A.name}<span class="adv-tod">${TOD[timeOfDay()].label}</span>　<span style="opacity:.75;font-weight:normal;">${Math.min(a.step + 1, ADV_STEPS)} / ${ADV_STEPS}</span></span>
+            <div class="adv-head"><span>${A.icon} ${A.name}<span class="adv-tod">${TOD[timeOfDay()].label}</span>　<span class="adv-count" style="opacity:.75;font-weight:normal;">${a.step} / ${need}</span></span>
                 <span class="adv-streak ${a.streak >= 3 ? 'on' : ''}">🔥 ${a.streak}連続</span></div>
             <div class="adv-track"><div class="adv-line"></div>${nodes}
-                <div class="adv-goal ${a.step >= ADV_STEPS - 1 ? 'near' : ''}">${A.goal}</div>
+                <div class="adv-goal ${a.step >= need - 1 ? 'near' : ''}">${A.goal}</div>
                 <div class="adv-hero" style="left:${pos(a.step)}">🧙</div></div>
             ${encounter ? `<div class="adv-enc">${encounter}</div>` : ''}`;
     }
     // 次の問題の前：地域を踏破していれば演出 → 新しい地域へ。出会いのひとことと、巻物が開くような登場
     function advBeforeQuestion() {
         const a = advState();
-        if (a.step >= ADV_STEPS) {
-            const A = ADV_AREAS[a.area], ok = a.res.filter(Boolean).length;
-            a.area = (a.area + 1) % ADV_AREAS.length; a.step = 0; a.res = [];
-            try { localStorage.setItem('advArea', String(a.area)); } catch (e) {}
+        if (a.step >= advNeed(a.area)) {
+            const A = ADV_AREAS[a.area], ok = advNeed(a.area), miss = a.miss;
+            a.area = (a.area + 1) % ADV_AREAS.length; a.step = 0; a.miss = 0;
+            advSave(a);
             const N = ADV_AREAS[a.area];
             const ov = document.createElement('div');
             ov.id = 'advClear';
@@ -8402,8 +8413,8 @@ const Cloud = (function () {
             ov.style.setProperty('--next-tint', N.tint);
             ov.style.animationDuration = '3s';
             ov.innerHTML = `<div class="rays"></div><div class="chest">🎁</div><div class="t1">🏁 ${A.name} 踏破！</div>
-                <div class="t2">正解 ${ok} / ${ADV_STEPS}${ok === ADV_STEPS ? '　✨ 全問正解！' : ''}</div>
-                <div class="t3">次の地へ … ${N.icon} ${N.name}</div>`;
+                <div class="t2">${ok}問正解で到達${miss === 0 ? '　✨ ノーミス！' : `（ミス ${miss}）`}</div>
+                <div class="t3">次の地へ … ${N.icon} ${N.name}（${advNeed(a.area)}問）</div>`;
             const old = document.getElementById('advClear'); if (old) old.remove();
             document.body.appendChild(ov);
             // 宝箱が開いて地域の宝が現れる → 背景が次の地域に変わる
@@ -8418,29 +8429,41 @@ const Cloud = (function () {
         const box = document.querySelector('#quiz-overlay .custom-box');
         if (box) { box.classList.remove('adv-unfurl', 'adv-shake'); void box.offsetWidth; box.classList.add('adv-unfurl'); }
     }
-    // 答えたあと：主人公が1歩進む（正解＝ジャンプときらめき、不正解＝つまずき）
+    function advSave(a) {
+        try { localStorage.setItem('advArea', String(a.area)); localStorage.setItem('advStep', String(a.step)); localStorage.setItem('advMiss', String(a.miss)); } catch (e) {}
+    }
+    // 答えたあと：正解なら主人公が1歩進む（ジャンプときらめき）。不正解はその場でつまずき、進まない
     function advAfterAnswer(ok) {
-        const a = advState();
-        a.res[a.step] = ok;
+        const a = advState(), need = advNeed(a.area);
         a.streak = ok ? a.streak + 1 : 0;
-        a.step = Math.min(a.step + 1, ADV_STEPS);
+        if (ok) a.step = Math.min(a.step + 1, need); else a.miss++;
+        advSave(a);
         const el = advEl();
-        const hero = el.querySelector('.adv-hero'), node = el.querySelectorAll('.adv-node')[a.step - 1];
-        if (node) node.classList.add(ok ? 'ok' : 'ng');
+        const hero = el.querySelector('.adv-hero');
+        if (ok) {
+            const node = el.querySelectorAll('.adv-node')[a.step - 1]; if (node) node.classList.add('ok');
+            const fill = el.querySelector('.adv-fill'); if (fill) fill.style.width = (a.step / need * 100).toFixed(1) + '%';
+            el.querySelectorAll('.adv-mark').forEach((m, q) => m.classList.toggle('ok', a.step >= need * (q + 1) / 4));
+        }
+        const cnt = el.querySelector('.adv-count'); if (cnt) cnt.textContent = `${a.step} / ${need}`;
         if (hero) {
-            hero.style.left = (a.step / ADV_STEPS * 100).toFixed(1) + '%';
+            hero.style.left = (a.step / need * 100).toFixed(1) + '%';
             hero.classList.remove('jump', 'trip'); void hero.offsetWidth; hero.classList.add(ok ? 'jump' : 'trip');
+        }
+        if (!ok) {
+            const enc = el.querySelector('.adv-enc');
+            if (enc) { enc.textContent = '💥 まちがえた！ 正解するまで先へ進めない'; enc.classList.add('adv-block'); }
         }
         const st = el.querySelector('.adv-streak');
         if (st) { st.textContent = `🔥 ${a.streak}連続`; st.classList.toggle('on', a.streak >= 3); }
-        if (a.step >= ADV_STEPS) { const g = el.querySelector('.adv-goal'); if (g) g.classList.add('near'); }
+        if (a.step >= need) { const g = el.querySelector('.adv-goal'); if (g) g.classList.add('near'); }
         const box = document.querySelector('#quiz-overlay .custom-box');
         advFx(ok, a.streak, ADV_AREAS[a.area].tint);
         if (ok && box) { box.style.setProperty('--fx', ADV_AREAS[a.area].tint); box.classList.remove('adv-glow'); void box.offsetWidth; box.classList.add('adv-glow'); }
         if (ok) {
             const track = el.querySelector('.adv-track');
             if (track) {
-                const x = a.step / ADV_STEPS * track.clientWidth;
+                const x = a.step / need * track.clientWidth;
                 ['✨', '⭐', '✨', '💫', '✨', '⭐'].forEach((c, k) => {
                     const sp = document.createElement('span');
                     sp.className = 'adv-spark'; sp.textContent = c;
