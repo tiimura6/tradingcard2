@@ -2002,10 +2002,24 @@
         .md-card.r-R  { box-shadow: 0 0 8px rgba(106,168,255,.7); }
         /* ===== バトル：手帖ごとの演出（鉄＝火花／銅＝火の粉／銀＝雪／金＝光の粒／白金＝雷とオーロラ） =====
            #battle-fx はバトル画面の背景と中身のあいだに重ねる（z-index:-1）。背景画像は battleBgUrl() で手帖ごとに差し替え */
-        #battle-overlay { background-image: linear-gradient(rgba(10, 2, 2, 0.35), rgba(10, 2, 2, 0.65)), var(--battle-bg, url('./bgm/boss-bg.jpg')); background-size: cover; background-position: center; }
+        /* 背景画像は1枚（BATTLE_BG_FILE）を共通で使い、手帖ごとに色合いを変える（.bfx-img のフィルター＋色の重ね） */
+        #battle-overlay { background: #07050a; }
         body.battle-mode #bg-layer { background-image: var(--battle-bg, url('./bgm/boss-bg.jpg')) !important; }
         #battle-fx { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
         body:not(.battle-mode) #battle-fx { display: none; }
+        #battle-fx .bfx-img { position: absolute; inset: 0; background: var(--battle-bg, url('./bgm/boss-bg.jpg')) center / cover no-repeat; }
+        #battle-fx .bfx-img::after { content: ''; position: absolute; inset: 0; mix-blend-mode: color; opacity: .55; }
+        #battle-fx .bfx-shade { position: absolute; inset: 0; background: linear-gradient(rgba(8, 4, 10, 0.28), rgba(8, 4, 10, 0.6)); }
+        #battle-fx.A1 .bfx-img { filter: grayscale(.9) brightness(.82) contrast(1.12); }
+        #battle-fx.A1 .bfx-img::after { background: #5d6772; opacity: .35; }
+        #battle-fx.A2 .bfx-img { filter: grayscale(.4) sepia(.55) brightness(.85) contrast(1.05); }
+        #battle-fx.A2 .bfx-img::after { background: #c0662e; opacity: .6; }
+        #battle-fx.B1 .bfx-img { filter: grayscale(1) brightness(1.02) contrast(1.08); }
+        #battle-fx.B1 .bfx-img::after { background: #a9c3e0; opacity: .4; }
+        #battle-fx.B2 .bfx-img { filter: grayscale(.3) sepia(.5) brightness(.95) contrast(1.08) saturate(1.3); }
+        #battle-fx.B2 .bfx-img::after { background: #e0ae2c; opacity: .6; }
+        #battle-fx.PT .bfx-img { filter: grayscale(.55) brightness(1.06) contrast(1.05); }
+        #battle-fx.PT .bfx-img::after { background: linear-gradient(120deg, #b9a8ff, #9fe8ff 45%, #ffc8f0); mix-blend-mode: soft-light; opacity: .75; }
         #battle-fx .bfx-tint { position: absolute; inset: 0; }
         #battle-fx .p { position: absolute; border-radius: 50%; will-change: transform, opacity; }
         /* 鉄：鍛冶場の火花。下から斜めに鋭く飛び散る */
@@ -8971,24 +8985,22 @@ const Cloud = (function () {
     /* 背景の下から上へ昇る光の粒。鉄→白金に進むほど数が増える */
     const PARTICLE_COUNT = { A1: 8, A2: 14, B1: 20, B2: 28, PT: 40 };
     /* ========== バトル：手帖ごとの背景と演出 ==========
-       背景画像：bgm/battle/ に置いて BATTLE_BG に「手帖キー: ファイル名」を足すだけで切り替わる（未登録は共通の boss-bg.jpg）
+       背景画像は1枚を共通で使い、手帖ごとに色合いを変える（鉄＝鋼色、銅＝赤銅、銀＝青白、金＝黄金、白金＝真珠色）
        ボスラッシュ（殿堂入り）は白金の背景・演出 */
-    const BATTLE_BG = {
-        // A1: 'battle_A1.jpg', A2: 'battle_A2.jpg', B1: 'battle_B1.jpg', B2: 'battle_B2.jpg', PT: 'battle_PT.jpg',
-    };
+    const BATTLE_BG_FILE = null;   // 例：'battle.jpg'（bgm/battle/ に置く）。未設定のあいだは共通の boss-bg.jpg
     const BATTLE_FX_COUNT = { A1: 26, A2: 22, B1: 46, B2: 24, PT: 40 };
     let _boltTimer = null;
     function battleFxKey() { return (typeof hofBossRush !== 'undefined' && hofBossRush.active) ? 'PT' : advNbKey(); }
-    function battleBgUrl(k) { return BATTLE_BG[k] ? `url('./bgm/battle/${BATTLE_BG[k]}')` : `url('./bgm/boss-bg.jpg')`; }
+    function battleBgUrl() { return BATTLE_BG_FILE ? `url('./bgm/battle/${BATTLE_BG_FILE}')` : `url('./bgm/boss-bg.jpg')`; }
     function battleFxStart() {
         const k = battleFxKey();
-        document.body.style.setProperty('--battle-bg', battleBgUrl(k));
+        document.body.style.setProperty('--battle-bg', battleBgUrl());
         const fx = document.getElementById('battle-fx');
         if (!fx) return;
         if (fx.dataset.k !== k) {
             const n = BATTLE_FX_COUNT[k] || 24;
             const rnd = (i, s) => { const x = Math.sin((i + 1) * 12.9898 + s * 78.233) * 43758.5453; return x - Math.floor(x); };
-            let html = '<div class="bfx-tint"></div>';
+            let html = '<div class="bfx-img"></div><div class="bfx-shade"></div><div class="bfx-tint"></div>';
             if (k === 'PT') html += '<div class="bfx-aurora"></div><div class="bfx-flash"></div><svg class="bfx-bolt" viewBox="0 0 120 700" preserveAspectRatio="none"><path d=""/></svg>';
             for (let i = 0; i < n; i++) {
                 const r = s => rnd(i, s);
