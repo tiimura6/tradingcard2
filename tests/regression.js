@@ -231,6 +231,10 @@ test('殿堂入りボタンは白金の手帖だけに表示／ボスラッシ�
   await p.evaluate(() => startHofBossRush()); await p.waitForTimeout(400);
   const bg = await p.evaluate(() => getComputedStyle(document.getElementById('bg-layer')).backgroundImage);
   assert(bg.includes('battle/battle.jpg'), '編成中の背景: ' + bg);
+  // 歴代の手帖のボス（超強化版）5連戦：鉄→白金の順に強くなる。演出は戦うボスの手帖のもの
+  const rush = await p.evaluate(() => ({ list: hofBossRush.bosses.map(b => [b.nb, b.name, b.hp, b.atk, b.img]), fx: battleFxKey() }));
+  assert(rush.list.length === 5 && rush.list.map(x => x[0]).join() === 'A1,A2,B1,B2,PT' && rush.list[0][1] === '超・アイアンスライム'
+    && rush.list[4][2] > rush.list[0][2] && rush.list[4][3] > rush.list[0][3] && rush.list[2][4].includes('slime_B1') && rush.fx === 'A1', JSON.stringify(rush));
   await p.evaluate(() => closeFormationModal()); await p.waitForTimeout(300);
   assert(!(await p.evaluate(() => document.body.classList.contains('battle-mode'))), 'キャンセル後もバトル背景のまま');
 });
