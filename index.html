@@ -2035,6 +2035,15 @@
         .pl-ladder { display: flex; justify-content: center; gap: 6px; margin: 4px 0 14px; }
         .pl-ladder span { font-size: 11px; padding: 3px 8px; border-radius: 10px; border: 1px solid #d8c8a0; color: #a09070; }
         .pl-ladder span.on { color: #fff; border-color: transparent; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,.7); }
+        /* ===== 制限時間のバー（バトル・レベル判定テスト） ===== */
+        .qt-wrap { display: flex; align-items: center; gap: 8px; margin: 2px 0 8px; }
+        .qt-bar { flex: 1; height: 8px; border-radius: 4px; background: rgba(0,0,0,.15); overflow: hidden; }
+        .qt-bar > div { height: 100%; width: 100%; border-radius: 4px; background: linear-gradient(90deg, #3cba6a, #9ad84a); transform-origin: left; }
+        .qt-wrap.warn .qt-bar > div { background: linear-gradient(90deg, #e05030, #f0a030); }
+        .qt-sec { min-width: 34px; font-size: 13px; font-weight: bold; color: #6a5030; font-variant-numeric: tabular-nums; text-align: right; }
+        .qt-wrap.warn .qt-sec { color: #c03020; animation: qt-blink .5s ease-in-out infinite alternate; }
+        body.adventure-mode:not(.battle-mode) .qt-sec { color: #f0e0b0; }
+        @keyframes qt-blink { to { opacity: .45; } }
     </style>
 </head>
 <body>
@@ -2173,7 +2182,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-1420</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-1440</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -7007,6 +7016,15 @@ const Cloud = (function () {
         quizOv.classList.add('battle-quiz-mode');
         document.getElementById('quizTitle').innerText = `⚔️ 正解すると命中率アップ！`;
         showQuiz(questionCard);
+        // 制限時間。時間切れは不正解あつかい（正解を表示して、バトルに戻る）
+        const isBlank = !!document.querySelector('#quizSentence .quiz-blank');
+        const secs = isBlank ? BATTLE_TIME.fillBlank : BATTLE_TIME.normal;
+        startCountdown(document.querySelector('#quiz-overlay .custom-box'), document.getElementById('quizTitle'), secs, () => {
+            if (!battleSession.active) return;
+            const t = document.getElementById('quizTitle'); if (t) t.innerText = '⏱️ 時間切れ！';
+            const dummy = document.createElement('button');
+            submitChoice(false, questionCard, '', dummy);
+        });
     }
 
     // 打撃SE：メイン画面の音声ON/OFFに従う。毎回 new Audio せず1つを使い回す
@@ -7384,6 +7402,7 @@ const Cloud = (function () {
 
     /* ========== QUIZ DISPLAY ========== */
     function showQuiz(card) {
+        stopCountdown();
         _awakenAttempt = false;
         pickSense(card);
         if (!trainingSession.active) advHide();   // 冒険の道は冒険のときだけ
@@ -7624,6 +7643,7 @@ const Cloud = (function () {
     }
 
     function closeQuiz() {
+        stopCountdown();
         // トレーニング中かつ問題を1問以上解いていたら結果画面を表示
         if (trainingSession.active && (trainingSession.correct + trainingSession.incorrect) > 0) {
             showTrainingResult();
@@ -7676,7 +7696,37 @@ const Cloud = (function () {
         setTimeout(() => { ov.style.display = 'none'; ov.innerHTML = ''; }, 600);
     }
 
+    /* 制限時間：container の先頭付近にバーを出し、時間切れで onTimeout を呼ぶ。戻り値の関数で止める */
+    let _qtStop = null;
+    function startCountdown(container, anchor, seconds, onTimeout) {
+        stopCountdown();
+        if (!container) return () => {};
+        const wrap = document.createElement('div');
+        wrap.className = 'qt-wrap';
+        wrap.innerHTML = '<div class="qt-bar"><div></div></div><div class="qt-sec"></div>';
+        if (anchor && anchor.parentNode === container) container.insertBefore(wrap, anchor.nextSibling); else container.insertBefore(wrap, container.firstChild);
+        const bar = wrap.querySelector('.qt-bar > div'), sec = wrap.querySelector('.qt-sec');
+        const end = Date.now() + seconds * 1000;
+        let raf = 0, done = false;
+        const tick = () => {
+            if (done) return;
+            const left = Math.max(0, end - Date.now());
+            bar.style.transform = `scaleX(${left / (seconds * 1000)})`;
+            sec.textContent = Math.ceil(left / 1000) + '秒';
+            wrap.classList.toggle('warn', left <= 5000);
+            if (left <= 0) { done = true; wrap.remove(); _qtStop = null; onTimeout(); return; }
+            raf = requestAnimationFrame(tick);
+        };
+        tick();
+        _qtStop = () => { done = true; cancelAnimationFrame(raf); wrap.remove(); _qtStop = null; };
+        return _qtStop;
+    }
+    function stopCountdown() { if (_qtStop) _qtStop(); }
+    // バトルの問題の制限時間（穴埋めは文を読む分だけ長め）
+    const BATTLE_TIME = { normal: 15, fillBlank: 20 };
+
     function submitChoice(isCorrect, card, selectedAnswer, btnEl) {
+        stopCountdown();
         // ボタン全体を無効化（二重タップ防止）
         document.querySelectorAll('.quiz-choice-btn').forEach(b => b.disabled = true);
         btnEl.classList.add(isCorrect ? 'correct' : 'wrong');
@@ -8640,10 +8690,10 @@ const Cloud = (function () {
     }
 
     /* ========== レベル判定テスト（はじめての人に。スキップ可）==========
-       4問ずつ出題し、3問以上正解なら上の手帖へ、2問以下なら下の手帖へ。銀（B1）から始め、最大12問ほどで決まる。
+       6問ずつ出題し、4問以上正解なら上の手帖へ、3問以下なら下の手帖へ。銀（B1）から始め、最大18問で決まる。1問12秒（時間切れは不正解）。
        結果の手帖までを開き、その手帖から始める（下の手帖はいつでも遊べる）。結果は placementDone に記録 */
     const PL_ORDER = ['A1', 'A2', 'B1', 'B2', 'PT'];
-    const PL_PER_LEVEL = 4, PL_PASS = 3;
+    const PL_PER_LEVEL = 6, PL_PASS = 4, PL_TIME = 12, PL_MAX = 18;   // 1つの手帖6問・4問正解で合格・1問12秒・最大18問
     const _plRows = {};
     async function placementItems(key) {
         if (_plRows[key]) return _plRows[key];
@@ -8691,7 +8741,7 @@ const Cloud = (function () {
         const box = document.getElementById('placementBox');
         box.innerHTML = `
             <h3 class="pl-title">🎯 レベル判定テスト</h3>
-            <p class="pl-sub">英単語の意味を選んで、あなたに合った手帖を見つけよう。<br>約2分・最大12問。分からないときは「わからない」を押してね。</p>
+            <p class="pl-sub">英単語の意味を選んで、あなたに合った手帖を見つけよう。<br>約3分・最大18問・1問${PL_TIME}秒。分からないときは「わからない」を押してね。</p>
             <button class="pl-start" onclick="placementStartLevel()">はじめる</button>
             <button class="pl-skip" onclick="placementSkip()">${fromPicker ? 'やめる' : 'スキップして鉄の手帖からはじめる'}</button>`;
         document.getElementById('placement-overlay').style.display = 'flex';
@@ -8706,9 +8756,10 @@ const Cloud = (function () {
         placementShow();
     }
     function placementShow() {
+        placement._answered = false;
         const item = placement.queue[placement.qi];
         const box = document.getElementById('placementBox');
-        const done = placement.asked, total = 12;
+        const done = placement.asked, total = PL_MAX;
         const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
         box.innerHTML = `
             <div class="pl-count">${done + 1} 問目</div>
@@ -8721,9 +8772,14 @@ const Cloud = (function () {
         box.querySelectorAll('.pl-choices button').forEach(b => b.onclick = () => placementAnswer(item.choices[+b.dataset.k] === item.q.meaning, b));
         box.querySelector('.pl-idk').onclick = () => placementAnswer(false, null);
         box.querySelector('.pl-skip').onclick = placementSkip;
+        startCountdown(box, box.querySelector('.pl-progress'), PL_TIME, () => placementAnswer(false, null, true));
     }
-    function placementAnswer(ok, btn) {
+    function placementAnswer(ok, btn, timeout) {
+        if (placement._answered) return;   // 時間切れとタップが重なっても1回だけ数える
+        placement._answered = true;
+        stopCountdown();
         const box = document.getElementById('placementBox');
+        if (timeout) { const c = box.querySelector('.pl-count'); if (c) c.textContent = '⏱️ 時間切れ'; }
         box.querySelectorAll('button').forEach(b => b.disabled = true);
         const item = placement.queue[placement.qi];
         box.querySelectorAll('.pl-choices button').forEach(b => { if (item.choices[+b.dataset.k] === item.q.meaning) b.classList.add('ok'); });
@@ -8772,6 +8828,7 @@ const Cloud = (function () {
         if (key !== currentNB.key) switchNotebook(key);
     }
     function placementSkip() {
+        stopCountdown();
         try { localStorage.setItem('placementDone', 'skip'); } catch (e) {}
         document.getElementById('placement-overlay').style.display = 'none';
     }

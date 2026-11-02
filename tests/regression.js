@@ -366,7 +366,7 @@ test('レベル判定テスト：はじめての人に自動で出る／全問�
   await p.waitForTimeout(1500);
   assert(await p.evaluate(() => getComputedStyle(document.getElementById('placement-overlay')).display === 'flex'), '自動で出ない');
   await p.click('#placementBox .pl-start');
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 30; i++) {
     await p.waitForTimeout(700);
     const done = await p.evaluate(() => !!document.querySelector('#placementBox .pl-result-nb'));
     if (done) break;
@@ -374,7 +374,7 @@ test('レベル判定テスト：はじめての人に自動で出る／全問�
       document.querySelectorAll('#placementBox .pl-choices button')[k].click(); });
   }
   const r = await p.evaluate(() => ({ nb: document.querySelector('#placementBox .pl-result-nb').textContent, asked: placement.asked }));
-  assert(r.nb === '白金の手帖' && r.asked === 12, JSON.stringify(r));
+  assert(r.nb === '白金の手帖' && r.asked === 18, JSON.stringify(r));
   await p.click('#placementBox .pl-start'); await p.waitForTimeout(2600);
   const st = await p.evaluate(() => ({ cur: currentNB.key, un: notebookState.unlocked.join(','), done: localStorage.getItem('placementDone') }));
   assert(st.cur === 'PT' && st.un === 'A1,A2,B1,B2,PT' && st.done === '1', JSON.stringify(st));
@@ -388,7 +388,12 @@ test('レベル判定テスト：はじめての人に自動で出る／全問�
   const p3 = await openApp(b, { seed: { __placement: true, cardMergeV1: '1' } });
   await p3.waitForTimeout(1500);
   await p3.click('#placementBox .pl-start');
-  for (let i = 0; i < 20; i++) { await p3.waitForTimeout(700); if (await p3.evaluate(() => !!document.querySelector('#placementBox .pl-result-nb'))) break; await p3.evaluate(() => document.querySelector('#placementBox .pl-idk').click()); }
+  // 1問目は時間切れ（12秒）→ 不正解あつかい。残りは「わからない」
+  await p3.waitForTimeout(800);
+  assert(await p3.evaluate(() => !!document.querySelector('#placementBox .qt-wrap')), '制限時間のバーがない');
+  await p3.waitForTimeout(12600);
+  assert(await p3.evaluate(() => placement.asked === 1 && placement.correct === 0), '時間切れが不正解にならない');
+  for (let i = 0; i < 30; i++) { await p3.waitForTimeout(700); if (await p3.evaluate(() => !!document.querySelector('#placementBox .pl-result-nb'))) break; await p3.evaluate(() => { const x = document.querySelector('#placementBox .pl-idk'); x && !x.disabled && x.click(); }); }
   assert((await p3.evaluate(() => document.querySelector('#placementBox .pl-result-nb').textContent)) === '鉄の手帖', '鉄にならない');
   assert(p.__errors.length + p2.__errors.length + p3.__errors.length === 0, [...p.__errors, ...p2.__errors].join(' / '));
 });
@@ -403,6 +408,22 @@ test('冒険：地域ごとに背景が変わる・正解で演出が出る／�
   assert(bg.includes('adv_area3.jpg'), '背景: ' + bg);
   await p.evaluate(() => { trainingSession.qCount = 0; document.querySelector('.quiz-choice-btn[data-correct]').click(); }); await p.waitForTimeout(150);
   assert(await p.evaluate(() => !!document.querySelector('#advFx .fx-word')), '正解の演出が出ない');
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('バトルの問題に制限時間：時間切れは不正解あつかいでバトルに戻る', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1' } });
+  await p.evaluate(() => { cardsData.slice(0, 30).forEach(c => { if (!unlockedCards.includes(c.id)) unlockedCards.push(c.id); }); });
+  await formParty(p, 0);
+  await p.evaluate(() => confirmFormationAndStart());
+  await p.waitForTimeout(2000);
+  await p.evaluate(() => { BATTLE_TIME.normal = 2; BATTLE_TIME.fillBlank = 2; });
+  await p.evaluate(() => { document.querySelectorAll('.bplan-col').forEach((c, i) => setBattlePlan(i, 'attack')); confirmBattlePlan(); });
+  await p.waitForTimeout(400);
+  assert(await p.evaluate(() => !!document.querySelector('#quiz-overlay .qt-wrap')), 'バーがない');
+  await p.waitForTimeout(4500);
+  const r = await p.evaluate(() => ({ quiz: getComputedStyle(document.getElementById('quiz-overlay')).display, bar: !!document.querySelector('.qt-wrap') }));
+  assert(r.quiz === 'none' && !r.bar, JSON.stringify(r));
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
