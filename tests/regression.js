@@ -303,7 +303,7 @@ test('紙吹雪は新しいカードのときだけ／冒険の道：答える�
 
 test('バトル突入・帰還の演出／ボスは下位の手帖ほど小さく白金ほど大きい', async b => {
   const sizes = {};
-  for (const nb of ['A1', 'PT']) {
+  for (const nb of (process.env.SHOT ? ['A1', 'A2', 'B1', 'B2', 'PT'] : ['A1', 'PT'])) {
     const p = await openApp(b, { seed: { cardMergeV1: '1', notebookState: { unlocked: ['A1', 'A2', 'B1', 'B2', 'PT'], current: nb } } });
     await p.evaluate(() => { cardsData.slice(0, 30).forEach(c => { if (!unlockedCards.includes(c.id)) unlockedCards.push(c.id); }); });
     await formParty(p, 0);
@@ -313,9 +313,15 @@ test('バトル突入・帰還の演出／ボスは下位の手帖ほど小さ�
     assert(cls.includes('enter'), '突入演出なし: ' + cls);
     await p.waitForTimeout(1600);
     sizes[nb] = await p.evaluate(() => parseInt(document.getElementById('battleEnemyImg').style.maxHeight, 10));
+    // 手帖ごとの演出（鉄＝火花…白金＝雷とオーロラ）
+    const fx = await p.evaluate(() => { const f = document.getElementById('battle-fx'); return { cls: f.className, n: f.querySelectorAll('.p').length, aurora: !!f.querySelector('.bfx-aurora'), shown: getComputedStyle(f).display }; });
+    assert(fx.cls === nb && fx.n > 10 && fx.aurora === (nb === 'PT') && fx.shown === 'block', JSON.stringify(fx));
+    if (process.env.SHOT) { if (nb === 'PT') await p.evaluate(() => { const f = document.getElementById('battle-fx'); f.querySelector('.bfx-bolt path').setAttribute('d', 'M60 0 L40 120 L80 230 L30 380 L70 520'); f.classList.add('strike'); }); await p.waitForTimeout(nb === 'PT' ? 60 : 900); await p.screenshot({ path: process.env.SHOT + '/bfx_' + nb + '.png' }); }
     await p.evaluate(() => confirmCloseBattle());
     await p.waitForTimeout(300);
     assert((await p.evaluate(() => document.getElementById('battle-trans').className)).includes('flee'), '逃げる演出なし');
+    await p.waitForTimeout(1500);
+    assert(await p.evaluate(() => getComputedStyle(document.getElementById('battle-fx')).display === 'none'), 'バトル後も演出が残る');
     await p.waitForTimeout(1300);
     assert(await p.evaluate(() => document.getElementById('battle-overlay').style.display === 'none' && !document.body.classList.contains('battle-mode')), '帰還後にバトル画面が残っている');
     assert(p.__errors.length === 0, p.__errors.join(' / '));
@@ -532,7 +538,7 @@ test('小さい画面（幅360px）で主な画面が横にはみ出さない', 
   const browser = await chromium.launch();
   const only = process.argv[2];
   let fail = 0;
-  for (const t of tests) {
+  for (const t of tests.filter(t => !process.env.ONLY || t.name.includes(process.env.ONLY))) {
     if (only && !t.name.includes(only)) continue;
     const t0 = Date.now();
     try {
