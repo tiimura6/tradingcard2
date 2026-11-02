@@ -9119,48 +9119,72 @@ const Cloud = (function () {
     const PL_ORDER = ['A1', 'A2', 'B1', 'B2', 'PT'];
     const PL_PER_LEVEL = 6, PL_PASS = 4, PL_TIME = 12, PL_MAX = 18;   // 1つの手帖6問・4問正解で合格・1問12秒・最大18問
     const _plRows = {};
+    function plShuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
     async function placementItems(key) {
         if (_plRows[key]) return _plRows[key];
         let items;
         if (key === 'PT') {
-            items = Object.values(quizList).map(q => ({ answer: q.answer, pos: q.pos, meaning: q.meaning }));
+            let ex = {};
+            try { ex = await fetch(`data/excl_PT.json?v=${NB_DATA_VERSION}`).then(r => r.json()); } catch (e) {}
+            const nos = Object.keys(quizList);
+            items = nos.map(no => ({ answer: quizList[no].answer, pos: quizList[no].pos, meaning: quizList[no].meaning,
+                                     excl: (ex[no] || []).map(n => quizList[n] && quizList[n].answer).filter(Boolean) }));
         } else {
             const rows = await fetch(`data/nb_${key}.json?v=${NB_DATA_VERSION}`).then(r => r.json());
             items = rows.map(r => ({ answer: r[0], pos: (r[8] || []).length ? [r[1]].concat(r[8].map(x => x[0])).join(' / ') : r[1],
-                                     meaning: (r[8] || []).length ? [r[2]].concat(r[8].map(x => x[1])).join('／') : r[2] }));
+                                     meaning: (r[8] || []).length ? [r[2]].concat(r[8].map(x => x[1])).join('／') : r[2],
+                                     excl: (r[6] || []).map(i => rows[i] && rows[i][0]).filter(Boolean) }));
         }
         // 機能語や短すぎる語（a, I など）は判定に向かないので除く
         items = items.filter(x => x.answer && x.answer.replace(/[^A-Za-z]/g, '').length >= 3 && x.meaning);
         return (_plRows[key] = items);
     }
-    function plSegs(m) { return String(m).split(/[／\/、]/).map(t => t.replace(/[（(].*?[）)]|〜|～/g, '').trim()).filter(Boolean); }
+    function plSegs(m) { return String(m).split(/[／\/、,;；]/).map(t => t.replace(/[（(].*?[）)]|〜|～|する$|な$|に$|の$/g, '').trim()).filter(Boolean); }
+    /* 「どちらでも正解」になる選択肢を同じ問題に入れないための判定
+       ・類義語・反対語の一覧（tools/build_notebooks.py の除外リスト）に入っている
+       ・日本語訳の一部が重なる（「捨てる」と「見捨てる」のように片方がもう片方を含む場合も）
+       ・つづりの頭が同じ派生語（achieve と achievement など） */
+    function plClash(a, b) {
+        const al = a.answer.toLowerCase(), bl = b.answer.toLowerCase();
+        if (al === bl) return true;
+        if ((a.excl || []).some(w => w.toLowerCase() === bl) || (b.excl || []).some(w => w.toLowerCase() === al)) return true;
+        const stem = s => s.replace(/[^a-z]/g, '').slice(0, 5);
+        if (stem(al).length >= 5 && stem(al) === stem(bl)) return true;
+        const sa = plSegs(a.meaning), sb = plSegs(b.meaning);
+        return sa.some(x => sb.some(y => x === y || (x.length >= 2 && y.length >= 2 && (x.includes(y) || y.includes(x)))));
+    }
+    // 問題も選択肢も毎回ランダム。選択肢の3つのダミーは、正解とも、ダミーどうしとも「どちらでも正解」にならない組み合わせ
     async function placementQuestions(key) {
         const items = await placementItems(key);
-        const pick = items.slice().sort(() => Math.random() - 0.5);
+        const pick = plShuffle(items.slice());
         const qs = [];
         for (const q of pick) {
             if (qs.length >= PL_PER_LEVEL) break;
-            const mine = new Set(plSegs(q.meaning));
+            if (qs.some(x => plClash(x.q, q))) continue;   // 同じテストの中で似た語を続けて出さない
             const ds = [];
-            for (const d of pick) {
+            for (const d of plShuffle(items.slice(0))) {
                 if (ds.length >= 3) break;
-                if (d === q || d.answer.toLowerCase() === q.answer.toLowerCase() || plSegs(d.meaning).some(t => mine.has(t)) || ds.includes(d.meaning)) continue;
-                ds.push(d.meaning);
+                if (d === q || plClash(d, q) || ds.some(x => plClash(x, d))) continue;
+                ds.push(d);
             }
-            if (ds.length === 3) qs.push({ q, choices: ds.concat([q.meaning]).sort(() => Math.random() - 0.5) });
+            if (ds.length === 3) qs.push({ q, choices: plShuffle(ds.map(d => d.meaning).concat([q.meaning])) });
         }
         return qs;
     }
     let placement = null;
+    // カードを1枚も持っていなければ、起動のたびに自動で案内する（スキップしても、次に開いたときにまた出る）。
+    // 同じタブの中では1回だけ。'test' は自動テスト用の印
     function placementNeeded() {
         try {
-            if (localStorage.getItem('placementDone')) return false;
-            if (unlockedCards.length > 0 || (xpData && xpData.totalXP > 0)) { localStorage.setItem('placementDone', 'existing'); return false; }
+            if (unlockedCards.length > 0) return false;
+            if (sessionStorage.getItem('plShownTab')) return false;
+            if (localStorage.getItem('placementDone') === 'test') return false;
         } catch (e) { return false; }
         return true;
     }
     function openPlacement(fromPicker) {
         if (typeof closeNotebookPicker === 'function') closeNotebookPicker();
+        try { sessionStorage.setItem('plShownTab', '1'); } catch (e) {}
         placement = { levelIdx: 2, qi: 0, correct: 0, queue: [], passed: {}, failed: {}, asked: 0, fromPicker: !!fromPicker };
         const box = document.getElementById('placementBox');
         box.innerHTML = `

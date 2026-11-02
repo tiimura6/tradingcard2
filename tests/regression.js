@@ -432,6 +432,28 @@ test('レベル判定テスト：はじめての人に自動で出る／全問�
   await p2.click('#placementBox .pl-skip'); await p2.waitForTimeout(300);
   const s2 = await p2.evaluate(() => ({ shown: getComputedStyle(document.getElementById('placement-overlay')).display, cur: currentNB.key, done: localStorage.getItem('placementDone') }));
   assert(s2.shown === 'none' && s2.cur === 'A1' && s2.done === 'skip', JSON.stringify(s2));
+  // 問題・選択肢はランダムで、同じ問題の選択肢に「どちらでも正解」になる組み合わせがない
+  const amb = await p2.evaluate(async () => {
+    let bad = [], firsts = new Set();
+    for (const k of ['A1', 'B1', 'PT']) {
+      const items = await placementItems(k);
+      for (let n = 0; n < 15; n++) {
+        const qs = await placementQuestions(k);
+        firsts.add(qs[0].q.answer);
+        qs.forEach(x => { const its = x.choices.map(m => items.find(i => i.meaning === m));
+          for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) if (plClash(its[i], its[j])) bad.push(its[i].answer + '/' + its[j].answer); });
+      }
+    }
+    return { bad, variety: firsts.size };
+  });
+  assert(amb.bad.length === 0 && amb.variety >= 20, JSON.stringify(amb));
+  // カードが0枚のままなら、次に開いたとき（別のタブ）にまた出る。カードを持っていれば出ない
+  const p4 = await openApp(b, { seed: { __placement: true, cardMergeV1: '1', placementDone: 'skip' } });
+  await p4.waitForTimeout(1500);
+  assert(await p4.evaluate(() => getComputedStyle(document.getElementById('placement-overlay')).display !== 'none'), 'カード0枚で出ない');
+  const p5 = await openApp(b, { seed: { __placement: true, cardMergeV1: '1', placementDone: 'skip', unlockedCards: ['a1-1'] } });
+  await p5.waitForTimeout(1500);
+  assert(await p5.evaluate(() => getComputedStyle(document.getElementById('placement-overlay')).display === 'none'), 'カードがあるのに出る');
   // 全問「わからない」→ 鉄
   const p3 = await openApp(b, { seed: { __placement: true, cardMergeV1: '1' } });
   await p3.waitForTimeout(1500);
