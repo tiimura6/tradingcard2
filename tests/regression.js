@@ -405,11 +405,17 @@ test('冒険：地域ごとに背景が変わる・正解で演出が出る／�
   assert(txt.includes('時間をあけて') && !txt.includes('8時間後冒険'), '時間ボーナスの表記');
   await p.evaluate(() => { closeTrainingModal(false); openTrainingMode(); }); await p.waitForTimeout(500);
   const bg = await p.evaluate(() => getComputedStyle(document.getElementById('bg-layer')).backgroundImage);
-  assert(bg.includes('adv_area3.jpg'), '背景: ' + bg);
+  assert(bg.includes('adv_ruins_'), '背景（以前の3＝遺跡は、草原を先頭に足したので4に移る）: ' + bg);
   // 時間帯：夜（22時）は暗い色合い・昼（12時）はそのまま
   const night = await p.evaluate(() => { window.__todHour = 22; advApplyTimeOfDay(); return getComputedStyle(document.body).getPropertyValue('--tod-blend').trim(); });
   const day = await p.evaluate(() => { window.__todHour = 12; advApplyTimeOfDay(); return getComputedStyle(document.body).getPropertyValue('--tod-op').trim(); });
   assert(night === 'multiply' && day === '0', `時間帯 ${night} ${day}`);
+  // 時間帯ごとの絵がある「はじまりの草原」は、絵が切り替わり色合いはかけない
+  const m = await p.evaluate(() => { advSetBackground(0); window.__todHour = 22; advApplyTimeOfDay();
+    return { bg: document.body.style.getPropertyValue('--adv-bg'), op: document.body.style.getPropertyValue('--tod-op') }; });
+  assert(m.bg.includes('adv_meadow_night.jpg') && m.op === '0', JSON.stringify(m));
+  const e = await p.evaluate(() => { window.__todHour = 17; advApplyTimeOfDay(); return document.body.style.getPropertyValue('--adv-bg'); });
+  assert(e.includes('adv_meadow_evening.jpg'), e);
   await p.evaluate(() => { trainingSession.qCount = 0; document.querySelector('.quiz-choice-btn[data-correct]').click(); }); await p.waitForTimeout(150);
   assert(await p.evaluate(() => !!document.querySelector('#advFx .fx-word')), '正解の演出が出ない');
   assert(p.__errors.length === 0, p.__errors.join(' / '));

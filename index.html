@@ -1961,7 +1961,7 @@
         .md-card.r-R  { box-shadow: 0 0 8px rgba(106,168,255,.7); }
         @keyframes md-flip { to { opacity: 1; transform: none; } }
         /* ===== 冒険：地域ごとの背景と、正解したときの壮大な演出 ===== */
-        body.adventure-mode #bg-layer { background-image: var(--adv-bg, url('./bgm/adventure-bg.jpg')) !important; transition: filter 1.5s; }
+        body.adventure-mode #bg-layer { background-image: var(--adv-bg, url('./bgm/adv/adv_meadow_day.jpg')) !important; transition: filter 1.5s; }
         #advFx { position: fixed; inset: 0; z-index: 9500; pointer-events: none; overflow: hidden; }
         #advFx .fx-flash { position: absolute; inset: 0; background: radial-gradient(circle at 50% 45%, var(--fx, #ffe9a0) 0%, transparent 60%); opacity: 0; animation: fx-flash .7s ease-out forwards; }
         #advFx .fx-rays { position: absolute; left: 50%; top: 45%; width: 180vmax; height: 180vmax; margin: -90vmax 0 0 -90vmax; opacity: 0;
@@ -2187,7 +2187,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-1450</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-1515</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -2572,7 +2572,7 @@ const Cloud = (function () {
         'unlockedCards', 'srsData', 'dailyGachaStorage', 'loginStreak', 'xpData',
         'specialTickets', 'spEnhanceData', 'dailyStudyData', 'dailyChallenges',
         'weeklyChallenges', 'hallOfFame', 'battleProgress', 'notebookState', 'gold', 'awakened',
-        'cardMergeV1', 'advArea', 'placementDone', 'placementResult',   // カード番号移行済みの印（別端末で取り込んだときに二重移行しないため）／冒険の道の地域
+        'cardMergeV1', 'advArea', 'advAreaV2', 'placementDone', 'placementResult',   // カード番号移行済みの印（別端末で取り込んだときに二重移行しないため）／冒険の道の地域
     ];
     const K = { SESSION: 'authSession', GUEST: 'authGuest', DIRTY: 'authDirty', QUEUE: 'logQueue', LAST: 'authLastSync', ACTIVE: 'authLastActive' };
     // 共用の端末：最後の操作からこの時間がたったら、次に開いたとき自動でログアウトする（記録は保存してから）
@@ -5607,7 +5607,7 @@ const Cloud = (function () {
 
         setTimeout(() => {
             // 背景・シーン切り替え（bg-layerに画像を直接セット）
-            try { advSetBackground((parseInt(localStorage.getItem('advArea'), 10) || 0) % ADV_AREAS.length); } catch (e) {}
+            try { advSetBackground(advStoredArea()); } catch (e) {}
             document.body.classList.add('adventure-mode');
 
             // フェードイン
@@ -8235,21 +8235,32 @@ const Cloud = (function () {
 
     let _awakenAttempt = false;
     /* ========== 冒険の道（問題を解くたびに旅が進む演出） ==========
-       5問で1つの地域を踏破 → 次の地域へ。地域は前回の続きから（advArea に保存）。報酬は変えない（見た目の演出のみ） */
+       5問で1つの地域を踏破 → 次の地域へ（草原→森→洞窟→丘→遺跡→山脈→城→草原…）。地域は前回の続きから（advArea に保存）。報酬は変えない */
     const ADV_STEPS = 5;
     const ADV_AREAS = [
-        { tod: 1,   name: 'ささやきの森', icon: '🌲', goal: '🏕️', tint: '#8fd060', enc: ['🍄 キノコの精が問いかけてきた', '🦊 森のキツネがなぞなぞを出した', '🌿 木の幹に古い文字が刻まれている', '🦉 フクロウが言葉の意味をたずねた'] },
-        { tod: .35, name: '霧の洞窟',     icon: '🦇', goal: '💎', tint: '#8fa0ff', enc: ['🦇 コウモリの群れが道をふさいだ', '🕯️ 壁に光る文字が浮かび上がった', '🗝️ 錆びた扉に謎の言葉が…', '💧 地底湖に言葉が映っている'] },
-        { tod: .3,  name: '星降る丘',     icon: '⛰️', goal: '🔭', tint: '#c9a6ff', enc: ['⭐ 流れ星が言葉を落としていった', '🐑 羊飼いの少年が道をたずねた', '🌙 月の精がささやいた', '🪁 風に乗って手紙が飛んできた'] },
-        { tod: 1,   name: '古代の遺跡',   icon: '🏛️', goal: '📜', tint: '#e8b850', enc: ['🗿 石像が口を開いた', '📜 古文書の一節が読めそうだ', '🐍 封印の蛇が合言葉を求めている', '🏺 壺の底に文字が刻まれている'] },
-        { tod: 1,   name: '竜の山脈',     icon: '🐉', goal: '🥚', tint: '#ff8a60', enc: ['🔥 竜の吐息で道が熱い…', '🦅 大鷲が試練を与えた', '⛏️ 鉱夫が岩に刻んだ言葉を見せた', '🌋 火山の精霊が問いかけた'] },
-        { tod: 1,   name: '天空の城',     icon: '🏰', goal: '👑', tint: '#80e0ff', enc: ['☁️ 雲の門番が合言葉を問う', '👑 王の書庫で不思議な本を見つけた', '🕊️ 白い鳩が手紙を運んできた', '🔔 塔の鐘に言葉が刻まれている'] },
+        { key: 'meadow',   imgs: ['morning', 'day', 'evening', 'night'], tod: 1, name: 'はじまりの草原', icon: '🌄', goal: '🗺️', tint: '#a8d870', enc: ['🐇 野うさぎが道をふさいだ', '🪧 古い道しるべに文字が刻まれている', '🧚 草原の妖精が問いかけてきた', '🐦 小鳥が手紙をくわえてきた'] },
+        { key: 'forest',   imgs: ['day'], tod: 1,   name: 'ささやきの森', icon: '🌲', goal: '🏕️', tint: '#8fd060', enc: ['🍄 キノコの精が問いかけてきた', '🦊 森のキツネがなぞなぞを出した', '🌿 木の幹に古い文字が刻まれている', '🦉 フクロウが言葉の意味をたずねた'] },
+        { key: 'cave',     imgs: ['day'], tod: .35, name: '霧の洞窟',     icon: '🦇', goal: '💎', tint: '#8fa0ff', enc: ['🦇 コウモリの群れが道をふさいだ', '🕯️ 壁に光る文字が浮かび上がった', '🗝️ 錆びた扉に謎の言葉が…', '💧 地底湖に言葉が映っている'] },
+        { key: 'hill',     imgs: ['day'], tod: .3,  name: '星降る丘',     icon: '⛰️', goal: '🔭', tint: '#c9a6ff', enc: ['⭐ 流れ星が言葉を落としていった', '🐑 羊飼いの少年が道をたずねた', '🌙 月の精がささやいた', '🪁 風に乗って手紙が飛んできた'] },
+        { key: 'ruins',    imgs: ['day'], tod: 1,   name: '古代の遺跡',   icon: '🏛️', goal: '📜', tint: '#e8b850', enc: ['🗿 石像が口を開いた', '📜 古文書の一節が読めそうだ', '🐍 封印の蛇が合言葉を求めている', '🏺 壺の底に文字が刻まれている'] },
+        { key: 'mountain', imgs: ['day'], tod: 1,   name: '竜の山脈',     icon: '🐉', goal: '🥚', tint: '#ff8a60', enc: ['🔥 竜の吐息で道が熱い…', '🦅 大鷲が試練を与えた', '⛏️ 鉱夫が岩に刻んだ言葉を見せた', '🌋 火山の精霊が問いかけた'] },
+        { key: 'castle',   imgs: ['day'], tod: 1,   name: '天空の城',     icon: '🏰', goal: '👑', tint: '#80e0ff', enc: ['☁️ 雲の門番が合言葉を問う', '👑 王の書庫で不思議な本を見つけた', '🕊️ 白い鳩が手紙を運んできた', '🔔 塔の鐘に言葉が刻まれている'] },
     ];
+    // 保存されている地域（「はじまりの草原」を先頭に追加したので、以前の番号は1つずらす）
+    function advStoredArea() {
+        let v = parseInt(localStorage.getItem('advArea'), 10) || 0;
+        if (!localStorage.getItem('advAreaV2')) {
+            if (localStorage.getItem('advArea') !== null) v = v + 1;
+            localStorage.setItem('advArea', String(v % ADV_AREAS.length));
+            localStorage.setItem('advAreaV2', '1');
+        }
+        return v % ADV_AREAS.length;
+    }
     function advState() {
         const s = trainingSession;
         if (!s.adv) {
             let area = 0;
-            try { area = (parseInt(localStorage.getItem('advArea'), 10) || 0) % ADV_AREAS.length; } catch (e) {}
+            try { area = advStoredArea(); } catch (e) {}
             s.adv = { area, step: 0, res: [], streak: 0 };
         }
         return s.adv;
@@ -8264,12 +8275,19 @@ const Cloud = (function () {
         }
         return el;
     }
-    // 地域ごとの背景（bgm/adv_area0〜5.jpg）
+    /* 地域ごとの背景：bgm/adv/adv_{地域}_{時間帯}.jpg（時間帯＝morning / day / evening / night）
+       その時間帯の絵がある地域はその絵を使い、ない地域は昼の絵に色合いをかけて時間帯を表す */
     let _advAreaShown = 0;
+    function advBgUrl(i, tod) {
+        const A = ADV_AREAS[i] || ADV_AREAS[0];
+        return `./bgm/adv/adv_${A.key}_${A.imgs.includes(tod) ? tod : 'day'}.jpg`;
+    }
     function advSetBackground(i) {
         _advAreaShown = i;
-        document.body.style.setProperty('--adv-bg', `url('./bgm/adv_area${i}.jpg')`);
+        document.body.style.setProperty('--adv-bg', `url('${advBgUrl(i, timeOfDay())}')`);
         advApplyTimeOfDay();
+        // 次の地域の絵を先に読み込んでおく（切り替えのときに一瞬空白にならないように）
+        try { new Image().src = advBgUrl((i + 1) % ADV_AREAS.length, timeOfDay()); } catch (e) {}
     }
     /* 端末の時計で朝・昼・夕方・夜を決め、背景の色合いを変える。
        洞窟（空が見えない）と星降る丘（もともと夜）は弱めにかける。window.__todHour で時刻を試せる */
@@ -8284,7 +8302,12 @@ const Cloud = (function () {
         return h >= 5 && h < 9 ? 'morning' : h >= 9 && h < 16 ? 'day' : h >= 16 && h < 19 ? 'evening' : 'night';
     }
     function advApplyTimeOfDay() {
-        const t = TOD[timeOfDay()], k = (ADV_AREAS[_advAreaShown] || {}).tod ?? 1;
+        const tod = timeOfDay(), t = TOD[tod], A = ADV_AREAS[_advAreaShown] || {};
+        // その時間帯の絵がある地域は、絵を切り替えるだけで色合いはかけない
+        const hasImg = (A.imgs || []).includes(tod);
+        const want = `url('${advBgUrl(_advAreaShown, tod)}')`;
+        if (document.body.style.getPropertyValue('--adv-bg') !== want) document.body.style.setProperty('--adv-bg', want);
+        const k = hasImg ? 0 : (A.tod ?? 1);
         const st = document.body.style;
         st.setProperty('--tod-grad', t.grad);
         st.setProperty('--tod-blend', t.blend);
