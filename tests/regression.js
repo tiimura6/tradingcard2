@@ -342,6 +342,27 @@ test('カードを探す：名称・新カードは1日100枚まで（探す回�
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
+test('穴埋め問題：例文ごとに確認した固定ダミーから選ぶ（どちらでも正解になる選択肢を出さない）', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1' } });
+  await p.waitForTimeout(2600);
+  const r = await p.evaluate(() => {
+    const card = cardsData.find(c => c.id === 'a1-605');
+    const fixed = fbDistractors(card);
+    let seen = 0, bad = [];
+    for (let i = 0; i < 30 && seen < 5; i++) {
+      showQuiz(card);
+      if (!document.getElementById('quizTitle').innerText.includes('穴埋め')) continue;
+      seen++;
+      [...document.querySelectorAll('#quizChoices .quiz-choice-btn')].map(b => b.textContent.toLowerCase())
+        .forEach(w => { if (w !== card.quiz.answer.toLowerCase() && !fixed.map(x => x.toLowerCase()).includes(w)) bad.push(w); });
+    }
+    document.getElementById('quiz-overlay').style.display = 'none';
+    return { n: fixed && fixed.length, seen, bad };
+  });
+  assert(r.n >= 3 && r.seen >= 1 && r.bad.length === 0, JSON.stringify(r));
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
 test('まとめて探す：最大10回・ゴールドと今日の残り回数を消費・結果一覧', async b => {
   const p = await openApp(b, { seed: { cardMergeV1: '1' } });
   await p.waitForTimeout(2600);
@@ -351,7 +372,7 @@ test('まとめて探す：最大10回・ゴールドと今日の残り回数を
   // 演出：最初は裏向き・OKは隠れている → 順にめくれて、最後にOKが出る。タップで全部めくれる
   const s0 = await p.evaluate(() => ({ open: document.querySelectorAll('#mdGrid .md-card.open').length, sum: document.getElementById('multi-draw-overlay').classList.contains('summoning'), circle: !!document.querySelector('.md-circle') }));
   assert(s0.open === 0 && s0.sum && s0.circle, '開始 ' + JSON.stringify(s0));
-  await p.waitForTimeout(2300);
+  await p.waitForTimeout(3300);   // SR/URの「ため」があっても最初の1枚はめくれている
   const s1 = await p.evaluate(() => document.querySelectorAll('#mdGrid .md-card.open').length);
   assert(s1 >= 1, '順にめくれない ' + s1);
   await p.click('#mdGrid'); await p.waitForTimeout(100);

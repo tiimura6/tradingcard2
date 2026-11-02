@@ -4157,7 +4157,7 @@ const Cloud = (function () {
      * 鉄〜金 = CEFR-J A1〜B2（データは data/nb_*.json、カードIDは a1-N など）
      * 前の手帖のカードを全部集めると次の手帖が開く。既存ユーザーは白金も最初から開いている。
      */
-    const NB_DATA_VERSION = '20261102c';
+    const NB_DATA_VERSION = '20261102d';
     const NOTEBOOKS = [
         { key: 'A1', name: '鉄の手帖',   level: 'CEFR-J A1', sub: 'はじまりの扉　基礎の英単語', count: 1067, prefix: 'a1',
           c: ['#eef0f3', '#8c939d', '#5d636b'], gem: '⚙️' },
@@ -4350,6 +4350,27 @@ const Cloud = (function () {
             } catch (e) {}
         }
         return (_ptExcl[card.no] || []).map(no => no - 1);
+    }
+    /* 穴埋め問題の固定ダミー：例文ごとに「文脈に入らない」と確認した語（data/fb_手帖.json、tools/build_fb.py で作成）
+       キーは「カードID#意味番号」。見つからないときは従来のランダム選択 */
+    const _fbCache = {};
+    function fbDistractors(card) {
+        const nb = card.nb || 'PT';
+        if (!(nb in _fbCache)) {
+            _fbCache[nb] = {};
+            try {
+                const x = new XMLHttpRequest();
+                x.open('GET', `data/fb_${nb}.json?v=${NB_DATA_VERSION}`, false);
+                x.send(null);
+                if ((x.status === 200 || x.status === 0) && x.responseText) _fbCache[nb] = JSON.parse(x.responseText);
+            } catch (e) {}
+        }
+        const si = Math.max(0, cardSenses(card).indexOf(card.quiz));
+        const list = _fbCache[nb][card.id + '#' + si];
+        if (!list) return null;
+        const ans = String(card.quiz.answer).toLowerCase();
+        const ok = list.filter(w => String(w).toLowerCase() !== ans);
+        return ok.length >= 3 ? ok : null;
     }
     function jaSegs(m) {
         return String(m || '').split(/[／\/、,;；]/).map(t => t.replace(/[（(].*?[）)]/g, '').replace(/[〜～]/g, '').trim()).filter(Boolean);
@@ -7670,7 +7691,9 @@ const Cloud = (function () {
                 if (filtered.length >= 3) allAnswers = filtered;
             }
 
-            const choices = shuffle([correctAnswer, ...safeDistractors(card, shuffle(allAnswers), 'answer').slice(0, 3)]);
+            // 例文ごとに確認済みの固定ダミーがあれば、そこから3つ（どちらでも正解になる選択肢を出さないため）
+            const fixed = fbDistractors(card);
+            const choices = shuffle([correctAnswer, ...(fixed ? shuffle(fixed.slice()) : safeDistractors(card, shuffle(allAnswers), 'answer')).slice(0, 3)]);
 
             choices.forEach(ans => {
                 const btn = document.createElement('button');
