@@ -406,6 +406,10 @@ test('冒険：地域ごとに背景が変わる・正解で演出が出る／�
   await p.evaluate(() => { closeTrainingModal(false); openTrainingMode(); }); await p.waitForTimeout(500);
   const bg = await p.evaluate(() => getComputedStyle(document.getElementById('bg-layer')).backgroundImage);
   assert(bg.includes('adv_area3.jpg'), '背景: ' + bg);
+  // 時間帯：夜（22時）は暗い色合い・昼（12時）はそのまま
+  const night = await p.evaluate(() => { window.__todHour = 22; advApplyTimeOfDay(); return getComputedStyle(document.body).getPropertyValue('--tod-blend').trim(); });
+  const day = await p.evaluate(() => { window.__todHour = 12; advApplyTimeOfDay(); return getComputedStyle(document.body).getPropertyValue('--tod-op').trim(); });
+  assert(night === 'multiply' && day === '0', `時間帯 ${night} ${day}`);
   await p.evaluate(() => { trainingSession.qCount = 0; document.querySelector('.quiz-choice-btn[data-correct]').click(); }); await p.waitForTimeout(150);
   assert(await p.evaluate(() => !!document.querySelector('#advFx .fx-word')), '正解の演出が出ない');
   assert(p.__errors.length === 0, p.__errors.join(' / '));

@@ -1961,7 +1961,7 @@
         .md-card.r-R  { box-shadow: 0 0 8px rgba(106,168,255,.7); }
         @keyframes md-flip { to { opacity: 1; transform: none; } }
         /* ===== 冒険：地域ごとの背景と、正解したときの壮大な演出 ===== */
-        body.adventure-mode #bg-layer { background-image: var(--adv-bg, url('./bgm/adventure-bg.jpg')) !important; transition: filter .6s; }
+        body.adventure-mode #bg-layer { background-image: var(--adv-bg, url('./bgm/adventure-bg.jpg')) !important; transition: filter 1.5s; }
         #advFx { position: fixed; inset: 0; z-index: 9500; pointer-events: none; overflow: hidden; }
         #advFx .fx-flash { position: absolute; inset: 0; background: radial-gradient(circle at 50% 45%, var(--fx, #ffe9a0) 0%, transparent 60%); opacity: 0; animation: fx-flash .7s ease-out forwards; }
         #advFx .fx-rays { position: absolute; left: 50%; top: 45%; width: 180vmax; height: 180vmax; margin: -90vmax 0 0 -90vmax; opacity: 0;
@@ -2044,6 +2044,11 @@
         .qt-wrap.warn .qt-sec { color: #c03020; animation: qt-blink .5s ease-in-out infinite alternate; }
         body.adventure-mode:not(.battle-mode) .qt-sec { color: #f0e0b0; }
         @keyframes qt-blink { to { opacity: .45; } }
+        /* ===== 冒険の背景：端末の時計に合わせて朝・昼・夕方・夜の色合いに ===== */
+        body.adventure-mode:not(.battle-mode) #bg-layer { filter: var(--tod-filter, none); }
+        body.adventure-mode:not(.battle-mode) #bg-layer::after { content: ''; position: absolute; inset: 0; pointer-events: none;
+            background: var(--tod-grad, none); mix-blend-mode: var(--tod-blend, normal); opacity: var(--tod-op, 0); transition: opacity 1.5s; }
+        #advTrail .adv-tod { font-size: 11px; font-weight: normal; opacity: .85; margin-left: 4px; }
     </style>
 </head>
 <body>
@@ -2182,7 +2187,7 @@
         <button onclick="openCouponModal()" title="秘密の鍵"
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-1440</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-1450</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -8233,12 +8238,12 @@ const Cloud = (function () {
        5問で1つの地域を踏破 → 次の地域へ。地域は前回の続きから（advArea に保存）。報酬は変えない（見た目の演出のみ） */
     const ADV_STEPS = 5;
     const ADV_AREAS = [
-        { name: 'ささやきの森', icon: '🌲', goal: '🏕️', tint: '#8fd060', enc: ['🍄 キノコの精が問いかけてきた', '🦊 森のキツネがなぞなぞを出した', '🌿 木の幹に古い文字が刻まれている', '🦉 フクロウが言葉の意味をたずねた'] },
-        { name: '霧の洞窟',     icon: '🦇', goal: '💎', tint: '#8fa0ff', enc: ['🦇 コウモリの群れが道をふさいだ', '🕯️ 壁に光る文字が浮かび上がった', '🗝️ 錆びた扉に謎の言葉が…', '💧 地底湖に言葉が映っている'] },
-        { name: '星降る丘',     icon: '⛰️', goal: '🔭', tint: '#c9a6ff', enc: ['⭐ 流れ星が言葉を落としていった', '🐑 羊飼いの少年が道をたずねた', '🌙 月の精がささやいた', '🪁 風に乗って手紙が飛んできた'] },
-        { name: '古代の遺跡',   icon: '🏛️', goal: '📜', tint: '#e8b850', enc: ['🗿 石像が口を開いた', '📜 古文書の一節が読めそうだ', '🐍 封印の蛇が合言葉を求めている', '🏺 壺の底に文字が刻まれている'] },
-        { name: '竜の山脈',     icon: '🐉', goal: '🥚', tint: '#ff8a60', enc: ['🔥 竜の吐息で道が熱い…', '🦅 大鷲が試練を与えた', '⛏️ 鉱夫が岩に刻んだ言葉を見せた', '🌋 火山の精霊が問いかけた'] },
-        { name: '天空の城',     icon: '🏰', goal: '👑', tint: '#80e0ff', enc: ['☁️ 雲の門番が合言葉を問う', '👑 王の書庫で不思議な本を見つけた', '🕊️ 白い鳩が手紙を運んできた', '🔔 塔の鐘に言葉が刻まれている'] },
+        { tod: 1,   name: 'ささやきの森', icon: '🌲', goal: '🏕️', tint: '#8fd060', enc: ['🍄 キノコの精が問いかけてきた', '🦊 森のキツネがなぞなぞを出した', '🌿 木の幹に古い文字が刻まれている', '🦉 フクロウが言葉の意味をたずねた'] },
+        { tod: .35, name: '霧の洞窟',     icon: '🦇', goal: '💎', tint: '#8fa0ff', enc: ['🦇 コウモリの群れが道をふさいだ', '🕯️ 壁に光る文字が浮かび上がった', '🗝️ 錆びた扉に謎の言葉が…', '💧 地底湖に言葉が映っている'] },
+        { tod: .3,  name: '星降る丘',     icon: '⛰️', goal: '🔭', tint: '#c9a6ff', enc: ['⭐ 流れ星が言葉を落としていった', '🐑 羊飼いの少年が道をたずねた', '🌙 月の精がささやいた', '🪁 風に乗って手紙が飛んできた'] },
+        { tod: 1,   name: '古代の遺跡',   icon: '🏛️', goal: '📜', tint: '#e8b850', enc: ['🗿 石像が口を開いた', '📜 古文書の一節が読めそうだ', '🐍 封印の蛇が合言葉を求めている', '🏺 壺の底に文字が刻まれている'] },
+        { tod: 1,   name: '竜の山脈',     icon: '🐉', goal: '🥚', tint: '#ff8a60', enc: ['🔥 竜の吐息で道が熱い…', '🦅 大鷲が試練を与えた', '⛏️ 鉱夫が岩に刻んだ言葉を見せた', '🌋 火山の精霊が問いかけた'] },
+        { tod: 1,   name: '天空の城',     icon: '🏰', goal: '👑', tint: '#80e0ff', enc: ['☁️ 雲の門番が合言葉を問う', '👑 王の書庫で不思議な本を見つけた', '🕊️ 白い鳩が手紙を運んできた', '🔔 塔の鐘に言葉が刻まれている'] },
     ];
     function advState() {
         const s = trainingSession;
@@ -8260,9 +8265,36 @@ const Cloud = (function () {
         return el;
     }
     // 地域ごとの背景（bgm/adv_area0〜5.jpg）
+    let _advAreaShown = 0;
     function advSetBackground(i) {
+        _advAreaShown = i;
         document.body.style.setProperty('--adv-bg', `url('./bgm/adv_area${i}.jpg')`);
+        advApplyTimeOfDay();
     }
+    /* 端末の時計で朝・昼・夕方・夜を決め、背景の色合いを変える。
+       洞窟（空が見えない）と星降る丘（もともと夜）は弱めにかける。window.__todHour で時刻を試せる */
+    const TOD = {
+        morning: { label: '🌅 朝',   grad: 'linear-gradient(180deg, #ffb08a 0%, #ffd9a8 55%, #fff0d0 100%)', blend: 'soft-light', op: .7,  filter: 'brightness(1.03) saturate(1.08)' },
+        day:     { label: '☀️ 昼',   grad: 'none', blend: 'normal', op: 0, filter: 'none' },
+        evening: { label: '🌇 夕方', grad: 'linear-gradient(180deg, #ff5a2a 0%, #ff8a4a 40%, #6a2a7a 100%)', blend: 'soft-light', op: .85, filter: 'brightness(.93) saturate(1.18) sepia(.12)' },
+        night:   { label: '🌙 夜',   grad: 'linear-gradient(180deg, #0a1450 0%, #141a48 50%, #1a0e30 100%)', blend: 'multiply', op: .62, filter: 'brightness(.86) saturate(.88)' },
+    };
+    function timeOfDay() {
+        const h = (typeof window.__todHour === 'number') ? window.__todHour : new Date().getHours();
+        return h >= 5 && h < 9 ? 'morning' : h >= 9 && h < 16 ? 'day' : h >= 16 && h < 19 ? 'evening' : 'night';
+    }
+    function advApplyTimeOfDay() {
+        const t = TOD[timeOfDay()], k = (ADV_AREAS[_advAreaShown] || {}).tod ?? 1;
+        const st = document.body.style;
+        st.setProperty('--tod-grad', t.grad);
+        st.setProperty('--tod-blend', t.blend);
+        st.setProperty('--tod-op', String(t.op * k));
+        // 強さ k に合わせて明るさ・彩度の変化も弱める
+        st.setProperty('--tod-filter', k >= 1 ? t.filter : t.filter.replace(/(brightness|saturate)\(([\d.]+)\)/g, (m, f, v) => `${f}(${(1 + (parseFloat(v) - 1) * k).toFixed(3)})`).replace(/sepia\(([\d.]+)\)/, (m, v) => `sepia(${(parseFloat(v) * k).toFixed(3)})`));
+        const lab = document.querySelector('#advTrail .adv-tod'); if (lab) lab.textContent = t.label;
+    }
+    // 冒険中は5分ごとに時間帯を確かめる（夕方から夜に変わる、など）
+    setInterval(() => { if (typeof adventureActive !== 'undefined' && adventureActive) advApplyTimeOfDay(); }, 300000);
     // 正解・不正解の演出（画面全体）：閃光・光の筋・斬撃・星が飛び散る・ひとこと。連続正解が増えるほど派手に
     function advFx(ok, streak, tint, word) {
         const old = document.getElementById('advFx'); if (old) old.remove();
@@ -8297,7 +8329,7 @@ const Cloud = (function () {
         let nodes = '';
         for (let k = 0; k < ADV_STEPS; k++) nodes += `<div class="adv-node ${a.res[k] === true ? 'ok' : a.res[k] === false ? 'ng' : ''}" style="left:${pos(k)}"></div>`;
         el.innerHTML = `
-            <div class="adv-head"><span>${A.icon} ${A.name}　<span style="opacity:.75;font-weight:normal;">${Math.min(a.step + 1, ADV_STEPS)} / ${ADV_STEPS}</span></span>
+            <div class="adv-head"><span>${A.icon} ${A.name}<span class="adv-tod">${TOD[timeOfDay()].label}</span>　<span style="opacity:.75;font-weight:normal;">${Math.min(a.step + 1, ADV_STEPS)} / ${ADV_STEPS}</span></span>
                 <span class="adv-streak ${a.streak >= 3 ? 'on' : ''}">🔥 ${a.streak}連続</span></div>
             <div class="adv-track"><div class="adv-line"></div>${nodes}
                 <div class="adv-goal ${a.step >= ADV_STEPS - 1 ? 'near' : ''}">${A.goal}</div>

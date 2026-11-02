@@ -10,8 +10,9 @@
   bgm/adv_area4.jpg 竜の山脈（燃える赤・雪山）
   bgm/adv_area5.jpg 天空の城（明るい空色・城）
 
-使い方: python3 tools/make_adventure_backgrounds.py
-自分で用意した画像があれば、同じ名前（adv_area0.jpg〜adv_area5.jpg）で置き換えるだけでよい。
+使い方: python3 tools/make_adventure_backgrounds.py --force
+※ 2026-11 から、6地域とも作者が用意した画像（adv_area0〜5.jpg）を使っている。
+  このスクリプトは既にある画像を上書きしない（--force を付けたときだけ作り直す）。
 """
 from pathlib import Path
 import numpy as np
@@ -53,6 +54,8 @@ def add_stars(a, seed=3):
     return a
 
 def main():
+    import sys
+    force = '--force' in sys.argv
     src = Image.open(SRC).convert("RGB")
     W, H = src.size
     for i, g in enumerate(AREAS):
@@ -71,6 +74,8 @@ def main():
         if g["shadow"]: a = grade(a, **g)
         if g.get("stars"): a = add_stars(a)
         dst = ROOT / "bgm" / f"adv_area{i}.jpg"
+        if dst.exists() and not force:
+            print(dst.name, '既にあるので作らない'); continue
         Image.fromarray((a * 255).astype(np.uint8)).save(dst, "JPEG", quality=84, optimize=True, progressive=True)
         print(dst.name, dst.stat().st_size // 1024, "KB")
 
