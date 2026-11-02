@@ -2009,7 +2009,7 @@
         body:not(.battle-mode) #battle-fx { display: none; }
         #battle-fx .bfx-img { position: absolute; inset: 0; background: var(--battle-bg, url('./bgm/boss-bg.jpg')) center / cover no-repeat; }
         #battle-fx .bfx-img::after { content: ''; position: absolute; inset: 0; mix-blend-mode: color; opacity: .55; }
-        #battle-fx .bfx-shade { position: absolute; inset: 0; background: linear-gradient(rgba(8, 4, 10, 0.28), rgba(8, 4, 10, 0.6)); }
+        #battle-fx .bfx-shade { position: absolute; inset: 0; background: linear-gradient(rgba(8, 4, 10, 0.7) 0%, rgba(8, 4, 10, 0.5) 14%, rgba(8, 4, 10, 0.24) 34%, rgba(8, 4, 10, 0.3) 62%, rgba(8, 4, 10, 0.62) 100%); }   /* 上（敵の名前・HP）は天井の光が強いので濃いめに */
         #battle-fx.A1 .bfx-img { filter: grayscale(.9) brightness(.82) contrast(1.12); }
         #battle-fx.A1 .bfx-img::after { background: #5d6772; opacity: .35; }
         #battle-fx.A2 .bfx-img { filter: grayscale(.4) sepia(.55) brightness(.85) contrast(1.05); }
