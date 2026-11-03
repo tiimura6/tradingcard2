@@ -5075,7 +5075,9 @@ const Cloud = (function () {
      *   ※以下の旧コメントは参考：
      *   討伐戦：約9回の正解で倒せる／敵の攻撃に約11回耐えられる（ミスは1回程度まで。★・レベル・スキル・防御で余裕が出る）
      * プレイヤーレベルのボーナスは含めない（冒険するほど楽になる） */
-    const BOSS_TUNING = { midRounds: 4, midSurvive: 8, finalRounds: 6, finalSurvive: 8 };
+    /* 撃退戦（中間）は★3のカード3枚、討伐戦は★5のカード3枚の部隊を想定（強すぎると感じたら冒険で経験値と★を上げて挑む）
+       Rounds＝全員「攻撃」で正解し続けて倒せるターン数／Survive＝敵の通常攻撃に耐えられる回数 */
+    const BOSS_TUNING = { midStars: 3, midRounds: 6, midSurvive: 6, finalStars: 5, finalRounds: 8, finalSurvive: 6 };
     const HIT_RATE = { attack: { ok: 0.9, ng: 0.3 }, skill: { ok: 0.8, ng: 0.2 } };
     const WRONG_DAMAGE_MULT = 0.5;   // 不正解のターンは、命中しても与えるダメージ（回復量も）が半分
     // 後衛のGuardによる被ダメージ軽減率：Guard ÷ (Guard ＋ 敵の攻撃力×2.5)、最大50%
@@ -5084,15 +5086,18 @@ const Cloud = (function () {
     const EXPECTED_GUARD = 0.26;
     function bossStatsFor(g) {
         const base = statBase(g);
-        const A = base * (1 + STAR_BONUS) * 1.04;      // 想定する攻撃力（★1・品詞ボーナス程度。レアカードや★が多いほど楽になる）
-        const D = base * (1 + STAR_BONUS);             // 想定する守備力
-        const partyHP = D * 3 * (0.8 + 1.3 + 1.0);
-        const perRound = A * 3 * HIT_RATE.attack.ok;   // 全員「攻撃」で正解したときの1ターンの期待ダメージ
+        const T = BOSS_TUNING;
+        const party = stars => {
+            const A = base * (1 + STAR_BONUS * stars) * 1.04;   // 想定する攻撃力（品詞ボーナス程度）
+            const D = base * (1 + STAR_BONUS * stars);          // 想定する守備力
+            return { hp: D * 3 * (0.8 + 1.3 + 1.0), perRound: A * 3 * HIT_RATE.attack.ok };   // 全員「攻撃」で正解したときの1ターンの期待ダメージ
+        };
+        const m = party(T.midStars), f = party(T.finalStars);
         return {
-            midHp:    Math.round(perRound * BOSS_TUNING.midRounds),
-            midAtk:   Math.round(partyHP / BOSS_TUNING.midSurvive / (1 - EXPECTED_GUARD)),   // 後衛の軽減ぶんを見込む
-            finalHp:  Math.round(perRound * BOSS_TUNING.finalRounds),
-            finalAtk: Math.round(partyHP / BOSS_TUNING.finalSurvive / (1 - EXPECTED_GUARD)),
+            midHp:    Math.round(m.perRound * T.midRounds),
+            midAtk:   Math.round(m.hp / T.midSurvive / (1 - EXPECTED_GUARD)),   // 後衛の軽減ぶんを見込む
+            finalHp:  Math.round(f.perRound * T.finalRounds),
+            finalAtk: Math.round(f.hp / T.finalSurvive / (1 - EXPECTED_GUARD)),
         };
     }
 
