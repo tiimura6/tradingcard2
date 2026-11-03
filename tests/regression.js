@@ -50,8 +50,10 @@ async function openApp(browser, { seed, viewport, ignoreMute } = {}) {
     if (ignoreMute) Object.defineProperty(P, 'muted', { get() { return false; }, set() {} });   // iPhone相当（消音が効かない）
     // レベル判定テストは、そのテストでだけ出す（ほかのテストでは画面をふさぐため受験済みにしておく）
     if (!sessionStorage.getItem('__seeded') && !(seed && seed.__placement)) localStorage.setItem('placementDone', 'test');
+    // 物語の場面は、物語のテストでだけ出す（ほかのテストでは画面をふさぐので読んだことにしておく）
+    if (!sessionStorage.getItem('__seeded') && !(seed && seed.__story)) localStorage.setItem('storySeen', JSON.stringify(Object.fromEntries(['prologue','end_A1','start_A2','end_A2','start_B1','end_B1','start_B2','end_B2','start_PT','end_PT','hof'].map(k => [k, 1]))));
     if (seed && !sessionStorage.getItem('__seeded')) {
-      Object.entries(seed).forEach(([k, v]) => { if (k !== '__placement') localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)); });
+      Object.entries(seed).forEach(([k, v]) => { if (k !== '__placement' && k !== '__story') localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)); });
       sessionStorage.setItem('__seeded', '1');
     }
   }, { seed: seed || null, ignoreMute: !!ignoreMute });
@@ -278,6 +280,42 @@ test('タイトル画面に全手帖（鉄〜白金）のコンプリート率',
   await p.waitForTimeout(2600);
   const r = await p.evaluate(() => { updateCollectionProgress(); const a = allCompletion(); return { have: a.have, total: a.total, txt: document.getElementById('allCp').innerText, segs: document.querySelectorAll('.all-cp-seg').length }; });
   assert(r.have === 150 && r.total === 8324 && r.segs === 5 && r.txt.includes('1.8%') && r.txt.includes('150 / 8,324'), JSON.stringify(r));
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('称号・実績：これまでの記録でまとめて解除・報酬・称号の表示・新しい解除の通知', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1', unlockedCards: ids('a1', 1, 100), playStats: { battleWins: 1 }, gold: '0' } });
+  await p.waitForTimeout(4200);
+  const r = await p.evaluate(() => ({ a: Object.keys(achv), gold, pop: (document.getElementById('achv-pop') || {}).textContent || '' }));
+  assert(r.a.includes('c10') && r.a.includes('c100') && r.a.includes('win1') && !r.a.includes('c500') && r.gold >= 600, JSON.stringify(r));
+  const r2 = await p.evaluate(() => { openAchievements(); const items = document.querySelectorAll('#achvBox .achv-item').length; setAchvTitle('win1'); closeAchievements();
+    return { items, badge: document.getElementById('levelBadge').textContent }; });
+  assert(r2.items === 34 && r2.badge.includes('スライムハンター'), JSON.stringify(r2));
+  await p.evaluate(() => { statInc('ultUsed'); }); await p.waitForTimeout(1200);
+  const r3 = await p.evaluate(() => ({ ult: !!achv.ult, pop: (document.getElementById('achv-pop') || {}).textContent || '' }));
+  assert(r3.ult && r3.pop.includes('合体の極意'), JSON.stringify(r3));
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('物語：はじめての人に序章が出る・英単語をタップで意味・スキップ・読み返し・手帖の終わりの場面', async b => {
+  const p = await openApp(b, { seed: { __story: true, cardMergeV1: '1' } });
+  await p.waitForTimeout(3500);
+  assert(await p.evaluate(() => getComputedStyle(document.getElementById('story-overlay')).display === 'flex'), '序章が出ない');
+  for (let i = 0; i < 3; i++) await p.click('#stNext');
+  if (process.env.SHOT) { await p.evaluate(() => document.querySelector('#stLines .st-w').classList.add('show')); await p.click('#stNext'); await p.screenshot({ path: process.env.SHOT + '/story.png' }); await p.evaluate(() => document.querySelector('#stLines .st-w').classList.remove('show')); }
+  const w = await p.evaluate(() => { const s = document.querySelector('#stLines .st-w'); s.click(); return { en: s.textContent, ja: s.dataset.ja, show: s.classList.contains('show') }; });
+  assert(w.en === 'key' && w.ja === '鍵' && w.show, JSON.stringify(w));
+  await p.click('#story-overlay .st-foot button'); await p.waitForTimeout(200);
+  const r = await p.evaluate(() => ({ seen: storySeen.prologue, shown: getComputedStyle(document.getElementById('story-overlay')).display }));
+  assert(r.seen === 1 && r.shown === 'none', JSON.stringify(r));
+  // 鉄の手帖の最後の討伐戦に勝つと、第一章の終わりが読めるようになる
+  const r2 = await p.evaluate(() => { const last = Math.ceil(NB_BY_KEY.A1.count / COLLECTION_PAGE_SIZE) - 1; battleProgress.defeated.push(`a1_tab${last}_final`); return storyPending(); });
+  assert(r2 === 'end_A1', r2);
+  await p.waitForTimeout(2800);
+  assert(await p.evaluate(() => document.getElementById('stTitle').textContent.includes('第一章の終わり')), '第一章の終わりが出ない');
+  await p.evaluate(() => storyClose());
+  const r3 = await p.evaluate(() => { openStoryArchive(); const bs = [...document.querySelectorAll('#storyBox .story-list button')]; return { n: bs.length, open: bs.filter(b => !b.disabled).length }; });
+  assert(r3.n === 11 && r3.open === 2, JSON.stringify(r3));
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 

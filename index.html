@@ -1341,6 +1341,49 @@
         .all-cp-seg i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; transition: width .6s ease; }
         .all-cp-legend { display: flex; justify-content: space-between; font-size: 9.5px; color: #b8acd8; margin-top: 3px; }
 
+        /* ===== 称号・実績 ===== */
+        .achv-title { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 10px; font-size: 11px; color: #ffe9a8; background: rgba(120,70,0,.55); border: 1px solid rgba(255,200,90,.5); vertical-align: middle; }
+        #achv-modal .custom-box { width: 94%; max-width: 520px; max-height: 88vh; overflow-y: auto; background: #140c22; color: #eadff8; }
+        #achv-modal h3 { margin: 0 0 4px; color: #ffe9a8; font-family: 'Noto Serif JP', serif; }
+        .achv-sum { font-size: 12px; color: #c8b8e8; margin-bottom: 8px; }
+        .achv-group { font-size: 12px; color: #ffd27a; margin: 12px 0 6px; font-weight: bold; }
+        .achv-item { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 10px; margin-bottom: 6px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); }
+        .achv-item.done { background: rgba(120,80,10,.28); border-color: rgba(255,200,90,.45); }
+        .achv-item .ic { font-size: 24px; width: 30px; text-align: center; filter: grayscale(1); opacity: .5; }
+        .achv-item.done .ic { filter: none; opacity: 1; }
+        .achv-item .bd { flex: 1; min-width: 0; }
+        .achv-item .nm { font-size: 13.5px; font-weight: bold; color: #fff; }
+        .achv-item .cd { font-size: 11px; color: #b8a8d8; }
+        .achv-item .pg { height: 4px; border-radius: 2px; background: rgba(255,255,255,.1); margin-top: 4px; overflow: hidden; }
+        .achv-item .pg i { display: block; height: 100%; background: linear-gradient(90deg,#a070ff,#ffd060); }
+        .achv-item .rw { font-size: 11px; color: #ffd060; white-space: nowrap; }
+        .achv-item button { font-size: 11px; padding: 4px 8px; border-radius: 8px; border: 1px solid #ffd060; background: rgba(80,50,0,.8); color: #ffe9a8; cursor: pointer; white-space: nowrap; }
+        .achv-item button.on { background: #ffd060; color: #3a2000; font-weight: bold; }
+        #achv-pop { position: fixed; left: 50%; top: 14px; transform: translateX(-50%); z-index: 99990; pointer-events: none; padding: 10px 18px; border-radius: 14px;
+            background: linear-gradient(135deg,#3a2400,#6a4400); border: 2px solid #ffd060; color: #fff3c8; font-size: 14px; text-align: center; box-shadow: 0 0 24px rgba(255,200,80,.6);
+            font-family: 'Noto Serif JP', serif; animation: achv-pop 3.2s ease forwards; white-space: nowrap; }
+        #achv-pop small { display: block; font-size: 11px; color: #ffd060; }
+        @keyframes achv-pop { 0% { opacity: 0; transform: translate(-50%, -30px); } 10%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -20px); } }
+
+        /* ===== 物語 ===== */
+        #story-overlay { position: fixed; inset: 0; z-index: 99000; display: none; align-items: center; justify-content: center; padding: 16px;
+            background: radial-gradient(ellipse at 50% 40%, rgba(40,24,70,.94), rgba(6,3,14,.97)); }
+        #story-overlay .st-box { width: 100%; max-width: 480px; background: linear-gradient(180deg, #f6ecd2, #e8d8b0); color: #3a2a12; border-radius: 14px; padding: 18px 18px 12px;
+            box-shadow: 0 0 40px rgba(255,210,120,.35), inset 0 0 30px rgba(120,80,20,.25); border: 2px solid #b8924a; font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', serif; }
+        #story-overlay .st-ttl { font-size: 13px; color: #8a6020; letter-spacing: .12em; text-align: center; margin-bottom: 10px; }
+        #story-overlay .st-lines { min-height: 150px; }
+        #story-overlay .st-line { font-size: 15.5px; line-height: 1.85; margin: 0 0 8px; opacity: 0; transform: translateY(6px); animation: st-in .6s ease forwards; }
+        @keyframes st-in { to { opacity: 1; transform: none; } }
+        #story-overlay .st-w { color: #7a2a8a; font-weight: bold; font-family: Georgia, serif; border-bottom: 1.5px dotted #7a2a8a; cursor: pointer; position: relative; }
+        #story-overlay .st-w.show::after { content: attr(data-ja); position: absolute; left: 50%; bottom: 120%; transform: translateX(-50%); white-space: nowrap; font-size: 12px; font-weight: normal;
+            background: #3a2050; color: #fff; padding: 3px 8px; border-radius: 8px; font-family: 'Noto Sans JP', sans-serif; }
+        #story-overlay .st-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 12px; color: #8a6a3a; }
+        #story-overlay .st-foot button { font-size: 13px; padding: 7px 14px; border-radius: 10px; border: 1px solid #a07a30; background: #fff6dc; color: #6a4a10; cursor: pointer; font-family: inherit; }
+        #story-overlay .st-foot button.st-next { background: linear-gradient(135deg,#8a5a10,#5a3400); color: #fff3c8; border-color: #f0c040; font-weight: bold; }
+        .story-list { display: flex; flex-direction: column; gap: 6px; }
+        .story-list button { text-align: left; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(160,130,255,.4); background: rgba(40,28,80,.7); color: #eadff8; font-size: 13.5px; cursor: pointer; font-family: 'Noto Serif JP', serif; }
+        .story-list button:disabled { opacity: .45; cursor: default; }
+
         /* ===== STUDY MODE (TikTok 式) ===== */
         #study-overlay {
             display: none; position: fixed; top: 0; left: 0;
@@ -2404,12 +2447,22 @@
     <button class="action-btn btn-study" id="adventureBattleBtn" onclick="adventureOrBattle()" style="grid-column:span 2;">
         <span class="btn-icon" id="adventureBattleBtnIcon">🗺️</span><span id="adventureBattleBtnLabel">冒険</span>
     </button>
+    <button class="action-btn" id="achvBtn" onclick="openAchievements()" style="grid-column:span 2;background:linear-gradient(150deg,#4a3a10,#2a1e00);color:#ffe0a0;border:1px solid rgba(220,170,60,0.45);">
+        <span class="btn-icon">🏅</span>称号・実績 <span id="achvBtnCount" style="font-size:11px;opacity:.8;"></span>
+    </button>
+    <button class="action-btn" id="storyBtn" onclick="openStoryArchive()" style="grid-column:span 2;background:linear-gradient(150deg,#2a2050,#140c30);color:#d8c8ff;border:1px solid rgba(160,130,255,0.45);">
+        <span class="btn-icon">📖</span>物語
+    </button>
     <button class="action-btn" id="hofBtn" onclick="showHallOfFameModal()"
         style="grid-column:1/-1;background:linear-gradient(150deg,#4a3010,#2a1800);color:#f0d080;border:1px solid rgba(200,150,30,0.4);">
         <span class="btn-icon">🏆</span>殿堂入りへの道
     </button>
 </div>
 
+<div id="story-overlay"><div class="st-box"><div class="st-ttl" id="stTitle"></div><div class="st-lines" id="stLines"></div>
+    <div class="st-foot"><button onclick="storyClose()">スキップ</button><span id="stPage"></span><button class="st-next" id="stNext" onclick="storyNext()">次へ ▶</button></div></div></div>
+<div id="story-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)this.style.display='none'"><div class="custom-box" id="storyBox" style="width:92%;max-width:420px;background:#140c22;color:#eadff8;"></div></div>
+<div id="achv-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeAchievements()"><div class="custom-box" id="achvBox"></div></div>
 <!-- Gacha Choice Modal -->
 <!-- SP強化モーダル -->
 
@@ -2752,7 +2805,7 @@ const Cloud = (function () {
         'unlockedCards', 'srsData', 'dailyGachaStorage', 'loginStreak', 'xpData',
         'specialTickets', 'spEnhanceData', 'dailyStudyData', 'dailyChallenges',
         'weeklyChallenges', 'hallOfFame', 'battleProgress', 'notebookState', 'gold', 'awakened',
-        'cardMergeV1', 'advArea', 'advAreaV2', 'advStep', 'advMiss', 'advProg', 'placementDone', 'placementResult',   // カード番号移行済みの印（別端末で取り込んだときに二重移行しないため）／冒険の道の地域
+        'cardMergeV1', 'advArea', 'advAreaV2', 'advStep', 'advMiss', 'advProg', 'placementDone', 'placementResult', 'achv', 'achvTitle', 'playStats', 'storySeen',   // カード番号移行済みの印（別端末で取り込んだときに二重移行しないため）／冒険の道の地域
     ];
     const K = { SESSION: 'authSession', GUEST: 'authGuest', DIRTY: 'authDirty', QUEUE: 'logQueue', LAST: 'authLastSync', ACTIVE: 'authLastActive' };
     // 共用の端末：最後の操作からこの時間がたったら、次に開いたとき自動でログアウトする（記録は保存してから）
@@ -4623,6 +4676,7 @@ const Cloud = (function () {
     function saveUnlocked() {
         localStorage.setItem('unlockedCards', JSON.stringify(unlockedCards));
         checkNotebookUnlocks();
+        if (typeof scheduleAchvCheck === 'function') scheduleAchvCheck();
     }
 
     let gachaSession = { isGachaMode: false, selectedCard: null, userAnswer: "", onDone: null };
@@ -4672,7 +4726,7 @@ const Cloud = (function () {
         xpData.totalXP   += amount;
         while (xpData.xp >= XP_PER_LEVEL) {
             xpData.xp -= XP_PER_LEVEL;
-            xpData.level++;
+            xpData.level++; if (typeof scheduleAchvCheck === 'function') scheduleAchvCheck();
         }
         localStorage.setItem('xpData', JSON.stringify(xpData));
         updateXPDisplay();
@@ -4688,10 +4742,236 @@ const Cloud = (function () {
         const el = document.getElementById('levelBadge');
         const bar = document.getElementById('xpBarFill');
         const label = document.getElementById('xpLabel');
-        if (el) el.textContent = `Lv.${xpData.level} ${title}`;
+        if (el) { const at = typeof achvTitle === 'function' ? achvTitle() : null; el.innerHTML = `Lv.${xpData.level} ${title}` + (at ? `<span class="achv-title">${at.icon} ${at.name}</span>` : ''); }
         if (bar) bar.style.width = Math.round((xpData.xp / XP_PER_LEVEL) * 100) + '%';
         if (label) label.textContent = `${xpData.xp}/${XP_PER_LEVEL} XP ｜ 次のLvまで${XP_PER_LEVEL - xpData.xp}XP`;
     }
+
+    /* ========== 物語（言の葉堂のひみつ手帖） ==========
+       節目にだけ短い場面を出す（はじまり・手帖の始まりと終わり・殿堂入り）。いつでもスキップでき、「物語」から読み返せる。
+       文の中の英単語は、その手帖のレベルのことば。タップすると意味が出る（[[英語|日本語]] で書く） */
+    const STORY = [
+        { id: 'prologue', title: '序章　言の葉堂', lines: [
+            '古い本屋「言の葉堂」。店の奥の棚で、あなたは一冊の手帖を見つけた。',
+            '表紙には小さな [[key|鍵]] の絵。開いてみると、ページはほとんど白紙だった。',
+            '「……よく来たね」　手帖の中から、かすかな声がする。この店の主人の声だという。',
+            '「ことばたちがスライムに食べられて、世界中に散らばってしまった。ひとつ覚えるたびに、この世界に [[light|光]] が戻る。どうか集め直しておくれ」',
+            'あなたは鉄の手帖を手に、店の [[door|扉]] を開けた。' ] },
+        { id: 'end_A1', title: '第一章の終わり　鉄の手帖', lines: [
+            '洞窟の奥で、アイアンスライムが光の粒になって消えた。',
+            '手帖に、ことばが戻ってくる。[[river|川]]、[[friend|友だち]]、[[morning|朝]]……読める。意味が分かる。',
+            '「よくやった。でも、これはまだ始まりにすぎないよ」　主人の声が、少しだけ近く聞こえた。',
+            '手帖の最後のページに、銅色の地図が浮かび上がった。' ] },
+        { id: 'start_A2', title: '第二章　銅の手帖', lines: [
+            '銅の手帖は、旅の道しるべだった。',
+            'ページの端に、主人の走り書きがある。「[[journey|旅]] は、知っていることばの数だけ遠くまで行ける」',
+            '星降る丘の向こうで、カッパースライムが待っている。' ] },
+        { id: 'end_A2', title: '第二章の終わり　銅の手帖', lines: [
+            'かがり火の祭壇で、カッパースライムが静かに崩れた。',
+            '「あなたは [[brave|勇敢な]] 人だね」',
+            '「実はわたしは、ことばを守ろうとして、白金の手帖の奥に閉じこめられてしまったのだ」',
+            '銀色の鍵が、手帖からこぼれ落ちた。' ] },
+        { id: 'start_B1', title: '第三章　銀の手帖', lines: [
+            '銀の手帖を開くと、冷たい風が吹きぬけた。',
+            '古代の遺跡には、昔の人が残した [[message|伝言]] が刻まれている。',
+            '「ことばを失った国は、[[memory|記憶]] も失う」　——遺跡の石碑より' ] },
+        { id: 'end_B1', title: '第三章の終わり　銀の手帖', lines: [
+            '凍った神殿で、シルバースライムが砕け散った。',
+            '石碑の文字が、すべて読めるようになっていた。',
+            '「[[knowledge|知識]] は、分け合っても減らない。覚えておくといい」',
+            '遠くの山脈で、竜が目を覚ました。' ] },
+        { id: 'start_B2', title: '第四章　金の手帖', lines: [
+            '金の手帖は、ずっしりと重く、そして温かかった。',
+            '竜の山脈の頂には、ことばの宝が眠るという。',
+            '「本当に強いのは、いつまでも [[curious|好奇心の強い]] 人だ」と主人は言った。' ] },
+        { id: 'end_B2', title: '第四章の終わり　金の手帖', lines: [
+            '竜の宝物庫で、ゴールドスライムが金色の光になって消えた。',
+            '金貨の山の奥に、白く光る扉がある。',
+            '「ここまで来たか、わが [[apprentice|弟子]] よ」　——今度は、はっきりと主人の声だった。' ] },
+        { id: 'start_PT', title: '終章　白金の手帖', lines: [
+            '白金の手帖は、見たことのないことばで埋まっていた。',
+            '天空の城。主人は、その最上階にいる。',
+            '「最後のことばたちは、[[elusive|とらえどころのない]] ものばかりだ。だが、あなたなら [[persevere|やり抜く]] だろう」' ] },
+        { id: 'end_PT', title: '終章の終わり　白金の手帖', lines: [
+            '玉座の間で、プラチナスライムがゆっくりと膝をついた。',
+            '光の中から、白いひげの老人が現れた。言の葉堂の主人だ。',
+            '「ありがとう。ことばが戻り、世界に色が戻った」',
+            '「最後にひとつだけ。歴代のスライムたちが、あなたの力をもう一度試したがっている」　——殿堂入りへの道が開いた。' ] },
+        { id: 'hof', title: 'エピローグ', lines: [
+            '歴代のスライムをすべて退けたとき、あなたの手帖はまばゆく輝いていた。',
+            '「ことばは、覚えた人のものになる。もうこの手帖は、あなたのものだ」',
+            '「[[vocabulary|語彙]] は、世界を見る窓。窓が増えるほど、世界は広く見える」',
+            '——言の葉堂のひみつ手帖・完——　でも、ことばの旅に終わりはない。' ] },
+    ];
+    let storySeen = safeParse('storySeen', null) || {};
+    let _story = null;
+    // 次に見せる場面（まだ見ていないもの）
+    function storyPending() {
+        const nbDone = k => typeof nbFinalDone === 'function' && nbFinalDone(k);
+        const want = ['prologue'];
+        ['A2', 'B1', 'B2', 'PT'].forEach(k => { if (currentNB.key === k) want.push('start_' + k); });
+        ['A1', 'A2', 'B1', 'B2', 'PT'].forEach(k => { if (nbDone(k)) want.push('end_' + k); });
+        if (hallOfFame['金の手帖'] && hallOfFame['金の手帖'].achieved) want.push('hof');
+        return want.find(id => !storySeen[id]) || null;
+    }
+    function storyUnlocked(id) {
+        if (storySeen[id]) return true;
+        return storyPending() === id;
+    }
+    // ほかの画面（ログイン・判定テスト・バトル・冒険など）が開いている間は出さない
+    function storyBlocked() {
+        if (typeof adventureActive !== 'undefined' && adventureActive) return true;
+        if (document.getElementById('appLoading')) return true;
+        return ['auth-overlay', 'placement-overlay', 'battle-overlay', 'quiz-overlay', 'training-modal', 'multi-draw-overlay', 'gacha-overlay',
+                'battle-formation-modal', 'nb-picker', 'battle-result-overlay', 'story-overlay', 'achv-modal']
+            .some(id => { const el = document.getElementById(id); return el && getComputedStyle(el).display !== 'none'; });
+    }
+    function storyTick() {
+        const id = storyPending();
+        if (id && !storyBlocked()) storyOpen(id);
+    }
+    function storyFmt(s) {
+        const esc = x => String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        return esc(s).replace(/\[\[([^|\]]+)\|([^\]]+)\]\]/g, (m, en, ja) => `<span class="st-w" data-ja="${ja}" onclick="this.classList.toggle('show')">${en}</span>`);
+    }
+    function storyOpen(id) {
+        const sc = STORY.find(x => x.id === id); if (!sc) return;
+        _story = { sc, i: 0 };
+        document.getElementById('stTitle').textContent = sc.title;
+        document.getElementById('stLines').innerHTML = '';
+        document.getElementById('story-overlay').style.display = 'flex';
+        storyNext();
+    }
+    function storyNext() {
+        if (!_story) return;
+        const { sc } = _story;
+        if (_story.i >= sc.lines.length) { storyClose(); return; }
+        const p = document.createElement('p'); p.className = 'st-line'; p.innerHTML = storyFmt(sc.lines[_story.i]);
+        document.getElementById('stLines').appendChild(p);
+        _story.i++;
+        document.getElementById('stPage').textContent = `${_story.i} / ${sc.lines.length}`;
+        document.getElementById('stNext').textContent = _story.i >= sc.lines.length ? '閉じる' : '次へ ▶';
+    }
+    function storyClose() {
+        if (_story) { storySeen[_story.sc.id] = 1; try { localStorage.setItem('storySeen', JSON.stringify(storySeen)); } catch (e) {} }
+        _story = null;
+        document.getElementById('story-overlay').style.display = 'none';
+    }
+    function openStoryArchive() {
+        const box = document.getElementById('storyBox');
+        box.innerHTML = `<h3 style="margin:0 0 4px;color:#d8c8ff;font-family:'Noto Serif JP',serif;">📖 言の葉堂のひみつ手帖</h3>` +
+            `<div style="font-size:11.5px;color:#b8a8d8;margin-bottom:10px;">手帖を進めると、物語の続きが読めます。文の中の英単語はタップすると意味が出ます</div>` +
+            `<div class="story-list">${STORY.map(sc => { const ok = storyUnlocked(sc.id); return `<button ${ok ? '' : 'disabled'} onclick="document.getElementById('story-modal').style.display='none';storyOpen('${sc.id}')">${ok ? sc.title : '？？？（まだ読めません）'}</button>`; }).join('')}</div>` +
+            `<button class="modal-cancel-btn" onclick="document.getElementById('story-modal').style.display='none'" style="margin-top:10px;">閉じる</button>`;
+        document.getElementById('story-modal').style.display = 'flex';
+    }
+    setInterval(storyTick, 2500);
+    /* ========== 称号・実績 ==========
+       条件を満たすと解除（ゴールドの報酬つき）。解除した実績の名前は「称号」として、レベルの横に1つ表示できる
+       進み具合の一部（バトルの勝利数など）は playStats に数える */
+    let playStats = safeParse('playStats', null) || {};
+    function statInc(k, n) { playStats[k] = (playStats[k] || 0) + (n || 1); try { localStorage.setItem('playStats', JSON.stringify(playStats)); } catch (e) {} scheduleAchvCheck(); }
+    function starCount(min) { let n = 0; for (const id of unlockedCards) if (getStars(id) >= min) n++; return n; }
+    function nbFinalDone(key) {
+        const nb = NB_BY_KEY[key]; if (!nb) return false;
+        const last = Math.ceil(nb.count / COLLECTION_PAGE_SIZE) - 1;
+        return battleProgress.defeated.includes(`${key === 'PT' ? '' : nb.prefix + '_'}tab${last}_final`);
+    }
+    const ACHV = [
+        // [グループ, id, アイコン, 称号, 条件の説明, 現在値, 目標, 報酬G]
+        ['集める', 'c10',   '🃏', '駆け出しの収集家', 'カードを10枚集める',     () => allCompletion().have, 10, 100],
+        ['集める', 'c100',  '📚', 'ことば集め',       'カードを100枚集める',    () => allCompletion().have, 100, 300],
+        ['集める', 'c500',  '🗃️', '手帖の守り人',     'カードを500枚集める',    () => allCompletion().have, 500, 600],
+        ['集める', 'c1000', '📜', '千のことばの主',   'カードを1,000枚集める',  () => allCompletion().have, 1000, 1000],
+        ['集める', 'c3000', '🏛️', 'ことばの賢者',     'カードを3,000枚集める',  () => allCompletion().have, 3000, 2000],
+        ['集める', 'call',  '👑', '言の葉の王',       '全手帖（8,324枚）をコンプリート', () => allCompletion().have, 8324, 10000],
+        ['手帖', 'nbA2', '🔶', '旅立ちの冒険者', '銅の手帖を開く',   () => notebookState.unlocked.includes('A2') ? 1 : 0, 1, 300],
+        ['手帖', 'nbB1', '💠', '世界を広げる者', '銀の手帖を開く',   () => notebookState.unlocked.includes('B1') ? 1 : 0, 1, 500],
+        ['手帖', 'nbB2', '🌟', '知恵の探究者',   '金の手帖を開く',   () => notebookState.unlocked.includes('B2') ? 1 : 0, 1, 800],
+        ['手帖', 'nbPT', '💎', '難関に挑む者',   '白金の手帖を開く', () => notebookState.unlocked.includes('PT') ? 1 : 0, 1, 1000],
+        ['覚える', 's3_50',  '✍️', '書ける者',       '★3以上のカードを50枚',  () => starCount(3), 50, 400],
+        ['覚える', 's3_300', '🖋️', 'ことばの職人',   '★3以上のカードを300枚', () => starCount(3), 300, 1000],
+        ['覚える', 's5_10',  '🧠', '記憶の達人',     '★5のカードを10枚',      () => starCount(5), 10, 500],
+        ['覚える', 's5_100', '🔮', '記憶の大魔導士', '★5のカードを100枚',     () => starCount(5), 100, 2000],
+        ['続ける', 'lv10',   '🎓', '一人前の魔法使い', 'レベル10になる',  () => xpData.level, 10, 300],
+        ['続ける', 'lv30',   '🧙', '熟練の魔法使い',   'レベル30になる',  () => xpData.level, 30, 1000],
+        ['続ける', 'st7',    '🔥', '続ける力',         '7日連続でログイン',  () => loginStreak.streak || 0, 7, 500],
+        ['続ける', 'st30',   '☀️', '日々の鍛錬者',     '30日連続でログイン', () => loginStreak.streak || 0, 30, 2000],
+        ['戦う', 'win1',   '⚔️', 'スライムハンター', 'バトルに初めて勝つ',       () => playStats.battleWins || 0, 1, 200],
+        ['戦う', 'win30',  '🛡️', '歴戦の勇者',       'バトルに30回勝つ',         () => playStats.battleWins || 0, 30, 1000],
+        ['戦う', 'nomiss', '🎯', '完璧な作戦家',     '一度もまちがえずにバトルに勝つ', () => playStats.noMissWins || 0, 1, 500],
+        ['戦う', 'ult',    '💥', '合体の極意',       '3人合体・必殺技を使う',    () => playStats.ultUsed || 0, 1, 300],
+        ['戦う', 'fA1', '⚙️', '鉄の覇者',   '鉄の手帖の最後の討伐戦に勝つ',   () => nbFinalDone('A1') ? 1 : 0, 1, 800],
+        ['戦う', 'fA2', '🔶', '銅の覇者',   '銅の手帖の最後の討伐戦に勝つ',   () => nbFinalDone('A2') ? 1 : 0, 1, 1200],
+        ['戦う', 'fB1', '❄️', '銀の覇者',   '銀の手帖の最後の討伐戦に勝つ',   () => nbFinalDone('B1') ? 1 : 0, 1, 1600],
+        ['戦う', 'fB2', '👑', '金の覇者',   '金の手帖の最後の討伐戦に勝つ',   () => nbFinalDone('B2') ? 1 : 0, 1, 2000],
+        ['戦う', 'fPT', '💠', '白金の覇者', '白金の手帖の最後の討伐戦に勝つ', () => nbFinalDone('PT') ? 1 : 0, 1, 3000],
+        ['戦う', 'hof', '🏆', '殿堂の英雄', '殿堂入りを果たす',  () => (hallOfFame['金の手帖'] && hallOfFame['金の手帖'].achieved) ? 1 : 0, 1, 3000],
+        ['冒険', 'adv1',    '🥾', '小さな一歩',   '冒険で面を1つ踏破する',         () => playStats.advClears || 0, 1, 200],
+        ['冒険', 'adv30',   '🧭', '旅慣れた者',   '冒険で面を30回踏破する',        () => playStats.advClears || 0, 30, 1000],
+        ['冒険', 'advNM',   '🌈', '迷わぬ旅人',   'ノーミスで面を踏破する',        () => playStats.advNoMiss || 0, 1, 500],
+        ['冒険', 'advLast', '🏔️', '最果ての旅人', 'どれかの手帖の最終面にたどり着く', () => playStats.advLast || 0, 1, 800],
+        ['みんなで', 'raid1',   '🤝', '共に戦う者',   'レイドボスに挑む',           () => playStats.raidHits || 0, 1, 300],
+        ['みんなで', 'raidWin', '🐉', '大魔王討伐隊', 'みんなでレイドボスを倒す',   () => playStats.raidWins || 0, 1, 2000],
+    ].map(a => ({ group: a[0], id: a[1], icon: a[2], name: a[3], cond: a[4], cur: a[5], goal: a[6], reward: a[7] }));
+    let achv = safeParse('achv', null);
+    let _achvTimer = null;
+    function scheduleAchvCheck() { clearTimeout(_achvTimer); _achvTimer = setTimeout(checkAchievements, 700); }
+    function checkAchievements() {
+        const first = !achv;   // はじめて調べるとき（これまでの記録でまとめて解除）
+        if (!achv) achv = {};
+        const today = new Date().toISOString().slice(0, 10);
+        const got = [];
+        for (const a of ACHV) {
+            if (achv[a.id]) continue;
+            let v = 0; try { v = a.cur(); } catch (e) {}
+            if (v >= a.goal) { achv[a.id] = today; got.push(a); }
+        }
+        try { localStorage.setItem('achv', JSON.stringify(achv)); } catch (e) {}
+        if (got.length) {
+            const g = got.reduce((s, a) => s + a.reward, 0);
+            gold += g; saveGold();
+            if (first && got.length > 1) achvPop(`🏅 これまでの記録で 実績${got.length}個を解除！`, `+${g.toLocaleString()}G`);
+            else got.forEach((a, i) => setTimeout(() => { achvPop(`🏅 実績解除：${a.icon} ${a.name}`, `${a.cond}　+${a.reward.toLocaleString()}G`); playSE('unlock'); }, i * 3300));
+        }
+        updateAchvBtn();
+    }
+    function achvPop(msg, sub) {
+        const old = document.getElementById('achv-pop'); if (old) old.remove();
+        const el = document.createElement('div'); el.id = 'achv-pop';
+        el.innerHTML = `${msg}${sub ? `<small>${sub}</small>` : ''}`;
+        document.body.appendChild(el); setTimeout(() => el.remove(), 3300);
+    }
+    function updateAchvBtn() {
+        const el = document.getElementById('achvBtnCount');
+        if (el) el.textContent = `${Object.keys(achv || {}).length}/${ACHV.length}`;
+    }
+    function achvTitle() { const id = localStorage.getItem('achvTitle'); const a = ACHV.find(x => x.id === id); return (a && achv && achv[a.id]) ? a : null; }
+    function setAchvTitle(id) {
+        try { if (localStorage.getItem('achvTitle') === id) localStorage.removeItem('achvTitle'); else localStorage.setItem('achvTitle', id); } catch (e) {}
+        updateXPDisplay(); openAchievements();
+    }
+    function openAchievements() {
+        checkAchievements();
+        const box = document.getElementById('achvBox');
+        const sel = localStorage.getItem('achvTitle');
+        const n = Object.keys(achv || {}).length;
+        let html = `<h3>🏅 称号・実績</h3><div class="achv-sum">解除 ${n} / ${ACHV.length}　｜　解除した実績は「称号」としてレベルの横に表示できます</div>`;
+        let grp = '';
+        for (const a of ACHV) {
+            if (a.group !== grp) { grp = a.group; html += `<div class="achv-group">${grp}</div>`; }
+            const done = !!(achv && achv[a.id]);
+            let v = 0; try { v = a.cur(); } catch (e) {}
+            const pct = Math.min(100, Math.round(v / a.goal * 100));
+            html += `<div class="achv-item${done ? ' done' : ''}"><div class="ic">${a.icon}</div><div class="bd"><div class="nm">${a.name}</div><div class="cd">${a.cond}${done ? `（${achv[a.id]} 解除）` : a.goal > 1 ? `　${Math.min(v, a.goal).toLocaleString()} / ${a.goal.toLocaleString()}` : ''}</div>` +
+                (done ? '' : `<div class="pg"><i style="width:${pct}%"></i></div>`) + `</div>` +
+                (done ? `<button class="${sel === a.id ? 'on' : ''}" onclick="setAchvTitle('${a.id}')">${sel === a.id ? '表示中' : '称号にする'}</button>` : `<div class="rw">+${a.reward.toLocaleString()}G</div>`) + `</div>`;
+        }
+        html += `<button class="modal-cancel-btn" onclick="closeAchievements()" style="margin-top:10px;">閉じる</button>`;
+        box.innerHTML = html;
+        document.getElementById('achv-modal').style.display = 'flex';
+    }
+    function closeAchievements() { document.getElementById('achv-modal').style.display = 'none'; }
 
     function updateSpecialGachaBtn() {}   // 強化の種は廃止（呼び出し元の互換のため残す）
 
@@ -5532,6 +5812,7 @@ const Cloud = (function () {
         loginStreak.lastDate = todayStr;
         loginStreak.bonusClaimed = false;
         localStorage.setItem('loginStreak', JSON.stringify(loginStreak));
+        scheduleAchvCheck();
 
         // ログインXP（連続ログイン日数に応じてボーナス）
         const loginXP = 10 + Math.min(loginStreak.streak - 1, 10) * 2; // 10〜30XP
@@ -6606,6 +6887,7 @@ const Cloud = (function () {
         e.nextReview = days > 0 ? Date.now() + days * 86400000 : Date.now();
         srsData[cardId] = e;
         localStorage.setItem('srsData', JSON.stringify(srsData));
+        if (typeof scheduleAchvCheck === 'function') scheduleAchvCheck();
     }
     /* 忘却曲線の「忘れかけ」判定：一度覚えた単語（level>=1）で、次の復習日を過ぎたもの。
        間隔は 1日 → 3日 → 1週間 → 2週間 → 1か月 と伸びていく（エビングハウスの忘却曲線） */
@@ -7370,6 +7652,7 @@ const Cloud = (function () {
     // 必殺技：3枚の攻撃力の合計×2.2を必ず当てる（不正解なら威力半分）
     function resolveUltimate(isCorrect, enhance) {
         const s = battleSession;
+        statInc('ultUsed');
         const dmg = Math.round(s.units.reduce((a, u) => a + u.atk, 0) * GAUGE.ultMult * enhance);
         const fx = document.createElement('div'); fx.id = 'battle-ult';
         fx.innerHTML = `<div class="flash"></div><div class="txt">💥 3人合体・必殺技！</div>`;
@@ -7710,6 +7993,7 @@ const Cloud = (function () {
 
     function processBattleAnswer(isCorrect, card) {
         if (!battleSession.active) return;
+        if (!isCorrect) battleSession.wrongs = (battleSession.wrongs || 0) + 1;
         updateSRS(card.id, isCorrect);
         if (isCorrect) addXP(15, null);
         battleSession.turn = 'resolve';
@@ -7752,6 +8036,8 @@ const Cloud = (function () {
         const win = enemyHP <= 0 && playerHP > 0;
         if (win && !battleSession._victoryShown) {
             battleSession._victoryShown = true;
+            statInc('battleWins');
+            if (!battleSession.wrongs) statInc('noMissWins');
             playVictoryAnimation(stage, () => endBattle());
             return;
         }
@@ -9019,7 +9305,9 @@ const Cloud = (function () {
         if (a.step >= advNeed(a.area)) {
             const A = ADV_AREAS[a.area], ok = advNeed(a.area), miss = a.miss;
             const atLast = a.area >= advLast();   // 最終面：その地にとどまって、もう一周
+            statInc('advClears'); if (!a.miss) statInc('advNoMiss');
             if (!atLast) a.area = a.area + 1;
+            if (a.area >= advLast()) statInc('advLast');
             a.step = 0; a.miss = 0;
             advSave(a);
             const N = ADV_AREAS[a.area];
@@ -9764,6 +10052,7 @@ const Cloud = (function () {
     updateDailyGoalDisplay();
     renderCollection();
     checkLoginStreak();
+    setTimeout(checkAchievements, 3500);   // 起動後に実績を確認（これまでの記録で解除できるものはまとめて）
 
     // タップ音
     document.addEventListener('pointerdown', (e) => {
