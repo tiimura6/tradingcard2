@@ -44,7 +44,16 @@ const RATE = {
   admin:      [5, 600],      // 管理者キー：1人10分に5回
   contactOne: [3, 600],      // 問い合わせ：1台10分に3件
   contactAll: [30, 3600],    // 問い合わせ：全体で1時間に30件
+  raid:       [10, 600],     // レイドの送信：1人10分に10回
 };
+/* レイドボス（みんなで倒す週替わりの巨大ボス）
+   ・1回の挑戦で与えたダメージは「自分のレベルに合わせたボスのHPの何％を削ったか」を点数にして合算（1回最大 RAID_MAX_HIT 点）
+   ・1人1日 RAID_DAILY 回まで。ボスのHPはスクリプトプロパティ RAID_HP で変えられる（既定 RAID_HP_DEFAULT） */
+const RAID_DAILY       = 3;
+const RAID_MAX_HIT     = 1500;
+const RAID_HP_DEFAULT  = 30000;
+const RAID_REWARD      = 2000;   // 撃破後に参加者が受け取れるゴールド
+const RAID_BOSSES      = [['A1', '巨大アイアンスライム'], ['A2', '巨大カッパースライム'], ['B1', '巨大シルバースライム'], ['B2', '巨大ゴールドスライム'], ['PT', '巨大プラチナスライム']];
 const CHUNK_SIZE      = 45000; // 1セルに入れる文字数（上限50,000）
 const MAX_CHUNKS      = 20;    // 進捗データの最大分割数（約90万文字まで）
 const MASTERED_LEVEL  = 4;     // SRSでこのレベル以上を「習得語」と数える（4=Week2）
@@ -60,6 +69,7 @@ const SHEET = {
   HOF:      '殿堂入り',
   CLASS:    'クラス別集計',
   CONTACT:  '問い合わせ',
+  RAID:     'レイド',
 };
 const BACKUP_KEEP = 4;   // バックアップを何回分残すか（毎週なら約1か月）
 
@@ -78,6 +88,7 @@ const HEADERS = {
              '開いている手帖', '鉄（枚）', '銅（枚）', '銀（枚）', '金（枚）', '白金（枚）', '要確認'],
   HOF:      ['達成日時', 'ログインID', 'ニックネーム', '区分'],
   CONTACT:  ['受付日時', '種類', '内容', '返信先', 'ログインID', '端末ID', '対応状況'],
+  RAID:     ['キー', '週（月曜日）', 'ログインID', 'ニックネーム', '与えたダメージ', '今日の挑戦回数', '最終挑戦日', '累計挑戦回数', '報酬受取'],
   CLASS:    ['クラス', '人数', '直近7日に利用した人数', '利用率', '直近7日の回答数', '1人あたり累計回答数', '正答率', '1人あたりカード', '1人あたり習得語数'],
 };
 
@@ -113,6 +124,9 @@ function doPost(e) {
       case 'adminUnlock':  return json_(adminUnlock_(req));
       case 'setPrefs':     return json_(setPrefs_(req));
       case 'contact':      return json_(contact_(req));
+      case 'raidStatus':   return json_(raidStatus_(req));
+      case 'raidHit':      return json_(raidHit_(req));
+      case 'raidClaim':    return json_(raidClaim_(req));
       default:             return json_({ ok: false, error: 'unknown_action' });
     }
   } catch (err) {
@@ -576,6 +590,105 @@ function hofRanking_() {
   return result;
 }
 
+/* ================= レイドボス ================= */
+function raidWeek_(now) {
+  const tz = 'Asia/Tokyo';
+  const d = new Date(Utilities.formatDate(now || new Date(), tz, 'yyyy-MM-dd') + 'T00:00:00Z');   // 日本時間の日付（UTCの0時として扱う）
+  const dow = (d.getUTCDay() + 6) % 7;   // 月曜=0
+  const mon = new Date(d.getTime() - dow * 86400000);
+  return { key: mon.toISOString().slice(0, 10), index: Math.floor(mon.getTime() / (7 * 86400000)), today: d.toISOString().slice(0, 10),
+           ends: new Date(mon.getTime() + 7 * 86400000).toISOString().slice(0, 10) };
+}
+function raidHp_() { return Number(PropertiesService.getScriptProperties().getProperty('RAID_HP')) || RAID_HP_DEFAULT; }
+/** その週の合計ダメージと上位（キャッシュ30秒） */
+function raidBoard_(week) {
+  const cache = CacheService.getScriptCache();
+  const ck = 'raid:' + week.key;
+  const hit = cache.get(ck);
+  if (hit) return JSON.parse(hit);
+  const sh = sheet_(SHEET.RAID);
+  let total = 0, rows = [];
+  if (sh.getLastRow() > 1) {
+    const hidden = {};
+    const users = sheet_(SHEET.USERS);
+    if (users.getLastRow() > 1) users.getRange(2, 1, users.getLastRow() - 1, 12).getValues().forEach(r => { if (String(r[11] || '').trim()) hidden[String(r[0])] = true; });
+    rows = sh.getRange(2, 1, sh.getLastRow() - 1, HEADERS.RAID.length).getValues().filter(r => String(r[1]) === week.key);
+    total = rows.reduce((s, r) => s + (Number(r[4]) || 0), 0);
+    rows = rows.filter(r => !hidden[String(r[2])]).sort((a, b) => (Number(b[4]) || 0) - (Number(a[4]) || 0)).slice(0, 10)
+      .map(r => ({ name: String(r[3] || '名無し'), dmg: Number(r[4]) || 0 }));
+  }
+  const out = { total: total, top: rows };
+  cache.put(ck, JSON.stringify(out), 30);
+  return out;
+}
+function raidMine_(sh, week, loginId) {
+  const row = findRow_(sh, 1, week.key + '|' + loginId);
+  if (!row) return { row: 0, dmg: 0, hitsToday: 0, claimed: false };
+  const v = sh.getRange(row, 1, 1, HEADERS.RAID.length).getValues()[0];
+  const last = v[6] instanceof Date ? Utilities.formatDate(v[6], 'Asia/Tokyo', 'yyyy-MM-dd') : String(v[6] || '');
+  return { row: row, dmg: Number(v[4]) || 0, hitsToday: last === week.today ? (Number(v[5]) || 0) : 0, claimed: !!String(v[8] || '').trim(), total: Number(v[7]) || 0 };
+}
+function raidStatus_(req) {
+  const week = raidWeek_();
+  const boss = RAID_BOSSES[((week.index % RAID_BOSSES.length) + RAID_BOSSES.length) % RAID_BOSSES.length];
+  const hp = raidHp_();
+  const board = raidBoard_(week);
+  const out = { ok: true, week: week.key, ends: week.ends, boss: { nb: boss[0], name: boss[1] }, hp: hp, dmg: Math.min(hp, board.total),
+                defeated: board.total >= hp, top: board.top, maxHits: RAID_DAILY, maxHit: RAID_MAX_HIT, reward: RAID_REWARD, me: null };
+  const loginId = req && req.token ? auth_(req.token) : null;
+  if (loginId) { const m = raidMine_(sheet_(SHEET.RAID), week, loginId); out.me = { dmg: m.dmg, hitsToday: m.hitsToday, claimed: m.claimed }; }
+  return out;
+}
+function raidHit_(req) {
+  const loginId = auth_(req.token);
+  if (!loginId) return { ok: false, error: 'auth' };
+  if (!rateOk_('raid:' + loginId, RATE.raid)) return { ok: false, error: 'rate' };
+  const pts = Math.round(Number(req.points));
+  if (!isFinite(pts) || pts < 0 || pts > RAID_MAX_HIT) return { ok: false, error: 'invalid' };
+  return withLock_(() => {
+    const week = raidWeek_();
+    const sh = sheet_(SHEET.RAID);
+    const m = raidMine_(sh, week, loginId);
+    if (m.hitsToday >= RAID_DAILY) return { ok: false, error: 'limit' };
+    const now = new Date();
+    if (m.row) {
+      sh.getRange(m.row, 5, 1, 4).setValues([[m.dmg + pts, m.hitsToday + 1, now, m.total + 1]]);
+    } else {
+      const users = sheet_(SHEET.USERS);
+      const urow = findRow_(users, 1, loginId);
+      const nick = urow ? users.getRange(urow, 2).getValue() : loginId;
+      appendRow_(sh, [week.key + '|' + loginId, week.key, loginId, nick, pts, 1, now, 1, ''], [1, 2, 3, 4]);
+    }
+    CacheService.getScriptCache().remove('raid:' + week.key);
+    return raidStatus_(req);
+  });
+}
+function raidClaim_(req) {
+  const loginId = auth_(req.token);
+  if (!loginId) return { ok: false, error: 'auth' };
+  return withLock_(() => {
+    const week = raidWeek_();
+    const st = raidStatus_(req);
+    if (!st.defeated) return { ok: false, error: 'not_defeated' };
+    const sh = sheet_(SHEET.RAID);
+    const m = raidMine_(sh, week, loginId);
+    if (!m.row || m.dmg <= 0) return { ok: false, error: 'not_joined' };
+    if (m.claimed) return { ok: false, error: 'claimed' };
+    sh.getRange(m.row, 9).setValue(new Date());
+    return { ok: true, reward: RAID_REWARD };
+  });
+}
+/** レイドボスのHPを変える（メニューから） */
+function setRaidHp() {
+  const ui = SpreadsheetApp.getUi();
+  const r = ui.prompt('レイドボスのHP', '1回の挑戦で最大' + RAID_MAX_HIT + '点。参加人数×1日の回数×日数を目安に（今：' + raidHp_() + '）', ui.ButtonSet.OK_CANCEL);
+  if (r.getSelectedButton() !== ui.Button.OK) return;
+  const n = Math.round(Number(r.getResponseText()));
+  if (!(n > 0)) { ui.alert('正の数を入れてください'); return; }
+  PropertiesService.getScriptProperties().setProperty('RAID_HP', String(n));
+  ui.alert('レイドボスのHPを ' + n + ' にしました（今週の分から反映）');
+}
+
 /* ================= 先生用メニュー ================= */
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('英単語図鑑')
@@ -590,6 +703,7 @@ function onOpen() {
     .addSeparator()
     .addItem('管理者キーを設定・変更', 'setAdminKey')
     .addItem('問い合わせの通知先を設定', 'setContactNotify')
+    .addItem('レイドボスのHPを設定', 'setRaidHp')
     .addToUi();
 }
 
@@ -791,7 +905,7 @@ function deleteUserData_(loginId) {
     let total = 0;
     // [シート, ログインIDの列]
     [[SHEET.USERS, 1], [SHEET.SESSIONS, 2], [SHEET.PROGRESS, 1], [SHEET.STATUS, 1],
-     [SHEET.LOG, 2], [SHEET.DAILY, 2], [SHEET.HOF, 2], [SHEET.CONTACT, 5]].forEach(([name, col]) => {
+     [SHEET.LOG, 2], [SHEET.DAILY, 2], [SHEET.HOF, 2], [SHEET.CONTACT, 5], [SHEET.RAID, 3]].forEach(([name, col]) => {
       const sh = sheet_(name);
       const last = sh.getLastRow();
       if (last < 2) return;

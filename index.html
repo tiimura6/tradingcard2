@@ -1384,6 +1384,20 @@
         .story-list button { text-align: left; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(160,130,255,.4); background: rgba(40,28,80,.7); color: #eadff8; font-size: 13.5px; cursor: pointer; font-family: 'Noto Serif JP', serif; }
         .story-list button:disabled { opacity: .45; cursor: default; }
 
+        /* ===== レイドボス ===== */
+        #raidBox h3 { margin: 0 0 2px; color: #ffd0b0; font-family: 'Noto Serif JP', serif; }
+        .raid-boss { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+        .raid-boss img { width: 92px; height: 92px; object-fit: contain; filter: drop-shadow(0 0 14px rgba(255,80,60,.7)); animation: raid-float 3s ease-in-out infinite; }
+        @keyframes raid-float { 50% { transform: translateY(-6px) scale(1.03); } }
+        .raid-hp { height: 14px; border-radius: 7px; background: rgba(255,255,255,.1); overflow: hidden; border: 1px solid rgba(255,120,100,.5); }
+        .raid-hp i { display: block; height: 100%; background: linear-gradient(90deg,#ff3a3a,#ff9a3a); transition: width .8s ease; }
+        .raid-info { font-size: 12px; color: #e8c8c0; line-height: 1.7; }
+        .raid-top { margin-top: 10px; font-size: 12px; background: rgba(255,255,255,.05); border-radius: 10px; padding: 8px 10px; }
+        .raid-top div { display: flex; justify-content: space-between; padding: 2px 0; }
+        .raid-go { width: 100%; margin-top: 12px; padding: 12px; border-radius: 12px; border: 2px solid #ffb070; background: linear-gradient(135deg,#a02010,#5a0a04); color: #fff; font-size: 15px; font-weight: bold; cursor: pointer; font-family: 'Noto Serif JP', serif; }
+        .raid-go:disabled { opacity: .45; cursor: default; }
+        .raid-note { font-size: 11.5px; color: #c8a8a0; margin-top: 8px; line-height: 1.6; }
+
         /* ===== STUDY MODE (TikTok 式) ===== */
         #study-overlay {
             display: none; position: fixed; top: 0; left: 0;
@@ -2453,6 +2467,9 @@
     <button class="action-btn" id="storyBtn" onclick="openStoryArchive()" style="grid-column:span 2;background:linear-gradient(150deg,#2a2050,#140c30);color:#d8c8ff;border:1px solid rgba(160,130,255,0.45);">
         <span class="btn-icon">📖</span>物語
     </button>
+    <button class="action-btn" id="raidBtn" onclick="openRaid()" style="grid-column:1/-1;background:linear-gradient(150deg,#5a1020,#2a0610);color:#ffd0c0;border:1px solid rgba(255,110,90,0.5);">
+        <span class="btn-icon">🐉</span>みんなで倒すレイドボス <span id="raidBtnInfo" style="font-size:11px;opacity:.85;"></span>
+    </button>
     <button class="action-btn" id="hofBtn" onclick="showHallOfFameModal()"
         style="grid-column:1/-1;background:linear-gradient(150deg,#4a3010,#2a1800);color:#f0d080;border:1px solid rgba(200,150,30,0.4);">
         <span class="btn-icon">🏆</span>殿堂入りへの道
@@ -2462,6 +2479,7 @@
 <div id="story-overlay"><div class="st-box"><div class="st-ttl" id="stTitle"></div><div class="st-lines" id="stLines"></div>
     <div class="st-foot"><button onclick="storyClose()">スキップ</button><span id="stPage"></span><button class="st-next" id="stNext" onclick="storyNext()">次へ ▶</button></div></div></div>
 <div id="story-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)this.style.display='none'"><div class="custom-box" id="storyBox" style="width:92%;max-width:420px;background:#140c22;color:#eadff8;"></div></div>
+<div id="raid-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeRaid()"><div class="custom-box" id="raidBox" style="width:94%;max-width:460px;max-height:88vh;overflow-y:auto;background:#1a0a10;color:#f6e2dc;"></div></div>
 <div id="achv-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeAchievements()"><div class="custom-box" id="achvBox"></div></div>
 <!-- Gacha Choice Modal -->
 <!-- SP強化モーダル -->
@@ -3368,6 +3386,8 @@ const Cloud = (function () {
         submitLogin, submitRegister, useServer, useLocal, manualSave, logout,
         isLoggedIn: () => !!session,
         nickname: () => session ? session.nickname : null,
+        // サーバーの機能を呼ぶ（ログイン中ならトークンを付ける）
+        call: (action, payload) => GAS_URL ? api(action, Object.assign(session ? { token: session.token } : {}, payload || {})) : Promise.resolve({ ok: false, error: 'no_server' }),
         esc,
     };
 })();
@@ -4747,6 +4767,99 @@ const Cloud = (function () {
         if (label) label.textContent = `${xpData.xp}/${XP_PER_LEVEL} XP ｜ 次のLvまで${XP_PER_LEVEL - xpData.xp}XP`;
     }
 
+    /* ========== みんなで倒すレイドボス ==========
+       週替わり（月曜はじまり）の巨大ボスを、ログインしている全員で倒す。1人1日3回、1回5ターン。
+       ボスの強さは自分の手帖・タブに合わせる（HPは討伐戦の1.5倍）。削ったHPの割合を点数にしてサーバーで合算する
+       （HPを削りきると1000点＋早く倒したぶんのボーナス、最大1500点）。倒したあとは参加者全員が報酬を受け取れる */
+    const RAID_TURNS = 5;
+    let raidState = null;
+    function raidLocalStage(st) {
+        const tabIdx = getCurrentGachaTabIndex();
+        const bs = bossStatsFor(globalTab(currentNB.key, tabIdx));
+        const nb = (st && st.boss && st.boss.nb) || 'PT';
+        return { id: 'raid', type: 'raid', tabIdx, nb, name: (st && st.boss && st.boss.name) || '巨大スライム', emoji: '🐉',
+                 img: `./boss/slime_${nb}.webp`, imgFallback: null,
+                 filter: 'saturate(1.4) contrast(1.15) drop-shadow(0 0 14px rgba(255,60,40,.85))',
+                 hp: Math.round(bs.finalHp * 1.5), atk: Math.round(bs.finalAtk * 0.9), tabUnlock: null, reward: { type: 'gacha', amount: 0 } };
+    }
+    function raidPoints() {
+        const s = battleSession;
+        const dealt = Math.max(0, s.enemyMaxHP - s.enemyHP);
+        if (s.enemyHP <= 0) return Math.min(1500, 1000 + Math.max(0, RAID_TURNS + 1 - s.turnCount) * 100);
+        return Math.min(1000, Math.round(dealt / s.enemyMaxHP * 1000));
+    }
+    async function openRaid() {
+        const box = document.getElementById('raidBox');
+        document.getElementById('raid-modal').style.display = 'flex';
+        if (!GAS_URL) { box.innerHTML = `<h3>🐉 みんなで倒すレイドボス</h3><div class="raid-note">サーバーにつながっていないため、参加できません。</div><button class="modal-cancel-btn" onclick="closeRaid()">閉じる</button>`; return; }
+        box.innerHTML = `<h3>🐉 みんなで倒すレイドボス</h3><div class="raid-note"><span class="al-inline"></span>読み込んでいます…</div>`;
+        const st = await Cloud.call('raidStatus');
+        if (st && st.error === 'unknown_action') { box.innerHTML = `<h3>🐉 みんなで倒すレイドボス</h3><div class="raid-note">ただいま準備中です。もうしばらくお待ちください。</div><button class="modal-cancel-btn" onclick="closeRaid()">閉じる</button>`; return; }
+        if (!st || !st.ok) { box.innerHTML = `<h3>🐉 みんなで倒すレイドボス</h3><div class="raid-note">読み込めませんでした。通信状態を確かめて、もう一度開いてください。</div><button class="modal-cancel-btn" onclick="closeRaid()">閉じる</button>`; return; }
+        raidState = st;
+        renderRaid();
+    }
+    function renderRaid() {
+        const st = raidState, box = document.getElementById('raidBox'), esc = Cloud.esc;
+        const left = Math.max(0, st.hp - st.dmg), pct = Math.max(0, Math.min(100, left / st.hp * 100));
+        const me = st.me, logged = Cloud.isLoggedIn();
+        const hitsLeft = me ? Math.max(0, st.maxHits - me.hitsToday) : 0;
+        let action;
+        if (!logged) action = `<div class="raid-note">🔒 レイドボスには、ログインすると参加できます（ゲストでは参加できません）。</div>`;
+        else if (st.defeated) action = me && me.dmg > 0
+            ? (me.claimed ? `<div class="raid-note">🎉 撃破の報酬は受け取り済みです。来週のボスもお楽しみに！</div>` : `<button class="raid-go" onclick="claimRaid()">🎁 撃破の報酬を受け取る（+${st.reward.toLocaleString()}G）</button>`)
+            : `<div class="raid-note">今週のボスは、みんなの力で倒されました！ 来週はいっしょに戦おう。</div>`;
+        else action = `<button class="raid-go" ${hitsLeft ? '' : 'disabled'} onclick="startRaid()">⚔️ 挑む（今日あと${hitsLeft}回）</button>`;
+        box.innerHTML = `<h3>🐉 みんなで倒すレイドボス</h3>
+            <div class="raid-info">今週：${esc(st.week)}〜（${esc(st.ends)} に新しいボス）</div>
+            <div class="raid-boss"><img src="./boss/slime_${esc(st.boss.nb)}.webp" alt=""><div style="flex:1;">
+                <div style="font-size:16px;font-weight:bold;color:#fff;">${esc(st.boss.name)}${st.defeated ? '　💀撃破！' : ''}</div>
+                <div class="raid-hp" style="margin:6px 0;"><i style="width:${pct}%"></i></div>
+                <div class="raid-info">残りHP <b>${left.toLocaleString()}</b> / ${st.hp.toLocaleString()}</div></div></div>
+            <div class="raid-info">${me ? `あなたのダメージ：<b>${me.dmg.toLocaleString()}</b>　｜　今日の挑戦：${me.hitsToday} / ${st.maxHits}` : ''}</div>
+            ${action}
+            <div class="raid-top"><div style="color:#ffb090;font-weight:bold;">⚔️ 今週の活躍（上位10人）</div>
+                ${st.top.length ? st.top.map((r, i) => `<div><span>${['🥇', '🥈', '🥉'][i] || (i + 1) + '.'} ${esc(r.name)}</span><span>${r.dmg.toLocaleString()}</span></div>`).join('') : '<div style="color:#a08880;">まだだれも挑んでいません。最初の一撃を！</div>'}</div>
+            <div class="raid-note">・1回の挑戦は${RAID_TURNS}ターン。ボスの強さは、あなたの手帖とタブに合わせて変わります。<br>・削ったHPの割合が点数になり、全員の点数でボスのHPが減ります（1回最大1,500点）。<br>・倒したら、挑んだ人全員が報酬を受け取れます。</div>
+            <button class="modal-cancel-btn" onclick="closeRaid()" style="margin-top:8px;">閉じる</button>`;
+        const info = document.getElementById('raidBtnInfo');
+        if (info) info.textContent = st.defeated ? '（今週は撃破！）' : `（残りHP ${Math.round(pct)}%）`;
+    }
+    function closeRaid() { document.getElementById('raid-modal').style.display = 'none'; }
+    function startRaid() {
+        if (!raidState || !Cloud.isLoggedIn()) return;
+        closeRaid();
+        openBattleFormationModal(raidLocalStage(raidState));
+    }
+    async function claimRaid() {
+        const r = await Cloud.call('raidClaim');
+        if (r && r.ok) {
+            gold += r.reward; saveGold(); statInc('raidWins'); playSE('unlock');
+            achvPop('🎉 レイドボス撃破の報酬', `+${r.reward.toLocaleString()}G`);
+            if (raidState && raidState.me) raidState.me.claimed = true;
+            renderRaid();
+        } else alert('報酬を受け取れませんでした（' + ((r && r.error) || '通信エラー') + '）');
+    }
+    // レイドの挑戦が終わったとき（5ターン経過・ボスを倒した・負けた）：点数を送って結果を表示
+    async function raidFinish() {
+        const s = battleSession, pts = raidPoints();
+        s.active = false;
+        const ov = document.getElementById('battle-result-overlay');
+        document.getElementById('battleResultTitle').className = 'battle-result-title win';
+        document.getElementById('battleResultTitle').textContent = s.enemyHP <= 0 ? '🐉 撃破！' : '⏱️ 挑戦終了';
+        const desc = document.getElementById('battleResultDesc');
+        desc.innerHTML = `${s.stage.name}に <b style="color:#ffd060;">${pts.toLocaleString()}点</b> のダメージ！<br><span style="color:#c8a8a0;">（送信しています…）</span>`;
+        ov.classList.remove('showing'); ov.style.display = 'flex'; void ov.offsetWidth; ov.classList.add('showing');
+        const r = await Cloud.call('raidHit', { points: pts });
+        if (r && r.ok) {
+            raidState = r; statInc('raidHits');
+            const left = Math.max(0, r.hp - r.dmg);
+            desc.innerHTML = `${s.stage.name}に <b style="color:#ffd060;">${pts.toLocaleString()}点</b> のダメージ！<br>みんなの合計で、残りHP <b>${left.toLocaleString()}</b> / ${r.hp.toLocaleString()}` +
+                (r.defeated ? '<br>🎉 <b>レイドボスを撃破！</b> レイドの画面から報酬を受け取ろう' : '') + `<br>今日の挑戦：${r.me.hitsToday} / ${r.maxHits}`;
+        } else {
+            desc.innerHTML = `${s.stage.name}に ${pts.toLocaleString()}点 のダメージ！<br><span style="color:#ff9a8a;">記録を送れませんでした（${r && r.error === 'limit' ? '今日の挑戦回数を使い切っています' : '通信エラー'}）</span>`;
+        }
+    }
     /* ========== 物語（言の葉堂のひみつ手帖） ==========
        節目にだけ短い場面を出す（はじまり・手帖の始まりと終わり・殿堂入り）。いつでもスキップでき、「物語」から読み返せる。
        文の中の英単語は、その手帖のレベルのことば。タップすると意味が出る（[[英語|日本語]] で書く） */
@@ -7258,7 +7371,7 @@ const Cloud = (function () {
         const el = document.getElementById('battle-trans');
         if (!el) { fadeScreen(fn); return; }
         const t = stage && stage.type;
-        el.querySelector('.b1').textContent = t === 'final' ? '⚔ 討伐戦 ⚔' : t === 'hof' ? `⚔ BOSS RUSH ${stage.rushNo || ''}/5 ⚔` : '⚔ ENCOUNTER! ⚔';
+        el.querySelector('.b1').textContent = t === 'raid' ? '🐉 RAID BOSS 🐉' : t === 'final' ? '⚔ 討伐戦 ⚔' : t === 'hof' ? `⚔ BOSS RUSH ${stage.rushNo || ''}/5 ⚔` : '⚔ ENCOUNTER! ⚔';
         el.querySelector('.b2').textContent = stage ? `${stage.name}が現れた！` : '';
         el.classList.remove('enter', 'exit'); void el.offsetWidth; el.classList.add('enter');
         let done = false;
@@ -7379,7 +7492,7 @@ const Cloud = (function () {
             + (stage.type === 'final' ? ' drop-shadow(0 0 18px rgba(255,210,90,0.65))' : '');
         // ボスの大きさ：下位の手帖ほど小さく、白金に近づくほど大きい（討伐戦はさらに一回り大きく）
         const BOSS_SIZE = { A1: 118, A2: 142, B1: 168, B2: 196, PT: 226 };
-        const bh = Math.round((BOSS_SIZE[stage.nb || currentNB.key] || 190) * (stage.type === 'final' || stage.type === 'hof' ? 1.12 : 1));
+        const bh = Math.round((BOSS_SIZE[stage.nb || currentNB.key] || 190) * (stage.type === 'final' || stage.type === 'hof' ? 1.12 : stage.type === 'raid' ? 1.3 : 1));
         bossImg.style.transform = '';
         bossImg.style.maxHeight = bh + 'px';
         bossImg.style.maxWidth = `min(${Math.round(bh * 1.47)}px, 86vw)`;
@@ -7546,7 +7659,8 @@ const Cloud = (function () {
         // ゲージが足りなくなったスキルは攻撃に戻す
         if (Array.isArray(s.plan)) { let left = s.gauge; s.plan = s.plan.map((a, i) => { if (a !== 'skill') return a; const c = skillCost(s.units[i]); if (left >= c) { left -= c; return a; } return 'attack'; }); }
         const I = BOSS_INTENTS[s.intent], cost = planCost(s.plan), full = s.gauge >= GAUGE.max;
-        const intentHtml = `<div class="b-intent ${s.intent}${s.rage ? ' rage' : ''}"><span class="ic">${I.ic}</span><div><b>${s.rage ? '😡 ' : ''}ボスの様子：${I.name}</b><br>${I.desc}</div></div>`;
+        const raidTurn = s.stage && s.stage.type === 'raid' ? `<div class="b-intent shield" style="justify-content:center;"><b>🐉 レイド　ターン ${Math.min(s.turnCount, RAID_TURNS)} / ${RAID_TURNS}　｜　いまの点数 ${raidPoints().toLocaleString()}</b></div>` : '';
+        const intentHtml = raidTurn + `<div class="b-intent ${s.intent}${s.rage ? ' rage' : ''}"><span class="ic">${I.ic}</span><div><b>${s.rage ? '😡 ' : ''}ボスの様子：${I.name}</b><br>${I.desc}</div></div>`;
         const gaugeHtml = `<div class="b-gauge${full ? ' full' : ''}"><div class="fill" style="width:${s.gauge}%"></div>` +
             `<div class="rsv" style="left:${Math.max(0, s.gauge - cost)}%;width:${Math.min(cost, s.gauge)}%"></div>` +
             `<div class="lbl">✨ ことばの力 ${s.gauge} / ${GAUGE.max}${cost ? `（使う予定 ${cost}）` : ''}${s.streak >= 2 ? `　🔥${s.streak}連続正解` : ''}</div></div>`;
@@ -7937,7 +8051,7 @@ const Cloud = (function () {
                     addBattleLog(`😡 ${stage.name}は怒り状態になった！ 攻撃が1.25倍に`);
                 }
                 setTimeout(() => {
-                    if (s.enemyHP <= 0 || s.playerHP <= 0) endBattle();
+                    if (s.enemyHP <= 0 || s.playerHP <= 0 || (s.stage.type === 'raid' && s.turnCount > RAID_TURNS)) endBattle();
                     else { s.turn = 'player'; s.currentUnitIdx = -1; renderBattleUI(); }
                 }, s.rage && document.getElementById('battle-rage') ? 1500 : 900);
             };
@@ -8034,6 +8148,10 @@ const Cloud = (function () {
     function endBattle() {
         const { enemyHP, playerHP, stage } = battleSession;
         const win = enemyHP <= 0 && playerHP > 0;
+        if (stage && stage.type === 'raid') {
+            if (win && !battleSession._victoryShown) { battleSession._victoryShown = true; playVictoryAnimation(stage, () => endBattle()); return; }
+            raidFinish(); return;
+        }
         if (win && !battleSession._victoryShown) {
             battleSession._victoryShown = true;
             statInc('battleWins');
@@ -9647,6 +9765,7 @@ const Cloud = (function () {
     // ボスラッシュは、今戦っているボスの手帖の色合い・演出
     function battleFxKey() {
         if (typeof hofBossRush !== 'undefined' && hofBossRush.active) { const b = hofBossRush.bosses[hofBossRush.bossIndex]; return (b && b.nb) || 'PT'; }
+        if (battleSession && battleSession.active && battleSession.stage && battleSession.stage.type === 'raid') return battleSession.stage.nb || 'PT';
         return advNbKey();
     }
     function battleBgUrl() { return BATTLE_BG_FILE ? `url('./bgm/battle/${BATTLE_BG_FILE}')` : `url('./bgm/boss-bg.jpg')`; }

@@ -13,7 +13,9 @@ const check = (cond, msg) => { console.log((cond ? '  ✅ ' : '  ❌ ') + msg); 
 
 async function newDevice(b, gas, name) {
   const c = await b.newContext({ viewport: { width: 390, height: 844 } });
-  await c.addInitScript(() => { window.confetti = () => {}; window.__alerts = []; window.alert = m => window.__alerts.push(String(m)); window.confirm = () => true; });
+  await c.addInitScript(() => { window.confetti = () => {}; window.__alerts = []; window.alert = m => window.__alerts.push(String(m)); window.confirm = () => true;
+    // 物語の場面は画面をふさぐので、読んだことにしておく（物語は regression.js で確認）
+    if (!localStorage.getItem('storySeen')) localStorage.setItem('storySeen', JSON.stringify(Object.fromEntries(['prologue','end_A1','start_A2','end_A2','start_B1','end_B1','start_B2','end_B2','start_PT','end_PT','hof'].map(k => [k, 1])))); });
   await c.route('**/index.html*', r => r.fulfill({ status: 200, contentType: 'text/html', body: html }));
   await c.route(FAKE + '**', async r => {
     const req = r.request();
@@ -28,6 +30,43 @@ async function newDevice(b, gas, name) {
 }
 
 (async () => {
+  // ---------- サーバー単体：レイドボス ----------
+  console.log('レイドボス（Code.gs）');
+  {
+    const env = makeEnv(); const { ctx: gas, sheets, cache, props } = env; gas.setup();
+    let fake = new Date('2026-11-04T03:00:00Z').getTime();   // 水曜（日本時間 12時）
+    const RealDate = Date;
+    gas.Date = class extends RealDate { constructor(...a) { a.length ? super(...a) : super(fake); } static now() { return fake; } };
+    const call = o => JSON.parse(gas.doPost({ postData: { contents: JSON.stringify(o) } }).getContent());
+    call({ action: 'register', loginId: 'raid01', nickname: 'りゅう', password: 'secret123' });
+    call({ action: 'register', loginId: 'raid02', nickname: 'かくれ', password: 'secret123' });
+    const t1 = call({ action: 'login', loginId: 'raid01', password: 'secret123' }).token;
+    const t2 = call({ action: 'login', loginId: 'raid02', password: 'secret123' }).token;
+    props.RAID_HP = '2500';
+    let st = call({ action: 'raidStatus' });
+    check(st.ok && st.week === '2026-11-02' && st.hp === 2500 && st.dmg === 0 && st.me === null && st.boss && st.boss.name, `週は月曜で区切る・ボスとHP（${st.week} ${st.boss && st.boss.name}）`);
+    check(call({ action: 'raidHit', points: 100 }).error === 'auth', 'ログインしていないと挑めない');
+    check(call({ action: 'raidHit', token: t1, points: 99999 }).error === 'invalid', '1回の上限を超える点数は受け付けない');
+    st = call({ action: 'raidHit', token: t1, points: 900 });
+    check(st.ok && st.dmg === 900 && st.me.dmg === 900 && st.me.hitsToday === 1, '与えたダメージが合算される');
+    call({ action: 'raidHit', token: t1, points: 500 }); call({ action: 'raidHit', token: t1, points: 500 });
+    check(call({ action: 'raidHit', token: t1, points: 500 }).error === 'limit', '1日3回まで');
+    check(call({ action: 'raidClaim', token: t1 }).error === 'not_defeated', '倒すまでは報酬を受け取れない');
+    call({ action: 'setPrefs', token: t2, hideRanking: true });
+    st = call({ action: 'raidHit', token: t2, points: 700 });
+    check(st.defeated && st.dmg === 2500 && st.top.length === 1 && st.top[0].name === 'りゅう' && st.top[0].dmg === 1900, '合計がHPに届くと撃破・「ランキングに載せない」人は上位に出ない');
+    const c1 = call({ action: 'raidClaim', token: t1 });
+    check(c1.ok && c1.reward === 2000 && call({ action: 'raidClaim', token: t1 }).error === 'claimed', '撃破後、参加者は1回だけ報酬を受け取れる');
+    fake += 86400000; Object.keys(cache).forEach(k => delete cache[k]);
+    st = call({ action: 'raidStatus', token: t1 });
+    check(st.me.hitsToday === 0 && st.me.dmg === 1900, '次の日は挑戦回数が戻る（ダメージは週の間残る）');
+    fake += 6 * 86400000; Object.keys(cache).forEach(k => delete cache[k]);
+    st = call({ action: 'raidStatus', token: t1 });
+    check(st.week === '2026-11-09' && st.dmg === 0 && st.me.dmg === 0 && !st.defeated, '翌週は新しいボス（ダメージ0から）');
+    gas.deleteUserData_('raid01');
+    check(!sheets['レイド'].data.slice(1).some(r => String(r[2]) === 'raid01'), '生徒データの削除でレイドの記録も消える');
+  }
+
   // ---------- サーバー単体：セキュリティ ----------
   console.log('サーバー（Code.gs）');
   {
@@ -179,6 +218,19 @@ async function newDevice(b, gas, name) {
   check(await A.p.evaluate(() => unlockedCards.length) === 8324, '管理者の印＋正しい鍵で全カード解禁');
   check(String((sheetRows('取り組み状況')[0] || [])[28] || '').includes('管理者キー使用'), '管理者キーの使用を要確認に記録');
   await A.p.evaluate(() => Cloud.saveNow()); await A.p.waitForTimeout(1500);
+  // レイドボス：画面を開く → 挑む（5ターンで終了）→ 点数がサーバーに合算される
+  await A.p.evaluate(() => openRaid()); await A.p.waitForTimeout(1200);
+  check(await A.p.evaluate(() => !!document.querySelector('#raidBox .raid-go') && document.querySelector('#raidBox').innerText.includes('今日あと3回')), 'レイドの画面が開き、挑戦できる（今日あと3回）');
+  if (process.env.SHOT) await A.p.screenshot({ path: process.env.SHOT + '/raid.png' });
+  await A.p.evaluate(() => startRaid()); await A.p.waitForTimeout(400);
+  for (let n = 0; n < 3; n++) await A.p.evaluate(() => document.querySelector('#formationCardPool .formation-pool-card:not(.used)').click());
+  await A.p.evaluate(() => confirmFormationAndStart()); await A.p.waitForTimeout(2000);
+  const rs = await A.p.evaluate(() => ({ type: battleSession.stage.type, hp: battleSession.enemyMaxHP }));
+  await A.p.evaluate(() => { battleSession.enemyHP = Math.round(battleSession.enemyMaxHP * 0.6); battleSession.turnCount = 6; endBattle(); });
+  await A.p.waitForTimeout(1500);
+  const raidRow = sheetRows('レイド').find(r => String(r[2]) === 'taro01');
+  check(rs.type === 'raid' && raidRow && Number(raidRow[4]) === 400 && await A.p.evaluate(() => document.getElementById('battleResultDesc').innerText.includes('400点')), `レイドの点数（HPの40%＝400点）がサーバーに合算される（${raidRow && raidRow[4]}）`);
+  await A.p.evaluate(() => { document.getElementById('battle-result-overlay').style.display = 'none'; document.getElementById('battle-overlay').style.display = 'none'; document.body.classList.remove('battle-mode'); });
   // 端末B：ログイン → 引き継ぎ
   const B = await newDevice(b, gas, 'B');
   await B.p.evaluate(() => Cloud.openModal('login')); await B.p.waitForTimeout(300);

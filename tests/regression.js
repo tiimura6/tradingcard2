@@ -319,6 +319,13 @@ test('物語：はじめての人に序章が出る・英単語をタップで�
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
+test('レイドボス：サーバーにつながっていないときは参加できない旨を表示', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1' } });
+  await p.evaluate(() => openRaid()); await p.waitForTimeout(300);
+  assert(await p.evaluate(() => document.getElementById('raidBox').innerText.includes('サーバーにつながっていない')), 'メッセージがない');
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
 test('管理者の全解禁で全手帖・全カード・全タブが開く／アプリ内に管理者キーの文字列がない', async b => {
   const p = await openApp(b);
   // 管理者キーの照合はサーバー側（tests/gas-e2e.js で確認）。ここでは解禁処理そのものを確認
