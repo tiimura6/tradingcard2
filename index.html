@@ -1668,6 +1668,11 @@
         .formation-pool-card-rarity { font-size: 7px; font-weight: bold; line-height: 1.1; }
         .formation-pool-card-stats { font-size: 7px; color: #88ccff; line-height: 1.2; }
         .formation-pool-card-skill { font-size: 6px; color: #ddaaff; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .formation-pool-card-skill .c { color: #ffd27a; }
+        .formation-skill-info { font-size: 10.5px; line-height: 1.5; color: #e8dcff; background: rgba(20,10,40,.75); border: 1px solid rgba(170,130,255,.35); border-radius: 8px; padding: 5px 8px; margin: 0 0 6px; text-align: left; }
+        .formation-skill-info:empty { display: none; }
+        .formation-skill-info b { color: #ffe6a0; }
+        .formation-skill-info .pos { display: inline-block; min-width: 2.6em; color: #9ad0ff; }
 
         /* ターンインジケーター */
         .battle-turn-banner {
@@ -2555,6 +2560,7 @@
                 <div id="fslot-rear-content" style="display:none"></div>
             </div>
         </div>
+        <div class="formation-skill-info" id="formationSkillInfo"></div>
         <div style="font-size:11px;color:#a08060;margin-bottom:4px;">▼ カードをタップすると 前衛→中衛→後衛 の順に入ります</div>
         <div class="formation-pool-sort-bar" id="formationSortBar">
             <span style="font-size:10px;color:#886699;align-self:center;">並替:</span>
@@ -7191,7 +7197,7 @@ const Cloud = (function () {
                     <img src="${card.thumb}" class="formation-slot-card-img" decoding="async" onerror="imgFallback(this,'${card.id}')">
                     <div style="font-size:10px;font-weight:bold;color:#fff;line-height:1.2">${card.quiz.answer.slice(0,8)}</div>
                     <div style="font-size:9px;color:#88bbff">P:${power} HP:${guard}${bonus.guard ? `<br>ガード-${Math.round(guardRateFor(stats.def, formationState.stage ? formationState.stage.atk : 1) * 100)}%` : ""}</div>
-                    <div style="font-size:9px;color:#f9ca24">${skill.icon}${skill.name}</div>
+                    <div style="font-size:9px;color:#f9ca24">${skill.icon}${skill.name}<span style="color:#ffd27a;">・力${skill.cost || 30}</span></div>
                     <div style="font-size:9px;color:#aaa;cursor:pointer;margin-top:1px" onclick="removeFormationCard('${pos}')">✕ 外す</div>`;
             } else {
                 slot.innerHTML = `
@@ -7202,6 +7208,12 @@ const Cloud = (function () {
                     <div style="font-size:11px;color:#666;margin-top:6px">タップして選択</div>`;
             }
         });
+        // 編成した3枚のスキルの効果（どのスキルをいつ使うかの作戦を立てやすく）
+        const info = document.getElementById('formationSkillInfo');
+        if (info) info.innerHTML = ['front', 'mid', 'rear'].filter(p => formationState.slots[p]).map(p => {
+            const sk = getWordSkill(formationState.slots[p]);
+            return `<div><span class="pos">${POSITION_BONUS[p].label}</span>${sk.icon}<b>${sk.name}</b>（力${sk.cost || 30}）${sk.desc}</div>`;
+        }).join('');
     }
 
     let formationSortPos = 'mid';   // 並べ替えの基準にするポジション（前衛なら攻撃+30%込みで比較）
@@ -7261,9 +7273,10 @@ const Cloud = (function () {
                     <div class="formation-pool-card-name">${(card.quiz.answer||'').slice(0,8)}</div>
                     <div class="formation-pool-card-rarity" style="color:${rarityColors[rarity]||'#888'}">${rarity}</div>
                     <div class="formation-pool-card-stats">P:${power} G:${guard}</div>
-                    <div class="formation-pool-card-skill">${skill.icon}${skill.name}</div>
+                    <div class="formation-pool-card-skill">${skill.icon}${skill.name}<span class="c">・力${skill.cost || 30}</span></div>
                     <div>${starsHTML(getStars(card.id), 8)}</div>
                 </div>`;
+            div.title = `${skill.icon}${skill.name}（力${skill.cost || 30}）${skill.desc}`;
             div.onclick = () => { if (!formationState.usedCardIds.has(card.id)) addCardToFormation(card); };
             formationPoolEls.set(card.id, div);
             frag.appendChild(div);

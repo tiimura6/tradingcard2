@@ -194,6 +194,9 @@ test('バトル：順番に編成（前衛はPower順）→作戦→1問→命�
   for (let n = 0; n < 3; n++) await p.evaluate(() => document.querySelector('#formationCardPool .formation-pool-card:not(.used)').click());
   const slots = await p.evaluate(() => ['front', 'mid', 'rear'].every(x => formationState.slots[x]));
   assert(slots, '3枠が埋まらない');
+  const si = await p.evaluate(() => ({ n: document.querySelectorAll('#formationSkillInfo > div').length, txt: document.getElementById('formationSkillInfo').innerText, pool: document.querySelector('#formationCardPool .formation-pool-card').title }));
+  assert(si.n === 3 && si.txt.includes('力') && si.pool.includes('力'), '編成画面にスキルの効果が出ない ' + JSON.stringify(si));
+  if (process.env.SHOT) await p.screenshot({ path: process.env.SHOT + '/formation.png' });
   await p.click('#formationStartBtn'); await p.waitForTimeout(1300);
   assert((await p.evaluate(() => document.querySelectorAll('.bplan-btn').length)) === 9, '作戦ボタンが攻撃・スキル・守るの9個でない');
   // 最初はゲージ0なのでスキルは選べない・ボスの予告が出ている
