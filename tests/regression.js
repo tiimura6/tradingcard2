@@ -251,14 +251,15 @@ test('バトル：ことばの力ゲージ・スキルの消費・守る・必�
     s._wall = 0.25; s.intent = 'smash'; s.playerHP = s.playerMaxHP; const hp0 = s.playerHP; s.rage = true;
     const rbu = renderBattleUI; renderBattleUI = () => {}; battleEnemyTurn();
     setTimeout(() => { out.walled = hp0 - s.playerHP; s._curse = { power: 0.4, turns: 1 }; s.intent = 'attack'; const hp1 = s.playerHP; battleEnemyTurn();
-      setTimeout(() => { out.cursed = hp1 - s.playerHP; out.atk = s.stage.atk; renderBattleUI = rbu; res(out); }, 1000); }, 1000);
+      setTimeout(() => { out.cursed = hp1 - s.playerHP; out.atk = s.stage.atk; }, 1000);
+      setTimeout(() => { renderBattleUI = rbu; res(out); }, 2200); }, 2000);   // 次のターンの準備（予告の決め直し）が終わってから戻す
   }));
   assert(r4.kinds >= 12 && r4.same && r4.foresee === 'attack' && r4.walled === 0 && r4.cursed > 0 && r4.cursed < r4.atk, JSON.stringify(r4));
   // ボスのHPが半分を切ると怒り状態に
   const r3 = await p.evaluate(() => new Promise(res => {
     const s = battleSession; s.intent = 'attack'; s.enemyHP = Math.floor(s.enemyMaxHP * 0.4); s.playerHP = s.playerMaxHP; s._guardCut = 0.6;
     const hp0 = s.playerHP; battleEnemyTurn();
-    setTimeout(() => res({ rage: s.rage, banner: !!document.getElementById('battle-rage') || s.rage, dmg: hp0 - s.playerHP, atk: s.stage.atk }), 1200);
+    setTimeout(() => res({ rage: s.rage, banner: !!document.getElementById('battle-rage') || s.rage, dmg: hp0 - s.playerHP, atk: s.stage.atk, active: s.active, hp0, ehp: s.enemyHP, log: s.log && s.log.slice(-3) }), 1200);
   }));
   assert(r3.rage && r3.dmg > 0 && r3.dmg < r3.atk * 0.5, JSON.stringify(r3));
   assert(p.__errors.length === 0, p.__errors.join(' / '));
