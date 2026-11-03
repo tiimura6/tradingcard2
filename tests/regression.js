@@ -213,15 +213,15 @@ test('バトル：ことばの力ゲージ・スキルの消費・守る・必�
   await p.click('#formationStartBtn'); await p.waitForTimeout(1300);
   const r = await p.evaluate(() => {
     const s = battleSession, out = {};
-    // ゲージ65：スキルは2枚まで（30×2）
-    s.gauge = 65; renderBattlePlanner();
+    // ゲージが2枚分ちょうど：スキルは2枚まで（使う力はスキルごとに違う）
+    s.gauge = skillCost(s.units[0]) + skillCost(s.units[1]); renderBattlePlanner();
     setBattlePlan(0, 'skill'); setBattlePlan(1, 'skill'); setBattlePlan(2, 'skill');
     out.skills = s.plan.filter(a => a === 'skill').length;
     out.thirdDisabled = document.querySelectorAll('.bplan-btn.skill')[2].disabled;
     // 作戦決定でゲージを使う
     s.turn = 'player'; s.plan = ['skill', 'attack', 'guard']; s.gauge = 40;
     const sq = battleStartQuiz; battleStartQuiz = () => {}; confirmBattlePlan(); battleStartQuiz = sq;
-    out.afterSpend = s.gauge;
+    out.afterSpend = s.gauge; out.expSpend = 40 - skillCost(s.units[0]);
     // 満タンで必殺技ボタン
     s.turn = 'player'; s.gauge = 100; renderBattlePlanner();
     out.ultBtn = !!document.querySelector('.bplan-ult');
@@ -232,7 +232,7 @@ test('バトル：ことばの力ゲージ・スキルの消費・守る・必�
   });
   if (process.env.SHOT) { await p.evaluate(() => { const s = battleSession; s.turn = 'player'; s.gauge = 70; s.streak = 3; s.intent = 'smash'; s.intentTurn = s.turnCount; s.plan = ['skill', 'guard', 'attack']; renderBattlePlanner(); document.querySelector('#battleActionArea').scrollIntoView(); }); await p.screenshot({ path: process.env.SHOT + '/plan1.png' });
     await p.evaluate(() => { const s = battleSession; s.gauge = 100; s.plan = 'ult'; s.intent = 'shield'; s.rage = true; renderBattlePlanner(); }); await p.screenshot({ path: process.env.SHOT + '/plan2.png' }); }
-  assert(r.skills === 2 && r.thirdDisabled && r.afterSpend === 10 && r.ultBtn && r.next === 'smash' && r.cost === 100, JSON.stringify(r));
+  assert(r.skills === 2 && r.thirdDisabled && r.afterSpend === r.expSpend && r.ultBtn && r.next === 'smash' && r.cost === 100, JSON.stringify(r));
   // 正解でゲージがたまる（連続正解で増える）・守るで被ダメージが減る
   const r2 = await p.evaluate(() => new Promise(res => {
     const s = battleSession; s.gauge = 0; s.streak = 1; s.plan = ['guard', 'guard', 'attack']; s.intent = 'attack'; s.enemyHP = s.enemyMaxHP;
@@ -240,6 +240,20 @@ test('バトル：ことばの力ゲージ・スキルの消費・守る・必�
     resolveBattleRound(true);
   }));
   assert(r2.gauge === 35 && r2.streak === 2 && Math.abs(r2.cut - 0.6) < 1e-9, JSON.stringify(r2));
+  // スキルは品詞ごとに4種類・単語で決まる（同じ単語はいつも同じ）。鉄壁は大技を防ぎ、先読みは大技を止め、呪いはボスの攻撃を下げる
+  const r4 = await p.evaluate(() => new Promise(res => {
+    const kinds = new Set(cardsData.slice(0, 400).map(c => getWordSkill(c).kind));
+    const same = getWordSkill(cardsData[5]).name === getWordSkill(cardsData[5]).name;
+    const s = battleSession, u = s.units[0], orig = u.skill;
+    const out = { kinds: kinds.size, same };
+    u.skill = Object.assign({}, POS_SKILLS.adv[1].base, { type: 'swift' }); s.intent = 'smash'; applySkillEffect(u, 1, 1, ''); out.foresee = s.intent;
+    u.skill = orig;
+    s._wall = 0.25; s.intent = 'smash'; s.playerHP = s.playerMaxHP; const hp0 = s.playerHP; s.rage = true;
+    const rbu = renderBattleUI; renderBattleUI = () => {}; battleEnemyTurn();
+    setTimeout(() => { out.walled = hp0 - s.playerHP; s._curse = { power: 0.4, turns: 1 }; s.intent = 'attack'; const hp1 = s.playerHP; battleEnemyTurn();
+      setTimeout(() => { out.cursed = hp1 - s.playerHP; out.atk = s.stage.atk; renderBattleUI = rbu; res(out); }, 1000); }, 1000);
+  }));
+  assert(r4.kinds >= 12 && r4.same && r4.foresee === 'attack' && r4.walled === 0 && r4.cursed > 0 && r4.cursed < r4.atk, JSON.stringify(r4));
   // ボスのHPが半分を切ると怒り状態に
   const r3 = await p.evaluate(() => new Promise(res => {
     const s = battleSession; s.intent = 'attack'; s.enemyHP = Math.floor(s.enemyMaxHP * 0.4); s.playerHP = s.playerMaxHP; s._guardCut = 0.6;

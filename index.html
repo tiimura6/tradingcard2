@@ -1691,6 +1691,8 @@
         .bplan-btn.sel.skill  { background: linear-gradient(135deg,#3a1a6a,#20104a); border-color: #b080ff; color: #e8d8ff; }
         .bplan-go { grid-column: 1 / -1; padding: 11px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; border: 2px solid #f0c040; background: linear-gradient(135deg,#8a5a10,#5a3400); color: #fff3c8; font-family: 'Noto Serif JP', serif; }
         .bplan-go:disabled { opacity: .45; }
+        .bplan-skills { grid-column: 1 / -1; font-size: 10px; line-height: 1.45; color: #d8cce8; background: rgba(10,6,24,.7); border-radius: 8px; padding: 5px 8px; }
+        .bplan-skills b { color: #ffe6a0; }
         .bplan-btn.sel.guard  { background: linear-gradient(135deg,#1a4a6a,#0a2a4a); border-color: #6ac0ff; color: #d0ecff; }
         .bplan-btn:disabled { opacity: .35; cursor: not-allowed; }
         /* ことばの力ゲージ・ボスの予告・必殺技 */
@@ -4825,37 +4827,65 @@ const Cloud = (function () {
         return 'n'; // n / phr / conj / prep / etc → 名詞系扱い
     }
 
-    // 品詞別スキル定義（typeはシナジー判定にも使用）
+    /* 品詞別スキル：品詞ごとに4種類。どれになるかは単語で決まる（同じ単語はいつも同じスキル）。
+       SR・URは強い版。type はシナジー判定（同じ系統2枚以上で発動）に使う。cost は使う「ことばの力」
+       kind：hit＝攻撃／crit＝確率で大ダメージ／break＝ボスの守りを崩す／punish＝力をためているボスに大ダメージ
+             buff＝次のターン全員の攻撃アップ／curse＝ボスの攻撃ダウン（数ターン）／rally＝ゲージ回復／focus＝次のターン必中
+             fort＝回復と被ダメージ軽減／reflect＝受けたダメージを返す／heal＝大回復／wall＝大技・2連撃を無効
+             foresee＝力ため・大技を止める／momentum＝連続正解ほど強い／drain＝攻撃しながらゲージ回復 */
     const POS_SKILLS = {
-        // 動詞: 行動的・連撃系
-        v: {
-            base:  { name: '行動力',   icon: '⚔️',  desc: 'ATK×1.4 貫通攻撃',    type: 'strike',  power: 1.4 },
-            high:  { name: '連鎖突撃', icon: '🗡️', desc: '2連続ATK×1.2攻撃',    type: 'strike',  power: 1.2, hits: 2 },
-        },
-        // 形容詞: バフ・強化系
-        adj: {
-            base:  { name: '形容の輝き', icon: '✨', desc: '次ターン全員ATK×1.5',  type: 'enhance', power: 1.5 },
-            high:  { name: '絶対優勢',   icon: '🌟', desc: '次ターン全員ATK×2.0',  type: 'enhance', power: 2.0 },
-        },
-        // 名詞: 防御・回復系
-        n: {
-            base:  { name: '堅固な存在', icon: '🛡️', desc: 'HP回復+20%・被ダメ-20%', type: 'fortify', power: 0.20 },
-            high:  { name: '不動の柱',   icon: '🏰', desc: 'HP回復+35%・被ダメ-30%', type: 'fortify', power: 0.35 },
-        },
-        // 副詞: 速攻・先制系
-        adv: {
-            base:  { name: '加速',     icon: '⚡', desc: '先制+ATK×1.3 即時攻撃', type: 'swift',   power: 1.3 },
-            high:  { name: '超加速',   icon: '💨', desc: '先制+ATK×1.8 即時2連',  type: 'swift',   power: 1.8 },
-        },
+        v: [   // 動詞：攻撃系
+            { base: { name: '行動力',   icon: '⚔️', kind: 'hit', power: 1.4, cost: 30, desc: '攻撃×1.4' },
+              high: { name: '連鎖突撃', icon: '🗡️', kind: 'hit', power: 1.2, hits: 2, cost: 30, desc: '攻撃×1.2を2回' } },
+            { base: { name: '会心の一撃', icon: '🎯', kind: 'crit', power: 3.0, chance: 0.4, cost: 30, desc: '40%で攻撃×3、外れると×1' },
+              high: { name: '必殺の一閃', icon: '⚡', kind: 'crit', power: 3.5, chance: 0.5, cost: 30, desc: '50%で攻撃×3.5、外れると×1' } },
+            { base: { name: '盾砕き',   icon: '🔨', kind: 'break', power: 1.3, cost: 30, desc: '攻撃×1.3。ボスの守りを崩し、このターンは全員の攻撃が半分にならない' },
+              high: { name: '城壁崩し', icon: '💣', kind: 'break', power: 1.6, cost: 30, desc: '攻撃×1.6。ボスの守りを崩し、このターンは全員の攻撃が半分にならない' } },
+            { base: { name: '隙を突く', icon: '👁️', kind: 'punish', power: 2.5, weak: 1.1, cost: 20, desc: 'ボスが力をためている時は攻撃×2.5（ふだんは×1.1）' },
+              high: { name: '弱点看破', icon: '🔍', kind: 'punish', power: 3.2, weak: 1.3, cost: 20, desc: 'ボスが力をためている時は攻撃×3.2（ふだんは×1.3）' } },
+        ],
+        adj: [   // 形容詞：強化・弱体系
+            { base: { name: '形容の輝き', icon: '✨', kind: 'buff', power: 1.5, cost: 30, desc: '次のターン、全員の攻撃×1.5' },
+              high: { name: '絶対優勢',   icon: '🌟', kind: 'buff', power: 2.0, cost: 30, desc: '次のターン、全員の攻撃×2.0' } },
+            { base: { name: '弱体の呪い', icon: '🌑', kind: 'curse', power: 0.3, turns: 2, cost: 30, desc: '2ターンの間、ボスの攻撃-30%' },
+              high: { name: '衰弱の呪い', icon: '☠️', kind: 'curse', power: 0.4, turns: 3, cost: 30, desc: '3ターンの間、ボスの攻撃-40%' } },
+            { base: { name: '鼓舞',   icon: '📣', kind: 'rally', power: 20, cost: 10, desc: 'ことばの力+20（使う力は10）' },
+              high: { name: '大鼓舞', icon: '🎺', kind: 'rally', power: 35, cost: 10, desc: 'ことばの力+35（使う力は10）' } },
+            { base: { name: '集中',     icon: '🧘', kind: 'focus', power: 1.0, cost: 20, desc: '次のターン、全員の攻撃・スキルが必ず当たる' },
+              high: { name: '明鏡止水', icon: '🪷', kind: 'focus', power: 1.2, cost: 20, desc: '次のターン、全員が必ず当たり、攻撃×1.2' } },
+        ],
+        n: [   // 名詞：防御・回復系
+            { base: { name: '堅固な存在', icon: '🛡️', kind: 'fort', power: 0.20, cost: 30, desc: 'HP回復（カードのHPの20%）・被ダメージ-20%' },
+              high: { name: '不動の柱',   icon: '🏰', kind: 'fort', power: 0.35, cost: 30, desc: 'HP回復（カードのHPの35%）・被ダメージ-35%' } },
+            { base: { name: '反撃の構え', icon: '🔁', kind: 'reflect', power: 0.5, cost: 30, desc: 'このターン受けたダメージの50%をボスに返す' },
+              high: { name: '報復の盾',   icon: '🪞', kind: 'reflect', power: 0.8, cost: 30, desc: 'このターン受けたダメージの80%をボスに返す' } },
+            { base: { name: '癒やしの泉', icon: '⛲', kind: 'heal', power: 0.25, cost: 30, desc: 'パーティのHPを25%回復' },
+              high: { name: '命の泉',     icon: '💧', kind: 'heal', power: 0.4, cost: 30, desc: 'パーティのHPを40%回復' } },
+            { base: { name: '鉄壁',     icon: '🧱', kind: 'wall', power: 0.25, cost: 40, desc: 'ボスの大技・2連撃を完全に防ぐ（ふだんは被ダメージ-25%）' },
+              high: { name: '絶対防御', icon: '💠', kind: 'wall', power: 0.4, cost: 40, desc: 'ボスの大技・2連撃を完全に防ぐ（ふだんは被ダメージ-40%）' } },
+        ],
+        adv: [   // 副詞：速さ・流れ系
+            { base: { name: '加速',   icon: '💨', kind: 'hit', power: 1.3, cost: 20, desc: '攻撃×1.3（使う力が少ない）' },
+              high: { name: '超加速', icon: '🌪️', kind: 'hit', power: 1.8, cost: 20, desc: '攻撃×1.8（使う力が少ない）' } },
+            { base: { name: '先読み', icon: '🔮', kind: 'foresee', power: 1.0, cost: 30, desc: 'ボスの「力ため」「大技」を止める＋攻撃×1.0' },
+              high: { name: '未来視', icon: '🌌', kind: 'foresee', power: 1.4, cost: 30, desc: 'ボスの「力ため」「大技」を止める＋攻撃×1.4' } },
+            { base: { name: '勢い', icon: '🔥', kind: 'momentum', power: 0.25, cost: 20, desc: '連続正解1回につき攻撃+25%（最大4回）' },
+              high: { name: '怒涛', icon: '🌊', kind: 'momentum', power: 0.4, cost: 20, desc: '連続正解1回につき攻撃+40%（最大4回）' } },
+            { base: { name: '吸収',   icon: '🌀', kind: 'drain', power: 1.2, gain: 10, cost: 20, desc: '攻撃×1.2＋ことばの力+10' },
+              high: { name: '大吸収', icon: '♾️', kind: 'drain', power: 1.5, gain: 15, cost: 20, desc: '攻撃×1.5＋ことばの力+15' } },
+        ],
     };
+    const POS_TYPE = { v: 'strike', adj: 'enhance', n: 'fortify', adv: 'swift' };
+    function wordHash(s) { let h = 2166136261; for (const ch of String(s || '')) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 
-    // カードのスキルを取得（品詞 + レアリティ）
+    // カードのスキルを取得（品詞 + 単語で4種類から1つ + レアリティで強い版）
     function getWordSkill(card) {
         const pos = normPos(card && card.quiz && card.quiz.pos);
         const rarity = getRarity(card ? card.no : 1);
-        const posSkill = POS_SKILLS[pos] || POS_SKILLS['n'];
+        const list = POS_SKILLS[pos] || POS_SKILLS.n;
+        const fam = list[wordHash(card && card.quiz && card.quiz.answer) % list.length];
         const isHigh = (rarity === 'SR' || rarity === 'SSR' || rarity === 'UR');
-        return isHigh ? posSkill.high : posSkill.base;
+        return Object.assign({ type: POS_TYPE[pos] || 'fortify' }, isHigh ? fam.high : fam.base);
     }
 
     // シナジーボーナス計算（同じtypeが2枚以上で発動）
@@ -7144,7 +7174,8 @@ const Cloud = (function () {
         for (const [k, v] of Object.entries(w)) { if ((r -= v) < 0) return k; }
         return 'attack';
     }
-    function planCost(plan) { return plan === 'ult' ? GAUGE.max : (plan || []).filter(a => a === 'skill').length * GAUGE.skill; }
+    function skillCost(u) { return (u && u.skill && u.skill.cost) || GAUGE.skill; }
+    function planCost(plan) { return plan === 'ult' ? GAUGE.max : (plan || []).reduce((a, x, i) => a + (x === 'skill' ? skillCost(battleSession.units[i]) : 0), 0); }
     function renderBattlePlanner() {
         const area = document.getElementById('battleActionArea');
         if (!area) return;
@@ -7155,7 +7186,7 @@ const Cloud = (function () {
         if (s.plan === 'ult' && s.gauge < GAUGE.max) s.plan = null;
         if (s.plan !== 'ult' && (!Array.isArray(s.plan) || s.plan.length !== s.units.length)) s.plan = s.units.map(() => 'attack');
         // ゲージが足りなくなったスキルは攻撃に戻す
-        if (Array.isArray(s.plan)) { let left = s.gauge; s.plan = s.plan.map(a => { if (a !== 'skill') return a; if (left >= GAUGE.skill) { left -= GAUGE.skill; return a; } return 'attack'; }); }
+        if (Array.isArray(s.plan)) { let left = s.gauge; s.plan = s.plan.map((a, i) => { if (a !== 'skill') return a; const c = skillCost(s.units[i]); if (left >= c) { left -= c; return a; } return 'attack'; }); }
         const I = BOSS_INTENTS[s.intent], cost = planCost(s.plan), full = s.gauge >= GAUGE.max;
         const intentHtml = `<div class="b-intent ${s.intent}${s.rage ? ' rage' : ''}"><span class="ic">${I.ic}</span><div><b>${s.rage ? '😡 ' : ''}ボスの予告：${I.name}</b><br>${I.desc}</div></div>`;
         const gaugeHtml = `<div class="b-gauge${full ? ' full' : ''}"><div class="fill" style="width:${s.gauge}%"></div>` +
@@ -7169,11 +7200,12 @@ const Cloud = (function () {
                 <div class="bplan-head">${u.bonus.label}：${(u.card.quiz.answer || '').slice(0, 9)}</div>
                 ${['attack', 'skill', 'guard'].map(a => {
                     const sel = s.plan !== 'ult' && s.plan[i] === a;
-                    const dis = s.plan === 'ult' || (a === 'skill' && !sel && left < GAUGE.skill);
-                    const sub = a === 'attack' ? `P${u.atk}・命中90%` : a === 'skill' ? `${u.skill.icon}${u.skill.name}・力${GAUGE.skill}` : `被ダメ-${Math.round(GAUGE.guardCut * 100)}%`;
+                    const dis = s.plan === 'ult' || (a === 'skill' && !sel && left < skillCost(u));
+                    const sub = a === 'attack' ? `P${u.atk}・命中90%` : a === 'skill' ? `${u.skill.icon}${u.skill.name}・力${skillCost(u)}` : `被ダメ-${Math.round(GAUGE.guardCut * 100)}%`;
                     return `<button class="bplan-btn ${a}${sel ? ' sel' : ''}" ${dis ? 'disabled' : ''} onclick="setBattlePlan(${i},'${a}')">${BATTLE_ACTIONS[a].icon}${BATTLE_ACTIONS[a].name}<small>${sub}</small></button>`;
                 }).join('')}
             </div>`).join('') +
+            `<div class="bplan-skills">${s.units.map(u => `<div>${u.skill.icon}<b>${u.skill.name}</b>（力${skillCost(u)}）${u.skill.desc}</div>`).join('')}</div>` +
             `<button class="bplan-go" id="battleGoBtn" onclick="confirmBattlePlan()">📜 作戦決定 → 問題へ</button>`;
     }
     function setBattlePlan(i, action) {
@@ -7181,7 +7213,7 @@ const Cloud = (function () {
         const s = battleSession;
         if (action === 'ult') { s.plan = s.plan === 'ult' ? null : 'ult'; renderBattlePlanner(); return; }
         if (s.plan === 'ult') return;
-        if (action === 'skill' && s.plan[i] !== 'skill' && s.gauge - planCost(s.plan) < GAUGE.skill) return;
+        if (action === 'skill' && s.plan[i] !== 'skill' && s.gauge - planCost(s.plan) < skillCost(s.units[i])) return;
         s.plan[i] = action;
         renderBattlePlanner();
     }
@@ -7204,9 +7236,15 @@ const Cloud = (function () {
         const gain = isCorrect ? GAUGE.gain[Math.min(battleSession.streak, 3) - 1] : 0;
         battleSession.gauge = Math.min(GAUGE.max, (battleSession.gauge || 0) + gain);
         addBattleLog(isCorrect ? `✅ 正解！ 命中率アップ（攻撃90%・スキル80%）　✨ことばの力 +${gain}` : '❌ 不正解… 命中率ダウン（攻撃30%・スキル20%）、当たっても威力は半分');
-        const shieldCut = battleSession.intent === 'shield' ? 0.5 : 1;   // ボスが守りを固めているターンは半分
-        if (shieldCut < 1) addBattleLog('🧱 ボスは守りを固めている… こちらの攻撃は半分');
-        const enhance = (battleSession.buffActive ? (battleSession._enhancePower || 1.5) : 1) * (isCorrect ? 1 : WRONG_DAMAGE_MULT) * shieldCut;
+        battleSession._shieldBroken = false;
+        // 盾砕きのスキルを使う予定なら、守りは最初から崩れる（順番に関係なく全員に効く）
+        if (battleSession.intent === 'shield' && Array.isArray(plan) && plan.some((a, i) => a === 'skill' && units[i].skill.kind === 'break')) battleSession._shieldBroken = true;
+        const shieldCut = (battleSession.intent === 'shield' && !battleSession._shieldBroken) ? 0.5 : 1;   // ボスが守りを固めているターンは半分
+        if (battleSession.intent === 'shield') addBattleLog(battleSession._shieldBroken ? '🔨 ボスの守りを崩した！ 攻撃は半分にならない' : '🧱 ボスは守りを固めている… こちらの攻撃は半分');
+        const focus = battleSession._focus || 0;   // 集中：このターンは必中（明鏡止水は攻撃×1.2）
+        battleSession._focus = 0;
+        if (focus) addBattleLog('🧘 集中！ このターンはすべて命中');
+        const enhance = (battleSession.buffActive ? (battleSession._enhancePower || 1.5) : 1) * (isCorrect ? 1 : WRONG_DAMAGE_MULT) * shieldCut * (focus || 1);
         battleSession.buffActive = false; battleSession._enhancePower = null;
         // 守る：1枚につき被ダメージ -30%
         battleSession._guardCut = plan === 'ult' ? 0 : plan.filter(a => a === 'guard').length * GAUGE.guardCut;
@@ -7228,7 +7266,7 @@ const Cloud = (function () {
                 addBattleLog(`${u.bonus.label}は守りを固めた 🛡️（被ダメージ -${Math.round(GAUGE.guardCut * 100)}%）`);
                 i++; setTimeout(step, 450); return;
             }
-            const rate = HIT_RATE[act][key];
+            const rate = focus ? 1 : HIT_RATE[act][key];
             const hit = Math.random() < rate;
             const tag = `<span class="bhit ${hit ? 'hit' : 'miss'}">${hit ? 'HIT' : 'MISS'}</span>`;
             if (!hit) {
@@ -7287,24 +7325,82 @@ const Cloud = (function () {
         document.getElementById('battlePlayerHPBar').style.width = Math.max(0, Math.min(100, playerHP / playerMaxHP * 100)) + '%';
     }
     function applySkillEffect(unit, enhance, rate, tag) {
-        const skill = unit.skill;
-        const head = `${unit.bonus.label}の${skill.icon}${skill.name}（命中${Math.round(rate * 100)}%）${tag}`;
-        if (skill.type === 'strike' || skill.type === 'swift') {
-            const hits = skill.hits || 1;
+        const sk = unit.skill, S = battleSession;
+        const head = `${unit.bonus.label}の${sk.icon}${sk.name}（命中${Math.round(rate * 100)}%）${tag}`;
+        const strike = (mult, hits, note, color) => {
             let total = 0;
-            for (let k = 0; k < hits; k++) total += Math.round(unit.atk * skill.power * enhance);
-            battleSession.enemyHP = Math.max(0, battleSession.enemyHP - total);
-            addBattleLog(`${head} ${hits > 1 ? hits + '連撃 ' : ''}${total}ダメージ`);
-            animateUnitAttack(() => { playPunchSE(); bossHitAnim(); battleFlash('atk-flash'); showDamageFloat(total, true, skill.type === 'swift' ? '#ffdd00' : '#ff6622'); });
-        } else if (skill.type === 'enhance') {
-            battleSession.buffActive = true;
-            battleSession._enhancePower = skill.power;
-            addBattleLog(`${head} 次のターン、全員の攻撃×${skill.power}`);
-        } else if (skill.type === 'fortify') {
-            const heal = Math.round(unit.maxHp * skill.power * Math.min(1, enhance));
-            battleSession.playerHP = Math.min(battleSession.playerMaxHP, battleSession.playerHP + heal);
-            battleSession._defReduction = Math.min(0.75, (battleSession._defReduction || 0) + skill.power);
-            addBattleLog(`${head} HP+${heal}・次の被ダメージ -${Math.round(skill.power * 100)}%`);
+            for (let k = 0; k < (hits || 1); k++) total += Math.round(unit.atk * mult * enhance);
+            S.enemyHP = Math.max(0, S.enemyHP - total);
+            addBattleLog(`${head} ${hits > 1 ? hits + '連撃 ' : ''}${total}ダメージ${note || ''}`);
+            animateUnitAttack(() => { playPunchSE(); bossHitAnim(); battleFlash('atk-flash'); showDamageFloat(total, true, color || '#ff6622'); });
+        };
+        switch (sk.kind) {
+            case 'hit': strike(sk.power, sk.hits); break;
+            case 'crit': {
+                const c = Math.random() < sk.chance;
+                strike(c ? sk.power : 1, 1, c ? ' 💥会心！' : '（会心ならず）', c ? '#ffdd00' : '#ff6622');
+                break;
+            }
+            case 'break': strike(sk.power, 1, S.intent === 'shield' ? ' 🔨守りを崩した' : '', '#ffaa44'); break;
+            case 'punish': {
+                const on = S.intent === 'charge';
+                strike(on ? sk.power : sk.weak, 1, on ? ' 👁️力をためた隙を突いた！' : '', on ? '#ffdd00' : '#ff6622');
+                break;
+            }
+            case 'momentum': {
+                const n = Math.min(4, S.streak || 0);
+                strike(1 + sk.power * n, 1, n ? ` 🔥${n}連続の勢い` : '');
+                break;
+            }
+            case 'drain': {
+                strike(sk.power, 1, ` ✨ことばの力+${sk.gain}`, '#80e0ff');
+                S.gauge = Math.min(GAUGE.max, (S.gauge || 0) + sk.gain);
+                break;
+            }
+            case 'foresee': {
+                const was = S.intent;
+                if (was === 'charge' || was === 'smash') { S.intent = 'attack'; addBattleLog(`🔮 ボスの${BOSS_INTENTS[was].name.replace('！', '')}を読み切って止めた！`); }
+                strike(sk.power, 1, '', '#c0a0ff');
+                break;
+            }
+            case 'buff':
+                S.buffActive = true; S._enhancePower = sk.power;
+                addBattleLog(`${head} 次のターン、全員の攻撃×${sk.power}`);
+                break;
+            case 'curse':
+                S._curse = { power: sk.power, turns: sk.turns };
+                addBattleLog(`${head} ${sk.turns}ターンの間、ボスの攻撃-${Math.round(sk.power * 100)}%`);
+                break;
+            case 'rally':
+                S.gauge = Math.min(GAUGE.max, (S.gauge || 0) + sk.power);
+                addBattleLog(`${head} ことばの力+${sk.power}`);
+                break;
+            case 'focus':
+                S._focus = sk.power;
+                addBattleLog(`${head} 次のターン、全員が必ず当たる${sk.power > 1 ? '（攻撃×' + sk.power + '）' : ''}`);
+                break;
+            case 'fort': {
+                const heal = Math.round(unit.maxHp * sk.power * Math.min(1, enhance));
+                S.playerHP = Math.min(S.playerMaxHP, S.playerHP + heal);
+                S._defReduction = Math.min(0.75, (S._defReduction || 0) + sk.power);
+                addBattleLog(`${head} HP+${heal}・このターンの被ダメージ -${Math.round(sk.power * 100)}%`);
+                break;
+            }
+            case 'reflect':
+                S._reflect = Math.max(S._reflect || 0, sk.power);
+                addBattleLog(`${head} このターン受けたダメージの${Math.round(sk.power * 100)}%を返す構え`);
+                break;
+            case 'heal': {
+                const heal = Math.round(S.playerMaxHP * sk.power);
+                S.playerHP = Math.min(S.playerMaxHP, S.playerHP + heal);
+                addBattleLog(`${head} パーティのHP+${heal}`);
+                break;
+            }
+            case 'wall':
+                S._wall = Math.max(S._wall || 0, sk.power);
+                addBattleLog(`${head} 大技・2連撃を完全に防ぐ構え（ふだんは被ダメージ-${Math.round(sk.power * 100)}%）`);
+                break;
+            default: strike(sk.power || 1, 1);
         }
     }
 
@@ -7437,6 +7533,9 @@ const Cloud = (function () {
                 }, s.rage && document.getElementById('battle-rage') ? 1500 : 900);
             };
             s._guardCutUsed = s._guardCut || 0; s._guardCut = 0;
+            const wall = s._wall || 0, reflect = s._reflect || 0; s._wall = 0; s._reflect = 0;
+            const curse = s._curse && s._curse.turns > 0 ? s._curse.power : 0;
+            if (s._curse && s._curse.turns > 0) { s._curse.turns--; if (!s._curse.turns) s._curse = null; }
             if (I.mult === 0) {   // 力をためる：このターンは攻撃しない
                 s._defReduction = 0;
                 addBattleLog(`⚡ ${stage.name}は力をためている… 次のターンに大技が来る！`);
@@ -7444,12 +7543,21 @@ const Cloud = (function () {
                 after();
                 return;
             }
-            const cut = (1 - (s.guardRate || 0)) * (1 - Math.min(0.75, (s._defReduction || 0) + (s._guardCutUsed || 0)));
+            const walled = wall && (s.intent === 'smash' || s.intent === 'double');
+            const cut = walled ? 0 : (1 - (s.guardRate || 0)) * (1 - Math.min(0.75, (s._defReduction || 0) + (s._guardCutUsed || 0) + wall)) * (1 - curse);
             s._defReduction = 0;
             const hits = I.hits || 1;
             let dmg = 0;
             for (let k = 0; k < hits; k++) dmg += Math.round(stage.atk * I.mult * (s.rage ? 1.25 : 1) * cut);
             battleSession.playerHP = Math.max(0, battleSession.playerHP - dmg);
+            if (walled) addBattleLog(`🧱 鉄壁！ ${I.name.replace('！', '')}を完全に防いだ`);
+            if (curse) addBattleLog(`🌑 呪いでボスの攻撃が-${Math.round(curse * 100)}%`);
+            if (reflect && dmg > 0) {
+                const back = Math.round(dmg * reflect);
+                s.enemyHP = Math.max(0, s.enemyHP - back);
+                addBattleLog(`🔁 反撃！ ${back}ダメージを返した`);
+                setTimeout(() => { bossHitAnim(); showDamageFloat(back, true, '#ffa0a0'); renderBattleUI_hpOnly(); }, 650);
+            }
             addBattleLog(`${I.ic} ${stage.name}の${s.intent === 'attack' ? '攻撃' : I.name.replace('！', '')}！ ${dmg} ダメージ` +
                 (s._guardCutUsed ? `（守るで -${Math.round(Math.min(0.75, s._guardCutUsed) * 100)}%）` : '') + (battleSession.guardRate ? `（後衛のガードで -${Math.round(battleSession.guardRate * 100)}%）` : ''));
 
