@@ -1723,6 +1723,42 @@
         .bplan-ult { grid-column: 1 / -1; padding: 9px; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer; border: 2px solid #ffe070; color: #fff;
             background: linear-gradient(135deg,#ff4a8a,#8a40ff,#30b0ff); font-family: 'Noto Serif JP', serif; animation: b-full 1.2s linear infinite; }
         .bplan-ult.sel { outline: 3px solid #fff; }
+        /* スキルの演出：スキル名の帯＋種類ごとのエフェクト（ボスの上／味方の上） */
+        #skill-fx { position: fixed; inset: 0; z-index: 9550; pointer-events: none; overflow: hidden; }
+        #skill-fx .sk-banner { position: absolute; left: 0; right: 0; top: 30%; display: flex; justify-content: center; }
+        #skill-fx .sk-banner span { padding: 8px 26px; font-size: 20px; font-weight: bold; color: #fff; font-family: 'Noto Serif JP', serif; white-space: nowrap;
+            background: linear-gradient(90deg, transparent, var(--skc) 18%, var(--skc) 82%, transparent); text-shadow: 0 0 8px #000, 0 0 2px #000; animation: sk-band .9s ease forwards; }
+        @keyframes sk-band { 0% { opacity: 0; transform: translateX(-40%) skewX(-12deg); } 20% { opacity: 1; transform: translateX(0) skewX(-12deg); } 75% { opacity: 1; transform: translateX(0) skewX(-12deg); } 100% { opacity: 0; transform: translateX(40%) skewX(-12deg); } }
+        #skill-fx .sk-at { position: absolute; transform: translate(-50%, -50%); }
+        #skill-fx .sk-slash { width: 220px; height: 6px; border-radius: 3px; background: linear-gradient(90deg, transparent, #fff, var(--skc), transparent); box-shadow: 0 0 14px var(--skc);
+            animation: sk-slash .45s ease-out forwards; }
+        #skill-fx .sk-slash.b { animation-delay: .12s; opacity: 0; }
+        @keyframes sk-slash { 0% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--r, -30deg)) scaleX(0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--r, -30deg)) scaleX(1.2); } }
+        #skill-fx .sk-burst { width: 40px; height: 40px; border-radius: 50%; border: 4px solid var(--skc); box-shadow: 0 0 20px var(--skc), inset 0 0 14px var(--skc); animation: sk-burst .6s ease-out forwards; }
+        @keyframes sk-burst { 0% { opacity: 1; transform: translate(-50%, -50%) scale(.3); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(5); } }
+        #skill-fx .sk-crit { font-size: 34px; font-weight: bold; color: #fff36a; font-family: Georgia, serif; letter-spacing: .08em; text-shadow: 0 0 14px #ff8a00, 0 0 4px #000; animation: sk-pop .8s ease forwards; }
+        @keyframes sk-pop { 0% { opacity: 0; transform: translate(-50%, -50%) scale(2.6); } 25% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -80%) scale(1); } }
+        #skill-fx .sk-shard { width: 14px; height: 18px; background: linear-gradient(135deg, #e8f4ff, #7aa0c8); clip-path: polygon(50% 0, 100% 40%, 70% 100%, 0 70%); animation: sk-shard .7s ease-out forwards; }
+        @keyframes sk-shard { 0% { opacity: 1; transform: translate(-50%, -50%) rotate(0); } 100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot)); } }
+        #skill-fx .sk-eye { font-size: 64px; animation: sk-pop .8s ease forwards; filter: drop-shadow(0 0 12px var(--skc)); }
+        #skill-fx .sk-ring { width: 120px; height: 120px; border-radius: 50%; border: 3px dashed var(--skc); box-shadow: 0 0 16px var(--skc); animation: sk-ring .9s ease-out forwards; }
+        @keyframes sk-ring { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.4) rotate(0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5) rotate(200deg); } }
+        #skill-fx .sk-smoke { width: 160px; height: 120px; border-radius: 50%; background: radial-gradient(circle, rgba(120,40,160,.85), rgba(40,0,60,.4) 55%, transparent 70%); filter: blur(4px); animation: sk-smoke 1s ease-out forwards; }
+        @keyframes sk-smoke { 0% { opacity: 0; transform: translate(-50%, -30%) scale(.5); } 35% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -80%) scale(1.5); } }
+        #skill-fx .sk-up { width: 10px; height: 10px; border-radius: 50%; background: var(--skc); box-shadow: 0 0 10px var(--skc); animation: sk-up .9s ease-out forwards; }
+        @keyframes sk-up { 0% { opacity: 0; transform: translate(-50%, 0) scale(.6); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), -110px) scale(1); } }
+        #skill-fx .sk-dome { width: 300px; height: 120px; border-radius: 150px 150px 20px 20px; border: 3px solid var(--skc); background: radial-gradient(ellipse at 50% 100%, transparent 40%, var(--skc) 160%);
+            box-shadow: 0 0 22px var(--skc); animation: sk-dome 1s ease forwards; }
+        @keyframes sk-dome { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.6); } 30% { opacity: .9; transform: translate(-50%, -50%) scale(1.03); } 80% { opacity: .7; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1); } }
+        #skill-fx .sk-wall { display: flex; gap: 3px; animation: sk-dome 1.1s ease forwards; }
+        #skill-fx .sk-wall i { width: 46px; height: 30px; background: linear-gradient(180deg, #c8d0dc, #6a7484); border: 2px solid #e8eef8; border-radius: 3px; box-shadow: 0 0 10px var(--skc); }
+        #skill-fx .sk-mirror { width: 260px; height: 110px; border-radius: 12px; background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.85) 45%, transparent 60%), rgba(160,220,255,.25);
+            border: 2px solid #e0f4ff; box-shadow: 0 0 20px var(--skc); animation: sk-dome .9s ease forwards; }
+        #skill-fx .sk-flow { width: 12px; height: 12px; border-radius: 50%; background: var(--skc); box-shadow: 0 0 12px var(--skc); animation: sk-flow .8s ease-in forwards; }
+        @keyframes sk-flow { 0% { opacity: 0; transform: translate(-50%, -50%); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.4); } }
+        #skill-fx .sk-tint { position: absolute; inset: 0; background: radial-gradient(circle at 50% 40%, var(--skc), transparent 65%); opacity: 0; animation: sk-tint .7s ease-out forwards; }
+        @keyframes sk-tint { 25% { opacity: .35; } 100% { opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) { #skill-fx * { animation-duration: .01s !important; } }
         #battle-rage { position: fixed; inset: 0; z-index: 9600; pointer-events: none; display: flex; align-items: center; justify-content: center;
             background: radial-gradient(circle, rgba(255,40,20,.45), rgba(60,0,0,.7)); animation: b-rage 1.6s ease forwards; }
         #battle-rage div { font-size: 34px; font-weight: bold; color: #fff; letter-spacing: .1em; text-shadow: 0 0 18px #ff2a00, 0 0 4px #000; font-family: 'Noto Serif JP', serif; text-align: center; }
@@ -5048,8 +5084,8 @@ const Cloud = (function () {
     const EXPECTED_GUARD = 0.26;
     function bossStatsFor(g) {
         const base = statBase(g);
-        const A = base * 1.08 * 1.04;                  // 想定する攻撃力（★1・品詞ボーナス程度。レアカードや★が多いほど楽になる）
-        const D = base * 1.08;                         // 想定する守備力
+        const A = base * (1 + STAR_BONUS) * 1.04;      // 想定する攻撃力（★1・品詞ボーナス程度。レアカードや★が多いほど楽になる）
+        const D = base * (1 + STAR_BONUS);             // 想定する守備力
         const partyHP = D * 3 * (0.8 + 1.3 + 1.0);
         const perRound = A * 3 * HIT_RATE.attack.ok;   // 全員「攻撃」で正解したときの1ターンの期待ダメージ
         return {
@@ -5131,7 +5167,7 @@ const Cloud = (function () {
     /* ========== ATK/DEF CALCULATION ========== */
     /* ===== カードのステータス =====
      * 初期値：鉄のタブ1が最も低く、白金の最後のタブが最も高い（全手帖を通した「通しタブ番号」で決まる）
-     * ＋ レアリティ倍率 ＋ ★（その単語をどれだけ深く知っているか）1つにつき +8%
+     * ＋ レアリティ倍率 ＋ ★（その単語をどれだけ深く知っているか）1つにつき +30%（★5で2.5倍）
      * ＋ プレイヤーレベルボーナス（冒険で経験値を積むほど全カードが強くなる：従来どおり）
      */
     const NB_TAB_OFFSET = (() => {
@@ -5143,7 +5179,7 @@ const Cloud = (function () {
     function globalTab(nbKey, tabIdx) { return (NB_TAB_OFFSET[nbKey] || 0) + tabIdx; }
     function statBase(g) { return 40 + 5.5 * g; }          // 通しタブ0 → 40、通しタブ88 → 524
     const RARITY_MULT = { N: 1.0, R: 1.15, SR: 1.35, UR: 1.6 };
-    const STAR_BONUS = 0.08;
+    const STAR_BONUS = 0.30;   // ★1つにつき+30%（★5で2.5倍）。よく覚えた単語のカードほど強い
 
     function getCardStats(card) {
         const rarity = getRarity(card.no);
@@ -7363,6 +7399,49 @@ const Cloud = (function () {
         document.getElementById('battleEnemyHPBar').style.width = Math.max(0, Math.min(100, enemyHP / enemyMaxHP * 100)) + '%';
         document.getElementById('battlePlayerHPBar').style.width = Math.max(0, Math.min(100, playerHP / playerMaxHP * 100)) + '%';
     }
+    /* スキルの演出：帯にスキル名、種類ごとにボスまたは味方の上でエフェクト */
+    const SKILL_FX_COLOR = { hit: '#ff6a3a', crit: '#ffd23a', break: '#9ac8ff', punish: '#ffe24a', momentum: '#ff7a2a', drain: '#5ae0ff', foresee: '#b38cff',
+        buff: '#ffd86a', curse: '#a04ad8', rally: '#ffb84a', focus: '#7ad0ff', fort: '#6ae0a0', reflect: '#bfe8ff', heal: '#6aff9a', wall: '#a8b8cc' };
+    function skillFx(unit, sk, opt) {
+        opt = opt || {};
+        let box = document.getElementById('skill-fx');
+        if (!box) { box = document.createElement('div'); box.id = 'skill-fx'; document.body.appendChild(box); }
+        box.innerHTML = '';
+        const color = SKILL_FX_COLOR[sk.kind] || '#ffd86a';
+        box.style.setProperty('--skc', color);
+        const center = id => { const el = document.getElementById(id); const img = id === 'boss' ? (document.getElementById('battleEnemyImg') && document.getElementById('battleEnemyImg').style.display !== 'none' ? document.getElementById('battleEnemyImg') : document.getElementById('battleEnemySprite')) : el;
+            if (!img) return { x: innerWidth / 2, y: innerHeight / 2 }; const r = img.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; };
+        const boss = center('boss'), party = center('battleUnitsRow');
+        const at = (cls, p, style, html) => { const d = document.createElement('div'); d.className = 'sk-at ' + cls; d.style.left = p.x + 'px'; d.style.top = p.y + 'px'; if (style) d.style.cssText += style; if (html) d.innerHTML = html; box.appendChild(d); return d; };
+        box.insertAdjacentHTML('beforeend', `<div class="sk-tint"></div><div class="sk-banner"><span>${sk.icon} ${sk.name}</span></div>`);
+        switch (sk.kind) {
+            case 'hit': case 'momentum': case 'punish': case 'crit': case 'break': case 'drain': case 'foresee':
+                at('sk-slash', boss, '--r:-28deg;'); at('sk-slash b', boss, '--r:24deg;'); at('sk-burst', boss);
+                if ((sk.hits || 1) > 1) at('sk-slash b', boss, '--r:-5deg;animation-delay:.24s;');
+                if (sk.kind === 'crit' && opt.crit) at('sk-crit', { x: boss.x, y: boss.y - 40 }, '', 'CRITICAL!');
+                if (sk.kind === 'punish' && opt.on) at('sk-eye', { x: boss.x, y: boss.y - 30 }, '', '👁️');
+                if (sk.kind === 'foresee') at('sk-ring', boss);
+                if (sk.kind === 'break' && opt.shield) for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2; at('sk-shard', boss, `--dx:${Math.round(Math.cos(a) * 120)}px;--dy:${Math.round(Math.sin(a) * 90)}px;--rot:${k * 70}deg;`); }
+                if (sk.kind === 'drain') for (let k = 0; k < 8; k++) at('sk-flow', { x: boss.x + (k - 4) * 8, y: boss.y }, `--dx:${Math.round((party.x - boss.x) + (k - 4) * 14)}px;--dy:${Math.round(party.y - boss.y)}px;animation-delay:${.2 + k * .05}s;`);
+                if (sk.kind === 'momentum') for (let k = 0; k < 6; k++) at('sk-up', { x: boss.x + (k - 3) * 22, y: boss.y + 40 }, `--dx:${(k - 3) * 6}px;animation-delay:${k * .05}s;`);
+                break;
+            case 'buff': case 'rally': case 'focus':
+                for (let k = 0; k < 14; k++) at('sk-up', { x: party.x + (k - 7) * 22, y: party.y + 30 }, `--dx:${Math.round(Math.sin(k) * 14)}px;animation-delay:${(k % 5) * .07}s;`);
+                if (sk.kind === 'focus') at('sk-ring', party, 'width:220px;height:90px;');
+                break;
+            case 'curse':
+                at('sk-smoke', boss); at('sk-smoke', { x: boss.x - 30, y: boss.y + 10 }, 'animation-delay:.15s;'); at('sk-smoke', { x: boss.x + 30, y: boss.y + 10 }, 'animation-delay:.25s;');
+                break;
+            case 'fort': at('sk-dome', party); break;
+            case 'heal':
+                for (let k = 0; k < 16; k++) at('sk-up', { x: party.x + (k - 8) * 20, y: party.y + 30 }, `--dx:${Math.round(Math.cos(k) * 12)}px;animation-delay:${(k % 6) * .08}s;`);
+                at('sk-dome', party, 'border-style:dotted;');
+                break;
+            case 'reflect': at('sk-mirror', { x: party.x, y: party.y - 60 }); break;
+            case 'wall': at('sk-wall', { x: party.x, y: party.y - 70 }, '', '<i></i><i></i><i></i><i></i><i></i>'); break;
+        }
+        clearTimeout(box._t); box._t = setTimeout(() => { box.innerHTML = ''; }, 1300);
+    }
     function applySkillEffect(unit, enhance, rate, tag) {
         const sk = unit.skill, S = battleSession;
         const head = `${unit.bonus.label}の${sk.icon}${sk.name}（命中${Math.round(rate * 100)}%）${tag}`;
@@ -7373,10 +7452,13 @@ const Cloud = (function () {
             addBattleLog(`${head} ${hits > 1 ? hits + '連撃 ' : ''}${total}ダメージ${note || ''}`);
             animateUnitAttack(() => { playPunchSE(); bossHitAnim(); battleFlash('atk-flash'); showDamageFloat(total, true, color || '#ff6622'); });
         };
+        // 会心かどうかは先に決めて、演出に使う
+        const critRoll = sk.kind === 'crit' ? Math.random() < sk.chance : false;
+        try { skillFx(unit, sk, { crit: critRoll, on: S.intent === 'charge', shield: S.intent === 'shield' }); } catch (e) {}
         switch (sk.kind) {
             case 'hit': strike(sk.power, sk.hits); break;
             case 'crit': {
-                const c = Math.random() < sk.chance;
+                const c = critRoll;
                 strike(c ? sk.power : 1, 1, c ? ' 💥会心！' : '（会心ならず）', c ? '#ffdd00' : '#ff6622');
                 break;
             }

@@ -247,7 +247,7 @@ test('バトル：ことばの力ゲージ・スキルの消費・守る・必�
     const same = getWordSkill(cardsData[5]).name === getWordSkill(cardsData[5]).name;
     const s = battleSession, u = s.units[0], orig = u.skill;
     const out = { kinds: kinds.size, same };
-    u.skill = Object.assign({}, POS_SKILLS.adv[1].base, { type: 'swift' }); s.intent = 'smash'; applySkillEffect(u, 1, 1, ''); out.foresee = s.intent;
+    u.skill = Object.assign({}, POS_SKILLS.adv[1].base, { type: 'swift' }); s.intent = 'smash'; applySkillEffect(u, 1, 1, ''); out.foresee = s.intent; out.fx = !!document.querySelector('#skill-fx .sk-banner') && !!document.querySelector('#skill-fx .sk-ring');
     u.skill = orig;
     s._wall = 0.25; s.intent = 'smash'; s.playerHP = s.playerMaxHP; const hp0 = s.playerHP; s.rage = true;
     const rbu = renderBattleUI; renderBattleUI = () => {}; battleEnemyTurn();
@@ -255,7 +255,14 @@ test('バトル：ことばの力ゲージ・スキルの消費・守る・必�
       setTimeout(() => { out.cursed = hp1 - s.playerHP; out.atk = s.stage.atk; }, 1000);
       setTimeout(() => { renderBattleUI = rbu; res(out); }, 2200); }, 2000);   // 次のターンの準備（予告の決め直し）が終わってから戻す
   }));
-  assert(r4.kinds >= 12 && r4.same && r4.foresee === 'attack' && r4.walled === 0 && r4.cursed > 0 && r4.cursed < r4.atk, JSON.stringify(r4));
+  assert(r4.kinds >= 12 && r4.same && r4.foresee === 'attack' && r4.fx && r4.walled === 0 && r4.cursed > 0 && r4.cursed < r4.atk, JSON.stringify(r4));
+  // ★（習熟度）1つにつき+30%：★5で2.5倍
+  const st = await p.evaluate(() => { const c = cardsData[10]; const keep = getStars; getStars = () => 0; const a0 = getCardStats(c).atk; getStars = () => 5; const a5 = getCardStats(c).atk; getStars = keep; return { a0, a5, lv: xpData.level }; });
+  assert(st.lv > 1 || Math.abs(st.a5 / st.a0 - 2.5) < 0.05, JSON.stringify(st));
+  if (process.env.SHOT) for (const k of [['n', 2], ['v', 2], ['adj', 1]]) {
+    await p.evaluate(k => { const s = battleSession, u = s.units[0]; s.intent = 'shield'; const fam = POS_SKILLS[k[0]][k[1]]; skillFx(u, Object.assign({ type: 'x' }, fam.high), { shield: true }); }, k);
+    await p.waitForTimeout(380); await p.screenshot({ path: process.env.SHOT + '/skfx_' + k[0] + '.png' });
+  }
   // ボスのHPが半分を切ると怒り状態に
   const r3 = await p.evaluate(() => new Promise(res => {
     const s = battleSession; s.intent = 'attack'; s.enemyHP = Math.floor(s.enemyMaxHP * 0.4); s.playerHP = s.playerMaxHP; s._guardCut = 0.6;
