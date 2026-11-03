@@ -2440,6 +2440,7 @@
         🔥 <span id="comboCount">0</span>連続正解中！
     </div>
     <!-- XP / Level -->
+    <div id="achvTitleLine" style="text-align:center;margin:2px 0 4px;display:none;"></div>
     <div class="xp-level-row" id="xpLevelRow">
         <div class="level-badge" id="levelBadge">Lv.1 見習い魔法使い</div>
         <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xpBarFill" style="width:0%"></div></div>
@@ -2461,10 +2462,10 @@
     <button class="action-btn btn-study" id="adventureBattleBtn" onclick="adventureOrBattle()" style="grid-column:span 2;">
         <span class="btn-icon" id="adventureBattleBtnIcon">🗺️</span><span id="adventureBattleBtnLabel">冒険</span>
     </button>
-    <button class="action-btn" id="achvBtn" onclick="openAchievements()" style="grid-column:span 2;background:linear-gradient(150deg,#4a3a10,#2a1e00);color:#ffe0a0;border:1px solid rgba(220,170,60,0.45);">
+    <button class="action-btn" id="achvBtn" onclick="openAchievements()" style="grid-column:span 1;background:linear-gradient(150deg,#4a3a10,#2a1e00);color:#ffe0a0;border:1px solid rgba(220,170,60,0.45);">
         <span class="btn-icon">🏅</span>称号・実績 <span id="achvBtnCount" style="font-size:11px;opacity:.8;"></span>
     </button>
-    <button class="action-btn" id="storyBtn" onclick="openStoryArchive()" style="grid-column:span 2;background:linear-gradient(150deg,#2a2050,#140c30);color:#d8c8ff;border:1px solid rgba(160,130,255,0.45);">
+    <button class="action-btn" id="storyBtn" onclick="openStoryArchive()" style="grid-column:span 1;background:linear-gradient(150deg,#2a2050,#140c30);color:#d8c8ff;border:1px solid rgba(160,130,255,0.45);">
         <span class="btn-icon">📖</span>物語
     </button>
     <button class="action-btn" id="raidBtn" onclick="openRaid()" style="grid-column:1/-1;background:linear-gradient(150deg,#5a1020,#2a0610);color:#ffd0c0;border:1px solid rgba(255,110,90,0.5);">
@@ -4762,7 +4763,9 @@ const Cloud = (function () {
         const el = document.getElementById('levelBadge');
         const bar = document.getElementById('xpBarFill');
         const label = document.getElementById('xpLabel');
-        if (el) { const at = typeof achvTitle === 'function' ? achvTitle() : null; el.innerHTML = `Lv.${xpData.level} ${title}` + (at ? `<span class="achv-title">${at.icon} ${at.name}</span>` : ''); }
+        if (el) el.textContent = `Lv.${xpData.level} ${title}`;
+        const tl = document.getElementById('achvTitleLine');
+        if (tl) { const at = typeof achvTitle === 'function' ? achvTitle() : null; tl.innerHTML = at ? `<span class="achv-title">🏷️ ${at.icon} ${at.name}</span>` : ''; tl.style.display = at ? '' : 'none'; }
         if (bar) bar.style.width = Math.round((xpData.xp / XP_PER_LEVEL) * 100) + '%';
         if (label) label.textContent = `${xpData.xp}/${XP_PER_LEVEL} XP ｜ 次のLvまで${XP_PER_LEVEL - xpData.xp}XP`;
     }

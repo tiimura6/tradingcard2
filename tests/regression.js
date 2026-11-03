@@ -289,7 +289,7 @@ test('称号・実績：これまでの記録でまとめて解除・報酬・�
   const r = await p.evaluate(() => ({ a: Object.keys(achv), gold, pop: (document.getElementById('achv-pop') || {}).textContent || '' }));
   assert(r.a.includes('c10') && r.a.includes('c100') && r.a.includes('win1') && !r.a.includes('c500') && r.gold >= 600, JSON.stringify(r));
   const r2 = await p.evaluate(() => { openAchievements(); const items = document.querySelectorAll('#achvBox .achv-item').length; setAchvTitle('win1'); closeAchievements();
-    return { items, badge: document.getElementById('levelBadge').textContent }; });
+    return { items, badge: document.getElementById('achvTitleLine').textContent }; });
   assert(r2.items === 34 && r2.badge.includes('スライムハンター'), JSON.stringify(r2));
   await p.evaluate(() => { statInc('ultUsed'); }); await p.waitForTimeout(1200);
   const r3 = await p.evaluate(() => ({ ult: !!achv.ult, pop: (document.getElementById('achv-pop') || {}).textContent || '' }));
