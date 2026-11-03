@@ -346,10 +346,13 @@ test('殿堂入りボスラッシュが開始できる（全手帖コンプリ�
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
-test('殿堂入りへの道は全手帖コンプリートで開く／ボスラッシュはバトル背景', async b => {
+test('殿堂入りへの道は白金の手帖だけに表示・全手帖コンプリートで開く／ボスラッシュはバトル背景', async b => {
   const p = await openApp(b, { seed: { cardMergeV1: '1', unlockedCards: ids('card', 1, 863).concat(['a1-1']),
     notebookState: { unlocked: ['A1', 'PT'], current: 'A1' } } });
   await p.waitForTimeout(1500);
+  assert((await p.evaluate(() => getComputedStyle(document.getElementById('hofBtn')).display)) === 'none', '鉄の手帖で殿堂入りボタンが見えている');
+  await p.click('#nbChip'); await p.waitForTimeout(300);
+  await p.click('.nb-row:has-text("白金の手帖")'); await p.waitForTimeout(2300);
   const h0 = await p.evaluate(() => { updateCollectionProgress(); startHofBossRush(); return { txt: document.getElementById('hofBtn').innerText, shown: getComputedStyle(document.getElementById('hofBtn')).display, alert: (window.__alerts || []).join('|'), rush: hofBossRush.active }; });
   assert(h0.shown !== 'none' && h0.txt.includes('全手帖 残り') && h0.alert.includes('コンプリート') && !h0.rush, JSON.stringify(h0));
   await p.evaluate(() => { adminUnlockAll(); updateCollectionProgress(); });

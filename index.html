@@ -5115,8 +5115,8 @@ const Cloud = (function () {
         renderAllCompletion();
         // 殿堂入りボタンのロック状態を更新
         const hofBtn = document.getElementById('hofBtn');
-        if (hofBtn) hofBtn.style.display = '';
-        if (hofBtn) {
+        if (hofBtn) hofBtn.style.display = isPT ? '' : 'none';   // ボタンは白金の手帖だけに表示（条件は全手帖コンプリート）
+        if (hofBtn && isPT) {
             // 殿堂入りは鉄〜白金の全手帖（8,324枚）のコンプリートで解禁
             const ac = allCompletion();
             const allComplete = ac.have >= ac.total;
