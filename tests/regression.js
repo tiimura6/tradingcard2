@@ -193,13 +193,60 @@ test('バトル：順番に編成（前衛はPower順）→作戦→1問→命�
   const slots = await p.evaluate(() => ['front', 'mid', 'rear'].every(x => formationState.slots[x]));
   assert(slots, '3枠が埋まらない');
   await p.click('#formationStartBtn'); await p.waitForTimeout(1300);
-  assert((await p.evaluate(() => document.querySelectorAll('.bplan-btn').length)) === 6, '作戦ボタンが攻撃・スキルの6個でない');
+  assert((await p.evaluate(() => document.querySelectorAll('.bplan-btn').length)) === 9, '作戦ボタンが攻撃・スキル・守るの9個でない');
+  // 最初はゲージ0なのでスキルは選べない・ボスの予告が出ている
+  const g0 = await p.evaluate(() => ({ dis: [...document.querySelectorAll('.bplan-btn.skill')].every(b => b.disabled), intent: battleSession.intent, box: !!document.querySelector('.b-intent') }));
+  assert(g0.dis && g0.intent === 'attack' && g0.box, JSON.stringify(g0));
   await p.evaluate(() => { battleSession.enemyHP = 1; });
   await p.click('#battleGoBtn'); await p.waitForTimeout(600);
   await p.evaluate(() => document.querySelector('.quiz-choice-btn[data-correct]').click());
   await p.waitForTimeout(5500);
   const d = await p.evaluate(() => document.getElementById('battleResultDesc').innerText);
   assert(d.includes('撃退'), d);
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('バトル：ことばの力ゲージ・スキルの消費・守る・必殺技・ボスの予告と怒り状態', async b => {
+  const p = await openApp(b, { seed: { unlockedCards: ids('a1', 1, 60) } });
+  await p.evaluate(() => openBattleFormationModal(getBattleStages()[0]));
+  for (let n = 0; n < 3; n++) await p.evaluate(() => document.querySelector('#formationCardPool .formation-pool-card:not(.used)').click());
+  await p.click('#formationStartBtn'); await p.waitForTimeout(1300);
+  const r = await p.evaluate(() => {
+    const s = battleSession, out = {};
+    // ゲージ65：スキルは2枚まで（30×2）
+    s.gauge = 65; renderBattlePlanner();
+    setBattlePlan(0, 'skill'); setBattlePlan(1, 'skill'); setBattlePlan(2, 'skill');
+    out.skills = s.plan.filter(a => a === 'skill').length;
+    out.thirdDisabled = document.querySelectorAll('.bplan-btn.skill')[2].disabled;
+    // 作戦決定でゲージを使う
+    s.turn = 'player'; s.plan = ['skill', 'attack', 'guard']; s.gauge = 40;
+    const sq = battleStartQuiz; battleStartQuiz = () => {}; confirmBattlePlan(); battleStartQuiz = sq;
+    out.afterSpend = s.gauge;
+    // 満タンで必殺技ボタン
+    s.turn = 'player'; s.gauge = 100; renderBattlePlanner();
+    out.ultBtn = !!document.querySelector('.bplan-ult');
+    // 力をためた次は必ず大技
+    s.intent = 'charge'; out.next = pickBossIntent();
+    out.cost = planCost('ult');
+    return out;
+  });
+  if (process.env.SHOT) { await p.evaluate(() => { const s = battleSession; s.turn = 'player'; s.gauge = 70; s.streak = 3; s.intent = 'smash'; s.intentTurn = s.turnCount; s.plan = ['skill', 'guard', 'attack']; renderBattlePlanner(); document.querySelector('#battleActionArea').scrollIntoView(); }); await p.screenshot({ path: process.env.SHOT + '/plan1.png' });
+    await p.evaluate(() => { const s = battleSession; s.gauge = 100; s.plan = 'ult'; s.intent = 'shield'; s.rage = true; renderBattlePlanner(); }); await p.screenshot({ path: process.env.SHOT + '/plan2.png' }); }
+  assert(r.skills === 2 && r.thirdDisabled && r.afterSpend === 10 && r.ultBtn && r.next === 'smash' && r.cost === 100, JSON.stringify(r));
+  // 正解でゲージがたまる（連続正解で増える）・守るで被ダメージが減る
+  const r2 = await p.evaluate(() => new Promise(res => {
+    const s = battleSession; s.gauge = 0; s.streak = 1; s.plan = ['guard', 'guard', 'attack']; s.intent = 'attack'; s.enemyHP = s.enemyMaxHP;
+    const eT = battleEnemyTurn; battleEnemyTurn = () => { battleEnemyTurn = eT; res({ gauge: s.gauge, streak: s.streak, cut: s._guardCut }); };
+    resolveBattleRound(true);
+  }));
+  assert(r2.gauge === 35 && r2.streak === 2 && Math.abs(r2.cut - 0.6) < 1e-9, JSON.stringify(r2));
+  // ボスのHPが半分を切ると怒り状態に
+  const r3 = await p.evaluate(() => new Promise(res => {
+    const s = battleSession; s.intent = 'attack'; s.enemyHP = Math.floor(s.enemyMaxHP * 0.4); s.playerHP = s.playerMaxHP; s._guardCut = 0.6;
+    const hp0 = s.playerHP; battleEnemyTurn();
+    setTimeout(() => res({ rage: s.rage, banner: !!document.getElementById('battle-rage') || s.rage, dmg: hp0 - s.playerHP, atk: s.stage.atk }), 1200);
+  }));
+  assert(r3.rage && r3.dmg > 0 && r3.dmg < r3.atk * 0.5, JSON.stringify(r3));
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 

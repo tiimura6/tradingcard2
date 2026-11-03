@@ -1691,6 +1691,38 @@
         .bplan-btn.sel.skill  { background: linear-gradient(135deg,#3a1a6a,#20104a); border-color: #b080ff; color: #e8d8ff; }
         .bplan-go { grid-column: 1 / -1; padding: 11px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; border: 2px solid #f0c040; background: linear-gradient(135deg,#8a5a10,#5a3400); color: #fff3c8; font-family: 'Noto Serif JP', serif; }
         .bplan-go:disabled { opacity: .45; }
+        .bplan-btn.sel.guard  { background: linear-gradient(135deg,#1a4a6a,#0a2a4a); border-color: #6ac0ff; color: #d0ecff; }
+        .bplan-btn:disabled { opacity: .35; cursor: not-allowed; }
+        /* ことばの力ゲージ・ボスの予告・必殺技 */
+        .bplan-top { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 5px; }
+        .b-intent { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 10px; background: rgba(40,8,8,.78); border: 1.5px solid rgba(255,110,90,.55); color: #ffe0d0; font-size: 12px; line-height: 1.3; }
+        .b-intent b { font-size: 13px; color: #fff; }
+        .b-intent .ic { font-size: 22px; }
+        .b-intent.charge { border-color: #ffb040; background: rgba(60,30,0,.82); animation: b-pulse 1s ease-in-out infinite; }
+        .b-intent.smash { border-color: #ff4040; background: rgba(80,0,0,.85); animation: b-pulse .6s ease-in-out infinite; }
+        .b-intent.shield { border-color: #8ab0d0; background: rgba(20,30,50,.82); }
+        .b-intent.rage { box-shadow: 0 0 12px rgba(255,60,40,.7); }
+        @keyframes b-pulse { 50% { box-shadow: 0 0 16px rgba(255,90,40,.9); } }
+        .b-gauge { position: relative; height: 16px; border-radius: 8px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,220,120,.45); overflow: hidden; }
+        .b-gauge .fill { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg,#40c0ff,#a070ff,#ffd040); transition: width .5s ease; }
+        .b-gauge .rsv { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(45deg, rgba(255,255,255,.45) 0 4px, transparent 4px 8px); transition: all .3s; }
+        .b-gauge .lbl { position: relative; z-index: 1; font-size: 10.5px; line-height: 16px; color: #fff; text-align: center; text-shadow: 0 0 3px #000, 0 0 3px #000; }
+        .b-gauge.full .fill { animation: b-full 1s linear infinite; }
+        @keyframes b-full { 50% { filter: brightness(1.5); } }
+        .bplan-ult { grid-column: 1 / -1; padding: 9px; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer; border: 2px solid #ffe070; color: #fff;
+            background: linear-gradient(135deg,#ff4a8a,#8a40ff,#30b0ff); font-family: 'Noto Serif JP', serif; animation: b-full 1.2s linear infinite; }
+        .bplan-ult.sel { outline: 3px solid #fff; }
+        #battle-rage { position: fixed; inset: 0; z-index: 9600; pointer-events: none; display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(circle, rgba(255,40,20,.45), rgba(60,0,0,.7)); animation: b-rage 1.6s ease forwards; }
+        #battle-rage div { font-size: 34px; font-weight: bold; color: #fff; letter-spacing: .1em; text-shadow: 0 0 18px #ff2a00, 0 0 4px #000; font-family: 'Noto Serif JP', serif; text-align: center; }
+        #battle-rage small { display: block; font-size: 14px; letter-spacing: 0; margin-top: 6px; }
+        @keyframes b-rage { 0% { opacity: 0; } 15%, 75% { opacity: 1; } 100% { opacity: 0; } }
+        #battle-ult { position: fixed; inset: 0; z-index: 9600; pointer-events: none; overflow: hidden; }
+        #battle-ult .flash { position: absolute; inset: 0; background: radial-gradient(circle, #fff, rgba(160,120,255,.6) 40%, transparent 70%); animation: b-ultf 1.1s ease-out forwards; }
+        #battle-ult .txt { position: absolute; left: 0; right: 0; top: 40%; text-align: center; font-size: 30px; font-weight: bold; color: #fff; font-family: 'Noto Serif JP', serif;
+            text-shadow: 0 0 16px #a070ff, 0 0 4px #000; animation: b-ultt 1.1s ease forwards; }
+        @keyframes b-ultf { 0% { opacity: 0; transform: scale(.3); } 25% { opacity: 1; } 100% { opacity: 0; transform: scale(2); } }
+        @keyframes b-ultt { 0% { opacity: 0; transform: scale(2); } 25%, 70% { opacity: 1; transform: scale(1); } 100% { opacity: 0; } }
         /* 撃退：スライムが跳ねて逃げていく／討伐：光って弾けて消える */
         @keyframes slimeFlee {
             0%   { transform: translate(0,0) scale(1); }
@@ -6900,6 +6932,7 @@ const Cloud = (function () {
             playerHP: playerMaxHP, playerMaxHP,
             enemyHP: stage.hp, enemyMaxHP: stage.hp,
             turn: 'player', turnCount: 1,
+            gauge: 0, streak: 0, intent: null, intentTurn: 0, rage: false, _guardCut: 0,
             defendActive: false, buffActive: false,
             _enhancePower: null, _fortifyActive: false, _synergy: synergy,
             currentAction: null,
@@ -7085,33 +7118,77 @@ const Cloud = (function () {
     const BATTLE_ACTIONS = {
         attack: { icon: '⚔️', name: '攻撃' },
         skill:  { icon: '🔮', name: 'スキル' },
+        guard:  { icon: '🛡️', name: '守る' },
     };
+    /* ===== ことばの力ゲージ（0〜100） =====
+       正解でたまる（連続正解ほど多い：25→35→45）。スキルは1回30を使う。満タンで3人合体の必殺技。
+       守る：そのカードは攻撃しない代わりに、このターンの被ダメージを1枚につき30%減らす（正解・不正解に関係なく効く） */
+    const GAUGE = { gain: [25, 35, 45], skill: 30, max: 100, guardCut: 0.3, ultMult: 2.2 };
+    /* ===== ボスの予告（次の行動をターンの初めに見せる） =====
+       通常攻撃／力をためる（次のターンに大技2.5倍）／守りを固める（こちらの攻撃が半分、ボスの攻撃も0.6倍）
+       HPが半分を切ると怒り状態：攻撃1.25倍、2連撃が加わり、力をためる回数が増える */
+    const BOSS_INTENTS = {
+        attack: { ic: '👊', name: '通常攻撃', desc: 'ふつうの攻撃をしてくる', mult: 1 },
+        charge: { ic: '⚡', name: '力をためている', desc: 'このターンは攻撃しない。次のターンに大技（2.5倍）！', mult: 0 },
+        smash:  { ic: '💥', name: '大技！', desc: '2.5倍の大ダメージ！「守る」で受け止めよう', mult: 2.5 },
+        shield: { ic: '🧱', name: '守りを固めている', desc: 'こちらの攻撃が半分になる。攻撃をひかえて、守りや強化（形容詞のスキル）に回すのも手', mult: 0.6 },
+        double: { ic: '🌀', name: '2連撃', desc: '0.8倍の攻撃を2回してくる', mult: 0.8, hits: 2 },
+    };
+    function pickBossIntent() {
+        const s = battleSession;
+        if (s.intent === 'charge') return 'smash';
+        if (s.turnCount <= 1) return 'attack';
+        const w = s.rage ? { attack: 35, double: 30, charge: 25, shield: 10 } : { attack: 55, charge: 25, shield: 20 };
+        if (s.intent === 'shield') delete w.shield;   // 守りは2ターン続けない
+        let r = Math.random() * Object.values(w).reduce((a, b) => a + b, 0);
+        for (const [k, v] of Object.entries(w)) { if ((r -= v) < 0) return k; }
+        return 'attack';
+    }
+    function planCost(plan) { return plan === 'ult' ? GAUGE.max : (plan || []).filter(a => a === 'skill').length * GAUGE.skill; }
     function renderBattlePlanner() {
         const area = document.getElementById('battleActionArea');
         if (!area) return;
-        if (!battleSession.plan || battleSession.plan.length !== battleSession.units.length) {
-            battleSession.plan = battleSession.units.map(() => 'attack');
-        }
+        const s = battleSession;
+        if (s.gauge == null) s.gauge = 0;
+        // ターンの初めにボスの次の行動を決めて見せる
+        if (s.intentTurn !== s.turnCount) { s.intent = pickBossIntent(); s.intentTurn = s.turnCount; }
+        if (s.plan === 'ult' && s.gauge < GAUGE.max) s.plan = null;
+        if (s.plan !== 'ult' && (!Array.isArray(s.plan) || s.plan.length !== s.units.length)) s.plan = s.units.map(() => 'attack');
+        // ゲージが足りなくなったスキルは攻撃に戻す
+        if (Array.isArray(s.plan)) { let left = s.gauge; s.plan = s.plan.map(a => { if (a !== 'skill') return a; if (left >= GAUGE.skill) { left -= GAUGE.skill; return a; } return 'attack'; }); }
+        const I = BOSS_INTENTS[s.intent], cost = planCost(s.plan), full = s.gauge >= GAUGE.max;
+        const intentHtml = `<div class="b-intent ${s.intent}${s.rage ? ' rage' : ''}"><span class="ic">${I.ic}</span><div><b>${s.rage ? '😡 ' : ''}ボスの予告：${I.name}</b><br>${I.desc}</div></div>`;
+        const gaugeHtml = `<div class="b-gauge${full ? ' full' : ''}"><div class="fill" style="width:${s.gauge}%"></div>` +
+            `<div class="rsv" style="left:${Math.max(0, s.gauge - cost)}%;width:${Math.min(cost, s.gauge)}%"></div>` +
+            `<div class="lbl">✨ ことばの力 ${s.gauge} / ${GAUGE.max}${cost ? `（使う予定 ${cost}）` : ''}${s.streak >= 2 ? `　🔥${s.streak}連続正解` : ''}</div></div>`;
+        const ult = full ? `<button class="bplan-ult${s.plan === 'ult' ? ' sel' : ''}" onclick="setBattlePlan(-1,'ult')">💥 3人合体・必殺技！${s.plan === 'ult' ? '（選択中・もう一度で解除）' : '（ゲージを全部使う）'}</button>` : '';
+        let left = s.gauge - cost;
         area.style.display = 'grid';
-        area.innerHTML = battleSession.units.map((u, i) => `
+        area.innerHTML = `<div class="bplan-top">${intentHtml}${gaugeHtml}</div>` + ult + s.units.map((u, i) => `
             <div class="bplan-col">
                 <div class="bplan-head">${u.bonus.label}：${(u.card.quiz.answer || '').slice(0, 9)}</div>
-                ${['attack', 'skill'].map(a => `
-                    <button class="bplan-btn ${a}${battleSession.plan[i] === a ? ' sel' : ''}" onclick="setBattlePlan(${i},'${a}')">
-                        ${BATTLE_ACTIONS[a].icon}${BATTLE_ACTIONS[a].name}
-                        <small>${a === 'attack' ? `P${u.atk}・命中90%` : `${u.skill.icon}${u.skill.name}・命中80%`}</small>
-                    </button>`).join('')}
+                ${['attack', 'skill', 'guard'].map(a => {
+                    const sel = s.plan !== 'ult' && s.plan[i] === a;
+                    const dis = s.plan === 'ult' || (a === 'skill' && !sel && left < GAUGE.skill);
+                    const sub = a === 'attack' ? `P${u.atk}・命中90%` : a === 'skill' ? `${u.skill.icon}${u.skill.name}・力${GAUGE.skill}` : `被ダメ-${Math.round(GAUGE.guardCut * 100)}%`;
+                    return `<button class="bplan-btn ${a}${sel ? ' sel' : ''}" ${dis ? 'disabled' : ''} onclick="setBattlePlan(${i},'${a}')">${BATTLE_ACTIONS[a].icon}${BATTLE_ACTIONS[a].name}<small>${sub}</small></button>`;
+                }).join('')}
             </div>`).join('') +
             `<button class="bplan-go" id="battleGoBtn" onclick="confirmBattlePlan()">📜 作戦決定 → 問題へ</button>`;
     }
     function setBattlePlan(i, action) {
         if (!battleSession.active || battleSession.turn !== 'player') return;
-        battleSession.plan[i] = action;
+        const s = battleSession;
+        if (action === 'ult') { s.plan = s.plan === 'ult' ? null : 'ult'; renderBattlePlanner(); return; }
+        if (s.plan === 'ult') return;
+        if (action === 'skill' && s.plan[i] !== 'skill' && s.gauge - planCost(s.plan) < GAUGE.skill) return;
+        s.plan[i] = action;
         renderBattlePlanner();
     }
     function confirmBattlePlan() {
         if (!battleSession.active || battleSession.turn !== 'player') return;
         battleSession.turn = 'quiz';
+        battleSession.gauge = Math.max(0, (battleSession.gauge || 0) - planCost(battleSession.plan));   // スキル・必殺技のゲージを使う
         const area = document.getElementById('battleActionArea');
         if (area) area.style.display = 'none';
         battleStartQuiz();
@@ -7122,9 +7199,18 @@ const Cloud = (function () {
         const { units, plan, stage } = battleSession;
         const key = isCorrect ? 'ok' : 'ng';
         battleSession._defReduction = 0;   // 名詞スキル（堅固な存在など）で軽減されたときだけ使う
-        addBattleLog(isCorrect ? '✅ 正解！ 命中率アップ（攻撃90%・スキル80%）' : '❌ 不正解… 命中率ダウン（攻撃30%・スキル20%）、当たっても威力は半分');
-        const enhance = (battleSession.buffActive ? (battleSession._enhancePower || 1.5) : 1) * (isCorrect ? 1 : WRONG_DAMAGE_MULT);
+        // ことばの力ゲージ：正解でたまる（連続正解ほど多い）
+        battleSession.streak = isCorrect ? (battleSession.streak || 0) + 1 : 0;
+        const gain = isCorrect ? GAUGE.gain[Math.min(battleSession.streak, 3) - 1] : 0;
+        battleSession.gauge = Math.min(GAUGE.max, (battleSession.gauge || 0) + gain);
+        addBattleLog(isCorrect ? `✅ 正解！ 命中率アップ（攻撃90%・スキル80%）　✨ことばの力 +${gain}` : '❌ 不正解… 命中率ダウン（攻撃30%・スキル20%）、当たっても威力は半分');
+        const shieldCut = battleSession.intent === 'shield' ? 0.5 : 1;   // ボスが守りを固めているターンは半分
+        if (shieldCut < 1) addBattleLog('🧱 ボスは守りを固めている… こちらの攻撃は半分');
+        const enhance = (battleSession.buffActive ? (battleSession._enhancePower || 1.5) : 1) * (isCorrect ? 1 : WRONG_DAMAGE_MULT) * shieldCut;
         battleSession.buffActive = false; battleSession._enhancePower = null;
+        // 守る：1枚につき被ダメージ -30%
+        battleSession._guardCut = plan === 'ult' ? 0 : plan.filter(a => a === 'guard').length * GAUGE.guardCut;
+        if (plan === 'ult') { resolveUltimate(isCorrect, enhance); return; }
         let i = 0;
         const step = () => {
             if (!battleSession.active) return;
@@ -7138,6 +7224,10 @@ const Cloud = (function () {
             const u = units[i], act = plan[i];
             battleSession.currentUnitIdx = i;
             renderBattleUnits();
+            if (act === 'guard') {
+                addBattleLog(`${u.bonus.label}は守りを固めた 🛡️（被ダメージ -${Math.round(GAUGE.guardCut * 100)}%）`);
+                i++; setTimeout(step, 450); return;
+            }
             const rate = HIT_RATE[act][key];
             const hit = Math.random() < rate;
             const tag = `<span class="bhit ${hit ? 'hit' : 'miss'}">${hit ? 'HIT' : 'MISS'}</span>`;
@@ -7158,6 +7248,26 @@ const Cloud = (function () {
             i++; setTimeout(step, 750);
         };
         step();
+    }
+    // 必殺技：3枚の攻撃力の合計×2.2を必ず当てる（不正解なら威力半分）
+    function resolveUltimate(isCorrect, enhance) {
+        const s = battleSession;
+        const dmg = Math.round(s.units.reduce((a, u) => a + u.atk, 0) * GAUGE.ultMult * enhance);
+        const fx = document.createElement('div'); fx.id = 'battle-ult';
+        fx.innerHTML = `<div class="flash"></div><div class="txt">💥 3人合体・必殺技！</div>`;
+        document.body.appendChild(fx); setTimeout(() => fx.remove(), 1200);
+        playSE('unlock');
+        setTimeout(() => {
+            if (!s.active) return;
+            s.enemyHP = Math.max(0, s.enemyHP - dmg);
+            addBattleLog(`💥 3人合体・必殺技！ ${dmg}ダメージ${isCorrect ? '' : '（不正解で威力半分）'}`);
+            playPunchSE(); bossHitAnim(); battleFlash('atk-flash'); showDamageFloat(dmg, true, '#ff80ff');
+            renderBattleUI_hpOnly();
+            setTimeout(() => {
+                if (s.enemyHP <= 0 || s.playerHP <= 0) endBattle();
+                else { s.turn = 'enemy'; battleEnemyTurn(); }
+            }, 900);
+        }, 700);
     }
     function bossHitAnim() {
         const sprite = document.getElementById('battleEnemySprite');
@@ -7310,14 +7420,38 @@ const Cloud = (function () {
         }
 
         setTimeout(() => {
-            let dmg = Math.round(stage.atk * (1 - (battleSession.guardRate || 0)));   // 後衛のGuard
-            // 名詞スキルによる被ダメージ軽減（このターンのみ）
-            if (battleSession._defReduction) {
-                dmg = Math.round(dmg * (1 - battleSession._defReduction));
-                battleSession._defReduction = 0;
+            const s = battleSession, I = BOSS_INTENTS[s.intent] || BOSS_INTENTS.attack;
+            const after = () => {
+                s.turnCount++;
+                // HPが半分を切ったら怒り状態（1回だけ演出）
+                if (!s.rage && s.enemyHP > 0 && s.enemyHP <= s.enemyMaxHP / 2) {
+                    s.rage = true;
+                    const r = document.createElement('div'); r.id = 'battle-rage';
+                    r.innerHTML = `<div>😡 怒り状態！<small>${stage.name}の攻撃が強くなった（2連撃も使ってくる）</small></div>`;
+                    document.body.appendChild(r); setTimeout(() => r.remove(), 1700);
+                    addBattleLog(`😡 ${stage.name}は怒り状態になった！ 攻撃が1.25倍に`);
+                }
+                setTimeout(() => {
+                    if (s.enemyHP <= 0 || s.playerHP <= 0) endBattle();
+                    else { s.turn = 'player'; s.currentUnitIdx = -1; renderBattleUI(); }
+                }, s.rage && document.getElementById('battle-rage') ? 1500 : 900);
+            };
+            s._guardCutUsed = s._guardCut || 0; s._guardCut = 0;
+            if (I.mult === 0) {   // 力をためる：このターンは攻撃しない
+                s._defReduction = 0;
+                addBattleLog(`⚡ ${stage.name}は力をためている… 次のターンに大技が来る！`);
+                showDamageFloat('⚡', false, '#ffb040');
+                after();
+                return;
             }
+            const cut = (1 - (s.guardRate || 0)) * (1 - Math.min(0.75, (s._defReduction || 0) + (s._guardCutUsed || 0)));
+            s._defReduction = 0;
+            const hits = I.hits || 1;
+            let dmg = 0;
+            for (let k = 0; k < hits; k++) dmg += Math.round(stage.atk * I.mult * (s.rage ? 1.25 : 1) * cut);
             battleSession.playerHP = Math.max(0, battleSession.playerHP - dmg);
-            addBattleLog(`${stage.emoji} ${stage.name}の攻撃！ ${dmg} ダメージ` + (battleSession.guardRate ? `（後衛のガードで -${Math.round(battleSession.guardRate * 100)}%）` : ''));
+            addBattleLog(`${I.ic} ${stage.name}の${s.intent === 'attack' ? '攻撃' : I.name.replace('！', '')}！ ${dmg} ダメージ` +
+                (s._guardCutUsed ? `（守るで -${Math.round(Math.min(0.75, s._guardCutUsed) * 100)}%）` : '') + (battleSession.guardRate ? `（後衛のガードで -${Math.round(battleSession.guardRate * 100)}%）` : ''));
 
             // ボス前進アニメ → SE → ユニットshake + 画面揺れ
             animateBossAttack(() => {
@@ -7336,19 +7470,7 @@ const Cloud = (function () {
                 }
                 showDamageFloat(dmg, false, '#88aaff');
             });
-
-            battleSession.turnCount++;
-
-            setTimeout(() => {
-                if (battleSession.enemyHP <= 0 || battleSession.playerHP <= 0) {
-                    endBattle();
-                } else {
-                    // 次プレイヤーターン（作戦は前のターンの選択を引き継ぐ）
-                    battleSession.turn = 'player';
-                    battleSession.currentUnitIdx = -1;
-                    renderBattleUI();
-                }
-            }, 900);
+            after();
         }, 800);
     }
 
