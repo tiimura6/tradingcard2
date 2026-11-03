@@ -291,34 +291,12 @@ test('称号・実績：これまでの記録でまとめて解除・報酬・�
   await p.waitForTimeout(4200);
   const r = await p.evaluate(() => ({ a: Object.keys(achv), gold, pop: (document.getElementById('achv-pop') || {}).textContent || '' }));
   assert(r.a.includes('c10') && r.a.includes('c100') && r.a.includes('win1') && !r.a.includes('c500') && r.gold >= 600, JSON.stringify(r));
-  const r2 = await p.evaluate(() => { openAchievements(); const items = document.querySelectorAll('#achvBox .achv-item').length; setAchvTitle('win1'); closeAchievements();
-    return { items, badge: document.getElementById('achvTitleLine').textContent }; });
-  assert(r2.items === 34 && r2.badge.includes('スライムハンター'), JSON.stringify(r2));
+  const r2 = await p.evaluate(() => { openSettings(); document.querySelector('#settingsBox .set-link').click(); const items = document.querySelectorAll('#achvBox .achv-item').length; const got = document.querySelectorAll('#achvBox .achv-item.done').length; closeAchievements();
+    return { items, got, btn: !!document.getElementById('achvBtn') }; });
+  assert(r2.items === 34 && r2.got === 3 && !r2.btn, JSON.stringify(r2));
   await p.evaluate(() => { statInc('ultUsed'); }); await p.waitForTimeout(1200);
   const r3 = await p.evaluate(() => ({ ult: !!achv.ult, pop: (document.getElementById('achv-pop') || {}).textContent || '' }));
   assert(r3.ult && r3.pop.includes('合体の極意'), JSON.stringify(r3));
-  assert(p.__errors.length === 0, p.__errors.join(' / '));
-});
-
-test('物語：はじめての人に序章が出る・英単語をタップで意味・スキップ・読み返し・手帖の終わりの場面', async b => {
-  const p = await openApp(b, { seed: { __story: true, cardMergeV1: '1' } });
-  await p.waitForTimeout(3500);
-  assert(await p.evaluate(() => getComputedStyle(document.getElementById('story-overlay')).display === 'flex'), '序章が出ない');
-  for (let i = 0; i < 3; i++) await p.click('#stNext');
-  if (process.env.SHOT) { await p.evaluate(() => document.querySelector('#stLines .st-w').classList.add('show')); await p.click('#stNext'); await p.screenshot({ path: process.env.SHOT + '/story.png' }); await p.evaluate(() => document.querySelector('#stLines .st-w').classList.remove('show')); }
-  const w = await p.evaluate(() => { const s = document.querySelector('#stLines .st-w'); s.click(); return { en: s.textContent, ja: s.dataset.ja, show: s.classList.contains('show') }; });
-  assert(w.en === 'key' && w.ja === '鍵' && w.show, JSON.stringify(w));
-  await p.click('#story-overlay .st-foot button'); await p.waitForTimeout(200);
-  const r = await p.evaluate(() => ({ seen: storySeen.prologue, shown: getComputedStyle(document.getElementById('story-overlay')).display }));
-  assert(r.seen === 1 && r.shown === 'none', JSON.stringify(r));
-  // 鉄の手帖の最後の討伐戦に勝つと、第一章の終わりが読めるようになる
-  const r2 = await p.evaluate(() => { const last = Math.ceil(NB_BY_KEY.A1.count / COLLECTION_PAGE_SIZE) - 1; battleProgress.defeated.push(`a1_tab${last}_final`); return storyPending(); });
-  assert(r2 === 'end_A1', r2);
-  await p.waitForTimeout(2800);
-  assert(await p.evaluate(() => document.getElementById('stTitle').textContent.includes('第一章の終わり')), '第一章の終わりが出ない');
-  await p.evaluate(() => storyClose());
-  const r3 = await p.evaluate(() => { openStoryArchive(); const bs = [...document.querySelectorAll('#storyBox .story-list button')]; return { n: bs.length, open: bs.filter(b => !b.disabled).length }; });
-  assert(r3.n === 11 && r3.open === 2, JSON.stringify(r3));
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
@@ -326,6 +304,25 @@ test('レイドボス：サーバーにつながっていないときは参加�
   const p = await openApp(b, { seed: { cardMergeV1: '1' } });
   await p.evaluate(() => openRaid()); await p.waitForTimeout(300);
   assert(await p.evaluate(() => document.getElementById('raidBox').innerText.includes('サーバーにつながっていない')), 'メッセージがない');
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('設定：効果音・演出を減らす・文字を大きく（この端末に保存）／カードの拡大表示に閉じるボタン', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1', unlockedCards: ids('a1', 1, 5) } });
+  await p.waitForTimeout(1500);
+  const r = await p.evaluate(() => {
+    openSettings();
+    const rows = document.querySelectorAll('#settingsBox .set-row').length;
+    setSetting('reduce', true); setSetting('big', true); setSetting('se', false);
+    return { rows, reduce: document.body.classList.contains('reduce-motion'), big: document.body.classList.contains('text-large'), se: seOn(), saved: JSON.parse(localStorage.getItem('appSettings')) };
+  });
+  assert(r.rows === 4 && r.reduce && r.big && r.se === false && r.saved.reduce === true, JSON.stringify(r));
+  await p.reload(); await p.waitForTimeout(1500);
+  assert(await p.evaluate(() => document.body.classList.contains('reduce-motion') && document.body.classList.contains('text-large')), '再読み込みで設定が戻る');
+  await p.evaluate(() => { closeSettings(); tapCard(cardsData[0], true); });
+  assert(await p.evaluate(() => !!document.querySelector('#zoomContent .zoom-close-btn')), '閉じるボタンがない');
+  await p.click('#zoomContent .zoom-close-btn');
+  assert(await p.evaluate(() => getComputedStyle(document.getElementById('zoom-overlay')).display === 'none'), '閉じない');
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
@@ -340,20 +337,21 @@ test('管理者の全解禁で全手帖・全カード・全タブが開く／�
   assert(!src.includes('SHION3215T'), '管理者キーがアプリ内に残っている');
 });
 
-test('殿堂入りボスラッシュが開始できる（白金の手帖）', async b => {
-  const p = await openApp(b, { seed: { unlockedCards: ids('card', 1, 863) } });
+test('殿堂入りボスラッシュが開始できる（全手帖コンプリート）', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1', unlockedCards: ids('a1', 1, 1067).concat(ids('a2', 1, 1352), ids('b1', 1, 2353), ids('b2', 1, 2689), ids('card', 1, 863)) } });
   await p.evaluate(() => startHofBossRush()); await p.waitForTimeout(400);
   assert((await p.evaluate(() => getComputedStyle(document.getElementById('battle-formation-modal')).display)) !== 'none', '編成画面が開かない');
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
-test('殿堂入りボタンは白金の手帖だけに表示／ボスラッシュはバトル背景', async b => {
-  const p = await openApp(b, { seed: { unlockedCards: ids('card', 1, 863).concat(['a1-1']),
+test('殿堂入りへの道は全手帖コンプリートで開く／ボスラッシュはバトル背景', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1', unlockedCards: ids('card', 1, 863).concat(['a1-1']),
     notebookState: { unlocked: ['A1', 'PT'], current: 'A1' } } });
-  assert((await p.evaluate(() => getComputedStyle(document.getElementById('hofBtn')).display)) === 'none', '鉄の手帖で殿堂入りボタンが見えている');
-  await p.click('#nbChip'); await p.waitForTimeout(300);
-  await p.click('.nb-row:has-text("白金の手帖")'); await p.waitForTimeout(2300);
-  assert((await p.evaluate(() => getComputedStyle(document.getElementById('hofBtn')).display)) !== 'none', '白金で殿堂入りボタンが見えない');
+  await p.waitForTimeout(1500);
+  const h0 = await p.evaluate(() => { updateCollectionProgress(); startHofBossRush(); return { txt: document.getElementById('hofBtn').innerText, shown: getComputedStyle(document.getElementById('hofBtn')).display, alert: (window.__alerts || []).join('|'), rush: hofBossRush.active }; });
+  assert(h0.shown !== 'none' && h0.txt.includes('全手帖 残り') && h0.alert.includes('コンプリート') && !h0.rush, JSON.stringify(h0));
+  await p.evaluate(() => { adminUnlockAll(); updateCollectionProgress(); });
+  assert((await p.evaluate(() => document.getElementById('hofBtn').innerText)).includes('殿堂入りへの道') && !(await p.evaluate(() => document.getElementById('hofBtn').innerText)).includes('残り'), '全コンプで解禁されない');
   await p.evaluate(() => startHofBossRush()); await p.waitForTimeout(400);
   const bg = await p.evaluate(() => getComputedStyle(document.getElementById('bg-layer')).backgroundImage);
   assert(bg.includes('battle/battle.jpg'), '編成中の背景: ' + bg);
@@ -445,8 +443,8 @@ test('バトル突入・帰還の演出／ボスは下位の手帖ほど小さ�
     sizes[nb] = await p.evaluate(() => parseInt(document.getElementById('battleEnemyImg').style.maxHeight, 10));
     // 手帖ごとの演出（鉄＝火花…白金＝雷とオーロラ）
     const fx = await p.evaluate(() => { const f = document.getElementById('battle-fx'); return { cls: f.className, n: f.querySelectorAll('.p').length, aurora: !!f.querySelector('.bfx-aurora'), shown: getComputedStyle(f).display }; });
-    assert(fx.cls === nb && fx.n > 10 && fx.aurora === (nb === 'PT') && fx.shown === 'block', JSON.stringify(fx));
-    if (process.env.SHOT) { if (nb === 'PT') await p.evaluate(() => { const f = document.getElementById('battle-fx'); f.querySelector('.bfx-bolt path').setAttribute('d', 'M60 0 L40 120 L80 230 L30 380 L70 520'); f.classList.add('strike'); }); await p.waitForTimeout(nb === 'PT' ? 60 : 900); await p.screenshot({ path: process.env.SHOT + '/bfx_' + nb + '.png' }); }
+    assert(fx.cls === nb && fx.n >= 10 && fx.aurora === (nb === 'PT') && fx.shown === 'block', JSON.stringify(fx));
+    if (process.env.SHOT) { await p.waitForTimeout(1500); await p.screenshot({ path: process.env.SHOT + '/bfx_' + nb + '.png' }); }
     await p.evaluate(() => confirmCloseBattle());
     await p.waitForTimeout(300);
     assert((await p.evaluate(() => document.getElementById('battle-trans').className)).includes('flee'), '逃げる演出なし');

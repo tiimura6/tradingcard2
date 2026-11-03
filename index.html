@@ -1341,6 +1341,24 @@
         .all-cp-seg i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; transition: width .6s ease; }
         .all-cp-legend { display: flex; justify-content: space-between; font-size: 9.5px; color: #b8acd8; margin-top: 3px; }
 
+        .zoom-close-btn { display: block; margin: 10px auto 0; padding: 9px 30px; border-radius: 20px; border: 1.5px solid rgba(255,220,140,.6); background: rgba(20,12,30,.85);
+            color: #ffe9a8; font-size: 14px; font-weight: bold; cursor: pointer; font-family: 'Noto Serif JP', serif; }
+        /* ===== 設定 ===== */
+        #settings-modal .custom-box { width: 92%; max-width: 400px; background: #160e24; color: #eadff8; }
+        #settings-modal h3 { margin: 0 0 10px; color: #ffe9a8; font-family: 'Noto Serif JP', serif; }
+        .set-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 4px; border-bottom: 1px solid rgba(255,255,255,.08); }
+        .set-row .lb { font-size: 14px; }
+        .set-row .lb small { display: block; font-size: 11px; color: #a898c8; }
+        .set-tg { display: flex; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,210,100,.5); flex-shrink: 0; }
+        .set-tg button { padding: 5px 12px; font-size: 12.5px; border: 0; background: rgba(40,28,60,.9); color: #c8b8e8; cursor: pointer; font-family: inherit; }
+        .set-tg button.on { background: #ffd060; color: #3a2000; font-weight: bold; }
+        .set-link { width: 100%; text-align: left; padding: 11px 12px; margin-top: 8px; border-radius: 10px; border: 1px solid rgba(255,210,100,.35); background: rgba(60,40,10,.55); color: #ffe6b0; font-size: 14px; cursor: pointer; font-family: 'Noto Serif JP', serif; display: flex; justify-content: space-between; }
+        /* 演出を減らす */
+        body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after { animation-duration: .01s !important; animation-iteration-count: 1 !important; transition-duration: .01s !important; }
+        body.reduce-motion #battle-fx .p, body.reduce-motion #particles, body.reduce-motion .bfx-bolt, body.reduce-motion .bfx-flash { display: none !important; }
+        /* 文字を大きく */
+        body.text-large #quiz-overlay .custom-box, body.text-large .modal-overlay .custom-box, body.text-large #cardDetailBox { zoom: 1.13; }
+
         /* ===== 称号・実績 ===== */
         .achv-title { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 10px; font-size: 11px; color: #ffe9a8; background: rgba(120,70,0,.55); border: 1px solid rgba(255,200,90,.5); vertical-align: middle; }
         #achv-modal .custom-box { width: 94%; max-width: 520px; max-height: 88vh; overflow-y: auto; background: #140c22; color: #eadff8; }
@@ -1364,39 +1382,6 @@
             font-family: 'Noto Serif JP', serif; animation: achv-pop 3.2s ease forwards; white-space: nowrap; }
         #achv-pop small { display: block; font-size: 11px; color: #ffd060; }
         @keyframes achv-pop { 0% { opacity: 0; transform: translate(-50%, -30px); } 10%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -20px); } }
-
-        /* ===== 物語 ===== */
-        #story-overlay { position: fixed; inset: 0; z-index: 99000; display: none; align-items: center; justify-content: center; padding: 16px;
-            background: radial-gradient(ellipse at 50% 40%, rgba(40,24,70,.94), rgba(6,3,14,.97)); }
-        #story-overlay .st-box { width: 100%; max-width: 480px; background: linear-gradient(180deg, #f6ecd2, #e8d8b0); color: #3a2a12; border-radius: 14px; padding: 18px 18px 12px;
-            box-shadow: 0 0 40px rgba(255,210,120,.35), inset 0 0 30px rgba(120,80,20,.25); border: 2px solid #b8924a; font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', serif; }
-        #story-overlay .st-ttl { font-size: 13px; color: #8a6020; letter-spacing: .12em; text-align: center; margin-bottom: 10px; }
-        #story-overlay .st-lines { min-height: 150px; }
-        #story-overlay .st-line { font-size: 15.5px; line-height: 1.85; margin: 0 0 8px; opacity: 0; transform: translateY(6px); animation: st-in .6s ease forwards; }
-        @keyframes st-in { to { opacity: 1; transform: none; } }
-        #story-overlay .st-w { color: #7a2a8a; font-weight: bold; font-family: Georgia, serif; border-bottom: 1.5px dotted #7a2a8a; cursor: pointer; position: relative; }
-        #story-overlay .st-w.show::after { content: attr(data-ja); position: absolute; left: 50%; bottom: 120%; transform: translateX(-50%); white-space: nowrap; font-size: 12px; font-weight: normal;
-            background: #3a2050; color: #fff; padding: 3px 8px; border-radius: 8px; font-family: 'Noto Sans JP', sans-serif; }
-        #story-overlay .st-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 12px; color: #8a6a3a; }
-        #story-overlay .st-foot button { font-size: 13px; padding: 7px 14px; border-radius: 10px; border: 1px solid #a07a30; background: #fff6dc; color: #6a4a10; cursor: pointer; font-family: inherit; }
-        #story-overlay .st-foot button.st-next { background: linear-gradient(135deg,#8a5a10,#5a3400); color: #fff3c8; border-color: #f0c040; font-weight: bold; }
-        .story-list { display: flex; flex-direction: column; gap: 6px; }
-        .story-list button { text-align: left; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(160,130,255,.4); background: rgba(40,28,80,.7); color: #eadff8; font-size: 13.5px; cursor: pointer; font-family: 'Noto Serif JP', serif; }
-        .story-list button:disabled { opacity: .45; cursor: default; }
-
-        /* ===== レイドボス ===== */
-        #raidBox h3 { margin: 0 0 2px; color: #ffd0b0; font-family: 'Noto Serif JP', serif; }
-        .raid-boss { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
-        .raid-boss img { width: 92px; height: 92px; object-fit: contain; filter: drop-shadow(0 0 14px rgba(255,80,60,.7)); animation: raid-float 3s ease-in-out infinite; }
-        @keyframes raid-float { 50% { transform: translateY(-6px) scale(1.03); } }
-        .raid-hp { height: 14px; border-radius: 7px; background: rgba(255,255,255,.1); overflow: hidden; border: 1px solid rgba(255,120,100,.5); }
-        .raid-hp i { display: block; height: 100%; background: linear-gradient(90deg,#ff3a3a,#ff9a3a); transition: width .8s ease; }
-        .raid-info { font-size: 12px; color: #e8c8c0; line-height: 1.7; }
-        .raid-top { margin-top: 10px; font-size: 12px; background: rgba(255,255,255,.05); border-radius: 10px; padding: 8px 10px; }
-        .raid-top div { display: flex; justify-content: space-between; padding: 2px 0; }
-        .raid-go { width: 100%; margin-top: 12px; padding: 12px; border-radius: 12px; border: 2px solid #ffb070; background: linear-gradient(135deg,#a02010,#5a0a04); color: #fff; font-size: 15px; font-weight: bold; cursor: pointer; font-family: 'Noto Serif JP', serif; }
-        .raid-go:disabled { opacity: .45; cursor: default; }
-        .raid-note { font-size: 11.5px; color: #c8a8a0; margin-top: 8px; line-height: 1.6; }
 
         /* ===== STUDY MODE (TikTok 式) ===== */
         #study-overlay {
@@ -2163,32 +2148,47 @@
         #battle-fx.PT .bfx-img::after { background: linear-gradient(120deg, #b9a8ff, #9fe8ff 45%, #ffc8f0); mix-blend-mode: soft-light; opacity: .75; }
         #battle-fx .bfx-tint { position: absolute; inset: 0; }
         #battle-fx .p { position: absolute; border-radius: 50%; will-change: transform, opacity; }
-        /* 鉄：鍛冶場の火花。下から斜めに鋭く飛び散る */
-        #battle-fx.A1 .bfx-tint { background: radial-gradient(ellipse at 50% 115%, rgba(255,120,30,.32), transparent 55%), linear-gradient(rgba(60,64,70,.25), rgba(20,20,24,.35)); }
-        #battle-fx.A1 .p { width: 3px; height: 3px; bottom: -6px; background: #fff3c0; box-shadow: 0 0 6px 2px rgba(255,160,40,.9); animation: bfx-spark var(--d) cubic-bezier(.15,.7,.4,1) var(--dl) infinite; }
-        @keyframes bfx-spark { 0% { transform: translate(0,0); opacity: 0; } 8% { opacity: 1; } 70% { opacity: .9; } 100% { transform: translate(var(--dx), -62vh); opacity: 0; } }
-        /* 銅：ゆらめきながら昇る火の粉 */
-        #battle-fx.A2 .bfx-tint { background: radial-gradient(ellipse at 50% 120%, rgba(230,110,40,.38), transparent 60%), linear-gradient(rgba(70,30,10,.15), rgba(40,15,5,.3)); }
-        #battle-fx.A2 .p { width: var(--s); height: var(--s); bottom: -10px; background: radial-gradient(circle, #ffd27a, #ff7a1a 60%, transparent 70%); box-shadow: 0 0 10px rgba(255,120,30,.8); animation: bfx-ember var(--d) ease-in var(--dl) infinite; }
-        @keyframes bfx-ember { 0% { transform: translate(0,0) scale(1); opacity: 0; } 10% { opacity: 1; } 35% { transform: translate(calc(var(--dx) * .5), -30vh) scale(.9); } 65% { transform: translate(calc(var(--dx) * -.4), -60vh) scale(.7); opacity: .8; } 100% { transform: translate(var(--dx), -95vh) scale(.4); opacity: 0; } }
-        /* 銀：冷たい空気と、揺れながら降る雪 */
-        #battle-fx.B1 .bfx-tint { background: linear-gradient(rgba(150,190,230,.18), rgba(30,50,80,.35)); }
-        #battle-fx.B1 .p { width: var(--s); height: var(--s); top: -12px; background: #fff; opacity: .85; box-shadow: 0 0 6px rgba(220,235,255,.9); animation: bfx-snow var(--d) linear var(--dl) infinite; }
-        @keyframes bfx-snow { 0% { transform: translate(0,0); } 25% { transform: translate(calc(var(--dx) * .6), 26vh); } 50% { transform: translate(calc(var(--dx) * -.3), 52vh); } 75% { transform: translate(calc(var(--dx) * .5), 78vh); } 100% { transform: translate(var(--dx), 106vh); } }
-        /* 金：上から差す光と、きらめきながら漂う光の粒 */
-        #battle-fx.B2 .bfx-tint { background: repeating-conic-gradient(from 200deg at 50% -10%, rgba(255,220,120,.10) 0 4deg, transparent 4deg 11deg), linear-gradient(rgba(120,90,20,.12), rgba(40,25,0,.3)); animation: bfx-rays 14s ease-in-out infinite alternate; }
+        /* 鉄「はじまりの扉」：重く静かな鋼色の霧と、ゆっくり漂う鉄の粉 */
+        #battle-fx.A1 .bfx-tint { background: linear-gradient(rgba(70,76,84,.28), rgba(20,22,26,.42)); }
+        #battle-fx .bfx-fog { position: absolute; left: -50%; width: 200%; height: 38%; bottom: -6%; opacity: .55; filter: blur(14px);
+            background: radial-gradient(ellipse 30% 60% at 20% 60%, rgba(190,200,210,.55), transparent 70%), radial-gradient(ellipse 28% 55% at 62% 50%, rgba(170,180,195,.5), transparent 70%), radial-gradient(ellipse 25% 50% at 88% 65%, rgba(200,205,215,.45), transparent 70%);
+            animation: bfx-fog 26s linear infinite; }
+        #battle-fx .bfx-fog.b { bottom: 18%; height: 30%; opacity: .3; animation-duration: 40s; animation-direction: reverse; }
+        @keyframes bfx-fog { from { transform: translateX(0); } to { transform: translateX(25%); } }
+        #battle-fx.A1 .p { width: var(--s); height: var(--s); border-radius: 1px; background: linear-gradient(135deg, #e8edf2, #7a838e); box-shadow: 0 0 4px rgba(220,230,240,.7);
+            animation: bfx-dust var(--d) ease-in-out var(--dl) infinite; }
+        @keyframes bfx-dust { 0% { transform: translate(0,0) rotate(0); opacity: 0; } 20% { opacity: .9; } 50% { transform: translate(var(--dx), -6vh) rotate(180deg); opacity: .5; } 80% { opacity: .9; } 100% { transform: translate(calc(var(--dx) * 1.6), -12vh) rotate(360deg); opacity: 0; } }
+        /* 銅「旅立ちの道」：夕暮れの風に舞う、赤銅色の木の葉 */
+        #battle-fx.A2 .bfx-tint { background: radial-gradient(ellipse at 80% -10%, rgba(255,150,70,.35), transparent 55%), linear-gradient(rgba(110,50,20,.18), rgba(40,15,5,.36)); }
+        #battle-fx.A2 .p { width: var(--s); height: calc(var(--s) * .55); top: -14px; border-radius: 0 100% 0 100%; background: linear-gradient(135deg, #f0a060, #b05420 60%, #7a3410);
+            box-shadow: 0 0 6px rgba(255,140,60,.5); animation: bfx-leaf var(--d) linear var(--dl) infinite; }
+        @keyframes bfx-leaf { 0% { transform: translate(0,0) rotate(0) rotateX(0); opacity: 0; } 8% { opacity: 1; } 30% { transform: translate(calc(var(--dx) * .35), 30vh) rotate(160deg) rotateX(180deg); } 60% { transform: translate(calc(var(--dx) * .7), 62vh) rotate(320deg) rotateX(360deg); } 92% { opacity: .9; } 100% { transform: translate(var(--dx), 104vh) rotate(480deg) rotateX(540deg); opacity: 0; } }
+        /* 銀「広がる世界」：月光のベールと、きらめきながら降りる銀の星屑 */
+        #battle-fx.B1 .bfx-tint { background: radial-gradient(circle at 78% 8%, rgba(235,242,255,.45) 0 5%, rgba(200,215,240,.18) 12%, transparent 30%), linear-gradient(rgba(150,170,200,.16), rgba(20,30,55,.4)); }
+        #battle-fx.B1 .p { width: var(--s); height: var(--s); top: -10px; background: #f4f8ff; clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+            filter: drop-shadow(0 0 4px #dfe8ff); animation: bfx-stardust var(--d) linear var(--dl) infinite; }
+        @keyframes bfx-stardust { 0% { transform: translate(0,0) scale(.6) rotate(0); opacity: 0; } 10% { opacity: 1; } 30% { transform: translate(calc(var(--dx) * .3), 30vh) scale(1.2) rotate(60deg); opacity: .4; } 50% { opacity: 1; } 70% { transform: translate(calc(var(--dx) * .7), 70vh) scale(.7) rotate(140deg); opacity: .5; } 100% { transform: translate(var(--dx), 104vh) scale(1) rotate(200deg); opacity: 0; } }
+        /* 金「深まる知恵」：古い書物から立ちのぼる金色の文字と、上から差す光 */
+        #battle-fx.B2 .bfx-tint { background: repeating-conic-gradient(from 200deg at 50% -10%, rgba(255,220,120,.10) 0 4deg, transparent 4deg 11deg), linear-gradient(rgba(120,90,20,.12), rgba(40,25,0,.32)); animation: bfx-rays 14s ease-in-out infinite alternate; }
         @keyframes bfx-rays { to { filter: brightness(1.35); transform: scale(1.04); } }
-        #battle-fx.B2 .p { width: var(--s); height: var(--s); background: radial-gradient(circle, #fffbe0, #ffd34a 55%, transparent 70%); box-shadow: 0 0 10px rgba(255,210,80,.9); animation: bfx-mote var(--d) ease-in-out var(--dl) infinite; }
-        @keyframes bfx-mote { 0%, 100% { transform: translate(0,0) scale(.6); opacity: 0; } 20% { opacity: 1; } 50% { transform: translate(var(--dx), -12vh) scale(1.1); opacity: .9; } 80% { opacity: .6; } }
-        /* 白金：揺れるオーロラと、ときどき走る雷 */
+        #battle-fx.B2 .p { bottom: -30px; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: bold; font-size: var(--s); color: #ffe08a;
+            text-shadow: 0 0 8px rgba(255,200,60,.95), 0 0 2px #fff; animation: bfx-letter var(--d) ease-out var(--dl) infinite; }
+        @keyframes bfx-letter { 0% { transform: translate(0,0) scale(.7) rotate(-8deg); opacity: 0; } 15% { opacity: 1; } 70% { opacity: .8; } 100% { transform: translate(var(--dx), -70vh) scale(1.15) rotate(10deg); opacity: 0; } }
+        /* 白金「世界をひもとく」：揺れるオーロラ、ひらひらと舞い上がる光の頁、ときおり走る虹色の光 */
         #battle-fx.PT .bfx-tint { background: linear-gradient(rgba(40,20,80,.25), rgba(10,5,30,.4)); }
         #battle-fx .bfx-aurora { position: absolute; left: -20%; right: -20%; top: -8%; height: 55%; opacity: .55; filter: blur(18px); mix-blend-mode: screen;
             background: linear-gradient(100deg, transparent 5%, rgba(80,255,190,.55) 25%, rgba(120,170,255,.5) 45%, rgba(220,120,255,.5) 65%, transparent 90%);
             -webkit-mask: radial-gradient(ellipse 60% 40% at 50% 40%, #000 35%, transparent 75%); mask: radial-gradient(ellipse 60% 40% at 50% 40%, #000 35%, transparent 75%);
             animation: bfx-aurora 9s ease-in-out infinite alternate; }
         @keyframes bfx-aurora { 0% { transform: translateX(-6%) skewX(-8deg) scaleY(.9); filter: blur(18px) hue-rotate(0deg); } 100% { transform: translateX(6%) skewX(8deg) scaleY(1.15); filter: blur(22px) hue-rotate(50deg); } }
-        #battle-fx.PT .p { width: 2px; height: 2px; background: #fff; box-shadow: 0 0 4px #cfe0ff; animation: bfx-twinkle var(--d) ease-in-out var(--dl) infinite; }
-        @keyframes bfx-twinkle { 0%, 100% { opacity: .15; } 50% { opacity: 1; } }
+        #battle-fx.PT .p { bottom: -24px; width: var(--s); height: calc(var(--s) * 1.3); border-radius: 2px;
+            background: repeating-linear-gradient(180deg, rgba(255,255,255,.95) 0 3px, rgba(200,210,255,.75) 3px 4px), #fff;
+            box-shadow: 0 0 10px rgba(200,220,255,.9); animation: bfx-page var(--d) ease-in-out var(--dl) infinite; }
+        @keyframes bfx-page { 0% { transform: translate(0,0) rotateY(0) rotate(-10deg); opacity: 0; } 10% { opacity: .95; } 50% { transform: translate(calc(var(--dx) * .6), -45vh) rotateY(180deg) rotate(8deg); } 90% { opacity: .8; } 100% { transform: translate(var(--dx), -95vh) rotateY(360deg) rotate(-6deg); opacity: 0; } }
+        #battle-fx .bfx-prism { position: absolute; top: -20%; bottom: -20%; width: 30%; left: -40%; opacity: 0; mix-blend-mode: screen;
+            background: linear-gradient(100deg, transparent, rgba(255,120,160,.35), rgba(255,230,120,.35), rgba(120,255,200,.35), rgba(120,170,255,.35), transparent);
+            transform: skewX(-18deg); animation: bfx-prism 11s ease-in-out 2s infinite; }
+        @keyframes bfx-prism { 0%, 70% { left: -40%; opacity: 0; } 75% { opacity: 1; } 95% { opacity: .6; } 100% { left: 120%; opacity: 0; } }
         #battle-fx .bfx-flash { position: absolute; inset: 0; background: rgba(220,230,255,.0); }
         #battle-fx .bfx-bolt { position: absolute; top: 0; width: 120px; height: 70vh; opacity: 0; }
         #battle-fx .bfx-bolt path { fill: none; stroke: #f4f7ff; stroke-width: 3; filter: drop-shadow(0 0 6px #9fb8ff) drop-shadow(0 0 14px #7a8cff); }
@@ -2197,7 +2197,7 @@
         @keyframes bfx-flash { 0% { background: rgba(220,230,255,.55); } 15% { background: rgba(220,230,255,.05); } 25% { background: rgba(220,230,255,.4); } 100% { background: rgba(220,230,255,0); } }
         @keyframes bfx-bolt { 0%, 30% { opacity: 1; } 15% { opacity: .2; } 100% { opacity: 0; } }
         @media (prefers-reduced-motion: reduce) {
-            #battle-fx .p, #battle-fx .bfx-aurora, #battle-fx .bfx-tint { animation: none !important; }
+            #battle-fx .p, #battle-fx .bfx-aurora, #battle-fx .bfx-tint, #battle-fx .bfx-fog, #battle-fx .bfx-prism { animation: none !important; }
             #battle-fx .p { opacity: .5; }
             #battle-fx.strike .bfx-flash, #battle-fx.strike .bfx-bolt { animation: none !important; }
         }
@@ -2429,6 +2429,8 @@
             style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
         <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
         <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-1605</span></div>
+        <button id="settingsBtn" onclick="openSettings()" title="設定"
+            style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 9px;font-size:12px;cursor:pointer;color:rgba(240,200,90,0.95);margin-right:4px;flex-shrink:0;font-family:'Noto Serif JP',serif;">⚙️ 設定</button>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -2445,7 +2447,6 @@
         🔥 <span id="comboCount">0</span>連続正解中！
     </div>
     <!-- XP / Level -->
-    <div id="achvTitleLine" style="text-align:center;margin:2px 0 4px;display:none;"></div>
     <div class="xp-level-row" id="xpLevelRow">
         <div class="level-badge" id="levelBadge">Lv.1 見習い魔法使い</div>
         <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xpBarFill" style="width:0%"></div></div>
@@ -2467,12 +2468,6 @@
     <button class="action-btn btn-study" id="adventureBattleBtn" onclick="adventureOrBattle()" style="grid-column:span 2;">
         <span class="btn-icon" id="adventureBattleBtnIcon">🗺️</span><span id="adventureBattleBtnLabel">冒険</span>
     </button>
-    <button class="action-btn" id="achvBtn" onclick="openAchievements()" style="grid-column:span 1;background:linear-gradient(150deg,#4a3a10,#2a1e00);color:#ffe0a0;border:1px solid rgba(220,170,60,0.45);">
-        <span class="btn-icon">🏅</span>称号・実績 <span id="achvBtnCount" style="font-size:11px;opacity:.8;"></span>
-    </button>
-    <button class="action-btn" id="storyBtn" onclick="openStoryArchive()" style="grid-column:span 1;background:linear-gradient(150deg,#2a2050,#140c30);color:#d8c8ff;border:1px solid rgba(160,130,255,0.45);">
-        <span class="btn-icon">📖</span>物語
-    </button>
     <button class="action-btn" id="raidBtn" onclick="openRaid()" style="grid-column:1/-1;background:linear-gradient(150deg,#5a1020,#2a0610);color:#ffd0c0;border:1px solid rgba(255,110,90,0.5);">
         <span class="btn-icon">🐉</span>みんなで倒すレイドボス <span id="raidBtnInfo" style="font-size:11px;opacity:.85;"></span>
     </button>
@@ -2482,10 +2477,8 @@
     </button>
 </div>
 
-<div id="story-overlay"><div class="st-box"><div class="st-ttl" id="stTitle"></div><div class="st-lines" id="stLines"></div>
-    <div class="st-foot"><button onclick="storyClose()">スキップ</button><span id="stPage"></span><button class="st-next" id="stNext" onclick="storyNext()">次へ ▶</button></div></div></div>
-<div id="story-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)this.style.display='none'"><div class="custom-box" id="storyBox" style="width:92%;max-width:420px;background:#140c22;color:#eadff8;"></div></div>
 <div id="raid-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeRaid()"><div class="custom-box" id="raidBox" style="width:94%;max-width:460px;max-height:88vh;overflow-y:auto;background:#1a0a10;color:#f6e2dc;"></div></div>
+<div id="settings-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeSettings()"><div class="custom-box" id="settingsBox"></div></div>
 <div id="achv-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeAchievements()"><div class="custom-box" id="achvBox"></div></div>
 <!-- Gacha Choice Modal -->
 <!-- SP強化モーダル -->
@@ -2830,7 +2823,7 @@ const Cloud = (function () {
         'unlockedCards', 'srsData', 'dailyGachaStorage', 'loginStreak', 'xpData',
         'specialTickets', 'spEnhanceData', 'dailyStudyData', 'dailyChallenges',
         'weeklyChallenges', 'hallOfFame', 'battleProgress', 'notebookState', 'gold', 'awakened',
-        'cardMergeV1', 'advArea', 'advAreaV2', 'advStep', 'advMiss', 'advProg', 'placementDone', 'placementResult', 'achv', 'achvTitle', 'playStats', 'storySeen',   // カード番号移行済みの印（別端末で取り込んだときに二重移行しないため）／冒険の道の地域
+        'cardMergeV1', 'advArea', 'advAreaV2', 'advStep', 'advMiss', 'advProg', 'placementDone', 'placementResult', 'achv', 'playStats',   // カード番号移行済みの印（別端末で取り込んだときに二重移行しないため）／冒険の道の地域
     ];
     const K = { SESSION: 'authSession', GUEST: 'authGuest', DIRTY: 'authDirty', QUEUE: 'logQueue', LAST: 'authLastSync', ACTIVE: 'authLastActive' };
     // 共用の端末：最後の操作からこの時間がたったら、次に開いたとき自動でログアウトする（記録は保存してから）
@@ -4770,8 +4763,6 @@ const Cloud = (function () {
         const bar = document.getElementById('xpBarFill');
         const label = document.getElementById('xpLabel');
         if (el) el.textContent = `Lv.${xpData.level} ${title}`;
-        const tl = document.getElementById('achvTitleLine');
-        if (tl) { const at = typeof achvTitle === 'function' ? achvTitle() : null; tl.innerHTML = at ? `<span class="achv-title">🏷️ ${at.icon} ${at.name}</span>` : ''; tl.style.display = at ? '' : 'none'; }
         if (bar) bar.style.width = Math.round((xpData.xp / XP_PER_LEVEL) * 100) + '%';
         if (label) label.textContent = `${xpData.xp}/${XP_PER_LEVEL} XP ｜ 次のLvまで${XP_PER_LEVEL - xpData.xp}XP`;
     }
@@ -4869,125 +4860,39 @@ const Cloud = (function () {
             desc.innerHTML = `${s.stage.name}に ${pts.toLocaleString()}点 のダメージ！<br><span style="color:#ff9a8a;">記録を送れませんでした（${r && r.error === 'limit' ? '今日の挑戦回数を使い切っています' : '通信エラー'}）</span>`;
         }
     }
-    /* ========== 物語（言の葉堂のひみつ手帖） ==========
-       節目にだけ短い場面を出す（はじまり・手帖の始まりと終わり・殿堂入り）。いつでもスキップでき、「物語」から読み返せる。
-       文の中の英単語は、その手帖のレベルのことば。タップすると意味が出る（[[英語|日本語]] で書く） */
-    const STORY = [
-        { id: 'prologue', title: '序章　言の葉堂', lines: [
-            '古い本屋「言の葉堂」。店の奥の棚で、あなたは一冊の手帖を見つけた。',
-            '表紙には小さな [[key|鍵]] の絵。開いてみると、ページはほとんど白紙だった。',
-            '「……よく来たね」　手帖の中から、かすかな声がする。この店の主人の声だという。',
-            '「ことばたちがスライムに食べられて、世界中に散らばってしまった。ひとつ覚えるたびに、この世界に [[light|光]] が戻る。どうか集め直しておくれ」',
-            'あなたは鉄の手帖を手に、店の [[door|扉]] を開けた。' ] },
-        { id: 'end_A1', title: '第一章の終わり　鉄の手帖', lines: [
-            '洞窟の奥で、アイアンスライムが光の粒になって消えた。',
-            '手帖に、ことばが戻ってくる。[[river|川]]、[[friend|友だち]]、[[morning|朝]]……読める。意味が分かる。',
-            '「よくやった。でも、これはまだ始まりにすぎないよ」　主人の声が、少しだけ近く聞こえた。',
-            '手帖の最後のページに、銅色の地図が浮かび上がった。' ] },
-        { id: 'start_A2', title: '第二章　銅の手帖', lines: [
-            '銅の手帖は、旅の道しるべだった。',
-            'ページの端に、主人の走り書きがある。「[[journey|旅]] は、知っていることばの数だけ遠くまで行ける」',
-            '星降る丘の向こうで、カッパースライムが待っている。' ] },
-        { id: 'end_A2', title: '第二章の終わり　銅の手帖', lines: [
-            'かがり火の祭壇で、カッパースライムが静かに崩れた。',
-            '「あなたは [[brave|勇敢な]] 人だね」',
-            '「実はわたしは、ことばを守ろうとして、白金の手帖の奥に閉じこめられてしまったのだ」',
-            '銀色の鍵が、手帖からこぼれ落ちた。' ] },
-        { id: 'start_B1', title: '第三章　銀の手帖', lines: [
-            '銀の手帖を開くと、冷たい風が吹きぬけた。',
-            '古代の遺跡には、昔の人が残した [[message|伝言]] が刻まれている。',
-            '「ことばを失った国は、[[memory|記憶]] も失う」　——遺跡の石碑より' ] },
-        { id: 'end_B1', title: '第三章の終わり　銀の手帖', lines: [
-            '凍った神殿で、シルバースライムが砕け散った。',
-            '石碑の文字が、すべて読めるようになっていた。',
-            '「[[knowledge|知識]] は、分け合っても減らない。覚えておくといい」',
-            '遠くの山脈で、竜が目を覚ました。' ] },
-        { id: 'start_B2', title: '第四章　金の手帖', lines: [
-            '金の手帖は、ずっしりと重く、そして温かかった。',
-            '竜の山脈の頂には、ことばの宝が眠るという。',
-            '「本当に強いのは、いつまでも [[curious|好奇心の強い]] 人だ」と主人は言った。' ] },
-        { id: 'end_B2', title: '第四章の終わり　金の手帖', lines: [
-            '竜の宝物庫で、ゴールドスライムが金色の光になって消えた。',
-            '金貨の山の奥に、白く光る扉がある。',
-            '「ここまで来たか、わが [[apprentice|弟子]] よ」　——今度は、はっきりと主人の声だった。' ] },
-        { id: 'start_PT', title: '終章　白金の手帖', lines: [
-            '白金の手帖は、見たことのないことばで埋まっていた。',
-            '天空の城。主人は、その最上階にいる。',
-            '「最後のことばたちは、[[elusive|とらえどころのない]] ものばかりだ。だが、あなたなら [[persevere|やり抜く]] だろう」' ] },
-        { id: 'end_PT', title: '終章の終わり　白金の手帖', lines: [
-            '玉座の間で、プラチナスライムがゆっくりと膝をついた。',
-            '光の中から、白いひげの老人が現れた。言の葉堂の主人だ。',
-            '「ありがとう。ことばが戻り、世界に色が戻った」',
-            '「最後にひとつだけ。歴代のスライムたちが、あなたの力をもう一度試したがっている」　——殿堂入りへの道が開いた。' ] },
-        { id: 'hof', title: 'エピローグ', lines: [
-            '歴代のスライムをすべて退けたとき、あなたの手帖はまばゆく輝いていた。',
-            '「ことばは、覚えた人のものになる。もうこの手帖は、あなたのものだ」',
-            '「[[vocabulary|語彙]] は、世界を見る窓。窓が増えるほど、世界は広く見える」',
-            '——言の葉堂のひみつ手帖・完——　でも、ことばの旅に終わりはない。' ] },
-    ];
-    let storySeen = safeParse('storySeen', null) || {};
-    let _story = null;
-    // 次に見せる場面（まだ見ていないもの）
-    function storyPending() {
-        const nbDone = k => typeof nbFinalDone === 'function' && nbFinalDone(k);
-        const want = ['prologue'];
-        ['A2', 'B1', 'B2', 'PT'].forEach(k => { if (currentNB.key === k) want.push('start_' + k); });
-        ['A1', 'A2', 'B1', 'B2', 'PT'].forEach(k => { if (nbDone(k)) want.push('end_' + k); });
-        if (hallOfFame['金の手帖'] && hallOfFame['金の手帖'].achieved) want.push('hof');
-        return want.find(id => !storySeen[id]) || null;
+    /* ========== 設定（この端末だけに保存） ==========
+       BGM・効果音・演出を減らす・文字の大きさ。称号・実績、アカウント、レベル判定テストへの入口もここ */
+    let appSettings = safeParse('appSettings', null) || {};
+    function seOn() { return appSettings.se == null ? bgmOn : !!appSettings.se; }   // 未設定のときは、これまでどおりBGMに合わせる
+    function reduceMotion() { return !!appSettings.reduce || !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }
+    function applySettings() {
+        document.body.classList.toggle('reduce-motion', !!appSettings.reduce);
+        document.body.classList.toggle('text-large', !!appSettings.big);
     }
-    function storyUnlocked(id) {
-        if (storySeen[id]) return true;
-        return storyPending() === id;
+    function setSetting(k, v) {
+        appSettings[k] = v;
+        try { localStorage.setItem('appSettings', JSON.stringify(appSettings)); } catch (e) {}
+        applySettings(); openSettings();
     }
-    // ほかの画面（ログイン・判定テスト・バトル・冒険など）が開いている間は出さない
-    function storyBlocked() {
-        if (typeof adventureActive !== 'undefined' && adventureActive) return true;
-        if (document.getElementById('appLoading')) return true;
-        return ['auth-overlay', 'placement-overlay', 'battle-overlay', 'quiz-overlay', 'training-modal', 'multi-draw-overlay', 'gacha-overlay',
-                'battle-formation-modal', 'nb-picker', 'battle-result-overlay', 'story-overlay', 'achv-modal']
-            .some(id => { const el = document.getElementById(id); return el && getComputedStyle(el).display !== 'none'; });
+    function openSettings() {
+        const tg = (k, on, a, b) => `<div class="set-tg"><button class="${on ? 'on' : ''}" onclick="${a}">オン</button><button class="${on ? '' : 'on'}" onclick="${b}">オフ</button></div>`;
+        const box = document.getElementById('settingsBox');
+        box.innerHTML = `<h3>⚙️ 設定</h3>
+            <div class="set-row"><div class="lb">🎵 BGM<small>タブを閉じると元に戻ります</small></div>${tg('bgm', bgmOn || _bgmResumePending, 'if(!bgmOn)toggleBGM();openSettings()', 'if(bgmOn)toggleBGM();_bgmResumePending=false;updateBgmButtons();openSettings()')}</div>
+            <div class="set-row"><div class="lb">🔔 効果音<small>正解・カード獲得などの音</small></div>${tg('se', seOn(), "setSetting('se',true)", "setSetting('se',false)")}</div>
+            <div class="set-row"><div class="lb">✨ 演出を減らす<small>光の点滅やアニメーションを短くします</small></div>${tg('reduce', !!appSettings.reduce, "setSetting('reduce',true)", "setSetting('reduce',false)")}</div>
+            <div class="set-row"><div class="lb">🔠 文字を大きく<small>問題やカードの画面を大きく表示します</small></div>${tg('big', !!appSettings.big, "setSetting('big',true)", "setSetting('big',false)")}</div>
+            <button class="set-link" onclick="closeSettings();openAchievements()"><span>🏅 称号・実績</span><span id="setAchvCount" style="font-size:12px;opacity:.8;"></span></button>
+            ${GAS_URL ? `<button class="set-link" onclick="closeSettings();Cloud.chipClick()"><span>👤 アカウント（ログイン・ランキング表示など）</span><span>›</span></button>` : ''}
+            <button class="set-link" onclick="closeSettings();openPlacement(true)"><span>🎯 レベル判定テストを受ける</span><span>›</span></button>
+            <button class="modal-cancel-btn" onclick="closeSettings()" style="margin-top:12px;">閉じる</button>`;
+        document.getElementById('settings-modal').style.display = 'flex';
+        updateAchvBtn();
     }
-    function storyTick() {
-        const id = storyPending();
-        if (id && !storyBlocked()) storyOpen(id);
-    }
-    function storyFmt(s) {
-        const esc = x => String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;');
-        return esc(s).replace(/\[\[([^|\]]+)\|([^\]]+)\]\]/g, (m, en, ja) => `<span class="st-w" data-ja="${ja}" onclick="this.classList.toggle('show')">${en}</span>`);
-    }
-    function storyOpen(id) {
-        const sc = STORY.find(x => x.id === id); if (!sc) return;
-        _story = { sc, i: 0 };
-        document.getElementById('stTitle').textContent = sc.title;
-        document.getElementById('stLines').innerHTML = '';
-        document.getElementById('story-overlay').style.display = 'flex';
-        storyNext();
-    }
-    function storyNext() {
-        if (!_story) return;
-        const { sc } = _story;
-        if (_story.i >= sc.lines.length) { storyClose(); return; }
-        const p = document.createElement('p'); p.className = 'st-line'; p.innerHTML = storyFmt(sc.lines[_story.i]);
-        document.getElementById('stLines').appendChild(p);
-        _story.i++;
-        document.getElementById('stPage').textContent = `${_story.i} / ${sc.lines.length}`;
-        document.getElementById('stNext').textContent = _story.i >= sc.lines.length ? '閉じる' : '次へ ▶';
-    }
-    function storyClose() {
-        if (_story) { storySeen[_story.sc.id] = 1; try { localStorage.setItem('storySeen', JSON.stringify(storySeen)); } catch (e) {} }
-        _story = null;
-        document.getElementById('story-overlay').style.display = 'none';
-    }
-    function openStoryArchive() {
-        const box = document.getElementById('storyBox');
-        box.innerHTML = `<h3 style="margin:0 0 4px;color:#d8c8ff;font-family:'Noto Serif JP',serif;">📖 言の葉堂のひみつ手帖</h3>` +
-            `<div style="font-size:11.5px;color:#b8a8d8;margin-bottom:10px;">手帖を進めると、物語の続きが読めます。文の中の英単語はタップすると意味が出ます</div>` +
-            `<div class="story-list">${STORY.map(sc => { const ok = storyUnlocked(sc.id); return `<button ${ok ? '' : 'disabled'} onclick="document.getElementById('story-modal').style.display='none';storyOpen('${sc.id}')">${ok ? sc.title : '？？？（まだ読めません）'}</button>`; }).join('')}</div>` +
-            `<button class="modal-cancel-btn" onclick="document.getElementById('story-modal').style.display='none'" style="margin-top:10px;">閉じる</button>`;
-        document.getElementById('story-modal').style.display = 'flex';
-    }
-    setInterval(storyTick, 2500);
+    function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
+    applySettings();
+    // 演出を減らす設定のときは紙吹雪を出さない
+    (function () { const cf = window.confetti; window.confetti = function () { if (reduceMotion()) return; return cf && cf.apply(this, arguments); }; })();
     /* ========== 称号・実績 ==========
        条件を満たすと解除（ゴールドの報酬つき）。解除した実績の名前は「称号」として、レベルの横に1つ表示できる
        進み具合の一部（バトルの勝利数など）は playStats に数える */
@@ -5065,20 +4970,14 @@ const Cloud = (function () {
         document.body.appendChild(el); setTimeout(() => el.remove(), 3300);
     }
     function updateAchvBtn() {
-        const el = document.getElementById('achvBtnCount');
-        if (el) el.textContent = `${Object.keys(achv || {}).length}/${ACHV.length}`;
-    }
-    function achvTitle() { const id = localStorage.getItem('achvTitle'); const a = ACHV.find(x => x.id === id); return (a && achv && achv[a.id]) ? a : null; }
-    function setAchvTitle(id) {
-        try { if (localStorage.getItem('achvTitle') === id) localStorage.removeItem('achvTitle'); else localStorage.setItem('achvTitle', id); } catch (e) {}
-        updateXPDisplay(); openAchievements();
+        const el = document.getElementById('setAchvCount');
+        if (el) el.textContent = `${Object.keys(achv || {}).length} / ${ACHV.length}`;
     }
     function openAchievements() {
         checkAchievements();
         const box = document.getElementById('achvBox');
-        const sel = localStorage.getItem('achvTitle');
         const n = Object.keys(achv || {}).length;
-        let html = `<h3>🏅 称号・実績</h3><div class="achv-sum">解除 ${n} / ${ACHV.length}　｜　解除した実績は「称号」としてレベルの横に表示できます</div>`;
+        let html = `<h3>🏅 称号・実績</h3><div class="achv-sum">解除 ${n} / ${ACHV.length}　｜　条件を満たすと称号とゴールドがもらえます</div>`;
         let grp = '';
         for (const a of ACHV) {
             if (a.group !== grp) { grp = a.group; html += `<div class="achv-group">${grp}</div>`; }
@@ -5087,7 +4986,7 @@ const Cloud = (function () {
             const pct = Math.min(100, Math.round(v / a.goal * 100));
             html += `<div class="achv-item${done ? ' done' : ''}"><div class="ic">${a.icon}</div><div class="bd"><div class="nm">${a.name}</div><div class="cd">${a.cond}${done ? `（${achv[a.id]} 解除）` : a.goal > 1 ? `　${Math.min(v, a.goal).toLocaleString()} / ${a.goal.toLocaleString()}` : ''}</div>` +
                 (done ? '' : `<div class="pg"><i style="width:${pct}%"></i></div>`) + `</div>` +
-                (done ? `<button class="${sel === a.id ? 'on' : ''}" onclick="setAchvTitle('${a.id}')">${sel === a.id ? '表示中' : '称号にする'}</button>` : `<div class="rw">+${a.reward.toLocaleString()}G</div>`) + `</div>`;
+                (done ? `<div class="rw" style="color:#9be89b;">✔ 獲得</div>` : `<div class="rw">+${a.reward.toLocaleString()}G</div>`) + `</div>`;
         }
         html += `<button class="modal-cancel-btn" onclick="closeAchievements()" style="margin-top:10px;">閉じる</button>`;
         box.innerHTML = html;
@@ -5215,11 +5114,11 @@ const Cloud = (function () {
         renderAllCompletion();
         // 殿堂入りボタンのロック状態を更新
         const hofBtn = document.getElementById('hofBtn');
-        if (hofBtn) hofBtn.style.display = isPT ? '' : 'none';   // 殿堂入りは白金の手帖だけに表示
-        if (hofBtn && isPT) {
-            // 殿堂入りは白金の手帖（863語）のコンプリートで解禁
-            const ptOwned = nbOwnedCount(NB_BY_KEY.PT);
-            const allComplete = ptOwned >= TOTAL_CARDS;
+        if (hofBtn) hofBtn.style.display = '';
+        if (hofBtn) {
+            // 殿堂入りは鉄〜白金の全手帖（8,324枚）のコンプリートで解禁
+            const ac = allCompletion();
+            const allComplete = ac.have >= ac.total;
             const wasLocked = hofBtn.style.opacity !== '1';
             if (allComplete) {
                 if (wasLocked) playSE('hof'); // 解禁瞬間にSE
@@ -5229,9 +5128,7 @@ const Cloud = (function () {
             } else {
                 hofBtn.style.opacity = '0.5';
                 hofBtn.style.background = 'linear-gradient(150deg,#2a2020,#1a1010)';
-                hofBtn.innerHTML = notebookState.unlocked.includes('PT')
-                    ? `<span class="btn-icon">🔒</span>殿堂入りへの道 (白金 残り${TOTAL_CARDS - ptOwned}枚)`
-                    : `<span class="btn-icon">🔒</span>殿堂入りへの道 (白金の手帖で解禁)`;
+                hofBtn.innerHTML = `<span class="btn-icon">🔒</span>殿堂入りへの道（全手帖 残り${(ac.total - ac.have).toLocaleString()}枚）`;
             }
         }
         updateAdventureBattleBtn();
@@ -6463,19 +6360,19 @@ const Cloud = (function () {
     }
 
     function showHallOfFameModal() {
-        const ptOwnedNow = nbOwnedCount(NB_BY_KEY.PT);
-        const allComplete = ptOwnedNow >= TOTAL_CARDS;
+        const acNow = allCompletion();
+        const allComplete = acNow.have >= acNow.total;
         // SE はボタン押下では流れない（コンプ解禁時・ボスラッシュクリア時のみ）
         if (!allComplete) {
             // 未コンプリートならロック画面を表示
-            const remaining = TOTAL_CARDS - ptOwnedNow;
+            const remaining = (acNow.total - acNow.have).toLocaleString();
             const el = document.getElementById('challengeModalContent');
             el.innerHTML = `
                 <div style="text-align:center;padding:24px 8px;">
                     <div style="font-size:48px;margin-bottom:12px;">🔒</div>
                     <div style="color:#e8d070;font-size:16px;font-weight:bold;font-family:'Noto Serif JP',serif;margin-bottom:10px;">殿堂入りへの道</div>
                     <div style="color:#a090c0;font-size:13px;line-height:1.8;margin-bottom:16px;">
-                        白金の手帖の全 <strong style="color:#f0c840;">${TOTAL_CARDS}</strong> 枚をコンプリートすると解禁されます。<br>
+                        鉄・銅・銀・金・白金の全手帖 <strong style="color:#f0c840;">${acNow.total.toLocaleString()}</strong> 枚をコンプリートすると解禁されます。<br>
                         残り <strong style="color:#ff8080;">${remaining}</strong> 枚
                     </div>
                     <div style="background:rgba(20,10,40,0.7);border-radius:10px;padding:12px;border:1px solid rgba(180,150,80,0.2);">
@@ -6712,6 +6609,7 @@ const Cloud = (function () {
                 <div>${starsHTML(getStars(card.id), 20) || starsHTML(0) || '<span style="color:rgba(255,255,255,.35);font-size:20px;">★★★★★</span>'}</div>
                 <div style="font-size:11px;color:#e8d8a8;margin-top:2px;">${nextStarHint(card.id)}</div>
             </div>
+            <button class="zoom-close-btn" onclick="event.stopPropagation();closeZoom()">✕ 閉じる</button>
         `;
         document.getElementById('zoom-overlay').style.display = 'flex';
     }
@@ -7975,7 +7873,7 @@ const Cloud = (function () {
     // 打撃SE：メイン画面の音声ON/OFFに従う。毎回 new Audio せず1つを使い回す
     let _punchSE = null;
     function playPunchSE() {
-        if (!bgmOn) return;
+        if (!seOn()) return;
         try {
             if (!_punchSE) { _punchSE = new Audio('./bgm/punch.mp3'); _punchSE.volume = 0.7; }
             const se = _punchSE.paused ? _punchSE : _punchSE.cloneNode();
@@ -9025,7 +8923,7 @@ const Cloud = (function () {
             return;
         }
         // 殿堂入りは白金の手帖のボスラッシュ。別の手帖を開いているときは白金へ切り替えてもらう
-        if (!isPT) { alert('殿堂入りへの挑戦は「白金の手帖」を開いてから行えます。'); return; }
+        { const ac = allCompletion(); if (ac.have < ac.total) { alert('殿堂入りへの挑戦は、全手帖のカードをコンプリートすると行えます。'); return; } }
         // 歴代の手帖のボス（鉄・銅・銀・金・白金それぞれの最後のタブの討伐ボス）を超強化して5連戦
         hofBossRush.bosses = hofRushBosses();
         hofBossRush.bossIndex = 0;
@@ -9362,7 +9260,7 @@ const Cloud = (function () {
         const now = () => { st.setProperty('--adv-bg', `url('${src}')`); _advBgSrc = src; apply(); };
         if (src === _advBgSrc) { apply(); return; }
         const visible = layer && document.body.classList.contains('adventure-mode') && _advBgSrc;
-        const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const reduce = reduceMotion();
         if (!visible || reduce) { now(); return; }
         const id = ++_advSwapId;
         layer.style.transition = 'opacity .45s ease';
@@ -9642,7 +9540,7 @@ const Cloud = (function () {
     document.addEventListener('touchend', unlockSEElements, { capture: true });
 
     function playSE(key) {
-        if (!bgmOn) return; // BGMオフ時は効果音も消音
+        if (!seOn()) return; // 効果音（設定。未設定ならBGMに合わせる）
         const a = SE[key];
         if (!a) return;
         a.currentTime = 0;
@@ -9774,9 +9672,11 @@ const Cloud = (function () {
     const PARTICLE_COUNT = { A1: 8, A2: 14, B1: 20, B2: 28, PT: 40 };
     /* ========== バトル：手帖ごとの背景と演出 ==========
        背景画像は1枚を共通で使い、手帖ごとに色合いを変える（鉄＝鋼色、銅＝赤銅、銀＝青白、金＝黄金、白金＝真珠色）
+       演出は手帖の名前に合わせる：鉄「はじまりの扉」＝鋼色の霧と鉄の粉／銅「旅立ちの道」＝夕暮れの風に舞う木の葉／
+       銀「広がる世界」＝月光と星屑／金「深まる知恵」＝立ちのぼる金色の文字／白金「世界をひもとく」＝オーロラと光の頁・虹色の光
        ボスラッシュ（殿堂入り）は、戦っているボスの手帖の色合い・演出 */
     const BATTLE_BG_FILE = 'battle.jpg';   // bgm/battle/ に置く。null にすると共通の boss-bg.jpg
-    const BATTLE_FX_COUNT = { A1: 26, A2: 22, B1: 46, B2: 24, PT: 40 };
+    const BATTLE_FX_COUNT = { A1: 30, A2: 18, B1: 34, B2: 16, PT: 12 };
     let _boltTimer = null;
     // ボスラッシュは、今戦っているボスの手帖の色合い・演出
     function battleFxKey() {
@@ -9794,28 +9694,30 @@ const Cloud = (function () {
             const n = BATTLE_FX_COUNT[k] || 24;
             const rnd = (i, s) => { const x = Math.sin((i + 1) * 12.9898 + s * 78.233) * 43758.5453; return x - Math.floor(x); };
             let html = '<div class="bfx-img"></div><div class="bfx-shade"></div><div class="bfx-tint"></div>';
-            if (k === 'PT') html += '<div class="bfx-aurora"></div><div class="bfx-flash"></div><svg class="bfx-bolt" viewBox="0 0 120 700" preserveAspectRatio="none"><path d=""/></svg>';
+            if (k === 'A1') html += '<div class="bfx-fog"></div><div class="bfx-fog b"></div>';
+            if (k === 'PT') html += '<div class="bfx-aurora"></div><div class="bfx-prism"></div>';
+            const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
             for (let i = 0; i < n; i++) {
                 const r = s => rnd(i, s);
-                const dur = { A1: 1.6 + r(2) * 1.6, A2: 6 + r(2) * 6, B1: 7 + r(2) * 9, B2: 5 + r(2) * 5, PT: 2 + r(2) * 4 }[k];
-                const dx = { A1: (r(3) - .5) * 260, A2: (r(3) - .5) * 120, B1: (r(3) - .5) * 90, B2: (r(3) - .5) * 60, PT: 0 }[k];
-                const size = { A2: 4 + r(4) * 6, B1: 2 + r(4) * 5, B2: 3 + r(4) * 6 }[k] || 3;
-                // 火花は画面下の中央寄りから、星（白金）は画面の上半分に散らす
-                const left = k === 'A1' ? 25 + r(5) * 50 : r(5) * 100;
-                const top = k === 'B2' ? `top:${(15 + r(6) * 75).toFixed(1)}%;` : k === 'PT' ? `top:${(r(6) * 45).toFixed(1)}%;` : '';
-                html += `<i class="p" style="left:${left.toFixed(1)}%;${top}--s:${size.toFixed(1)}px;--d:${dur.toFixed(2)}s;--dl:-${(r(7) * dur).toFixed(2)}s;--dx:${Math.round(dx)}px"></i>`;
+                const dur = { A1: 9 + r(2) * 8, A2: 7 + r(2) * 6, B1: 8 + r(2) * 8, B2: 6 + r(2) * 5, PT: 10 + r(2) * 6 }[k];
+                const dx = { A1: (r(3) - .5) * 80, A2: 60 + r(3) * 160, B1: (r(3) - .5) * 70, B2: (r(3) - .5) * 70, PT: (r(3) - .5) * 120 }[k];
+                const size = { A1: 2 + r(4) * 3, A2: 9 + r(4) * 8, B1: 5 + r(4) * 7, B2: 14 + r(4) * 14, PT: 10 + r(4) * 8 }[k];
+                const left = k === 'A2' ? r(5) * 80 - 10 : r(5) * 100;
+                // 鉄の粉は画面の下半分に漂う
+                const top = k === 'A1' ? `top:${(45 + r(6) * 50).toFixed(1)}%;` : '';
+                const ch = k === 'B2' ? LETTERS[Math.floor(r(8) * LETTERS.length)] : '';
+                html += `<i class="p" style="left:${left.toFixed(1)}%;${top}--s:${size.toFixed(1)}px;--d:${dur.toFixed(2)}s;--dl:-${(r(7) * dur).toFixed(2)}s;--dx:${Math.round(dx)}px">${ch}</i>`;
             }
             fx.className = k; fx.dataset.k = k; fx.innerHTML = html;
         }
         clearTimeout(_boltTimer);
-        if (k === 'PT') scheduleBolt();
     }
     // 白金：4〜9秒おきに雷（ギザギザの線をその都度つくる）
     function scheduleBolt() {
         _boltTimer = setTimeout(() => {
             const fx = document.getElementById('battle-fx');
             if (!fx || !document.body.classList.contains('battle-mode') || fx.dataset.k !== 'PT') return;
-            if (!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+            if (!reduceMotion()) {
                 let x = 60, y = 0, d = `M${x} 0`;
                 while (y < 700) { y += 40 + Math.random() * 60; x = Math.max(8, Math.min(112, x + (Math.random() - .5) * 60)); d += ` L${x.toFixed(0)} ${y.toFixed(0)}`; }
                 const svg = fx.querySelector('.bfx-bolt');
