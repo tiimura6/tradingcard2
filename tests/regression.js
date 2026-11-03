@@ -317,6 +317,8 @@ test('設定：効果音・演出を減らす・文字を大きく（この端�
     return { rows, reduce: document.body.classList.contains('reduce-motion'), big: document.body.classList.contains('text-large'), se: seOn(), saved: JSON.parse(localStorage.getItem('appSettings')) };
   });
   assert(r.rows === 4 && r.reduce && r.big && r.se === false && r.saved.reduce === true, JSON.stringify(r));
+  const k = await p.evaluate(() => ({ key: [...document.querySelectorAll('#settingsBox .set-link')].some(b => b.textContent.includes('秘密の鍵')), header: !!document.querySelector('.header-plate button[title="秘密の鍵"]'), chip: getComputedStyle(document.getElementById('accountChip')).display }));
+  assert(k.key && !k.header && k.chip === 'none', '秘密の鍵・ログインが設定画面にない ' + JSON.stringify(k));
   await p.reload(); await p.waitForTimeout(1500);
   assert(await p.evaluate(() => document.body.classList.contains('reduce-motion') && document.body.classList.contains('text-large')), '再読み込みで設定が戻る');
   await p.evaluate(() => { closeSettings(); tapCard(cardsData[0], true); });

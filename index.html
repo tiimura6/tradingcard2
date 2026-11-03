@@ -2425,12 +2425,10 @@
 <div class="header-plate">
     <!-- 言の葉堂のひみつ手帖 シリーズヘッダー -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px;margin-bottom:4px;">
-        <button onclick="openCouponModal()" title="秘密の鍵"
-            style="background:rgba(5,20,10,0.55);border:1px solid rgba(60,140,80,0.35);border-radius:20px;padding:3px 9px;font-size:11px;cursor:pointer;color:rgba(140,200,150,0.65);display:flex;align-items:center;gap:3px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.03em;opacity:0.7;flex-shrink:0;">🗝️</button>
-        <button id="accountChip" onclick="Cloud.chipClick()" title="アカウント"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-1605</span></div>
         <button id="settingsBtn" onclick="openSettings()" title="設定"
-            style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 9px;font-size:12px;cursor:pointer;color:rgba(240,200,90,0.95);margin-right:4px;flex-shrink:0;font-family:'Noto Serif JP',serif;">⚙️ 設定</button>
+            style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 9px;font-size:12px;cursor:pointer;color:rgba(240,200,90,0.95);flex-shrink:0;font-family:'Noto Serif JP',serif;">⚙️ 設定</button>
+        <button id="accountChip" style="display:none" aria-hidden="true"></button>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.02-1605</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -3029,8 +3027,8 @@ const Cloud = (function () {
     function renderChip() {
         const chip = document.getElementById('accountChip');
         if (!chip) return;
-        if (!GAS_URL) { chip.style.display = 'none'; return; }
-        chip.style.display = 'flex';
+        chip.style.display = 'none';   // ログインの表示は設定画面へ移した（ここは状態の保持だけ）
+        if (!GAS_URL) return;
         const icon = { saving: '⏳', ok: '☁️', error: '⚠️', offline: '📴', idle: '' }[syncState] || '';
         chip.innerHTML = session
             ? `👤 <span class="chip-name">${esc(session.nickname)}</span><span class="chip-sync">${icon}</span>`
@@ -3385,6 +3383,8 @@ const Cloud = (function () {
         start, log, saveNow, openModal, closeModal, chipClick, playAsGuest, adminUnlock, errorText, setHideRanking,
         submitLogin, submitRegister, useServer, useLocal, manualSave, logout,
         isLoggedIn: () => !!session,
+        // 設定画面に出すアカウントの表示（ニックネームと保存の状態）
+        accountLabel: () => session ? `${esc(session.nickname)} ${({ saving: '⏳', ok: '☁️', error: '⚠️', offline: '📴' })[syncState] || ''}` : 'ゲスト（ログインしていません）',
         nickname: () => session ? session.nickname : null,
         // サーバーの機能を呼ぶ（ログイン中ならトークンを付ける）
         call: (action, payload) => GAS_URL ? api(action, Object.assign(session ? { token: session.token } : {}, payload || {})) : Promise.resolve({ ok: false, error: 'no_server' }),
@@ -4883,7 +4883,8 @@ const Cloud = (function () {
             <div class="set-row"><div class="lb">✨ 演出を減らす<small>光の点滅やアニメーションを短くします</small></div>${tg('reduce', !!appSettings.reduce, "setSetting('reduce',true)", "setSetting('reduce',false)")}</div>
             <div class="set-row"><div class="lb">🔠 文字を大きく<small>問題やカードの画面を大きく表示します</small></div>${tg('big', !!appSettings.big, "setSetting('big',true)", "setSetting('big',false)")}</div>
             <button class="set-link" onclick="closeSettings();openAchievements()"><span>🏅 称号・実績</span><span id="setAchvCount" style="font-size:12px;opacity:.8;"></span></button>
-            ${GAS_URL ? `<button class="set-link" onclick="closeSettings();Cloud.chipClick()"><span>👤 アカウント（ログイン・ランキング表示など）</span><span>›</span></button>` : ''}
+            ${GAS_URL ? `<button class="set-link" onclick="closeSettings();Cloud.chipClick()"><span>👤 ${Cloud.isLoggedIn() ? 'アカウント' : 'ログイン・新規登録'}<small style="display:block;font-size:11px;color:#c8b090;">${Cloud.accountLabel()}</small></span><span>›</span></button>` : ''}
+            <button class="set-link" onclick="closeSettings();openCouponModal()"><span>🗝️ 秘密の鍵</span><span>›</span></button>
             <button class="set-link" onclick="closeSettings();openPlacement(true)"><span>🎯 レベル判定テストを受ける</span><span>›</span></button>
             <button class="modal-cancel-btn" onclick="closeSettings()" style="margin-top:12px;">閉じる</button>`;
         document.getElementById('settings-modal').style.display = 'flex';
