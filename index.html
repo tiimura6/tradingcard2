@@ -1332,6 +1332,15 @@
             border-radius: 4px; transition: width 0.6s ease;
         }
 
+        /* 全手帖（鉄〜白金）のコンプリート率：手帖ごとの色で区切ったバー */
+        .all-cp { margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(200,180,255,.25); }
+        .all-cp-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 11.5px; color: #e8dcff; }
+        .all-cp-head b { font-size: 14px; color: #ffe9a8; }
+        .all-cp-bar { display: flex; gap: 2px; height: 8px; margin-top: 5px; }
+        .all-cp-seg { position: relative; height: 100%; border-radius: 3px; background: rgba(255,255,255,.10); overflow: hidden; }
+        .all-cp-seg i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; transition: width .6s ease; }
+        .all-cp-legend { display: flex; justify-content: space-between; font-size: 9.5px; color: #b8acd8; margin-top: 3px; }
+
         /* ===== STUDY MODE (TikTok 式) ===== */
         #study-overlay {
             display: none; position: fixed; top: 0; left: 0;
@@ -2348,6 +2357,7 @@
         <div class="cp-count"><span id="cpAcquired">0</span><span class="cp-slash"> / </span><span id="cpTotal">0</span><span class="cp-unit">枚</span></div>
         <div class="cp-rate" id="cpRate">0% コンプリート</div>
         <div class="cp-bar-bg"><div class="cp-bar-fill" id="cpBarFill" style="width:0%"></div></div>
+        <div class="all-cp" id="allCp"></div>
     </div>
 </div>
 
@@ -4728,6 +4738,30 @@ const Cloud = (function () {
 
     function updateDailyGoalDisplay() { updateCollectionProgress(); } // 後方互換ラッパー
 
+    // 鉄〜白金の全手帖を合わせたコンプリート率（カードIDの頭：a1- a2- b1- b2- card-）
+    function allCompletion() {
+        const owned = new Set(unlockedCards);
+        let have = 0, total = 0;
+        const per = NOTEBOOKS.map(nb => {
+            let n = 0;
+            const pre = nb.prefix + '-';
+            owned.forEach(id => { if (String(id).startsWith(pre)) n++; });
+            n = Math.min(n, nb.count);
+            have += n; total += nb.count;
+            return { nb, n };
+        });
+        return { have, total, per, pct: total ? have / total * 100 : 0 };
+    }
+    function renderAllCompletion() {
+        const el = document.getElementById('allCp');
+        if (!el) return;
+        const a = allCompletion();
+        const pctTxt = a.pct >= 100 ? '100' : a.pct.toFixed(1);
+        el.innerHTML = `<div class="all-cp-head"><span>📚 全手帖（鉄〜白金）</span><span><b>${pctTxt}%</b>　${a.have.toLocaleString()} / ${a.total.toLocaleString()}枚</span></div>` +
+            `<div class="all-cp-bar">${a.per.map(p => `<div class="all-cp-seg" style="flex:${p.nb.count}" title="${p.nb.name} ${p.n}/${p.nb.count}"><i style="width:${(p.n / p.nb.count * 100).toFixed(1)}%;background:linear-gradient(90deg,${p.nb.c[2]},${p.nb.c[1]})"></i></div>`).join('')}</div>` +
+            `<div class="all-cp-legend">${a.per.map(p => `<span>${p.nb.name.replace('の手帖', '')} ${Math.floor(p.n / p.nb.count * 100)}%</span>`).join('')}</div>`;
+    }
+
     function updateCollectionProgress() {
         const acquired = ownedInNotebook();
         const total    = cardsData.length;
@@ -4740,6 +4774,7 @@ const Cloud = (function () {
         if (totEl)  totEl.textContent  = total;
         if (rateEl) rateEl.textContent = `${pct}% コンプリート`;
         if (fillEl) fillEl.style.width = pct + '%';
+        renderAllCompletion();
         // 殿堂入りボタンのロック状態を更新
         const hofBtn = document.getElementById('hofBtn');
         if (hofBtn) hofBtn.style.display = isPT ? '' : 'none';   // 殿堂入りは白金の手帖だけに表示
@@ -7152,8 +7187,8 @@ const Cloud = (function () {
     };
     /* ===== ことばの力ゲージ（0〜100） =====
        正解でたまる（連続正解ほど多い：25→35→45）。スキルは1回30を使う。満タンで3人合体の必殺技。
-       守る：そのカードは攻撃しない代わりに、このターンの被ダメージを1枚につき30%減らす（正解・不正解に関係なく効く） */
-    const GAUGE = { gain: [25, 35, 45], skill: 30, max: 100, guardCut: 0.3, ultMult: 2.2 };
+       守る：そのカードは攻撃しない代わりに、1枚につき このターンの被ダメージ-30%・パーティのHPを8%回復（正解・不正解に関係なく効く） */
+    const GAUGE = { gain: [25, 35, 45], skill: 30, max: 100, guardCut: 0.3, guardHeal: 0.08, ultMult: 2.2 };
     /* ===== ボスの予告（次の行動をターンの初めに見せる） =====
        通常攻撃／力をためる（次のターンに大技2.5倍）／守りを固める（こちらの攻撃が半分、ボスの攻撃も0.6倍）
        HPが半分を切ると怒り状態：攻撃1.25倍、2連撃が加わり、力をためる回数が増える */
@@ -7188,7 +7223,7 @@ const Cloud = (function () {
         // ゲージが足りなくなったスキルは攻撃に戻す
         if (Array.isArray(s.plan)) { let left = s.gauge; s.plan = s.plan.map((a, i) => { if (a !== 'skill') return a; const c = skillCost(s.units[i]); if (left >= c) { left -= c; return a; } return 'attack'; }); }
         const I = BOSS_INTENTS[s.intent], cost = planCost(s.plan), full = s.gauge >= GAUGE.max;
-        const intentHtml = `<div class="b-intent ${s.intent}${s.rage ? ' rage' : ''}"><span class="ic">${I.ic}</span><div><b>${s.rage ? '😡 ' : ''}ボスの予告：${I.name}</b><br>${I.desc}</div></div>`;
+        const intentHtml = `<div class="b-intent ${s.intent}${s.rage ? ' rage' : ''}"><span class="ic">${I.ic}</span><div><b>${s.rage ? '😡 ' : ''}ボスの様子：${I.name}</b><br>${I.desc}</div></div>`;
         const gaugeHtml = `<div class="b-gauge${full ? ' full' : ''}"><div class="fill" style="width:${s.gauge}%"></div>` +
             `<div class="rsv" style="left:${Math.max(0, s.gauge - cost)}%;width:${Math.min(cost, s.gauge)}%"></div>` +
             `<div class="lbl">✨ ことばの力 ${s.gauge} / ${GAUGE.max}${cost ? `（使う予定 ${cost}）` : ''}${s.streak >= 2 ? `　🔥${s.streak}連続正解` : ''}</div></div>`;
@@ -7201,7 +7236,7 @@ const Cloud = (function () {
                 ${['attack', 'skill', 'guard'].map(a => {
                     const sel = s.plan !== 'ult' && s.plan[i] === a;
                     const dis = s.plan === 'ult' || (a === 'skill' && !sel && left < skillCost(u));
-                    const sub = a === 'attack' ? `P${u.atk}・命中90%` : a === 'skill' ? `${u.skill.icon}${u.skill.name}・力${skillCost(u)}` : `被ダメ-${Math.round(GAUGE.guardCut * 100)}%`;
+                    const sub = a === 'attack' ? `P${u.atk}・命中90%` : a === 'skill' ? `${u.skill.icon}${u.skill.name}・力${skillCost(u)}` : `被ダメ-${Math.round(GAUGE.guardCut * 100)}%・HP+${Math.round(GAUGE.guardHeal * 100)}%`;
                     return `<button class="bplan-btn ${a}${sel ? ' sel' : ''}" ${dis ? 'disabled' : ''} onclick="setBattlePlan(${i},'${a}')">${BATTLE_ACTIONS[a].icon}${BATTLE_ACTIONS[a].name}<small>${sub}</small></button>`;
                 }).join('')}
             </div>`).join('') +
@@ -7263,7 +7298,11 @@ const Cloud = (function () {
             battleSession.currentUnitIdx = i;
             renderBattleUnits();
             if (act === 'guard') {
-                addBattleLog(`${u.bonus.label}は守りを固めた 🛡️（被ダメージ -${Math.round(GAUGE.guardCut * 100)}%）`);
+                const heal = Math.min(battleSession.playerMaxHP - battleSession.playerHP, Math.round(battleSession.playerMaxHP * GAUGE.guardHeal));
+                battleSession.playerHP += heal;
+                addBattleLog(`${u.bonus.label}は守りを固めた 🛡️（被ダメージ -${Math.round(GAUGE.guardCut * 100)}%・HP+${heal}）`);
+                if (heal > 0) showDamageFloat('+' + heal, false, '#7dffa0');
+                renderBattleUI_hpOnly();
                 i++; setTimeout(step, 450); return;
             }
             const rate = focus ? 1 : HIT_RATE[act][key];

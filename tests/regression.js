@@ -236,10 +236,11 @@ test('バトル：ことばの力ゲージ・スキルの消費・守る・必�
   // 正解でゲージがたまる（連続正解で増える）・守るで被ダメージが減る
   const r2 = await p.evaluate(() => new Promise(res => {
     const s = battleSession; s.gauge = 0; s.streak = 1; s.plan = ['guard', 'guard', 'attack']; s.intent = 'attack'; s.enemyHP = s.enemyMaxHP;
-    const eT = battleEnemyTurn; battleEnemyTurn = () => { battleEnemyTurn = eT; res({ gauge: s.gauge, streak: s.streak, cut: s._guardCut }); };
+    s.playerHP = Math.round(s.playerMaxHP / 2); const hp0 = s.playerHP;
+    const eT = battleEnemyTurn; battleEnemyTurn = () => { battleEnemyTurn = eT; res({ gauge: s.gauge, streak: s.streak, cut: s._guardCut, healed: s.playerHP - hp0, exp: 2 * Math.round(s.playerMaxHP * GAUGE.guardHeal) }); };
     resolveBattleRound(true);
   }));
-  assert(r2.gauge === 35 && r2.streak === 2 && Math.abs(r2.cut - 0.6) < 1e-9, JSON.stringify(r2));
+  assert(r2.gauge === 35 && r2.streak === 2 && Math.abs(r2.cut - 0.6) < 1e-9 && r2.healed === r2.exp, JSON.stringify(r2));
   // スキルは品詞ごとに4種類・単語で決まる（同じ単語はいつも同じ）。鉄壁は大技を防ぎ、先読みは大技を止め、呪いはボスの攻撃を下げる
   const r4 = await p.evaluate(() => new Promise(res => {
     const kinds = new Set(cardsData.slice(0, 400).map(c => getWordSkill(c).kind));
@@ -262,6 +263,14 @@ test('バトル：ことばの力ゲージ・スキルの消費・守る・必�
     setTimeout(() => res({ rage: s.rage, banner: !!document.getElementById('battle-rage') || s.rage, dmg: hp0 - s.playerHP, atk: s.stage.atk, active: s.active, hp0, ehp: s.enemyHP, log: s.log && s.log.slice(-3) }), 1200);
   }));
   assert(r3.rage && r3.dmg > 0 && r3.dmg < r3.atk * 0.5, JSON.stringify(r3));
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('タイトル画面に全手帖（鉄〜白金）のコンプリート率', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1', unlockedCards: ids('a1', 1, 100).concat(ids('card', 1, 50)) } });
+  await p.waitForTimeout(2600);
+  const r = await p.evaluate(() => { updateCollectionProgress(); const a = allCompletion(); return { have: a.have, total: a.total, txt: document.getElementById('allCp').innerText, segs: document.querySelectorAll('.all-cp-seg').length }; });
+  assert(r.have === 150 && r.total === 8324 && r.segs === 5 && r.txt.includes('1.8%') && r.txt.includes('150 / 8,324'), JSON.stringify(r));
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
