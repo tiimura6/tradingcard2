@@ -502,6 +502,78 @@
         }
         .card-info { margin-top: 8px; font-size: 13px; font-weight: bold; color: #c8b080; font-family: 'Noto Serif JP', serif; }
 
+
+        /* ===== 画面の動き（アニメーション） ===== */
+        /* モーダル：開くときは下からふわっと、閉じるときは残像が縮んで消える */
+        .modal-overlay { animation: mo-in .22s ease-out; }
+        .modal-overlay > .custom-box, .modal-overlay > .modal-box { animation: box-in .36s cubic-bezier(.2,1.25,.4,1); }
+        .modal-overlay.ghost-close { pointer-events: none !important; animation: mo-out .2s ease-in forwards; }
+        .modal-overlay.ghost-close > .custom-box, .modal-overlay.ghost-close > .modal-box { animation: box-out .2s ease-in forwards; }
+        @keyframes mo-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes mo-out { to { opacity: 0; } }
+        @keyframes box-in { from { opacity: 0; transform: translateY(22px) scale(.94); } to { opacity: 1; transform: none; } }
+        @keyframes box-out { to { opacity: 0; transform: translateY(10px) scale(.94); } }
+        /* 問題の切り替え：文がすっと入り、選択肢が順番に現れる */
+        #quizSentence.q-in { animation: q-in .38s ease-out; }
+        @keyframes q-in { from { opacity: 0; transform: translateX(26px); } to { opacity: 1; transform: none; } }
+        #quizChoices > .quiz-choice-btn, .pl-choices > button { animation: ch-in .34s cubic-bezier(.2,1.2,.4,1) backwards; }
+        #quizChoices > .quiz-choice-btn:nth-child(2), .pl-choices > button:nth-child(2) { animation-delay: .05s; }
+        #quizChoices > .quiz-choice-btn:nth-child(3), .pl-choices > button:nth-child(3) { animation-delay: .1s; }
+        #quizChoices > .quiz-choice-btn:nth-child(4), .pl-choices > button:nth-child(4) { animation-delay: .15s; }
+        @keyframes ch-in { from { opacity: 0; transform: translateY(12px) scale(.96); } to { opacity: 1; transform: none; } }
+        /* ボタンを押した手ごたえ */
+        .action-btn:active, .quiz-choice-btn:active, .pl-start:active, .rp-btn:active { transform: scale(.95); }
+        /* メイン画面に戻ったとき：ボタンが順番に浮かび上がる */
+        body.main-enter #main-page .action-grid > .action-btn { animation: btn-in .5s cubic-bezier(.2,1.3,.4,1) backwards; animation-delay: calc(var(--i, 0) * 55ms); }
+        @keyframes btn-in { from { opacity: 0; transform: translateY(18px) scale(.9); } to { opacity: 1; transform: none; } }
+        /* 図鑑のページを開いたとき：カードが順番に並ぶ */
+        .grid-anim > .card-container { animation: card-in .36s ease-out backwards; animation-delay: calc(var(--i, 0) * 16ms); }
+        @keyframes card-in { from { opacity: 0; transform: translateY(10px) scale(.92); } to { opacity: 1; transform: none; } }
+
+        /* 冒険への出発／帰還 */
+        #adv-trans { position: fixed; inset: 0; z-index: 9998; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+            background: radial-gradient(circle at 50% 45%, #3c2b12 0%, #160d05 72%); color: #f4e2b0; font-family: 'Noto Serif JP', serif; text-align: center; padding: 0 16px; }
+        #adv-trans.on { display: flex; animation: at-fade .32s ease-out both; }
+        #adv-trans.reveal { pointer-events: none; animation: at-iris .62s cubic-bezier(.6,0,.4,1) forwards; }
+        #adv-trans.home { display: flex; animation: at-iris-in .5s cubic-bezier(.6,0,.4,1) both; }
+        #adv-trans.home.out { pointer-events: none; animation: at-fadeout .45s ease-in forwards; }
+        #adv-trans.home .at-map, #adv-trans.home .at-compass, #adv-trans.home .at-skip { display: none; }
+        @keyframes at-fade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes at-fadeout { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes at-iris { from { clip-path: circle(150% at 50% 50%); } to { clip-path: circle(0% at 50% 50%); } }
+        @keyframes at-iris-in { from { clip-path: circle(0% at 50% 50%); } to { clip-path: circle(150% at 50% 50%); } }
+        .at-compass { font-size: 46px; animation: at-spin 1.3s ease-out both; }
+        @keyframes at-spin { from { transform: rotate(-600deg) scale(.3); opacity: 0; } 35% { opacity: 1; } to { transform: rotate(0) scale(1); } }
+        .at-t1 { font-size: 26px; font-weight: bold; letter-spacing: .14em; text-shadow: 0 0 18px rgba(255,200,90,.75); animation: at-rise .45s .15s both; }
+        .at-t2 { font-size: 14px; opacity: .92; animation: at-rise .45s .3s both; }
+        @keyframes at-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+        .at-map { position: relative; width: 300px; max-width: 86vw; height: 120px; border-radius: 10px;
+            background: linear-gradient(135deg, #ead9ab, #cbb078); box-shadow: 0 10px 40px rgba(0,0,0,.6), inset 0 0 30px rgba(120,80,20,.5);
+            animation: at-unroll .55s .1s cubic-bezier(.2,1.2,.4,1) both; overflow: hidden; }
+        @keyframes at-unroll { from { transform: scaleX(.05) rotate(-6deg); opacity: 0; } to { transform: none; opacity: 1; } }
+        .at-path { position: absolute; left: 0; top: 0; width: 300px; height: 120px; animation: at-draw 1s .45s ease-in-out both; }
+        .at-path path { fill: none; stroke: #7a4a18; stroke-width: 3; stroke-dasharray: 6 7; stroke-linecap: round; }
+        @keyframes at-draw { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+        .at-walker { position: absolute; left: 0; top: 0; font-size: 26px; line-height: 1;
+            offset-path: path('M20,95 C70,20 120,110 170,55 S260,30 285,25'); offset-rotate: 0deg; offset-anchor: center;
+            animation: at-walk 1s .45s ease-in-out both; }
+        @keyframes at-walk { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+        .at-goal { position: absolute; left: 272px; top: 2px; font-size: 22px; animation: at-pop .4s 1.3s cubic-bezier(.2,1.6,.4,1) both; }
+        @keyframes at-pop { from { transform: scale(0); } to { transform: scale(1); } }
+        .at-skip { position: absolute; bottom: 26px; font-size: 11px; opacity: .45; }
+        /* 手帖の切り替え：ページをめくる */
+        #nb-trans { position: fixed; inset: 0; z-index: 9997; display: none; perspective: 1400px; pointer-events: none; }
+        #nb-trans.on { display: block; pointer-events: all; }
+        #nb-trans .nt-page { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+            background: linear-gradient(110deg, var(--nt1, #f4ead0), var(--nt2, #c8a86a)); color: var(--nt3, #3a2a10); font-family: 'Noto Serif JP', serif;
+            transform-origin: left center; box-shadow: inset 30px 0 60px rgba(0,0,0,.35); backface-visibility: hidden; }
+        #nb-trans.on .nt-page { animation: nt-turn-in .5s cubic-bezier(.5,0,.3,1) both; }
+        #nb-trans.on.out .nt-page { transform-origin: right center; animation: nt-turn-out .55s cubic-bezier(.5,0,.3,1) both; }
+        @keyframes nt-turn-in { from { transform: rotateY(-100deg); opacity: .4; } to { transform: rotateY(0); opacity: 1; } }
+        @keyframes nt-turn-out { from { transform: rotateY(0); opacity: 1; } to { transform: rotateY(100deg); opacity: .3; } }
+        .nt-gem { font-size: 46px; animation: at-pop .45s .25s cubic-bezier(.2,1.6,.4,1) both; }
+        .nt-name { font-size: 28px; font-weight: bold; letter-spacing: .12em; animation: at-rise .4s .3s both; }
+        .nt-sub { font-size: 13px; opacity: .85; animation: at-rise .4s .4s both; }
         /* ===== MODALS ===== */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0;
@@ -1686,7 +1758,7 @@
             background:rgba(255,255,255,0.06); color:#aaa; cursor:pointer; transition:all 0.15s;
         }
         .formation-pool-sort-btn.active { background:#6633aa; border-color:#aa66ff; color:#fff; font-weight:bold; }
-        .formation-card-pool { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; max-height: 240px; overflow-y: auto; margin: 4px 0; padding-right: 2px; }
+        .formation-card-pool { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-height: 300px; overflow-y: auto; margin: 4px 0; padding-right: 2px; }
         .formation-pool-card {
             cursor: pointer; border-radius: 6px; overflow: hidden;
             border: 2px solid transparent; transition: all 0.15s; text-align: center;
@@ -1695,16 +1767,18 @@
         .formation-pool-card:hover { border-color: #ffd700; transform: scale(1.04); }
         .formation-pool-card.used { opacity: 0.35; pointer-events: none; }
         .formation-pool-card img { width: 100%; display: block; border-radius: 5px; }
-        .formation-pool-card-overlay {
-            position: absolute; bottom: 0; left: 0; right: 0;
-            background: linear-gradient(transparent 0%, rgba(0,0,0,0.82) 30%);
-            padding: 8px 2px 2px; pointer-events: none;
-        }
-        .formation-pool-card-name { font-size: 7px; color: #f0d080; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
-        .formation-pool-card-rarity { font-size: 7px; font-weight: bold; line-height: 1.1; }
-        .formation-pool-card-stats { font-size: 7px; color: #88ccff; line-height: 1.2; }
-        .formation-pool-card-skill { font-size: 6px; color: #ddaaff; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .formation-pool-card-skill .c { color: #ffd27a; }
+        /* 候補カード：文字は画像の上に重ねず、下の濃い帯に大きめに出す */
+        .formation-pool-card { background: #120a1e; border-color: rgba(255,255,255,.12); }
+        .formation-pool-card-rar { position: absolute; top: 3px; left: 3px; font-size: 10px; font-weight: 900; line-height: 1; padding: 3px 5px; border-radius: 6px;
+            color: #fff; background: var(--rc, #666); box-shadow: 0 1px 4px rgba(0,0,0,.6); letter-spacing: .03em; pointer-events: none; }
+        .formation-pool-card-info { padding: 4px 3px 5px; background: linear-gradient(#1e1230, #120a1e); pointer-events: none; }
+        .formation-pool-card-name { font-size: 10px; font-weight: bold; color: #ffe9a8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
+        .formation-pool-card-stats { display: flex; justify-content: center; gap: 3px; margin: 3px 0 2px; }
+        .formation-pool-card-stats b { font-size: 10px; line-height: 1; padding: 3px 4px; border-radius: 5px; color: #fff; font-weight: 800; }
+        .formation-pool-card-stats .p { background: #b4441c; }
+        .formation-pool-card-stats .g { background: #1f5ea8; }
+        .formation-pool-card-skill { font-size: 9px; color: #f0dcff; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.6em; }
+        .formation-pool-card-skill .c { color: #ffd27a; font-weight: bold; }
         .formation-skill-info { font-size: 10.5px; line-height: 1.5; color: #e8dcff; background: rgba(20,10,40,.75); border: 1px solid rgba(170,130,255,.35); border-radius: 8px; padding: 5px 8px; margin: 0 0 6px; text-align: left; }
         .formation-skill-info:empty { display: none; }
         .formation-skill-info b { color: #ffe6a0; }
@@ -2130,10 +2204,12 @@
         /* ===== まとめて探す（結果一覧） ===== */
         #multi-draw-overlay { position: fixed; inset: 0; z-index: 9000; display: none; align-items: center; justify-content: center;
             background: radial-gradient(circle at 50% 35%, rgba(60,40,110,.92), rgba(5,3,12,.96)); }
-        #multi-draw-overlay .md-box { width: 94%; max-width: 520px; max-height: 92vh; overflow-y: auto; text-align: center; padding: 14px 10px 16px; }
+        #multi-draw-overlay .md-box { width: 94%; max-width: 520px; max-height: 96vh; overflow: hidden; text-align: center; padding: 14px 10px 16px; box-sizing: border-box; }
         #multi-draw-overlay .md-title { color: #ffe9a8; font-size: 18px; font-weight: bold; font-family: 'Noto Serif JP', serif; text-shadow: 0 0 10px rgba(255,200,90,.6); }
         #multi-draw-overlay .md-sub { color: #d8c8f0; font-size: 12px; margin: 4px 0 10px; }
-        #multi-draw-overlay .md-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; }
+        #multi-draw-overlay .md-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; margin: 0 auto;
+            /* 2段のカードが画面の高さに収まる幅まで（光の演出は枠の中で切り、スクロールバーを出さない） */
+            width: min(100%, calc((96vh - 190px) / 2 / 1.66 * 5 + 28px)); }
         @media (max-width: 400px) { #multi-draw-overlay .md-grid { gap: 5px; } }
         /* まとめて探す：魔法陣 → 裏向きのカードが飛び出して並ぶ → 1枚ずつめくれる（タップで全部めくる） */
         #multi-draw-overlay .md-box { position: relative; }
@@ -2145,7 +2221,7 @@
         @keyframes md-circle { 0% { opacity: 0; transform: scale(.2) rotate(0); } 35% { opacity: 1; } 75% { opacity: 1; transform: scale(1.05) rotate(120deg); } 100% { opacity: 0; transform: scale(1.6) rotate(160deg); } }
         @keyframes md-spin { to { transform: rotate(360deg); } }
         @keyframes md-hue { to { filter: hue-rotate(360deg); } }
-        .md-flash { position: absolute; inset: -40px; pointer-events: none; background: radial-gradient(circle at 50% 46%, var(--mdc) 0%, transparent 55%); opacity: 0; animation: md-flashk .6s ease-out .95s forwards; }
+        .md-flash { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 50% 46%, var(--mdc) 0%, transparent 55%); opacity: 0; animation: md-flashk .6s ease-out .95s forwards; }
         @keyframes md-flashk { 30% { opacity: .9; } 100% { opacity: 0; } }
         #mdTitle, #mdSub, #mdClose { transition: opacity .35s; }
         #multi-draw-overlay.summoning #mdTitle, #multi-draw-overlay.summoning #mdSub, #multi-draw-overlay.summoning #mdClose { opacity: 0; pointer-events: none; }
@@ -2377,6 +2453,14 @@
 <div id="bg-layer"></div>
 <div id="adventure-bg"></div>
 <div id="adventure-fade"></div>
+<div id="adv-trans" aria-hidden="true">
+    <div class="at-compass">🧭</div>
+    <div class="at-t1"></div>
+    <div class="at-map"><svg class="at-path" viewBox="0 0 300 120"><path d="M20,95 C70,20 120,110 170,55 S260,30 285,25"/></svg><div class="at-walker">🧙</div><div class="at-goal">🚩</div></div>
+    <div class="at-t2"></div>
+    <div class="at-skip">タップで早送り</div>
+</div>
+<div id="nb-trans" aria-hidden="true"><div class="nt-page"><div class="nt-gem"></div><div class="nt-name"></div><div class="nt-sub">ページをめくっています…</div></div></div>
 <div id="screen-fade"></div>
 <div id="multi-draw-overlay"><div class="md-box"><div class="md-title" id="mdTitle"></div><div class="md-sub" id="mdSub"></div>
     <div class="md-grid" id="mdGrid"></div>
@@ -2509,7 +2593,7 @@
         <button id="settingsBtn" onclick="openSettings()" title="設定"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 9px;font-size:12px;cursor:pointer;color:rgba(240,200,90,0.95);flex-shrink:0;font-family:'Noto Serif JP',serif;">⚙️ 設定</button>
         <button id="accountChip" style="display:none" aria-hidden="true"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.04-2130</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.04-2230</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -5252,6 +5336,7 @@ const Cloud = (function () {
             choicesEl.appendChild(btn);
         });
         document.getElementById('quiz-overlay').style.display = 'flex';
+        quizSwapAnim();
     }
     function submitGrammar(ok, g, btnEl) {
         document.querySelectorAll('.quiz-choice-btn').forEach(b => { b.disabled = true; if (!ok && b.dataset.correct === '1') b.classList.add('correct'); });
@@ -5818,6 +5903,7 @@ const Cloud = (function () {
     // 平均的なカードで約25%、レアで★の多いカードほど50%に近づく
     function guardRateFor(rearDef, bossAtk) { return Math.min(0.5, rearDef / (rearDef + bossAtk * 2.5)); }
     const EXPECTED_GUARD = 0.26;
+    const BOSS_ATK_MULT = 2;   // ボスの攻撃力（2026-11-04 Takaの指示で2倍に）
     function bossStatsFor(g) {
         const base = statBase(g);
         const T = BOSS_TUNING;
@@ -5829,9 +5915,9 @@ const Cloud = (function () {
         const m = party(T.midStars), f = party(T.finalStars);
         return {
             midHp:    Math.round(m.perRound * T.midRounds),
-            midAtk:   Math.round(m.hp / T.midSurvive / (1 - EXPECTED_GUARD)),   // 後衛の軽減ぶんを見込む
+            midAtk:   Math.round(m.hp / T.midSurvive / (1 - EXPECTED_GUARD) * BOSS_ATK_MULT),   // 後衛の軽減ぶんを見込む
             finalHp:  Math.round(f.perRound * T.finalRounds),
-            finalAtk: Math.round(f.hp / T.finalSurvive / (1 - EXPECTED_GUARD)),
+            finalAtk: Math.round(f.hp / T.finalSurvive / (1 - EXPECTED_GUARD) * BOSS_ATK_MULT),
         };
     }
 
@@ -6587,6 +6673,83 @@ const Cloud = (function () {
         }, dur * 0.45 | 0);
     }
 
+    /* ---- 画面の動きの共通処理 ---- */
+    function motionOK() { return !document.body.classList.contains('reduce-motion'); }
+    // メイン画面のボタンを順番に浮かび上がらせる
+    function mainEnterAnim() {
+        if (!motionOK()) return;
+        document.querySelectorAll('#main-page .action-grid > .action-btn').forEach((b, i) => b.style.setProperty('--i', i));
+        document.body.classList.remove('main-enter'); void document.body.offsetWidth; document.body.classList.add('main-enter');
+        clearTimeout(mainEnterAnim._t); mainEnterAnim._t = setTimeout(() => document.body.classList.remove('main-enter'), 1400);
+    }
+    // 問題が切り替わったときに文をすっと入れる
+    function quizSwapAnim() {
+        const q = document.getElementById('quizSentence'); if (!q) return;
+        q.classList.remove('q-in'); void q.offsetWidth; q.classList.add('q-in');
+    }
+    // モーダルを閉じたとき、残像を縮ませて消す（本物はすぐ消えるので、処理やほかの画面には影響しない）
+    (function setupModalGhost() {
+        const mo = new MutationObserver(ms => ms.forEach(m => {
+            const el = m.target;
+            if (!/display:\s*flex/.test(m.oldValue || '') || el.style.display !== 'none' || !motionOK() || el.classList.contains('no-ghost')) return;
+            const g = el.cloneNode(true);
+            g.querySelectorAll('[id]').forEach(x => x.removeAttribute('id'));
+            g.removeAttribute('onclick'); g.setAttribute('aria-hidden', 'true');
+            g.style.display = 'flex'; g.classList.add('ghost-close');
+            (el.parentNode || document.body).appendChild(g);
+            setTimeout(() => g.remove(), 230);
+        }));
+        const watch = () => document.querySelectorAll('.modal-overlay').forEach(el => { if (!el._ghostWatch) { el._ghostWatch = 1; mo.observe(el, { attributes: true, attributeFilter: ['style'], attributeOldValue: true }); } });
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watch); else watch();
+    })();
+    setTimeout(() => { try { mainEnterAnim(); } catch (e) {} }, 250);   // 起動したとき
+    // 冒険へ出発：地図が広がり、道が描かれて旅人が進む → 丸く開いて冒険の画面へ
+    function advDepartAnim(onHidden, onDone) {
+        const el = document.getElementById('adv-trans');
+        if (!el || !motionOK()) return false;
+        let area = null; try { area = ADV_AREAS[advStoredArea()] || ADV_AREAS[0]; } catch (e) {}
+        el.querySelector('.at-t1').textContent = '冒険へ出発！';
+        el.querySelector('.at-t2').textContent = `${area ? area.icon + ' ' + area.name : ''}　—　${currentNB.name}`;
+        el.className = ''; void el.offsetWidth; el.classList.add('on');
+        let hidden = false, revealed = false;
+        const hide = () => { if (hidden) return; hidden = true; try { onHidden(); } catch (e) { console.error(e); } };
+        const reveal = () => {
+            if (revealed) return; revealed = true; hide();
+            el.classList.add('reveal');
+            try { onDone(); } catch (e) { console.error(e); }
+            setTimeout(() => { el.className = ''; el.onclick = null; }, 650);
+        };
+        setTimeout(hide, 340);
+        const t = setTimeout(reveal, 1550);
+        el.onclick = () => { clearTimeout(t); setTimeout(reveal, hidden ? 0 : 360); };
+        return true;
+    }
+    // 冒険から帰還：闇が丸く広がって「帰還」→ メイン画面へ
+    function advReturnAnim(onHidden) {
+        const el = document.getElementById('adv-trans');
+        if (!el || !motionOK()) return false;
+        el.querySelector('.at-t1').textContent = '🏠 帰還';
+        el.querySelector('.at-t2').textContent = '言の葉堂へ戻ります…';
+        el.className = ''; void el.offsetWidth; el.classList.add('home');
+        setTimeout(() => { try { onHidden(); } catch (e) { console.error(e); } }, 520);
+        setTimeout(() => { el.classList.add('out'); mainEnterAnim(); }, 900);
+        setTimeout(() => { el.className = ''; }, 1380);
+        return true;
+    }
+    // 手帖の切り替え：ページをめくる
+    function nbTurnAnim(nb, fn) {
+        const el = document.getElementById('nb-trans');
+        if (!el || !motionOK()) { fadeScreen(fn, 500); return; }
+        const pg = el.querySelector('.nt-page');
+        pg.style.setProperty('--nt1', nb.c ? nb.c[0] : '#f4ead0'); pg.style.setProperty('--nt2', nb.c ? nb.c[1] : '#c8a86a'); pg.style.setProperty('--nt3', nb.c ? nb.c[2] : '#3a2a10');
+        el.querySelector('.nt-gem').textContent = nb.gem || '📒';
+        el.querySelector('.nt-name').textContent = nb.name;
+        el.className = ''; void el.offsetWidth; el.classList.add('on');
+        setTimeout(() => { try { fn(); } catch (e) { console.error(e); } }, 520);
+        setTimeout(() => el.classList.add('out'), 1000);
+        setTimeout(() => { el.className = ''; mainEnterAnim(); }, 1560);
+    }
+
     function enterAdventureMode() {
         if (adventureActive) { showTrainingModal(); return; }
         adventureActive = true;
@@ -6602,7 +6765,12 @@ const Cloud = (function () {
             adv.play().catch(e => console.warn('adventureBGM play failed:', e));
         }
 
-        // フェードアウト
+        if (advDepartAnim(() => {
+            try { advSetBackground(advStoredArea()); } catch (e) {}
+            document.body.classList.add('adventure-mode');
+        }, () => showTrainingModal())) return;
+
+        // フェードアウト（演出を減らす設定のとき）
         fade.style.pointerEvents = 'all';
         fade.style.opacity = '1';
 
@@ -6626,12 +6794,7 @@ const Cloud = (function () {
         // 冒険をやめたら、次はまた1面（はじまりの草原）から
         try { advResetProgress(); } catch (e) {}
         const fade = document.getElementById('adventure-fade');
-
-        // フェードアウト
-        fade.style.pointerEvents = 'all';
-        fade.style.opacity = '1';
-
-        setTimeout(() => {
+        const swap = () => {
             // 背景を元に戻す
             document.body.classList.remove('adventure-mode');
             // 背景のフェードの途中で冒険を出ても、メイン画面の背景が消えたままにならないように
@@ -6645,6 +6808,15 @@ const Cloud = (function () {
                 if (bgmCtx && bgmCtx.state === 'suspended') bgmCtx.resume();
             }
 
+        };
+        if (advReturnAnim(swap)) return;
+
+        // フェードアウト（演出を減らす設定のとき）
+        fade.style.pointerEvents = 'all';
+        fade.style.opacity = '1';
+
+        setTimeout(() => {
+            swap();
             // フェードイン
             fade.style.opacity = '0';
             setTimeout(() => { fade.style.pointerEvents = 'none'; }, 650);
@@ -6991,6 +7163,11 @@ const Cloud = (function () {
         updateCollectionProgress();
         const grid = document.getElementById('collectionGrid');
         grid.innerHTML = '';
+        // 手帖やページが変わったときだけ、カードを順番に並べる演出
+        const gridKey = currentNB.key + '|' + currentCollectionPage;
+        grid.classList.toggle('grid-anim', renderCollection._key !== gridKey && motionOK());
+        renderCollection._key = gridKey;
+        let _ci = 0;
 
         // ページタブ描画
         renderCollectionTabs();
@@ -7004,6 +7181,7 @@ const Cloud = (function () {
             const rarity = getRarity(card.no);
             const cardEl = document.createElement('div');
             cardEl.className = `card-container ${isUnlocked ? `card-rarity-${rarity}` : 'locked'}`;
+            cardEl.style.setProperty('--i', Math.min(_ci++, 30));
             cardEl.onclick = () => tapCard(card, isUnlocked);
 
             const srsBadge = isUnlocked ? starsHTML(getStars(card.id), 10) : '';
@@ -7597,19 +7775,19 @@ const Cloud = (function () {
             pool.innerHTML = '<div style="color:#888;padding:8px">カードがありません</div>';
             return;
         }
-        const rarityColors = { UR: '#ff8800', SSR: '#ff8800', SR: '#cc88ff', R: '#4499ff', N: '#888' };
+        const rarityColors = { UR: '#e0700a', SSR: '#e0700a', SR: '#9a4ad8', R: '#2a6fd8', N: '#6a6a78' };
         const frag = document.createDocumentFragment();
         myCards.forEach(({ card, rarity, skill, power, guard }) => {
             const div = document.createElement('div');
             div.className = 'formation-pool-card' + (formationState.usedCardIds.has(card.id) ? ' used' : '');
             div.innerHTML = `
                 <img src="${card.thumb}" loading="lazy" decoding="async" alt="" onerror="imgFallback(this,'${card.id}')">
-                <div class="formation-pool-card-overlay">
-                    <div class="formation-pool-card-name">${(card.quiz.answer||'').slice(0,8)}</div>
-                    <div class="formation-pool-card-rarity" style="color:${rarityColors[rarity]||'#888'}">${rarity}</div>
-                    <div class="formation-pool-card-stats">P:${power} G:${guard}</div>
+                <div class="formation-pool-card-rar" style="--rc:${rarityColors[rarity] || '#666'}">${rarity}</div>
+                <div class="formation-pool-card-info">
+                    <div class="formation-pool-card-name">${card.quiz.answer || ''}</div>
+                    <div class="formation-pool-card-stats"><b class="p">P ${power}</b><b class="g">G ${guard}</b></div>
                     <div class="formation-pool-card-skill">${skill.icon}${skill.name}<span class="c">・力${skill.cost || 30}</span></div>
-                    <div>${starsHTML(getStars(card.id), 8)}</div>
+                    <div>${starsHTML(getStars(card.id), 9)}</div>
                 </div>`;
             div.title = `${skill.icon}${skill.name}（力${skill.cost || 30}）${skill.desc}`;
             div.onclick = () => { if (!formationState.usedCardIds.has(card.id)) addCardToFormation(card); };
@@ -7740,7 +7918,7 @@ const Cloud = (function () {
         let done = false;
         const run = () => { if (done) return; done = true; try { fn(); } catch (e) { console.error(e); } };
         setTimeout(run, flee ? 650 : 600);   // 真っ暗になったところで画面を切り替える
-        setTimeout(() => { el.classList.remove(cls); run(); }, flee ? 1450 : 1350);
+        setTimeout(() => { el.classList.remove(cls); run(); if (!adventureActive) mainEnterAnim(); }, flee ? 1450 : 1350);
     }
 
     function startBattle(stage) {
@@ -8911,6 +9089,7 @@ const Cloud = (function () {
         }
 
         document.getElementById('quiz-overlay').style.display = 'flex';
+        quizSwapAnim();
     }
     function showTrainingResult() {
         const total = trainingSession.correct + trainingSession.incorrect;
@@ -9948,6 +10127,7 @@ const Cloud = (function () {
         btn.onclick = submit;
         input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
         ov.style.display = 'flex';
+        quizSwapAnim();
         setTimeout(() => input.focus(), 150);
     }
 
@@ -10455,7 +10635,7 @@ const Cloud = (function () {
             }
             closeNotebookPicker();
             const fromKey = currentNB.key;
-            fadeScreen(() => {
+            nbTurnAnim(nb, () => {
                 if (typeof adventureActive !== 'undefined' && adventureActive) exitAdventureMode();
                 notebookState.current = key;
                 saveNotebookState();
@@ -10474,7 +10654,7 @@ const Cloud = (function () {
                 updateDailyGoalDisplay();
                 updateAdventureBattleBtn();
                 window.scrollTo(0, 0);
-            }, 500);
+            });
         };
         if (nb.key === 'PT') { proceed(null); return; }
         fetch(`data/nb_${nb.key}.json?v=${NB_DATA_VERSION}`)

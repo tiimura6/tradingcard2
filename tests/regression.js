@@ -116,7 +116,7 @@ test('BGMが重ならない（iPhone相当：消音が効かない環境）', as
   assert((await playing(p)) === '', '起動直後に鳴っている: ' + await playing(p));
   await p.click('#bgmBtn'); await p.waitForTimeout(800);
   assert((await playing(p)) === 'main.mp3', 'メイン: ' + await playing(p));
-  await p.evaluate(() => enterAdventureMode()); await p.waitForTimeout(1600);
+  await p.evaluate(() => enterAdventureMode()); await p.waitForTimeout(2000);
   assert((await playing(p)) === 'adventure.mp3', '冒険: ' + await playing(p));
   await p.evaluate(() => closeTrainingModal(true)); await p.waitForTimeout(1800);
   assert((await playing(p)) === 'main.mp3', '冒険後: ' + await playing(p));
@@ -141,7 +141,7 @@ test('カードを引く：50G（被りあり）と100G（新カード確定）'
 
 test('冒険で正解するとXPとゴールドが増える／記録画面にカウントアップ表示', async b => {
   const p = await openApp(b);
-  await p.evaluate(() => enterAdventureMode()); await p.waitForTimeout(1500);
+  await p.evaluate(() => enterAdventureMode()); await p.waitForTimeout(2000);
   await p.evaluate(() => openTrainingMode()); await p.waitForTimeout(400);
   const g0 = await p.evaluate(() => gold);
   await p.evaluate(() => document.querySelector('.quiz-choice-btn[data-correct]').click()); await p.waitForTimeout(1300);
@@ -180,7 +180,7 @@ test('★：復習日前の連続正解では上がらない／覚醒クエス�
   const p = await openApp(b, { seed: { cardMergeV1: '1', srsData: { 'a1-30': { level: 2, nextReview: now + 86400000 * 3, correct: 2, incorrect: 0 } } } });
   await p.evaluate(() => { updateSRS('a1-40', true); updateSRS('a1-40', true); updateSRS('a1-40', true); });
   assert((await p.evaluate(() => srsData['a1-40'].level)) === 1, '連続正解で段階が上がった');
-  await p.evaluate(() => enterAdventureMode()); await p.waitForTimeout(1500);
+  await p.evaluate(() => enterAdventureMode()); await p.waitForTimeout(2000);
   await p.evaluate(() => { closeTrainingModal(false); openTrainingMode(); trainingSession.qCount = 3; showTrainingQuiz(); }); await p.waitForTimeout(300);
   assert((await p.evaluate(() => document.getElementById('quizTitle').innerText)).includes('覚醒'), '覚醒クエストが出ない');
   await p.fill('#awakenInput', await p.evaluate(() => cardsData[29].quiz.answer));
@@ -430,7 +430,7 @@ test('文法の試練：冒険の5問に1問・カードは減らない・正解
   assert(new Set(data.map(g => g.q)).size === data.length, '同じ問題文がある');
   const p = await openApp(b, { seed: { cardMergeV1: '1', unlockedCards: ids('a1', 1, 20) } });
   assert((await p.evaluate(() => !!document.getElementById('grammarBtn'))) === false, '別ボタンが残っている');
-  await p.evaluate(() => enterAdventureMode()); await p.waitForTimeout(1500);
+  await p.evaluate(() => enterAdventureMode()); await p.waitForTimeout(2000);
   await p.evaluate(() => { closeTrainingModal(false); openTrainingMode(); }); await p.waitForTimeout(1200);
   await p.evaluate(() => { trainingSession.qCount = 2; showTrainingQuiz(); }); await p.waitForTimeout(300);
   const q = await p.evaluate(() => ({ title: document.getElementById('quizTitle').innerText, sent: !!document.querySelector('#quizSentence .gq-sent .bl'), n: document.querySelectorAll('#quizChoices .quiz-choice-btn').length, cards: trainingSession.cards.length }));
@@ -723,7 +723,7 @@ test('レベル判定テスト：はじめての人に自動で出る／全問�
 
 test('冒険：地域ごとに背景が変わる・正解で演出が出る／時間ボーナスは「時間をあけて」の表記', async b => {
   const p = await openApp(b, { seed: { cardMergeV1: '1', advArea: '3' } });
-  await p.evaluate(() => enterAdventureMode()); await p.waitForTimeout(1500);
+  await p.evaluate(() => enterAdventureMode()); await p.waitForTimeout(2000);
   const txt = await p.evaluate(() => document.getElementById('trainingModalContent').innerText);
   assert(txt.includes('時間をあけて') && !txt.includes('8時間後冒険'), '時間ボーナスの表記');
   await p.evaluate(() => { closeTrainingModal(false); openTrainingMode(); }); await p.waitForTimeout(500);

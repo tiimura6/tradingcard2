@@ -191,7 +191,7 @@ async function newDevice(b, gas, name) {
   // 学習
   await A.p.evaluate(() => { gold = 500; saveGold(); drawMulti('normal'); closeMultiDraw(); });
   await A.p.waitForTimeout(800);
-  await A.p.evaluate(() => enterAdventureMode()); await A.p.waitForTimeout(1500);
+  await A.p.evaluate(() => enterAdventureMode()); await A.p.waitForTimeout(2000);
   await A.p.evaluate(() => { closeTrainingModal(false); openTrainingMode(); });
   for (let i = 0; i < 3; i++) {
     await A.p.waitForTimeout(400);
