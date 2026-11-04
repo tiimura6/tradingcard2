@@ -776,8 +776,8 @@ test('冒険：地域ごとに背景が変わる・正解で演出が出る／�
   assert(g2.fresh && g2.area === 4 && g2.last === 5 && g2.t.includes('50問') && g2.a1 === 2, JSON.stringify(g2));
   // 冒険をやめると、次はまた1面から（今の手帖の進み具合を0に）
   const q = await p.evaluate(() => { const a = advState(); a.area = 2; a.step = 7; advSave(a); adventureActive = true; exitAdventureMode();
-    return { p: JSON.parse(localStorage.getItem('advProg')).A1, s: trainingSession.adv, src: advBgmSrc(6), mountain: advBgmSrc(5), ruins: advBgmSrc(4), hill: advBgmSrc(3), forest: advBgmSrc(1), meadow: advBgmSrc(0), cave: advBgmSrc(2) }; });
-  assert(q.p.area === 0 && q.p.step === 0 && q.s === null && q.src === './bgm/adventure.mp3' && q.forest === './bgm/adv/bgm_forest.mp3' && q.meadow === './bgm/adv/bgm_meadow.mp3' && q.cave === './bgm/adv/bgm_cave.mp3' && q.hill === './bgm/adv/bgm_hill.mp3' && q.ruins === './bgm/adv/bgm_ruins.mp3' && q.mountain === './bgm/adv/bgm_mountain.mp3', JSON.stringify(q));
+    return { p: JSON.parse(localStorage.getItem('advProg')).A1, s: trainingSession.adv, castle: advBgmSrc(6), mountain: advBgmSrc(5), ruins: advBgmSrc(4), hill: advBgmSrc(3), forest: advBgmSrc(1), meadow: advBgmSrc(0), cave: advBgmSrc(2) }; });
+  assert(q.p.area === 0 && q.p.step === 0 && q.s === null && q.castle === './bgm/adv/bgm_castle.mp3' && q.forest === './bgm/adv/bgm_forest.mp3' && q.meadow === './bgm/adv/bgm_meadow.mp3' && q.cave === './bgm/adv/bgm_cave.mp3' && q.hill === './bgm/adv/bgm_hill.mp3' && q.ruins === './bgm/adv/bgm_ruins.mp3' && q.mountain === './bgm/adv/bgm_mountain.mp3', JSON.stringify(q));
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
