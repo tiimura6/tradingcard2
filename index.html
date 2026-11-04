@@ -2131,7 +2131,10 @@
         /* 背景画像は1枚（BATTLE_BG_FILE）を共通で使い、手帖ごとに色合いを変える（.bfx-img のフィルター＋色の重ね） */
         #battle-overlay { background: #07050a; }
         body.battle-mode #bg-layer { background-image: var(--battle-bg, url('./bgm/boss-bg.jpg')) !important; }
-        #battle-fx { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+        #battle-fx { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; contain: paint; }
+        /* 横にはみ出す要素（大きなボス・霧・オーロラ）があっても、バトル画面を左右にスクロールさせない */
+        #battle-overlay { overflow-x: hidden; }
+        #battleEnemyImg { object-fit: contain; }
         body:not(.battle-mode) #battle-fx { display: none; }
         #battle-fx .bfx-img { position: absolute; inset: 0; background: var(--battle-bg, url('./bgm/boss-bg.jpg')) center / cover no-repeat; }
         #battle-fx .bfx-img::after { content: ''; position: absolute; inset: 0; mix-blend-mode: color; opacity: .55; }
@@ -7407,10 +7410,11 @@ const Cloud = (function () {
             + (stage.type === 'final' ? ' drop-shadow(0 0 18px rgba(255,210,90,0.65))' : '');
         // ボスの大きさ：下位の手帖ほど小さく、白金に近づくほど大きい（討伐戦はさらに一回り大きく）
         const BOSS_SIZE = { A1: 118, A2: 142, B1: 168, B2: 196, PT: 226 };
-        const bh = Math.round((BOSS_SIZE[stage.nb || currentNB.key] || 190) * (stage.type === 'final' || stage.type === 'hof' ? 1.12 : stage.type === 'raid' ? 1.3 : 1));
+        const bh = Math.round((BOSS_SIZE[stage.nb || currentNB.key] || 190) * (stage.type === 'final' || stage.type === 'hof' ? 1.12 : stage.type === 'raid' ? 1.15 : 1));
         bossImg.style.transform = '';
         bossImg.style.maxHeight = bh + 'px';
-        bossImg.style.maxWidth = `min(${Math.round(bh * 1.47)}px, 86vw)`;
+        bossImg.style.maxWidth = `min(${Math.round(bh * 1.47)}px, 78vw)`;
+        bossImg.style.width = 'auto'; bossImg.style.height = 'auto';
         bossSprite.style.fontSize = Math.round(bh * 0.5) + 'px';
         if (stage.img) {
             const loadedOk = bossImg.getAttribute('data-loaded-src') === stage.img
