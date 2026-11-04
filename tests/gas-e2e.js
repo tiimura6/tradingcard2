@@ -14,6 +14,7 @@ const check = (cond, msg) => { console.log((cond ? '  ✅ ' : '  ❌ ') + msg); 
 async function newDevice(b, gas, name) {
   const c = await b.newContext({ viewport: { width: 390, height: 844 } });
   await c.addInitScript(() => { window.confetti = () => {}; window.__alerts = []; window.alert = m => window.__alerts.push(String(m)); window.confirm = () => true;
+    if (!localStorage.getItem('tutorialDone')) localStorage.setItem('tutorialDone', 'test');   // 遊び方の案内は regression.js で確認
     // 物語の場面は画面をふさぐので、読んだことにしておく（物語は regression.js で確認）
     if (!localStorage.getItem('storySeen')) localStorage.setItem('storySeen', JSON.stringify(Object.fromEntries(['prologue','end_A1','start_A2','end_A2','start_B1','end_B1','start_B2','end_B2','start_PT','end_PT','hof'].map(k => [k, 1])))); });
   await c.route('**/index.html*', r => r.fulfill({ status: 200, contentType: 'text/html', body: html }));

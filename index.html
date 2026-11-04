@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>言の葉堂のひみつ手帖</title>
+    <!-- ホーム画面に追加（アプリとして起動） -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#2a1a40">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="ひみつ手帖">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
@@ -1341,8 +1350,29 @@
         .all-cp-seg i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; transition: width .6s ease; }
         .all-cp-legend { display: flex; justify-content: space-between; font-size: 9.5px; color: #b8acd8; margin-top: 3px; }
 
+        .spk-btn { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; padding: 2px 9px; border-radius: 14px; border: 1px solid rgba(160,120,255,.55);
+            background: rgba(90,60,170,.18); color: #7a4ad0; font-size: 13px; cursor: pointer; vertical-align: middle; line-height: 1.5; font-family: inherit; }
+        body.adventure-mode .spk-btn, #zoom-info-panel .spk-btn, #zoom-overlay .spk-btn { color: #d8c8ff; background: rgba(120,90,220,.28); }
+        .listen-play { display: block; margin: 6px auto 4px; width: 92px; height: 92px; border-radius: 50%; border: 3px solid #b090ff; font-size: 40px; cursor: pointer;
+            background: radial-gradient(circle, #6a4ad0, #3a2080); color: #fff; box-shadow: 0 0 18px rgba(150,110,255,.6); }
+        .listen-play:active { transform: scale(.95); }
         .zoom-close-bar { display: block; margin: 10px auto 0; padding: 9px 30px; border-radius: 20px; border: 1.5px solid rgba(255,220,140,.6); background: rgba(20,12,30,.85);
             color: #ffe9a8; font-size: 14px; font-weight: bold; cursor: pointer; font-family: 'Noto Serif JP', serif; }
+        /* ===== 遊び方の案内 ===== */
+        #tutorial { position: fixed; inset: 0; z-index: 99000; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(8,4,18,.92); }
+        #tutorial .tu-box { width: 100%; max-width: 420px; background: linear-gradient(180deg, #2a1a48, #160c2a); border: 2px solid rgba(255,210,110,.55); border-radius: 18px; padding: 22px 20px 16px; color: #f0e6ff; text-align: center; box-shadow: 0 0 40px rgba(160,110,255,.35); }
+        #tutorial .tu-ic { font-size: 64px; line-height: 1; margin: 4px 0 10px; animation: tu-pop .5s ease; }
+        @keyframes tu-pop { 0% { transform: scale(.4); opacity: 0; } 70% { transform: scale(1.1); } 100% { transform: none; opacity: 1; } }
+        #tutorial h3 { margin: 0 0 8px; font-size: 19px; color: #ffe08a; font-family: 'Noto Serif JP', serif; }
+        #tutorial p { margin: 0; font-size: 14px; line-height: 1.85; color: #e2d6f6; text-align: left; }
+        #tutorial .tu-dots { margin: 14px 0 10px; display: flex; gap: 7px; justify-content: center; }
+        #tutorial .tu-dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.25); }
+        #tutorial .tu-dots i.on { background: #ffd060; }
+        #tutorial .tu-btns { display: flex; justify-content: space-between; gap: 10px; }
+        #tutorial .tu-btns button { flex: 1; padding: 11px; border-radius: 12px; font-size: 14.5px; cursor: pointer; font-family: 'Noto Serif JP', serif; }
+        #tutorial .tu-skip { border: 1px solid rgba(255,255,255,.3); background: transparent; color: #c8b8e8; }
+        #tutorial .tu-next { border: 2px solid #f0c040; background: linear-gradient(135deg,#8a5a10,#5a3400); color: #fff3c8; font-weight: bold; }
+
         /* ===== 設定 ===== */
         #settings-modal .custom-box { width: 92%; max-width: 400px; background: #160e24; color: #eadff8; }
         #settings-modal h3 { margin: 0 0 10px; color: #ffe9a8; font-family: 'Noto Serif JP', serif; }
@@ -2479,6 +2509,7 @@
 </div>
 
 <div id="raid-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeRaid()"><div class="custom-box" id="raidBox" style="width:94%;max-width:460px;max-height:88vh;overflow-y:auto;background:#1a0a10;color:#f6e2dc;"></div></div>
+<div id="tutorial"><div class="tu-box" id="tuBox"></div></div>
 <div id="settings-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeSettings()"><div class="custom-box" id="settingsBox"></div></div>
 <div id="achv-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeAchievements()"><div class="custom-box" id="achvBox"></div></div>
 <!-- Gacha Choice Modal -->
@@ -4505,9 +4536,9 @@ const Cloud = (function () {
                 if (typeof renderCollection === 'function') try { renderCollection(); } catch (e) {}
             }
         }).catch(() => {});
-        // 一度見た画像は端末に保存（2回目からは通信なし・電波がなくても表示）
-        if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('./sw.js').catch(() => {});
     })();
+    // ホーム画面に追加できるようにする（あわせて、一度見たカードの画像を端末に保存する）
+    if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('./sw.js').catch(() => {});
 
     function buildCardsFor(nb, rows) {
         const list = [];
@@ -4896,6 +4927,36 @@ const Cloud = (function () {
             desc.innerHTML = `${s.stage.name}に ${pts.toLocaleString()}点 のダメージ！<br><span style="color:#ff9a8a;">記録を送れませんでした（${r && r.error === 'limit' ? '今日の挑戦回数を使い切っています' : '通信エラー'}）</span>`;
         }
     }
+    /* ========== 発音の読み上げ（端末の音声合成。通信なし・費用なし） ========== */
+    let _ttsVoice = null;
+    function ttsAvailable() { return 'speechSynthesis' in window && typeof SpeechSynthesisUtterance === 'function'; }
+    function ttsOn() { return ttsAvailable() && appSettings.tts !== false; }
+    function pickVoice() {
+        if (!ttsAvailable()) return null;
+        const vs = speechSynthesis.getVoices() || [];
+        _ttsVoice = vs.find(v => /^en[-_]US/i.test(v.lang) && /Google|Samantha|Alex|Aria|Jenny|Natural/i.test(v.name))
+            || vs.find(v => /^en[-_]US/i.test(v.lang)) || vs.find(v => /^en[-_]GB/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null;
+        return _ttsVoice;
+    }
+    if (ttsAvailable()) { pickVoice(); try { speechSynthesis.addEventListener('voiceschanged', pickVoice); } catch (e) {} }
+    function speakText(text, rate) {
+        if (!ttsOn() || !text) return false;
+        try {
+            speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(String(text));
+            u.lang = (_ttsVoice && _ttsVoice.lang) || 'en-US';
+            if (_ttsVoice || pickVoice()) u.voice = _ttsVoice;
+            u.rate = rate || 0.9;
+            speechSynthesis.speak(u);
+            return true;
+        } catch (e) { return false; }
+    }
+    // 読み上げボタン（data-say に読む文。HTMLとして安全な形にして入れる）
+    function spkBtn(text, label) {
+        if (!ttsOn() || !text) return '';
+        const v = String(text).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        return `<button class="spk-btn" type="button" data-say="${v}" onclick="event.stopPropagation();speakText(this.dataset.say, this.dataset.slow ? .7 : .9)" title="発音を聞く">🔊${label ? ' ' + label : ''}</button>`;
+    }
     /* ========== 設定（この端末だけに保存） ==========
        BGM・効果音・演出を減らす・文字の大きさ。称号・実績、アカウント、レベル判定テストへの入口もここ */
     let appSettings = safeParse('appSettings', null) || {};
@@ -4916,20 +4977,66 @@ const Cloud = (function () {
         box.innerHTML = `<h3>⚙️ 設定</h3>
             <div class="set-row"><div class="lb">🎵 BGM<small>タブを閉じると元に戻ります</small></div>${tg('bgm', bgmOn || _bgmResumePending, 'if(!bgmOn)toggleBGM();openSettings()', 'if(bgmOn)toggleBGM();_bgmResumePending=false;updateBgmButtons();openSettings()')}</div>
             <div class="set-row"><div class="lb">🔔 効果音<small>正解・カード獲得などの音</small></div>${tg('se', seOn(), "setSetting('se',true)", "setSetting('se',false)")}</div>
+            ${ttsAvailable() ? `<div class="set-row"><div class="lb">🗣️ 発音の読み上げ<small>🔊ボタンで英単語・例文を読み上げます</small></div>${tg('tts', ttsOn(), "setSetting('tts',true)", "setSetting('tts',false)")}</div>
+            <div class="set-row"><div class="lb">👂 聞き取り問題<small>冒険で、音を聞いて意味を選ぶ問題を出します</small></div>${tg('listen', ttsOn() && appSettings.listen !== false, "setSetting('listen',true)", "setSetting('listen',false)")}</div>` : ''}
             <div class="set-row"><div class="lb">✨ 演出を減らす<small>光の点滅やアニメーションを短くします</small></div>${tg('reduce', !!appSettings.reduce, "setSetting('reduce',true)", "setSetting('reduce',false)")}</div>
             <div class="set-row"><div class="lb">🔠 文字を大きく<small>問題やカードの画面を大きく表示します</small></div>${tg('big', !!appSettings.big, "setSetting('big',true)", "setSetting('big',false)")}</div>
             <button class="set-link" onclick="closeSettings();openAchievements()"><span>🏅 称号・実績</span><span id="setAchvCount" style="font-size:12px;opacity:.8;"></span></button>
             ${GAS_URL ? `<button class="set-link" onclick="closeSettings();Cloud.chipClick()"><span>👤 ${Cloud.isLoggedIn() ? 'アカウント' : 'ログイン・新規登録'}<small style="display:block;font-size:11px;color:#c8b090;">${Cloud.accountLabel()}</small></span><span>›</span></button>` : ''}
             <button class="set-link" onclick="closeSettings();openCouponModal()"><span>🗝️ 秘密の鍵</span><span>›</span></button>
             <button class="set-link" onclick="closeSettings();openPlacement(true)"><span>🎯 レベル判定テストを受ける</span><span>›</span></button>
+            <button class="set-link" onclick="closeSettings();openTutorial()"><span>📘 遊び方</span><span>›</span></button>
+            <button class="set-link" onclick="installApp()"><span>📲 ホーム画面に追加</span><span>›</span></button>
             <button class="modal-cancel-btn" onclick="closeSettings()" style="margin-top:12px;">閉じる</button>`;
         document.getElementById('settings-modal').style.display = 'flex';
         updateAchvBtn();
     }
     function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
+    // ホーム画面に追加：使える端末ではその場で追加の画面を出し、iPhoneなどでは手順を案内する
+    let _installEvt = null;
+    window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); _installEvt = e; });
+    function installApp() {
+        if (window.matchMedia && matchMedia('(display-mode: standalone)').matches) { alert('すでにホーム画面のアプリとして開いています。'); return; }
+        if (_installEvt) { _installEvt.prompt(); _installEvt.userChoice.finally(() => { _installEvt = null; }); return; }
+        const ios = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        alert(ios ? 'Safariで開き、画面下の「共有」ボタン（□に↑）→「ホーム画面に追加」を選んでください。'
+                  : 'ブラウザのメニュー（︙）から「ホーム画面に追加」または「アプリをインストール」を選んでください。');
+    }
     applySettings();
     // 演出を減らす設定のときは紙吹雪を出さない
     (function () { const cf = window.confetti; window.confetti = function () { if (reduceMotion()) return; return cf && cf.apply(this, arguments); }; })();
+    /* ========== 遊び方の案内（はじめての人に1回。設定の「遊び方」からいつでも見られる） ========== */
+    const TUTORIAL = [
+        { ic: '🧭', t: 'カードを探す', p: 'ゴールドを使って、英単語のカードを探しに行こう。問題に答えると、その単語のカードが手に入ります。<br>新しいカードは1日100枚まで。' },
+        { ic: '🗺️', t: '冒険で鍛える', p: '「冒険」で問題に答えて先へ進もう。正解するとゴールドと経験値がもらえます。<br>まちがえた単語は、あとで復習に出てきます。' },
+        { ic: '⚔️', t: 'スライムとバトル', p: 'カードを3枚えらんで部隊をつくり、スライムに挑もう。<br>「ボスの様子」を見て、攻撃・スキル・守るを使い分けるのがコツ。討伐すると次のタブが開きます。' },
+        { ic: '⭐', t: '覚えるほど強くなる', p: '日をあけて正解するほど、カードの★が増えて強くなります。<br>🔊で発音を聞いたり、📈学習レポートで成長を確かめたりしながら、毎日少しずつ続けよう！' },
+    ];
+    let _tuIdx = 0;
+    function openTutorial() { _tuIdx = 0; renderTutorial(); document.getElementById('tutorial').style.display = 'flex'; }
+    function renderTutorial() {
+        const s = TUTORIAL[_tuIdx], last = _tuIdx === TUTORIAL.length - 1;
+        document.getElementById('tuBox').innerHTML = `<div class="tu-ic">${s.ic}</div><h3>${s.t}</h3><p>${s.p}</p>
+            <div class="tu-dots">${TUTORIAL.map((_, i) => `<i class="${i === _tuIdx ? 'on' : ''}"></i>`).join('')}</div>
+            <div class="tu-btns"><button class="tu-skip" onclick="closeTutorial()">${last ? '閉じる' : 'スキップ'}</button>
+            <button class="tu-next" onclick="${last ? 'closeTutorial()' : '_tuIdx++;renderTutorial()'}">${last ? 'はじめる！' : '次へ ▶'}</button></div>`;
+    }
+    function closeTutorial() {
+        document.getElementById('tutorial').style.display = 'none';
+        try { localStorage.setItem('tutorialDone', '1'); } catch (e) {}
+    }
+    // カードを1枚も持っていない人に、ログイン・レベル判定テストが終わったあと自動で出す
+    (function autoTutorial() {
+        let tries = 0;
+        const timer = setInterval(() => {
+            if (++tries > 240) { clearInterval(timer); return; }
+            try { if (localStorage.getItem('tutorialDone') || unlockedCards.length > 0) { clearInterval(timer); return; } } catch (e) { clearInterval(timer); return; }
+            const busy = document.getElementById('appLoading') || ['auth-overlay', 'placement-overlay', 'settings-modal'].some(id => { const el = document.getElementById(id); return el && getComputedStyle(el).display !== 'none'; });
+            if (busy) return;
+            clearInterval(timer);
+            openTutorial();
+        }, 1500);
+    })();
     /* ========== 称号・実績 ==========
        条件を満たすと解除（ゴールドの報酬つき）。解除した実績の名前は「称号」として、レベルの横に1つ表示できる
        進み具合の一部（バトルの勝利数など）は playStats に数える */
@@ -6646,6 +6753,7 @@ const Cloud = (function () {
                 <div>${starsHTML(getStars(card.id), 20) || starsHTML(0) || '<span style="color:rgba(255,255,255,.35);font-size:20px;">★★★★★</span>'}</div>
                 <div style="font-size:11px;color:#e8d8a8;margin-top:2px;">${nextStarHint(card.id)}</div>
             </div>
+            ${ttsOn() ? `<div style="text-align:center;margin-top:8px;">${spkBtn(card.quiz.answer, '発音を聞く')}${card.quiz.example ? spkBtn(card.quiz.example, '例文') : ''}</div>` : ''}
             <button class="zoom-close-bar" onclick="event.stopPropagation();closeZoom()">✕ 閉じる</button>
         `;
         document.getElementById('zoom-overlay').style.display = 'flex';
@@ -6692,7 +6800,7 @@ const Cloud = (function () {
         const list = arr => (arr && arr.length) ? `<ul class="zip-phrases">${arr.map(x => `<li>${E(x)}</li>`).join('')}</ul>` : '';
         let html = `
             <div class="zip-word">
-                <div class="zip-word-en">${E(q.answer || ('No.' + card.no))}</div>
+                <div class="zip-word-en">${E(q.answer || ('No.' + card.no))}${spkBtn(q.answer)}</div>
                 ${d.i ? `<div style="font-size:15px;color:#c8b8f0;font-family:'Lucida Sans Unicode','Arial Unicode MS','Segoe UI',sans-serif;margin-top:2px;">${E(d.i)}</div>` : ''}
                 ${ss.map(x => `<div class="zip-word-ja"${multi ? ' style="margin-top:4px;"' : ''}>${x.pos ? `<span class="zip-pos-badge">${E(x.pos)}</span> ` : ''}${E(x.meaning || '')}</div>`).join('')}
             </div>`;
@@ -6702,7 +6810,7 @@ const Cloud = (function () {
         const exHtml = ss.filter(x => x.example).map((x, k) =>
             `<div${k ? ' style="margin-top:10px;padding-top:10px;border-top:1px dashed rgba(160,130,220,.25);"' : ''}>`
             + (multi ? `<div style="font-size:11px;color:#b8a0e8;margin-bottom:2px;"><span class="zip-pos-badge">${E(x.pos)}</span> ${E(x.meaning)}</div>` : '')
-            + `<div style="font-family:Georgia,'Noto Serif JP',serif;line-height:1.6;">${E(x.example)}</div>`
+            + `<div style="font-family:Georgia,'Noto Serif JP',serif;line-height:1.6;">${E(x.example)}${spkBtn(x.example)}</div>`
             + (x.exMeaning ? `<div style="font-size:12px;color:#8a7a9a;margin-top:3px;line-height:1.6;">${E(x.exMeaning)}</div>` : '')
             + `</div>`).join('');
         if (exHtml) html += sec(multi ? '📖 例文（意味ごと）' : '📖 例文', exHtml);
@@ -8329,6 +8437,8 @@ const Cloud = (function () {
             if (r < 0.40) quizType = 'fillBlank';
             else if (r < 0.70) quizType = 'meaningToEng';
             else quizType = 'engToMeaning';
+            // 聞き取り問題（読み上げが使えて、設定でオンのとき）：およそ7問に1問
+            if (ttsOn() && appSettings.listen !== false && Math.random() < 0.15) quizType = 'listen';
         } else {
             const rarity = getRarity(card.no);
             const isAdvanced = (rarity === 'SR' || rarity === 'UR') && Math.random() < 0.5;
@@ -8351,7 +8461,26 @@ const Cloud = (function () {
             return arr;
         }
 
-        if (quizType === 'engToMeaning') {
+        if (quizType === 'listen') {
+            // 【聞き取り】音を聞いて、日本語の意味を選ぶ（単語は答えたあとに表示）
+            const correctMeaning = card.quiz.meaning;
+            const choices = shuffle([correctMeaning, ...safeDistractors(card, shuffle(quizPool().map(q => q.meaning).filter(m => m !== correctMeaning)), 'meaning').slice(0, 3)]);
+            document.getElementById('quizTitle').innerText = '👂 聞き取り問題';
+            const say = String(card.quiz.answer).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+            document.getElementById('quizSentence').innerHTML =
+                `<div style="font-size:13px;color:#b08050;margin-bottom:4px;">聞こえた英単語の意味は？</div>` +
+                `<button class="listen-play" type="button" data-say="${say}" onclick="speakText(this.dataset.say, (this.dataset.n = (+this.dataset.n || 0) + 1) > 1 ? .7 : .9)">🔊</button>` +
+                `<div style="font-size:11px;color:#907060;">タップでもう一度（2回目からはゆっくり）</div>`;
+            setTimeout(() => speakText(card.quiz.answer, .9), 350);
+            choices.forEach(ans => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-choice-btn';
+                btn.textContent = ans;
+                if (ans === correctMeaning) btn.dataset.correct = '1';
+                btn.onclick = () => submitChoice(ans === correctMeaning, card, ans, btn);
+                choicesEl.appendChild(btn);
+            });
+        } else if (quizType === 'engToMeaning') {
             // 【タイプA】英単語→日本語意味選択
             const correctMeaning = card.quiz.meaning;
             const allMeanings = shuffle(
@@ -8362,7 +8491,7 @@ const Cloud = (function () {
             document.getElementById('quizTitle').innerText = '📖 意味を選ぼう';
             document.getElementById('quizSentence').innerHTML =
                 `<div style="font-size:13px;color:#b08050;margin-bottom:6px;">この単語の日本語の意味は？</div>` +
-                `<span style="font-size:26px;font-weight:bold;letter-spacing:0.05em;color:#3a2010;">${card.quiz.answer}</span>` +
+                `<span style="font-size:26px;font-weight:bold;letter-spacing:0.05em;color:#3a2010;">${card.quiz.answer}</span>${spkBtn(card.quiz.answer)}` +
                 `<div style="font-size:12px;color:#907060;margin-top:5px;">${card.quiz.pos || ''}</div>`;
 
             choices.forEach(ans => {
@@ -8713,9 +8842,9 @@ const Cloud = (function () {
                 meaningEl.innerHTML = `
                     <div style="text-align:center;font-size:16px;font-weight:bold;color:${resultColor};margin-bottom:10px;">${resultIcon}</div>
                     <div style="background:${resultBg};border:1px solid ${resultBorder};border-radius:12px;padding:12px 14px;">
-                        <div style="font-size:14px;font-weight:bold;color:${textMain};margin-bottom:6px;">💡 ${card.quiz.answer}${(() => { const dd = getDetailSync(card); return dd && dd.i ? ` <span style="font-weight:normal;font-size:12px;opacity:.85;">${dd.i}</span>` : ''; })()}</div>
+                        <div style="font-size:14px;font-weight:bold;color:${textMain};margin-bottom:6px;">💡 ${card.quiz.answer}${(() => { const dd = getDetailSync(card); return dd && dd.i ? ` <span style="font-weight:normal;font-size:12px;opacity:.85;">${dd.i}</span>` : ''; })()}${spkBtn(card.quiz.answer)}</div>
                         <div style="font-size:12px;color:${textSub};margin-bottom:${exMeaning ? '8px' : '0'};">${cardSenses(card).length > 1 ? card.quiz.pos + ' ' : ''}${card.quiz.meaning}${(() => { const o = cardSenses(card).filter(x => x !== card.quiz); return o.length ? `<div style="font-size:11px;opacity:.85;margin-top:3px;">ほかの意味：${o.map(x => x.pos + ' ' + x.meaning).join('　')}</div>` : ''; })()}</div>
-                        ${card.quiz.example && card.quiz.exMeaning ? `<div style="font-size:12.5px;color:${textMain};line-height:1.6;border-top:1px solid ${borderEx};padding-top:8px;font-family:Georgia,'Noto Serif JP',serif;">📖 ${String(card.quiz.example).replace(/</g, '&lt;')}</div>` : ''}
+                        ${card.quiz.example && card.quiz.exMeaning ? `<div style="font-size:12.5px;color:${textMain};line-height:1.6;border-top:1px solid ${borderEx};padding-top:8px;font-family:Georgia,'Noto Serif JP',serif;">📖 ${String(card.quiz.example).replace(/</g, '&lt;')}${spkBtn(card.quiz.example, '例文')}</div>` : ''}
                         ${exMeaning ? `<div style="font-size:12px;color:${textEx};line-height:1.7;${card.quiz.example && card.quiz.exMeaning ? 'margin-top:3px;' : `border-top:1px solid ${borderEx};padding-top:8px;`}">${card.quiz.example && card.quiz.exMeaning ? '' : '📖 '}${exMeaning}</div>` : ''}
                     </div>
                 `;

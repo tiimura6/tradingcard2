@@ -50,10 +50,11 @@ async function openApp(browser, { seed, viewport, ignoreMute } = {}) {
     if (ignoreMute) Object.defineProperty(P, 'muted', { get() { return false; }, set() {} });   // iPhone相当（消音が効かない）
     // レベル判定テストは、そのテストでだけ出す（ほかのテストでは画面をふさぐため受験済みにしておく）
     if (!sessionStorage.getItem('__seeded') && !(seed && seed.__placement)) localStorage.setItem('placementDone', 'test');
+    if (!sessionStorage.getItem('__seeded') && !(seed && seed.__tutorial)) localStorage.setItem('tutorialDone', 'test');   // 遊び方の案内は案内のテストでだけ出す
     // 物語の場面は、物語のテストでだけ出す（ほかのテストでは画面をふさぐので読んだことにしておく）
     if (!sessionStorage.getItem('__seeded') && !(seed && seed.__story)) localStorage.setItem('storySeen', JSON.stringify(Object.fromEntries(['prologue','end_A1','start_A2','end_A2','start_B1','end_B1','start_B2','end_B2','start_PT','end_PT','hof'].map(k => [k, 1]))));
     if (seed && !sessionStorage.getItem('__seeded')) {
-      Object.entries(seed).forEach(([k, v]) => { if (k !== '__placement' && k !== '__story') localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)); });
+      Object.entries(seed).forEach(([k, v]) => { if (k !== '__placement' && k !== '__story' && k !== '__tutorial') localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)); });
       sessionStorage.setItem('__seeded', '1');
     }
   }, { seed: seed || null, ignoreMute: !!ignoreMute });
@@ -352,6 +353,43 @@ test('カードのイラスト：一覧にある絵を使い、無いカード�
     await p.evaluate(() => tapCard(cardsData[0], true)); await p.waitForTimeout(800); await p.screenshot({ path: process.env.SHOT + '/cardimg_zoom.png' }); }
   assert(errs.length === 0, errs.join(' / '));
   await ctx.close();
+});
+
+test('発音の読み上げ：カード・単語ガイドの🔊ボタン・冒険の聞き取り問題／設定でオフにできる', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1', unlockedCards: ids('a1', 1, 30) } });
+  await p.evaluate(() => { window.__said = []; window.speechSynthesis.speak = u => window.__said.push(u.text); window.speechSynthesis.cancel = () => {}; });
+  await p.waitForTimeout(1200);
+  await p.evaluate(() => tapCard(cardsData[1], true));
+  await p.click('#zoomContent .spk-btn'); 
+  const z = await p.evaluate(() => ({ said: window.__said.slice(), n: document.querySelectorAll('#zoomContent .spk-btn').length, word: cardsData[1].quiz.answer }));
+  assert(z.said[0] === z.word && z.n >= 1, JSON.stringify(z));
+  // 聞き取り問題（冒険）：音が流れ、単語は表示しない
+  const l = await p.evaluate(async () => {
+    closeZoom(); enterAdventureMode(); await new Promise(r => setTimeout(r, 1500)); closeTrainingModal(false); openTrainingMode(); await new Promise(r => setTimeout(r, 500));
+    const keep = Math.random; let k = 0; Math.random = () => (k++ < 4 ? 0.1 : keep());
+    window.__said = []; const c = cardsData[2]; showQuiz(c); Math.random = keep;
+    await new Promise(r => setTimeout(r, 600));
+    return { title: document.getElementById('quizTitle').innerText, shown: document.getElementById('quizSentence').innerText.includes(c.quiz.answer), said: window.__said.slice(), word: c.quiz.answer, choices: document.querySelectorAll('#quizChoices .quiz-choice-btn').length };
+  });
+  assert(l.title.includes('聞き取り') && !l.shown && l.said[0] === l.word && l.choices === 4, JSON.stringify(l));
+  // 設定でオフ：ボタンが消える・聞き取り問題も出ない
+  const off = await p.evaluate(() => { setSetting('tts', false); closeSettings(); return { on: ttsOn(), btn: spkBtn('test') }; });
+  assert(off.on === false && off.btn === '', JSON.stringify(off));
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('遊び方の案内：はじめての人に自動で出る・最後まで進める・設定から見直せる', async b => {
+  const p = await openApp(b, { seed: { __tutorial: true, cardMergeV1: '1' } });
+  await p.waitForTimeout(3500);
+  assert(await p.evaluate(() => getComputedStyle(document.getElementById('tutorial')).display === 'flex'), '案内が出ない');
+  for (let i = 0; i < 3; i++) await p.click('#tuBox .tu-next');
+  assert((await p.evaluate(() => document.querySelector('#tuBox h3').textContent)).includes('覚えるほど'), '最後の画面にならない');
+  await p.click('#tuBox .tu-next');
+  const r = await p.evaluate(() => ({ shown: getComputedStyle(document.getElementById('tutorial')).display, done: localStorage.getItem('tutorialDone') }));
+  assert(r.shown === 'none' && r.done === '1', JSON.stringify(r));
+  await p.evaluate(() => { openSettings(); [...document.querySelectorAll('#settingsBox .set-link')].find(b => b.textContent.includes('遊び方')).click(); });
+  assert(await p.evaluate(() => getComputedStyle(document.getElementById('tutorial')).display === 'flex'), '設定から開けない');
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
 test('管理者の全解禁で全手帖・全カード・全タブが開く／アプリ内に管理者キーの文字列がない', async b => {
