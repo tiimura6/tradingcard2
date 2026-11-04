@@ -6599,8 +6599,9 @@ const Cloud = (function () {
 
     function getAdventureBGM() {
         if (!adventureBGM) {
-            adventureBGM = new Audio('./bgm/adventure.mp3');
-            adventureBGM.dataset.src = './bgm/adventure.mp3';
+            const first = advBgmSrc(0);   // 冒険はいつも1面（はじまりの草原）から
+            adventureBGM = new Audio(first);
+            adventureBGM.dataset.src = first;
             adventureBGM.loop = true;
             adventureBGM.volume = 0.35;
             adventureBGM.preload = 'auto';
