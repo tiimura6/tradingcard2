@@ -418,6 +418,33 @@ test('学習レポート・力だめしテスト（毎回同じ50問）・苦手
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
+test('文法の試練：各手帖30問のデータ・10問出題・まちがえると解説・正解の記録と自己ベスト', async b => {
+  const data = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '..', 'data', 'grammar.json'), 'utf8')).items;
+  const per = {}; data.forEach(g => { per[g.nb] = (per[g.nb] || 0) + 1; assert(g.c.length === 4 && new Set(g.c).size === 4 && g.q.split('＿＿＿').length === 2 && g.ja && g.ex, g.id); });
+  assert(['A1', 'A2', 'B1', 'B2', 'PT'].every(k => per[k] === 30), JSON.stringify(per));
+  const p = await openApp(b, { seed: { cardMergeV1: '1', unlockedCards: ids('a1', 1, 10) } });
+  await p.waitForTimeout(1200);
+  await p.evaluate(() => openGrammar()); await p.waitForTimeout(1200);
+  const s0 = await p.evaluate(() => ({ n: mq.items.length, nb: mq.items.every(x => x.g.nb === 'A1'), sent: !!document.querySelector('#mqBox .gq-sent .bl') }));
+  assert(s0.n === 10 && s0.nb && s0.sent, JSON.stringify(s0));
+  if (process.env.SHOT) await p.screenshot({ path: process.env.SHOT + '/grammar-q.png' });
+  // 1問目はわざとまちがえる → 解説と「次へ」が出る（自動では進まない）
+  await p.evaluate(() => { const it = mq.items[0]; [...document.querySelectorAll('#mqBox .pl-choices button')].find(x => x.textContent !== it.g.c[0]).click(); });
+  await p.waitForTimeout(1300);
+  const s1 = await p.evaluate(() => ({ i: mq.i, exp: !!document.querySelector('#mqBox .gq-exp'), next: !!document.querySelector('#mqBox .gq-next'), fill: document.querySelector('#mqBox .gq-sent .bl').textContent === mq.items[0].g.c[0] }));
+  assert(s1.i === 0 && s1.exp && s1.next && s1.fill, JSON.stringify(s1));
+  if (process.env.SHOT) await p.screenshot({ path: process.env.SHOT + '/grammar-exp.png' });
+  await p.evaluate(() => document.querySelector('#mqBox .gq-next').click());
+  for (let i = 1; i < 10; i++) { await p.evaluate(() => { const it = mq.items[mq.i]; [...document.querySelectorAll('#mqBox .pl-choices button')].find(x => x.textContent === it.g.c[0]).click(); document.querySelector('#mqBox .gq-next').click(); }); await p.waitForTimeout(60); }
+  await p.waitForTimeout(400);
+  const r = await p.evaluate(() => ({ best: grammarBest.A1, done: Object.keys(grammarDone).length, txt: document.getElementById('mqBox').innerText, info: document.getElementById('grammarBtnInfo').textContent }));
+  assert(r.best === 9 && r.done === 9 && r.txt.includes('9') && r.txt.includes('ふり返り') && r.info.includes('9/30'), JSON.stringify(r));
+  // 2回目はまだ正解していない問題が先に出る
+  const fresh = await p.evaluate(async () => { await openGrammar(); return mq.items.slice(0, 21).filter(x => grammarDone[x.g.id]).length; });
+  assert(fresh === 0, 'クリア済みが先に出ている');
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
 test('管理者の全解禁で全手帖・全カード・全タブが開く／アプリ内に管理者キーの文字列がない', async b => {
   const p = await openApp(b);
   // 管理者キーの照合はサーバー側（tests/gas-e2e.js で確認）。ここでは解禁処理そのものを確認
