@@ -1341,7 +1341,7 @@
         .all-cp-seg i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; transition: width .6s ease; }
         .all-cp-legend { display: flex; justify-content: space-between; font-size: 9.5px; color: #b8acd8; margin-top: 3px; }
 
-        .zoom-close-btn { display: block; margin: 10px auto 0; padding: 9px 30px; border-radius: 20px; border: 1.5px solid rgba(255,220,140,.6); background: rgba(20,12,30,.85);
+        .zoom-close-bar { display: block; margin: 10px auto 0; padding: 9px 30px; border-radius: 20px; border: 1.5px solid rgba(255,220,140,.6); background: rgba(20,12,30,.85);
             color: #ffe9a8; font-size: 14px; font-weight: bold; cursor: pointer; font-family: 'Noto Serif JP', serif; }
         /* ===== 設定 ===== */
         #settings-modal .custom-box { width: 92%; max-width: 400px; background: #160e24; color: #eadff8; }
@@ -4475,6 +4475,40 @@ const Cloud = (function () {
     }
 
     // 手帖のカード一式を作る（rows = 鉄〜金のJSONデータ。白金は quizList から）
+    /* ========== カードのイラスト画像 ==========
+       画像は別のリポジトリ（GitHub Pages）に置く：{IMG_BASE}{手帖}/{カードID}.webp（拡大用）と {手帖}/t/{カードID}.webp（一覧用）
+       manifest.json に「画像があるカード」の一覧。無いカードは今までどおり文字のカード（SVG）
+       作り方は tools/cardimg/make_card_images.py。IMG_BASE が空のあいだは画像を使わない */
+    const IMG_BASE = '';
+    let _imgMan = null, _imgHave = null;
+    function setImgManifest(m) {
+        if (!m || !m.have) return false;
+        const pre = { A1: 'a1-', A2: 'a2-', B1: 'b1-', B2: 'b2-', PT: 'card-' };
+        const have = new Set();
+        Object.keys(m.have).forEach(k => (m.have[k] || []).forEach(no => have.add(pre[k] + no)));
+        const changed = !_imgMan || _imgMan.ver !== m.ver;
+        _imgMan = m; _imgHave = have;
+        return changed;
+    }
+    function cardImgUrl(card, thumb) {
+        if (!IMG_BASE || !_imgHave || !_imgHave.has(card.id)) return '';
+        return `${IMG_BASE}${card.nb || 'PT'}/${thumb ? 't/' : ''}${card.id}.webp?r=${(_imgMan && _imgMan.rev) || 1}`;
+    }
+    // 前回の一覧ですぐ表示し、最新の一覧を読みに行く（変わっていたら描き直す）
+    (function loadImgManifest() {
+        if (!IMG_BASE) return;
+        try { setImgManifest(JSON.parse(localStorage.getItem('imgManifest') || 'null')); } catch (e) {}
+        fetch(`${IMG_BASE}manifest.json?t=${Math.floor(Date.now() / 600000)}`).then(r => r.ok ? r.json() : null).then(m => {
+            if (!m) return;
+            if (setImgManifest(m)) {
+                try { localStorage.setItem('imgManifest', JSON.stringify(m)); } catch (e) {}
+                if (typeof renderCollection === 'function') try { renderCollection(); } catch (e) {}
+            }
+        }).catch(() => {});
+        // 一度見た画像は端末に保存（2回目からは通信なし・電波がなくても表示）
+        if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('./sw.js').catch(() => {});
+    })();
+
     function buildCardsFor(nb, rows) {
         const list = [];
         if (nb.key !== 'PT') {
@@ -4490,18 +4524,17 @@ const Cloud = (function () {
                     _senses: senses, _si: 0,
                     get quiz() { return this._senses[this._si] || this._senses[0]; },   // いま出題中の意味
                     _excl: r[6] || [],
-                    // 絵のカードはまだ無いので、文字のカード（SVG）をその場で作る
-                    get img()   { return cardSVG(this); },
-                    get thumb() { return cardSVG(this); },
+                    // 絵のカード（画像リポジトリにあるもの）を使い、無ければ文字のカード（SVG）をその場で作る
+                    get img()   { return cardImgUrl(this, false) || cardSVG(this); },
+                    get thumb() { return cardImgUrl(this, true) || cardSVG(this); },
                 });
             });
             return list;
         }
         for (let i = 1; i <= TOTAL_CARDS; i++) {
             const quiz = quizList[i] || { meaning: `意味 ${i}`, answer: `Word ${i}` };
-            // 白金も文字のカード（SVG）で表示（絵のカード画像は廃止）
             list.push({ id: `card-${i}`, no: i, nb: 'PT', quiz: quiz,
-                        get img() { return cardSVG(this); }, get thumb() { return cardSVG(this); } });
+                        get img() { return cardImgUrl(this, false) || cardSVG(this); }, get thumb() { return cardImgUrl(this, true) || cardSVG(this); } });
         }
         return list;
     }
@@ -6613,7 +6646,7 @@ const Cloud = (function () {
                 <div>${starsHTML(getStars(card.id), 20) || starsHTML(0) || '<span style="color:rgba(255,255,255,.35);font-size:20px;">★★★★★</span>'}</div>
                 <div style="font-size:11px;color:#e8d8a8;margin-top:2px;">${nextStarHint(card.id)}</div>
             </div>
-            <button class="zoom-close-btn" onclick="event.stopPropagation();closeZoom()">✕ 閉じる</button>
+            <button class="zoom-close-bar" onclick="event.stopPropagation();closeZoom()">✕ 閉じる</button>
         `;
         document.getElementById('zoom-overlay').style.display = 'flex';
     }

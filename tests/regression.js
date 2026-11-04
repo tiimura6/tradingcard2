@@ -322,10 +322,36 @@ test('設定：効果音・演出を減らす・文字を大きく（この端�
   await p.reload(); await p.waitForTimeout(1500);
   assert(await p.evaluate(() => document.body.classList.contains('reduce-motion') && document.body.classList.contains('text-large')), '再読み込みで設定が戻る');
   await p.evaluate(() => { closeSettings(); tapCard(cardsData[0], true); });
-  assert(await p.evaluate(() => !!document.querySelector('#zoomContent .zoom-close-btn')), '閉じるボタンがない');
-  await p.click('#zoomContent .zoom-close-btn');
+  assert(await p.evaluate(() => !!document.querySelector('#zoomContent .zoom-close-bar')), '閉じるボタンがない');
+  await p.click('#zoomContent .zoom-close-bar');
   assert(await p.evaluate(() => getComputedStyle(document.getElementById('zoom-overlay')).display === 'none'), '閉じない');
   assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('カードのイラスト：一覧にある絵を使い、無いカードは文字のカード・読めないときも文字のカードに戻る', async b => {
+  const fs = require('fs'), path = require('path');
+  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+  await ctx.addInitScript(() => { window.confetti = () => {}; window.alert = () => {}; localStorage.setItem('placementDone', 'test'); localStorage.setItem('cardMergeV1', '1');
+    localStorage.setItem('unlockedCards', JSON.stringify(['a1-1', 'a1-2', 'a1-3'])); });
+  await ctx.route(/\/index\.html(\?.*)?$/, async r => { const res = await r.fetch(); r.fulfill({ response: res, body: (await res.text()).replace(/const GAS_URL = '[^']*';/, "const GAS_URL = '';").replace("const IMG_BASE = '';", "const IMG_BASE = 'http://localhost:8765/__img/';") }); });
+  await ctx.route(/\/__img\//, r => {
+    const rel = new (require('url').URL)(r.request().url()).pathname.replace('/__img/', '');
+    const f = path.join(__dirname, 'fixtures', 'img', rel);
+    if (rel.includes('a1-2.webp')) return r.fulfill({ status: 404, body: '' });   // 読めない画像
+    fs.existsSync(f) ? r.fulfill({ status: 200, contentType: rel.endsWith('.json') ? 'application/json' : 'image/webp', body: fs.readFileSync(f) }) : r.fulfill({ status: 404, body: '' });
+  });
+  const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
+  await p.goto('http://localhost:8765/index.html'); await p.waitForTimeout(3000);
+  const r = await p.evaluate(() => { const c = i => cardsData.find(x => x.id === i); return { a: c('a1-1').thumb, aimg: c('a1-1').img, c3: c('a1-3').thumb.slice(0, 20), saved: !!localStorage.getItem('imgManifest') }; });
+  assert(r.a.includes('/__img/A1/t/a1-1.webp?r=1') && r.aimg.includes('/__img/A1/a1-1.webp') && r.c3.startsWith('data:image/svg') && r.saved, JSON.stringify(r));
+  const imgs = await p.evaluate(() => [...document.querySelectorAll('img')].filter(i => /a1-[12]\b|a1-[12]\./.test(i.currentSrc || i.src) || (i.dataset.fb && i.closest('.card-item'))).map(i => ({ src: (i.currentSrc || i.src).slice(0, 60), ok: i.naturalWidth > 0, fb: i.dataset.fb || '' })));
+  await p.waitForTimeout(800);
+  const after = await p.evaluate(() => { const els = [...document.querySelectorAll('img')]; const one = els.find(i => (i.src || '').includes('a1-1.webp')); const two = els.find(i => i.dataset.fb && (i.src || '').startsWith('data:image/svg')); return { one: one && one.naturalWidth > 0, two: !!two }; });
+  assert(after.one && after.two, JSON.stringify({ imgs, after }));
+  if (process.env.SHOT) { await p.evaluate(() => [...document.querySelectorAll('img')].find(i => (i.src || '').includes('a1-1.webp')).scrollIntoView({ block: 'center' })); await p.waitForTimeout(300); await p.screenshot({ path: process.env.SHOT + '/cardimg_grid.png' });
+    await p.evaluate(() => tapCard(cardsData[0], true)); await p.waitForTimeout(800); await p.screenshot({ path: process.env.SHOT + '/cardimg_zoom.png' }); }
+  assert(errs.length === 0, errs.join(' / '));
+  await ctx.close();
 });
 
 test('管理者の全解禁で全手帖・全カード・全タブが開く／アプリ内に管理者キーの文字列がない', async b => {
