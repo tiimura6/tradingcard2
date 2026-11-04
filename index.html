@@ -2593,7 +2593,7 @@
         <button id="settingsBtn" onclick="openSettings()" title="設定"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 9px;font-size:12px;cursor:pointer;color:rgba(240,200,90,0.95);flex-shrink:0;font-family:'Noto Serif JP',serif;">⚙️ 設定</button>
         <button id="accountChip" style="display:none" aria-hidden="true"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.04-2245</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.04-2300</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -6693,6 +6693,7 @@ const Cloud = (function () {
         const mo = new MutationObserver(ms => ms.forEach(m => {
             const el = m.target;
             if (!/display:\s*flex/.test(m.oldValue || '') || el.style.display !== 'none' || !motionOK() || el.classList.contains('no-ghost')) return;
+            if (el.getElementsByTagName('*').length > 300) return;   // カードがたくさん並ぶ画面（部隊編成など）は複製が重いので残像を出さない
             const g = el.cloneNode(true);
             g.querySelectorAll('[id]').forEach(x => x.removeAttribute('id'));
             g.removeAttribute('onclick'); g.setAttribute('aria-hidden', 'true');
@@ -8476,6 +8477,7 @@ const Cloud = (function () {
         quizOv.classList.add('battle-quiz-mode');
         document.getElementById('quizTitle').innerText = `⚔️ 正解すると命中率アップ！`;
         showQuiz(questionCard);
+        { const qb = document.getElementById('quizQuitBtn'); if (qb) { qb.textContent = 'わからない（ミスあつかい）'; qb.style.display = ''; } }
         // 制限時間。時間切れは不正解あつかい（正解を表示して、バトルに戻る）
         const isBlank = !!document.querySelector('#quizSentence .quiz-blank');
         const secs = isBlank ? BATTLE_TIME.fillBlank : BATTLE_TIME.normal;
@@ -9161,6 +9163,16 @@ const Cloud = (function () {
     }
 
     function closeQuiz() {
+        // バトルの問題で押したとき：問題を閉じるだけだとターンが進まず動けなくなるので、
+        // 時間切れと同じく「不正解」としてバトルを続ける
+        const qov = document.getElementById('quiz-overlay');
+        if (battleSession.active && qov.classList.contains('battle-quiz-mode')) {
+            if (document.querySelector('#quizChoices .quiz-choice-btn:disabled')) return;   // もう答えた後
+            stopCountdown();
+            const t = document.getElementById('quizTitle'); if (t) t.innerText = '🤔 わからない…';
+            submitChoice(false, battleSession.questionCard, '', document.createElement('button'));
+            return;
+        }
         stopCountdown();
         // トレーニング中かつ問題を1問以上解いていたら結果画面を表示
         if (trainingSession.active && (trainingSession.correct + trainingSession.incorrect) > 0) {
@@ -9343,6 +9355,7 @@ const Cloud = (function () {
                 const quizOv = document.getElementById('quiz-overlay');
                 quizOv.style.display = 'none';
                 quizOv.classList.remove('battle-quiz-mode');
+                { const qb = document.getElementById('quizQuitBtn'); if (qb) qb.textContent = 'やめる'; }
                 logEvent('battle', card, isCorrect);
                 processBattleAnswer(isCorrect, card);
             } else {

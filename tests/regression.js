@@ -797,6 +797,25 @@ test('バトルの問題に制限時間：時間切れは不正解あつかい�
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
+test('バトルの問題で「わからない」を押しても進行不能にならない（不正解あつかいで次のターンへ）／冒険は終わらない', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1' } });
+  await p.evaluate(() => { cardsData.slice(0, 30).forEach(c => { if (!unlockedCards.includes(c.id)) unlockedCards.push(c.id); }); });
+  await formParty(p, 0);
+  await p.evaluate(() => { adventureActive = true; confirmFormationAndStart(); });
+  await p.waitForTimeout(2000);
+  const turn0 = await p.evaluate(() => battleSession.turnCount);
+  await p.evaluate(() => { document.querySelectorAll('.bplan-col').forEach((c, i) => setBattlePlan(i, 'attack')); confirmBattlePlan(); });
+  await p.waitForTimeout(400);
+  const lbl = await p.evaluate(() => document.getElementById('quizQuitBtn').textContent);
+  assert(lbl.includes('わからない'), lbl);
+  await p.evaluate(() => document.getElementById('quizQuitBtn').click());
+  await p.waitForTimeout(4500);
+  const r = await p.evaluate(() => ({ quiz: getComputedStyle(document.getElementById('quiz-overlay')).display, active: battleSession.active, turn: battleSession.turnCount,
+    adv: adventureActive, plan: !!document.querySelector('.bplan-col') || battleSession.enemyHP <= 0 || battleSession.playerHP <= 0, lbl: document.getElementById('quizQuitBtn').textContent }));
+  assert(r.quiz === 'none' && r.adv === true && r.lbl === 'やめる' && (r.turn > turn0 || !r.active) && r.plan, JSON.stringify({ turn0, r }));
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
 test('小さい画面（幅360px）で主な画面が横にはみ出さない', async b => {
   const p = await openApp(b, { viewport: { width: 360, height: 740 }, seed: { unlockedCards: ids('a1', 1, 50) } });
   const steps = ['openStudyMode("all")', 'closeStudyMode()', 'showHallOfFameModal()', 'closeChallengeModal()',
