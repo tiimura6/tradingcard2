@@ -1373,6 +1373,27 @@
         #tutorial .tu-skip { border: 1px solid rgba(255,255,255,.3); background: transparent; color: #c8b8e8; }
         #tutorial .tu-next { border: 2px solid #f0c040; background: linear-gradient(135deg,#8a5a10,#5a3400); color: #fff3c8; font-weight: bold; }
 
+        /* ===== 学習レポート ===== */
+        #report-modal .custom-box, #weak-modal .custom-box { width: 94%; max-width: 520px; max-height: 90vh; overflow-y: auto; background: #0e1a24; color: #e2f0f8; text-align: left; }
+        #report-modal h3, #weak-modal h3 { margin: 0 0 8px; color: #9fe0ff; font-family: 'Noto Serif JP', serif; }
+        .rp-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
+        .rp-tile { background: rgba(255,255,255,.06); border: 1px solid rgba(140,210,255,.2); border-radius: 12px; padding: 9px 10px; }
+        .rp-tile .v { font-size: 22px; font-weight: bold; color: #fff; font-family: Georgia, serif; }
+        .rp-tile .l { font-size: 11px; color: #9ec4d8; }
+        .rp-sec { margin: 14px 0 6px; font-size: 13px; font-weight: bold; color: #ffe08a; }
+        .rp-chart { background: rgba(255,255,255,.04); border-radius: 10px; padding: 6px; }
+        .rp-chart svg { display: block; width: 100%; height: auto; }
+        .rp-note { font-size: 11.5px; color: #8fb0c4; line-height: 1.6; margin-top: 4px; }
+        .rp-btn { width: 100%; margin-top: 8px; padding: 11px; border-radius: 12px; border: 1.5px solid rgba(255,220,120,.6); background: linear-gradient(135deg,#6a4a10,#3a2400); color: #fff1c8; font-size: 14.5px; font-weight: bold; cursor: pointer; font-family: 'Noto Serif JP', serif; }
+        .rp-btn.sub { background: rgba(40,80,110,.6); border-color: rgba(140,210,255,.5); color: #d8f2ff; }
+        .rp-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .rp-table th, .rp-table td { padding: 5px 4px; border-bottom: 1px solid rgba(255,255,255,.08); text-align: center; }
+        .rp-table th { color: #9ec4d8; font-weight: normal; }
+        .wk-item { display: flex; align-items: center; gap: 8px; padding: 7px 4px; border-bottom: 1px solid rgba(255,255,255,.07); font-size: 13px; }
+        .wk-item .w { font-family: Georgia, serif; font-weight: bold; color: #fff; min-width: 7em; }
+        .wk-item .m { flex: 1; color: #c8dcea; font-size: 12px; }
+        .wk-item .c { font-size: 11px; color: #ff9a8a; white-space: nowrap; }
+
         /* ===== 設定 ===== */
         #settings-modal .custom-box { width: 92%; max-width: 400px; background: #160e24; color: #eadff8; }
         #settings-modal h3 { margin: 0 0 10px; color: #ffe9a8; font-family: 'Noto Serif JP', serif; }
@@ -2499,6 +2520,9 @@
     <button class="action-btn btn-study" id="adventureBattleBtn" onclick="adventureOrBattle()" style="grid-column:span 2;">
         <span class="btn-icon" id="adventureBattleBtnIcon">🗺️</span><span id="adventureBattleBtnLabel">冒険</span>
     </button>
+    <button class="action-btn" id="reportBtn" onclick="openReport()" style="grid-column:1/-1;background:linear-gradient(150deg,#12405a,#08202e);color:#c8ecff;border:1px solid rgba(110,200,255,0.45);">
+        <span class="btn-icon">📈</span>学習レポート <span id="reportBtnInfo" style="font-size:11px;opacity:.9;"></span>
+    </button>
     <button class="action-btn" id="raidBtn" onclick="openRaid()" style="grid-column:1/-1;background:linear-gradient(150deg,#5a1020,#2a0610);color:#ffd0c0;border:1px solid rgba(255,110,90,0.5);">
         <span class="btn-icon">🐉</span>みんなで倒すレイドボス <span id="raidBtnInfo" style="font-size:11px;opacity:.85;"></span>
     </button>
@@ -2509,6 +2533,9 @@
 </div>
 
 <div id="raid-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeRaid()"><div class="custom-box" id="raidBox" style="width:94%;max-width:460px;max-height:88vh;overflow-y:auto;background:#1a0a10;color:#f6e2dc;"></div></div>
+<div id="mq-overlay" class="modal-overlay" style="display:none;"><div class="custom-box" id="mqBox" style="width:92%;max-width:420px;text-align:center;position:relative;"></div></div>
+<div id="report-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeReport()"><div class="custom-box" id="reportBox"></div></div>
+<div id="weak-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)this.style.display='none'"><div class="custom-box" id="weakBox"></div></div>
 <div id="tutorial"><div class="tu-box" id="tuBox"></div></div>
 <div id="settings-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeSettings()"><div class="custom-box" id="settingsBox"></div></div>
 <div id="achv-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeAchievements()"><div class="custom-box" id="achvBox"></div></div>
@@ -2855,7 +2882,7 @@ const Cloud = (function () {
         'unlockedCards', 'srsData', 'dailyGachaStorage', 'loginStreak', 'xpData',
         'specialTickets', 'spEnhanceData', 'dailyStudyData', 'dailyChallenges',
         'weeklyChallenges', 'hallOfFame', 'battleProgress', 'notebookState', 'gold', 'awakened',
-        'cardMergeV1', 'advArea', 'advAreaV2', 'advStep', 'advMiss', 'advProg', 'placementDone', 'placementResult', 'achv', 'playStats',   // カード番号移行済みの印（別端末で取り込んだときに二重移行しないため）／冒険の道の地域
+        'cardMergeV1', 'advArea', 'advAreaV2', 'advStep', 'advMiss', 'advProg', 'placementDone', 'placementResult', 'achv', 'playStats', 'studyLog', 'reportHist', 'testHist',   // カード番号移行済みの印（別端末で取り込んだときに二重移行しないため）／冒険の道の地域
     ];
     const K = { SESSION: 'authSession', GUEST: 'authGuest', DIRTY: 'authDirty', QUEUE: 'logQueue', LAST: 'authLastSync', ACTIVE: 'authLastActive' };
     // 共用の端末：最後の操作からこの時間がたったら、次に開いたとき自動でログアウトする（記録は保存してから）
@@ -4985,6 +5012,7 @@ const Cloud = (function () {
             ${GAS_URL ? `<button class="set-link" onclick="closeSettings();Cloud.chipClick()"><span>👤 ${Cloud.isLoggedIn() ? 'アカウント' : 'ログイン・新規登録'}<small style="display:block;font-size:11px;color:#c8b090;">${Cloud.accountLabel()}</small></span><span>›</span></button>` : ''}
             <button class="set-link" onclick="closeSettings();openCouponModal()"><span>🗝️ 秘密の鍵</span><span>›</span></button>
             <button class="set-link" onclick="closeSettings();openPlacement(true)"><span>🎯 レベル判定テストを受ける</span><span>›</span></button>
+            <button class="set-link" onclick="closeSettings();openReport()"><span>📈 学習レポート・力だめしテスト</span><span>›</span></button>
             <button class="set-link" onclick="closeSettings();openTutorial()"><span>📘 遊び方</span><span>›</span></button>
             <button class="set-link" onclick="installApp()"><span>📲 ホーム画面に追加</span><span>›</span></button>
             <button class="modal-cancel-btn" onclick="closeSettings()" style="margin-top:12px;">閉じる</button>`;
@@ -5005,6 +5033,211 @@ const Cloud = (function () {
     applySettings();
     // 演出を減らす設定のときは紙吹雪を出さない
     (function () { const cf = window.confetti; window.confetti = function () { if (reduceMotion()) return; return cf && cf.apply(this, arguments); }; })();
+    /* ========== 学習の記録・学習レポート・力だめしテスト・苦手な単語 ==========
+       studyLog：日ごとの回答数と正解数／reportHist：日ごとの「集めたカード・★3以上・★5」／testHist：力だめしテストの結果
+       （どれも同期の対象。力だめしテストの結果はサーバーの学習ログにも記録する） */
+    let studyLog = safeParse('studyLog', null) || {};
+    let reportHist = safeParse('reportHist', null) || {};
+    let testHist = safeParse('testHist', null) || [];
+    function dayKey(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+    function todayKey() { return dayKey(new Date()); }
+    function trimDays(obj, n) { const ks = Object.keys(obj).sort(); ks.slice(0, Math.max(0, ks.length - n)).forEach(k => delete obj[k]); }
+    function recordAnswer(ok) {
+        const k = todayKey(), v = studyLog[k] || [0, 0];
+        v[0]++; if (ok) v[1]++;
+        studyLog[k] = v; trimDays(studyLog, 400);
+        try { localStorage.setItem('studyLog', JSON.stringify(studyLog)); } catch (e) {}
+    }
+    function recordSnapshot() {
+        reportHist[todayKey()] = [allCompletion().have, starCount(3), starCount(5)];
+        trimDays(reportHist, 400);
+        try { localStorage.setItem('reportHist', JSON.stringify(reportHist)); } catch (e) {}
+    }
+    function testDue() { const last = testHist[testHist.length - 1]; return !last || (Date.now() - new Date(last.d).getTime()) > 30 * 86400000; }
+    function updateReportBtn() {
+        const el = document.getElementById('reportBtnInfo');
+        if (el) el.textContent = testHist.length === 0 ? '（はじめの力だめしテストを受けよう）' : testDue() ? '（⏰ 力だめしテストの時期です）' : '';
+    }
+    // 折れ線・棒グラフ（SVG）。series: [{ vals, color, kind: 'line'|'bar', max }]
+    function miniChart(labels, series, opt) {
+        opt = opt || {};
+        const W = 480, H = 150, L = 34, Rr = opt.right ? 34 : 8, T = 10, B = 22, iw = W - L - Rr, ih = H - T - B, n = Math.max(1, labels.length);
+        const x = i => L + (n === 1 ? iw / 2 : i * iw / (n - 1));
+        let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${opt.label || ''}">`;
+        const max0 = series[0].max || Math.max(1, ...series[0].vals.map(v => v || 0));
+        for (let k = 0; k <= 4; k++) {
+            const y = T + ih - ih * k / 4;
+            g += `<line x1="${L}" x2="${W - Rr}" y1="${y}" y2="${y}" stroke="rgba(255,255,255,.08)"/><text x="${L - 4}" y="${y + 3}" fill="#7f9fb2" font-size="10" text-anchor="end">${Math.round(max0 * k / 4)}</text>`;
+        }
+        if (opt.right) for (let k = 0; k <= 4; k += 2) { const y = T + ih - ih * k / 4; g += `<text x="${W - Rr + 4}" y="${y + 3}" fill="#ffcf7a" font-size="10">${k * 25}%</text>`; }
+        series.forEach(s => {
+            const mx = s.max || max0;
+            if (s.kind === 'bar') {
+                const bw = Math.max(2, iw / n * .6);
+                s.vals.forEach((v, i) => { const h = ih * (v || 0) / mx; if (h > 0) g += `<rect x="${x(i) - bw / 2}" y="${T + ih - h}" width="${bw}" height="${h}" rx="2" fill="${s.color}"/>`; });
+            } else {
+                const pts = s.vals.map((v, i) => v == null ? null : [x(i), T + ih - ih * v / mx]).filter(Boolean);
+                if (pts.length > 1) g += `<polyline points="${pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round"/>`;
+                g += pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="${s.color}"/>`).join('');
+            }
+        });
+        const step = Math.ceil(n / 6);
+        labels.forEach((l, i) => { if (i % step === 0 || i === n - 1) g += `<text x="${x(i)}" y="${H - 6}" fill="#7f9fb2" font-size="10" text-anchor="middle">${l}</text>`; });
+        return g + '</svg>';
+    }
+    function openReport() {
+        recordSnapshot();
+        const days = Object.keys(studyLog).sort();
+        const last30 = []; for (let i = 29; i >= 0; i--) last30.push(dayKey(new Date(Date.now() - i * 86400000)));
+        const wk = last30.slice(-7).map(k => studyLog[k] || [0, 0]), wa = wk.reduce((s, v) => s + v[0], 0), wc = wk.reduce((s, v) => s + v[1], 0);
+        const snapKeys = Object.keys(reportHist).sort().slice(-60);
+        const s3 = starCount(3), s5 = starCount(5);
+        const lab = k => k.slice(5).replace('-', '/');
+        let html = `<h3>📈 学習レポート</h3>
+            <div class="rp-tiles">
+                <div class="rp-tile"><div class="v">${s3.toLocaleString()}</div><div class="l">覚えた単語（★3以上）</div></div>
+                <div class="rp-tile"><div class="v">${s5.toLocaleString()}</div><div class="l">しっかり身についた（★5）</div></div>
+                <div class="rp-tile"><div class="v">${wa ? Math.round(wc / wa * 100) + '%' : '—'}</div><div class="l">直近7日の正答率（${wa}問）</div></div>
+                <div class="rp-tile"><div class="v">${days.filter(k => studyLog[k][0] > 0).length}</div><div class="l">学習した日数</div></div>
+            </div>
+            <div class="rp-sec">覚えた単語の数の移り変わり</div>
+            <div class="rp-chart">${miniChart(snapKeys.map(lab), [{ vals: snapKeys.map(k => reportHist[k][1]), color: '#5ad0ff' }, { vals: snapKeys.map(k => reportHist[k][2]), color: '#ffd060' }], { label: '覚えた単語の数' })}</div>
+            <div class="rp-note"><span style="color:#5ad0ff">━</span> ★3以上　<span style="color:#ffd060">━</span> ★5（記録は今日から1日1回ずつ増えていきます）</div>
+            <div class="rp-sec">この30日の回答数と正答率</div>
+            <div class="rp-chart">${miniChart(last30.map(lab), [{ vals: last30.map(k => (studyLog[k] || [0])[0]), color: 'rgba(90,200,255,.55)', kind: 'bar' }, { vals: last30.map(k => studyLog[k] && studyLog[k][0] ? Math.round(studyLog[k][1] / studyLog[k][0] * 100) : null), color: '#ffb84a', max: 100 }], { right: true, label: '回答数と正答率' })}</div>
+            <div class="rp-note"><span style="color:#5ac8ff">■</span> 回答数（左の目盛り）　<span style="color:#ffb84a">━</span> 正答率（右の目盛り）</div>
+            <div class="rp-sec">🎯 力だめしテスト（各手帖10問・全50問）</div>`;
+        if (testHist.length) {
+            html += `<div class="rp-chart">${miniChart(testHist.map(h => lab(h.d)), [{ vals: testHist.map(h => h.score), color: '#b39aff', max: 50 }], { label: '力だめしテストの得点' })}</div>
+                <table class="rp-table"><tr><th>日付</th><th>得点</th><th>鉄</th><th>銅</th><th>銀</th><th>金</th><th>白金</th></tr>${testHist.slice(-6).reverse().map(h => `<tr><td>${h.d}</td><td><b>${h.score}</b>/50</td>${PT_ORDER.map(k => `<td>${h.per[k]}</td>`).join('')}</tr>`).join('')}</table>`;
+        }
+        const last = testHist[testHist.length - 1];
+        html += `<div class="rp-note">毎回同じ50問なので、得点の変化がそのまま語彙力の伸びになります。<b>1か月に1回</b>受けるのがおすすめです。${last ? (testDue() ? '<br>⏰ 前回から1か月たちました。' : `<br>次のおすすめ：${new Date(new Date(last.d).getTime() + 30 * 86400000).toLocaleDateString('ja-JP')} ごろ`) : ''}</div>
+            <button class="rp-btn" onclick="startPowerTest()">🎯 力だめしテストを受ける（約10分）</button>
+            <button class="rp-btn sub" onclick="openWeak()">🧠 苦手な単語を見る（${currentNB.name}）</button>
+            <button class="modal-cancel-btn" onclick="closeReport()" style="margin-top:10px;">閉じる</button>`;
+        document.getElementById('reportBox').innerHTML = html;
+        document.getElementById('report-modal').style.display = 'flex';
+    }
+    function closeReport() { document.getElementById('report-modal').style.display = 'none'; updateReportBtn(); }
+
+    /* ---- 小テストの共通画面（力だめしテスト・苦手な単語の復習） ---- */
+    let mq = null;
+    function mqStart(o) { mq = Object.assign({ i: 0, res: [] }, o); mqShow(); document.getElementById('mq-overlay').style.display = 'flex'; }
+    function mqClose() { stopCountdown(); document.getElementById('mq-overlay').style.display = 'none'; mq = null; }
+    function mqShow() {
+        const it = mq.items[mq.i], box = document.getElementById('mqBox'), esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        mq._answered = false;
+        box.innerHTML = `<div class="pl-count">${mq.title}　${mq.i + 1} / ${mq.items.length}</div>
+            <div class="pl-progress"><div style="width:${mq.i / mq.items.length * 100}%"></div></div>
+            <div class="pl-word">${esc(it.q.answer)}${mq.speak ? spkBtn(it.q.answer) : ''}</div><div class="pl-pos">${esc(it.q.pos || '')}</div>
+            <div class="pl-choices">${it.choices.map((c, k) => `<button data-k="${k}">${esc(c)}</button>`).join('')}</div>
+            <button class="pl-idk">わからない</button><button class="pl-skip">やめる</button>`;
+        box.querySelectorAll('.pl-choices button').forEach(b => b.onclick = () => mqAnswer(it.choices[+b.dataset.k] === it.q.meaning, b));
+        box.querySelector('.pl-idk').onclick = () => mqAnswer(false, null);
+        box.querySelector('.pl-skip').onclick = mqClose;
+        if (mq.timer) startCountdown(box, box.querySelector('.pl-progress'), mq.timer, () => mqAnswer(false, null, true));
+    }
+    function mqAnswer(ok, btn, timeout) {
+        if (!mq || mq._answered) return;
+        mq._answered = true; stopCountdown();
+        const box = document.getElementById('mqBox'), it = mq.items[mq.i];
+        if (timeout) { const c = box.querySelector('.pl-count'); if (c) c.textContent = '⏱️ 時間切れ'; }
+        box.querySelectorAll('button').forEach(b => b.disabled = true);
+        box.querySelectorAll('.pl-choices button').forEach(b => { if (it.choices[+b.dataset.k] === it.q.meaning) b.classList.add('ok'); });
+        if (btn && !ok) btn.classList.add('ng');
+        mq.res.push({ it, ok });
+        if (mq.onAnswer) try { mq.onAnswer(it, ok); } catch (e) {}
+        setTimeout(() => { if (!mq) return; mq.i++; if (mq.i < mq.items.length) mqShow(); else { const m = mq; mq = null; m.onDone(m.res); } }, ok ? 450 : 1100);
+    }
+
+    /* ---- 力だめしテスト：いつも同じ50問（各手帖10問）。選択肢も毎回同じ組み合わせ（得点を比べられるように） ---- */
+    const PT_ORDER = ['A1', 'A2', 'B1', 'B2', 'PT'];
+    let _powerItems = null;
+    async function powerTestItems() {
+        if (_powerItems) return _powerItems;
+        const out = [];
+        for (const k of PT_ORDER) {
+            const items = (await placementItems(k)).slice().sort((a, b) => wordHash(a.answer + '|rikidameshi') - wordHash(b.answer + '|rikidameshi'));
+            const qs = [];
+            for (const q of items) {
+                if (qs.length >= 10) break;
+                if (qs.some(x => plClash(x.q, q))) continue;
+                const cands = items.filter(d => d !== q).sort((a, b) => wordHash(a.answer + '|' + q.answer) - wordHash(b.answer + '|' + q.answer));
+                const ds = [];
+                for (const d of cands) { if (ds.length >= 3) break; if (plClash(d, q) || ds.some(x => plClash(x, d))) continue; ds.push(d); }
+                if (ds.length < 3) continue;
+                const ch = ds.map(d => d.meaning).concat([q.meaning]).sort((a, b) => wordHash(a + q.answer) - wordHash(b + q.answer));
+                qs.push({ q, choices: ch, nb: k });
+            }
+            out.push(...qs);
+        }
+        return (_powerItems = out);
+    }
+    async function startPowerTest() {
+        closeReport();
+        appLoading(true, '問題を準備しています…');
+        let items = null;
+        try { items = await powerTestItems(); } catch (e) {}
+        appLoading(false);
+        if (!items || items.length < 50) { alert('問題を読み込めませんでした。通信状態を確認してください。'); return; }
+        const t0 = Date.now();
+        mqStart({ title: '🎯 力だめしテスト', items, timer: 12, onDone: res => {
+            const per = {}; PT_ORDER.forEach(k => per[k] = 0);
+            res.forEach(r => { if (r.ok) per[r.it.nb]++; });
+            const score = res.filter(r => r.ok).length;
+            const h = { d: todayKey(), score, total: res.length, per, sec: Math.round((Date.now() - t0) / 1000) };
+            testHist.push(h); testHist = testHist.slice(-60);
+            try { localStorage.setItem('testHist', JSON.stringify(testHist)); } catch (e) {}
+            if (GAS_URL) try {
+                Cloud.log({ timestamp: Date.now(), eventType: 'test', cardNo: testHist.length, word: '力だめしテスト',
+                    meaning: `得点 ${score}/${res.length}（鉄${per.A1} 銅${per.A2} 銀${per.B1} 金${per.B2} 白金${per.PT}）`,
+                    level: String(score), notebook: currentNB.key, responseTime: h.sec, totalUnlocked: unlockedCards.length });
+            } catch (e) {}
+            const prev = testHist[testHist.length - 2];
+            document.getElementById('mqBox').innerHTML = `<h3 class="pl-title">🎯 力だめしテストの結果</h3>
+                <div style="font-size:42px;font-weight:bold;color:#5a3a10;font-family:Georgia,serif;">${score}<span style="font-size:18px;"> / ${res.length}</span></div>
+                ${prev ? `<div class="pl-sub">前回（${prev.d}）は ${prev.score}点 → <b style="color:${score >= prev.score ? '#1a7a3a' : '#a03020'}">${score >= prev.score ? '+' : ''}${score - prev.score}点</b></div>` : '<div class="pl-sub">はじめての記録です。1か月後にもう一度受けて、伸びを確かめよう！</div>'}
+                <table class="rp-table" style="color:#3a2a10;margin:6px 0 10px;"><tr>${PT_ORDER.map(k => `<th style="color:#7a6a50">${NB_BY_KEY[k].name.replace('の手帖', '')}</th>`).join('')}</tr><tr>${PT_ORDER.map(k => `<td><b>${per[k]}</b>/10</td>`).join('')}</tr></table>
+                <button class="pl-start" onclick="mqClose();openReport()">学習レポートを見る</button>`;
+            updateReportBtn();
+        } });
+    }
+
+    /* ---- 苦手な単語：今の手帖で、まちがえた回数が多い単語 ---- */
+    function weakCards() {
+        return cardsData.filter(c => isOwned(c.id) && srsData[c.id] && srsData[c.id].incorrect > 0)
+            .map(c => ({ c, e: srsData[c.id], s: srsData[c.id].incorrect * 2 - srsData[c.id].correct }))
+            .sort((a, b) => b.s - a.s || b.e.incorrect - a.e.incorrect).slice(0, 40);
+    }
+    function openWeak() {
+        closeReport();
+        const list = weakCards(), esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        document.getElementById('weakBox').innerHTML = `<h3>🧠 苦手な単語（${currentNB.name}）</h3>
+            <div class="rp-note" style="margin-bottom:6px;">まちがえた回数が多い順に、最大40語。集中して復習すると、★が上がりやすくなります。</div>
+            ${list.length ? list.map(x => `<div class="wk-item"><span class="w">${esc(x.c.quiz.answer)}</span>${spkBtn(x.c.quiz.answer)}<span class="m">${esc(x.c.quiz.meaning)}</span><span class="c">✕${x.e.incorrect}　○${x.e.correct}</span></div>`).join('')
+                : '<div class="rp-note" style="padding:20px 0;text-align:center;">まだ苦手な単語はありません。冒険で問題に挑戦しよう！</div>'}
+            ${list.length ? `<button class="rp-btn" onclick="startWeakReview()">🧠 苦手な単語を${Math.min(10, list.length)}問 復習する</button>` : ''}
+            <button class="modal-cancel-btn" onclick="document.getElementById('weak-modal').style.display='none'" style="margin-top:10px;">閉じる</button>`;
+        document.getElementById('weak-modal').style.display = 'flex';
+    }
+    function startWeakReview() {
+        document.getElementById('weak-modal').style.display = 'none';
+        const list = weakCards().slice(0, 10).sort(() => Math.random() - .5);
+        const items = list.map(x => {
+            const c = x.c; pickSense(c);
+            const ds = safeDistractors(c, quizPool().map(q => q.meaning).filter(m => m !== c.quiz.meaning).sort(() => Math.random() - .5), 'meaning').slice(0, 3);
+            return { q: { answer: c.quiz.answer, pos: c.quiz.pos, meaning: c.quiz.meaning }, choices: ds.concat([c.quiz.meaning]).sort(() => Math.random() - .5), card: c };
+        });
+        mqStart({ title: '🧠 苦手な単語の復習', items, speak: true, onAnswer: (it, ok) => { updateSRS(it.card.id, ok); logEvent('training', it.card, ok); },
+            onDone: res => {
+                const n = res.filter(r => r.ok).length;
+                if (n) { addXP(n * 5, null); addGold(n * 10, null); }
+                document.getElementById('mqBox').innerHTML = `<h3 class="pl-title">🧠 復習の結果</h3><div style="font-size:38px;font-weight:bold;color:#5a3a10;font-family:Georgia,serif;">${n} / ${res.length}</div>
+                    <div class="pl-sub">正解した単語は、苦手リストから少しずつ外れていきます。${n ? `<br>+${n * 5}XP・+${n * 10}G` : ''}</div>
+                    <button class="pl-start" onclick="mqClose();openWeak()">苦手な単語に戻る</button>`;
+            } });
+    }
     /* ========== 遊び方の案内（はじめての人に1回。設定の「遊び方」からいつでも見られる） ========== */
     const TUTORIAL = [
         { ic: '🧭', t: 'カードを探す', p: 'ゴールドを使って、英単語のカードを探しに行こう。問題に答えると、その単語のカードが手に入ります。<br>新しいカードは1日100枚まで。' },
@@ -5089,6 +5322,7 @@ const Cloud = (function () {
     let _achvTimer = null;
     function scheduleAchvCheck() { clearTimeout(_achvTimer); _achvTimer = setTimeout(checkAchievements, 700); }
     function checkAchievements() {
+        try { recordSnapshot(); updateReportBtn(); } catch (e) {}
         const first = !achv;   // はじめて調べるとき（これまでの記録でまとめて解除）
         if (!achv) achv = {};
         const today = new Date().toISOString().slice(0, 10);
@@ -7026,6 +7260,7 @@ const Cloud = (function () {
         return srsData[cardId];
     }
     function updateSRS(cardId, isCorrect) {
+        if (typeof recordAnswer === 'function') recordAnswer(isCorrect);   // 学習レポート用：日ごとの回答数・正解数
         const e = getSRSEntry(cardId);
         const now = Date.now();
         if (isCorrect) {

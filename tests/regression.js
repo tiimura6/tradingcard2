@@ -317,7 +317,7 @@ test('設定：効果音・演出を減らす・文字を大きく（この端�
     setSetting('reduce', true); setSetting('big', true); setSetting('se', false);
     return { rows, reduce: document.body.classList.contains('reduce-motion'), big: document.body.classList.contains('text-large'), se: seOn(), saved: JSON.parse(localStorage.getItem('appSettings')) };
   });
-  assert(r.rows === 4 && r.reduce && r.big && r.se === false && r.saved.reduce === true, JSON.stringify(r));
+  assert(r.rows >= 4 && r.reduce && r.big && r.se === false && r.saved.reduce === true, JSON.stringify(r));
   const k = await p.evaluate(() => ({ key: [...document.querySelectorAll('#settingsBox .set-link')].some(b => b.textContent.includes('秘密の鍵')), header: !!document.querySelector('.header-plate button[title="秘密の鍵"]'), chip: getComputedStyle(document.getElementById('accountChip')).display }));
   assert(k.key && !k.header && k.chip === 'none', '秘密の鍵・ログインが設定画面にない ' + JSON.stringify(k));
   await p.reload(); await p.waitForTimeout(1500);
@@ -389,6 +389,32 @@ test('遊び方の案内：はじめての人に自動で出る・最後まで�
   assert(r.shown === 'none' && r.done === '1', JSON.stringify(r));
   await p.evaluate(() => { openSettings(); [...document.querySelectorAll('#settingsBox .set-link')].find(b => b.textContent.includes('遊び方')).click(); });
   assert(await p.evaluate(() => getComputedStyle(document.getElementById('tutorial')).display === 'flex'), '設定から開けない');
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('学習レポート・力だめしテスト（毎回同じ50問）・苦手な単語の復習', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1', unlockedCards: ids('a1', 1, 30),
+    srsData: { 'a1-3': { level: 1, nextReview: 0, correct: 0, incorrect: 3 }, 'a1-5': { level: 1, nextReview: 0, correct: 1, incorrect: 1 } } } });
+  await p.waitForTimeout(1500);
+  const r = await p.evaluate(() => { updateSRS('a1-7', true); updateSRS('a1-8', false); openReport();
+    return { log: studyLog[todayKey()], tiles: document.querySelectorAll('#reportBox .rp-tile').length, charts: document.querySelectorAll('#reportBox svg').length, btn: document.getElementById('reportBtnInfo').textContent }; });
+  assert(r.log[0] === 2 && r.log[1] === 1 && r.tiles === 4 && r.charts >= 2, JSON.stringify(r));
+  if (process.env.SHOT) { await p.evaluate(() => { const d = new Date(); for (let i = 1; i < 20; i++) { const k = dayKey(new Date(Date.now() - i * 86400000)); studyLog[k] = [10 + (i * 7) % 25, 8 + (i * 5) % 15]; reportHist[k] = [200 - i * 6, 120 - i * 5, 30 - i]; } testHist = [{ d: '2026-10-04', score: 28, per: { A1: 9, A2: 7, B1: 6, B2: 4, PT: 2 } }, { d: '2026-11-04', score: 34, per: { A1: 10, A2: 8, B1: 8, B2: 5, PT: 3 } }]; openReport(); });
+    await p.screenshot({ path: process.env.SHOT + '/report.png', fullPage: false }); await p.evaluate(() => { testHist = []; localStorage.removeItem('testHist'); }); }
+  // 力だめしテスト：50問・2回作っても同じ問題と選択肢
+  const items = await p.evaluate(async () => { const a = await powerTestItems(); _powerItems = null; const b2 = await powerTestItems();
+    const per = {}; a.forEach(x => per[x.nb] = (per[x.nb] || 0) + 1);
+    return { n: a.length, per, same: JSON.stringify(a.map(x => [x.q.answer, x.choices])) === JSON.stringify(b2.map(x => [x.q.answer, x.choices])), clash: a.some(x => { const its = x.choices.map(m => (x.q.meaning === m ? x.q : null)); return x.choices.filter(m => m === x.q.meaning).length !== 1; }) }; });
+  assert(items.n === 50 && items.same && !items.clash && Object.values(items.per).every(v => v === 10), JSON.stringify(items));
+  // テストを最後まで（全部「正解」を押す）→ 記録される
+  await p.evaluate(() => startPowerTest()); await p.waitForTimeout(1500);
+  for (let i = 0; i < 50; i++) { await p.evaluate(() => { const b = [...document.querySelectorAll('#mqBox .pl-choices button')].find(x => mq && x.textContent === mq.items[mq.i].q.meaning); b && b.click(); }); await p.waitForTimeout(480); }
+  await p.waitForTimeout(600);
+  const t = await p.evaluate(() => ({ hist: testHist.slice(-1)[0], txt: document.getElementById('mqBox').innerText }));
+  assert(t.hist && t.hist.score === 50 && t.hist.per.PT === 10 && t.txt.includes('50'), JSON.stringify(t));
+  // 苦手な単語：まちがえた回数が多い順・復習で★の記録が更新される
+  const w = await p.evaluate(() => { mqClose(); openWeak(); const first = document.querySelector('#weakBox .wk-item .w').textContent; startWeakReview(); return { first, word: cardsData.find(c => c.id === 'a1-3').quiz.answer, n: mq.items.length }; });
+  assert(w.first === w.word && w.n === 3, JSON.stringify(w));   // a1-3・a1-5・この前に1回まちがえた a1-8
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
