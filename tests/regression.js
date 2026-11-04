@@ -117,7 +117,7 @@ test('BGMが重ならない（iPhone相当：消音が効かない環境）', as
   await p.click('#bgmBtn'); await p.waitForTimeout(800);
   assert((await playing(p)) === 'main.mp3', 'メイン: ' + await playing(p));
   await p.evaluate(() => enterAdventureMode()); await p.waitForTimeout(2000);
-  assert((await playing(p)) === 'adventure.mp3', '冒険: ' + await playing(p));
+  assert((await playing(p)) === 'bgm_meadow.mp3', '冒険: ' + await playing(p));
   await p.evaluate(() => closeTrainingModal(true)); await p.waitForTimeout(1800);
   assert((await playing(p)) === 'main.mp3', '冒険後: ' + await playing(p));
   await formParty(p, 0); await p.click('#formationStartBtn'); await p.waitForTimeout(1500);
