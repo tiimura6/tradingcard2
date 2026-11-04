@@ -2593,7 +2593,7 @@
         <button id="settingsBtn" onclick="openSettings()" title="設定"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 9px;font-size:12px;cursor:pointer;color:rgba(240,200,90,0.95);flex-shrink:0;font-family:'Noto Serif JP',serif;">⚙️ 設定</button>
         <button id="accountChip" style="display:none" aria-hidden="true"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.04-2230</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.04-2215</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -9815,7 +9815,8 @@ const Cloud = (function () {
     /* 地域ごとのBGM：ファイルを bgm/adv/ に置いて、ここに「地域キー: ファイル名」を足すだけで切り替わる。
        登録がない地域は共通の bgm/adventure.mp3 */
     const ADV_BGM = {
-        // meadow: 'bgm_meadow.mp3', forest: 'bgm_forest.mp3', cave: 'bgm_cave.mp3', hill: 'bgm_hill.mp3',
+        forest: 'bgm_forest.mp3',   // ささやきの森（2026-11-04）
+        // meadow: 'bgm_meadow.mp3', cave: 'bgm_cave.mp3', hill: 'bgm_hill.mp3',
         // ruins: 'bgm_ruins.mp3', mountain: 'bgm_mountain.mp3', castle: 'bgm_castle.mp3',
     };
     function advBgmSrc(i) { const A = ADV_AREAS[i] || ADV_AREAS[0]; return ADV_BGM[A.key] ? './bgm/adv/' + ADV_BGM[A.key] : './bgm/adventure.mp3'; }
