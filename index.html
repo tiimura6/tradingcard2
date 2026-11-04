@@ -2171,10 +2171,35 @@
             background: linear-gradient(90deg, transparent, #fff 30%, #ffd36a 50%, #fff 70%, transparent); transform: rotate(-6deg) scaleX(0); }
         #battle-trans.enter { display: block; }
         #battle-trans.enter .bt-flash { animation: bt-flash .32s ease-out 2; }
-        #battle-trans.enter .bt-bar.top { animation: bt-in-top 1.45s cubic-bezier(.7,0,.3,1) forwards; }
-        #battle-trans.enter .bt-bar.bot { animation: bt-in-bot 1.45s cubic-bezier(.7,0,.3,1) forwards; }
-        #battle-trans.enter .bt-slash { animation: bt-slash 1.45s ease forwards; }
-        #battle-trans.enter .bt-text { animation: bt-text 1.45s ease forwards; }
+        /* 突入：帯が閉じて「ENCOUNTER!」→ バトル画面の準備ができるまで帯は閉じたまま（遅いときは読み込み中の表示）→ 帯が開く */
+        #battle-trans.enter .bt-bar.top { animation: bt-close-top .45s cubic-bezier(.7,0,.3,1) forwards; }
+        #battle-trans.enter .bt-bar.bot { animation: bt-close-bot .45s cubic-bezier(.7,0,.3,1) forwards; }
+        #battle-trans.enter .bt-slash { animation: bt-slash-in .7s ease .35s forwards; }
+        #battle-trans.enter .bt-text { animation: bt-text-in .4s ease .4s forwards; }
+        #battle-trans.enter.open .bt-bar.top { transform: translateX(0) skewY(-6deg); animation: bt-open-top .5s cubic-bezier(.7,0,.3,1) forwards; }
+        #battle-trans.enter.open .bt-bar.bot { transform: translateX(0) skewY(-6deg); animation: bt-open-bot .5s cubic-bezier(.7,0,.3,1) forwards; }
+        #battle-trans.enter.open .bt-text { opacity: 1; animation: bt-text-out .3s ease forwards; }
+        #battle-trans.enter.open .bt-load { opacity: 0 !important; transition: opacity .2s; }
+        #battle-trans.enter.open { pointer-events: none; }
+        /* 帯が閉じたあとは後ろを暗い幕でふさぐ（斜めの帯のすき間からバトル画面が透けないように）。開くときは幕を先に外す */
+        #battle-trans::before { content: ''; position: absolute; inset: 0; background: #0b0614; opacity: 0; pointer-events: none; }
+        #battle-trans.enter::before { animation: bt-cover .05s linear .44s forwards; }
+        #battle-trans.enter.open::before { animation: none; opacity: 0; }
+        @keyframes bt-cover { to { opacity: 1; } }
+        @keyframes bt-close-top { from { transform: translateX(-110%) skewY(-6deg); } to { transform: translateX(0) skewY(-6deg); } }
+        @keyframes bt-close-bot { from { transform: translateX(110%) skewY(-6deg); } to { transform: translateX(0) skewY(-6deg); } }
+        @keyframes bt-open-top { from { transform: translateX(0) skewY(-6deg); } to { transform: translateX(110%) skewY(-6deg); } }
+        @keyframes bt-open-bot { from { transform: translateX(0) skewY(-6deg); } to { transform: translateX(-110%) skewY(-6deg); } }
+        @keyframes bt-slash-in { 0% { opacity: 0; transform: rotate(-6deg) scaleX(0); } 30% { opacity: 1; transform: rotate(-6deg) scaleX(1); } 100% { opacity: .35; transform: rotate(-6deg) scaleX(1); } }
+        @keyframes bt-text-in { from { opacity: 0; transform: translateY(-50%) scale(1.6); } to { opacity: 1; transform: translateY(-50%) scale(1); } }
+        @keyframes bt-text-out { to { opacity: 0; transform: translateY(-50%) scale(.9); } }
+        /* 読み込み中：帯の上に「ボスが近づいてくる…」と光る点 */
+        #battle-trans .bt-load { position: absolute; left: 0; right: 0; top: calc(50% + 62px); text-align: center; color: #e8dcff; font-size: 13px; letter-spacing: .1em;
+            opacity: 0; transition: opacity .3s; pointer-events: none; text-shadow: 0 0 8px rgba(0,0,0,.9); }
+        #battle-trans.loading .bt-load { opacity: 1; }
+        #battle-trans .bt-load i { display: inline-block; width: 7px; height: 7px; margin: 0 4px; border-radius: 50%; background: #ffd36a; box-shadow: 0 0 8px #ffb030; animation: bt-dot 1s ease-in-out infinite; }
+        #battle-trans .bt-load i:nth-child(2) { animation-delay: .15s; } #battle-trans .bt-load i:nth-child(3) { animation-delay: .3s; }
+        @keyframes bt-dot { 0%, 100% { transform: translateY(0); opacity: .35; } 50% { transform: translateY(-7px); opacity: 1; } }
         /* 帰還：光の輪が閉じて開く */
         #battle-trans .bt-iris { display: none; position: absolute; inset: 0; background: radial-gradient(circle, #1a1030 0%, #05030a 70%); clip-path: circle(150% at 50% 50%); }
         #battle-trans .bt-home { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center;
@@ -2467,6 +2492,7 @@
     <button class="action-btn" id="mdClose" onclick="closeMultiDraw()" style="margin:14px auto 0;width:70%;padding:11px;font-size:15px;font-weight:bold;">OK</button></div></div>
 <div id="battle-trans"><div class="bt-flash"></div><div class="bt-bar top"></div><div class="bt-bar bot"></div><div class="bt-slash"></div>
     <div class="bt-text"><div class="b1"></div><div class="b2"></div></div>
+    <div class="bt-load"><div style="margin-bottom:8px;"><i></i><i></i><i></i></div>ボスが近づいてくる…</div>
     <div class="bt-iris"></div><div class="bt-ring"></div><div class="bt-home"></div></div>
 
 <!-- ===== ATMOSPHERIC BACKGROUND LAYERS ===== -->
@@ -2593,7 +2619,7 @@
         <button id="settingsBtn" onclick="openSettings()" title="設定"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 9px;font-size:12px;cursor:pointer;color:rgba(240,200,90,0.95);flex-shrink:0;font-family:'Noto Serif JP',serif;">⚙️ 設定</button>
         <button id="accountChip" style="display:none" aria-hidden="true"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.04-2300</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.04-2340</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -7904,11 +7930,35 @@ const Cloud = (function () {
         const t = stage && stage.type;
         el.querySelector('.b1').textContent = t === 'raid' ? '🐉 RAID BOSS 🐉' : t === 'final' ? '⚔ 討伐戦 ⚔' : t === 'hof' ? `⚔ BOSS RUSH ${stage.rushNo || ''}/5 ⚔` : '⚔ ENCOUNTER! ⚔';
         el.querySelector('.b2').textContent = stage ? `${stage.name}が現れた！` : '';
-        el.classList.remove('enter', 'exit'); void el.offsetWidth; el.classList.add('enter');
+        el.classList.remove('enter', 'exit', 'open', 'loading'); void el.offsetWidth; el.classList.add('enter');
+        const token = (battleEnterTransition._t = (battleEnterTransition._t || 0) + 1);
+        const t0 = Date.now();
         let done = false;
         const run = () => { if (done) return; done = true; try { fn(); } catch (e) { console.error(e); } };
-        setTimeout(run, 520);
-        setTimeout(() => { el.classList.remove('enter'); run(); }, 1500);
+        // バトル画面の準備ができたか（ボスの絵が読み込めた・読み込めなかった・絵がない）
+        const ready = () => {
+            const st = battleSession && battleSession.stage, img = document.getElementById('battleEnemyImg');
+            if (!battleSession || !battleSession.active) return true;
+            if (!st || !st.img || !img) return true;
+            return img.getAttribute('data-loaded-src') === st.img || img.getAttribute('data-failed') === st.img;
+        };
+        const open = () => {
+            if (battleEnterTransition._t !== token) return;
+            el.classList.add('open');
+            setTimeout(() => { if (battleEnterTransition._t === token) el.classList.remove('enter', 'open', 'loading'); }, 560);
+        };
+        setTimeout(() => {
+            run();   // 帯が閉じきって画面が隠れている間にバトル画面を作る
+            const MIN = 1150, MAX = 8000;   // 文字を読める最短の時間／どんなに遅くてもこの時間で開く
+            const tick = () => {
+                if (battleEnterTransition._t !== token) return;
+                const el2 = Date.now() - t0;
+                if ((ready() && el2 >= MIN) || el2 >= MAX) { requestAnimationFrame(() => requestAnimationFrame(open)); return; }
+                if (el2 >= MIN + 150) el.classList.add('loading');   // 準備に時間がかかっているときだけ読み込み中の表示
+                setTimeout(tick, 80);
+            };
+            tick();
+        }, 480);
     }
     /* バトルから帰還する演出：闇が輪のように広がって画面を包み「帰還…」→ 光の輪が広がってメイン画面へ */
     function battleExitTransition(fn, flee) {

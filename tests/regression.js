@@ -816,6 +816,23 @@ test('バトルの問題で「わからない」を押しても進行不能に�
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
+test('バトル突入：ボスの絵の準備ができるまで帯は閉じたまま（遅いときは読み込み中の表示）→ 準備ができたら開く', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1' } });
+  // ボスの絵の読み込みを2.5秒遅らせる（通信が遅い端末のつもり）
+  await p.__ctx.route(/\/boss\/slime_.*\.webp/, async r => { await new Promise(res => setTimeout(res, 2500)); await r.continue(); });
+  await p.evaluate(() => { cardsData.slice(0, 30).forEach(c => { if (!unlockedCards.includes(c.id)) unlockedCards.push(c.id); }); });
+  await formParty(p, 0);
+  await p.evaluate(() => confirmFormationAndStart());
+  await p.waitForTimeout(1700);
+  const s1 = await p.evaluate(() => { const el = document.getElementById('battle-trans'); return { enter: el.classList.contains('enter'), open: el.classList.contains('open'), loading: el.classList.contains('loading'), active: battleSession.active }; });
+  if (process.env.SHOT) await p.screenshot({ path: process.env.SHOT + '/battle-loading.png' });
+  assert(s1.enter && !s1.open && s1.loading && s1.active, '準備中なのに帯が開いた／読み込み中が出ない ' + JSON.stringify(s1));
+  await p.waitForTimeout(2600);
+  const s2 = await p.evaluate(() => { const el = document.getElementById('battle-trans'), img = document.getElementById('battleEnemyImg'); return { cls: el.className, img: getComputedStyle(img).display, loaded: !!img.getAttribute('data-loaded-src') }; });
+  assert(!s2.cls.includes('enter') && s2.loaded && s2.img === 'block', JSON.stringify(s2));
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
 test('小さい画面（幅360px）で主な画面が横にはみ出さない', async b => {
   const p = await openApp(b, { viewport: { width: 360, height: 740 }, seed: { unlockedCards: ids('a1', 1, 50) } });
   const steps = ['openStudyMode("all")', 'closeStudyMode()', 'showHallOfFameModal()', 'closeChallengeModal()',
