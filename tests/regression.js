@@ -392,56 +392,63 @@ test('遊び方の案内：はじめての人に自動で出る・最後まで�
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
-test('学習レポート・力だめしテスト（毎回同じ50問）・苦手な単語の復習', async b => {
+test('学習レポートは設定画面からだけ開く・力だめしテストはない・苦手な単語の復習', async b => {
   const p = await openApp(b, { seed: { cardMergeV1: '1', unlockedCards: ids('a1', 1, 30),
     srsData: { 'a1-3': { level: 1, nextReview: 0, correct: 0, incorrect: 3 }, 'a1-5': { level: 1, nextReview: 0, correct: 1, incorrect: 1 } } } });
   await p.waitForTimeout(1500);
-  const r = await p.evaluate(() => { updateSRS('a1-7', true); updateSRS('a1-8', false); openReport();
-    return { log: studyLog[todayKey()], tiles: document.querySelectorAll('#reportBox .rp-tile').length, charts: document.querySelectorAll('#reportBox svg').length, btn: document.getElementById('reportBtnInfo').textContent }; });
-  assert(r.log[0] === 2 && r.log[1] === 1 && r.tiles === 4 && r.charts >= 2, JSON.stringify(r));
-  if (process.env.SHOT) { await p.evaluate(() => { const d = new Date(); for (let i = 1; i < 20; i++) { const k = dayKey(new Date(Date.now() - i * 86400000)); studyLog[k] = [10 + (i * 7) % 25, 8 + (i * 5) % 15]; reportHist[k] = [200 - i * 6, 120 - i * 5, 30 - i]; } testHist = [{ d: '2026-10-04', score: 28, per: { A1: 9, A2: 7, B1: 6, B2: 4, PT: 2 } }, { d: '2026-11-04', score: 34, per: { A1: 10, A2: 8, B1: 8, B2: 5, PT: 3 } }]; openReport(); });
-    await p.screenshot({ path: process.env.SHOT + '/report.png', fullPage: false }); await p.evaluate(() => { testHist = []; localStorage.removeItem('testHist'); }); }
-  // 力だめしテスト：50問・2回作っても同じ問題と選択肢
-  const items = await p.evaluate(async () => { const a = await powerTestItems(); _powerItems = null; const b2 = await powerTestItems();
-    const per = {}; a.forEach(x => per[x.nb] = (per[x.nb] || 0) + 1);
-    return { n: a.length, per, same: JSON.stringify(a.map(x => [x.q.answer, x.choices])) === JSON.stringify(b2.map(x => [x.q.answer, x.choices])), clash: a.some(x => { const its = x.choices.map(m => (x.q.meaning === m ? x.q : null)); return x.choices.filter(m => m === x.q.meaning).length !== 1; }) }; });
-  assert(items.n === 50 && items.same && !items.clash && Object.values(items.per).every(v => v === 10), JSON.stringify(items));
-  // テストを最後まで（全部「正解」を押す）→ 記録される
-  await p.evaluate(() => startPowerTest()); await p.waitForTimeout(1500);
-  for (let i = 0; i < 50; i++) { await p.evaluate(() => { const b = [...document.querySelectorAll('#mqBox .pl-choices button')].find(x => mq && x.textContent === mq.items[mq.i].q.meaning); b && b.click(); }); await p.waitForTimeout(480); }
-  await p.waitForTimeout(600);
-  const t = await p.evaluate(() => ({ hist: testHist.slice(-1)[0], txt: document.getElementById('mqBox').innerText }));
-  assert(t.hist && t.hist.score === 50 && t.hist.per.PT === 10 && t.txt.includes('50'), JSON.stringify(t));
+  const r0 = await p.evaluate(() => ({ btn: !!document.getElementById('reportBtn'), pt: typeof startPowerTest, link: (() => { openSettings(); return document.getElementById('settings-modal').innerText.includes('学習レポート'); })() }));
+  assert(!r0.btn && r0.pt === 'undefined' && r0.link, JSON.stringify(r0));
+  const r = await p.evaluate(() => { closeSettings(); updateSRS('a1-7', true); updateSRS('a1-8', false); openReport();
+    return { log: studyLog[todayKey()], tiles: document.querySelectorAll('#reportBox .rp-tile').length, charts: document.querySelectorAll('#reportBox svg').length, txt: document.getElementById('reportBox').innerText }; });
+  assert(r.log[0] === 2 && r.log[1] === 1 && r.tiles === 4 && r.charts >= 2 && !r.txt.includes('力だめし') && r.txt.includes('文法の試練'), JSON.stringify(r));
+  await p.waitForTimeout(800);
+  assert((await p.evaluate(() => document.getElementById('reportBox').innerText)).includes('/60'), '文法のクリア数が出ない');
+  if (process.env.SHOT) await p.screenshot({ path: process.env.SHOT + '/report.png' });
   // 苦手な単語：まちがえた回数が多い順・復習で★の記録が更新される
-  const w = await p.evaluate(() => { mqClose(); openWeak(); const first = document.querySelector('#weakBox .wk-item .w').textContent; startWeakReview(); return { first, word: cardsData.find(c => c.id === 'a1-3').quiz.answer, n: mq.items.length }; });
-  assert(w.first === w.word && w.n === 3, JSON.stringify(w));   // a1-3・a1-5・この前に1回まちがえた a1-8
+  const w = await p.evaluate(() => { closeReport(); openWeak(); const first = document.querySelector('#weakBox .wk-item .w').textContent; startWeakReview(); return { first, word: cardsData.find(c => c.id === 'a1-3').quiz.answer, n: mq.items.length }; });
+  assert(w.first === w.word && w.n === 3, JSON.stringify(w));
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
-test('文法の試練：各手帖30問のデータ・10問出題・まちがえると解説・正解の記録と自己ベスト', async b => {
+test('レイド画面のボス画像は小さく表示され、画面が左右にはみ出さない', async b => {
+  const p = await openApp(b);
+  const r = await p.evaluate(async () => {
+    raidState = { hp: 30000, dmg: 1200, me: null, maxHits: 3, week: '11/2', ends: '11/9', boss: { nb: 'PT', name: '巨大スライム' }, top: [], reward: 2000, defeated: false };
+    document.getElementById('raid-modal').style.display = 'flex'; renderRaid();
+    const img = document.querySelector('#raidBox .raid-boss img'); await new Promise(res => img.complete ? res() : (img.onload = res, img.onerror = res));
+    const rc = img.getBoundingClientRect(), hp = document.querySelector('#raidBox .raid-hp').getBoundingClientRect();
+    return { w: Math.round(rc.width), h: Math.round(rc.height), sw: document.documentElement.scrollWidth, bw: document.getElementById('raidBox').scrollWidth <= document.getElementById('raidBox').clientWidth + 1, hp: Math.round(hp.height) };
+  });
+  assert(r.w <= 100 && r.h <= 100 && r.sw <= 390 && r.bw && r.hp >= 10, JSON.stringify(r));
+  if (process.env.SHOT) await p.screenshot({ path: process.env.SHOT + '/raid-modal.png' });
+});
+
+test('文法の試練：冒険の5問に1問・カードは減らない・正解で3倍のXP/G・まちがえると解説', async b => {
   const data = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '..', 'data', 'grammar.json'), 'utf8')).items;
   const per = {}; data.forEach(g => { per[g.nb] = (per[g.nb] || 0) + 1; assert(g.c.length === 4 && new Set(g.c).size === 4 && g.q.split('＿＿＿').length === 2 && g.ja && g.ex, g.id); });
-  assert(['A1', 'A2', 'B1', 'B2', 'PT'].every(k => per[k] === 30), JSON.stringify(per));
-  const p = await openApp(b, { seed: { cardMergeV1: '1', unlockedCards: ids('a1', 1, 10) } });
-  await p.waitForTimeout(1200);
-  await p.evaluate(() => openGrammar()); await p.waitForTimeout(1200);
-  const s0 = await p.evaluate(() => ({ n: mq.items.length, nb: mq.items.every(x => x.g.nb === 'A1'), sent: !!document.querySelector('#mqBox .gq-sent .bl') }));
-  assert(s0.n === 10 && s0.nb && s0.sent, JSON.stringify(s0));
-  if (process.env.SHOT) await p.screenshot({ path: process.env.SHOT + '/grammar-q.png' });
-  // 1問目はわざとまちがえる → 解説と「次へ」が出る（自動では進まない）
-  await p.evaluate(() => { const it = mq.items[0]; [...document.querySelectorAll('#mqBox .pl-choices button')].find(x => x.textContent !== it.g.c[0]).click(); });
-  await p.waitForTimeout(1300);
-  const s1 = await p.evaluate(() => ({ i: mq.i, exp: !!document.querySelector('#mqBox .gq-exp'), next: !!document.querySelector('#mqBox .gq-next'), fill: document.querySelector('#mqBox .gq-sent .bl').textContent === mq.items[0].g.c[0] }));
-  assert(s1.i === 0 && s1.exp && s1.next && s1.fill, JSON.stringify(s1));
-  if (process.env.SHOT) await p.screenshot({ path: process.env.SHOT + '/grammar-exp.png' });
-  await p.evaluate(() => document.querySelector('#mqBox .gq-next').click());
-  for (let i = 1; i < 10; i++) { await p.evaluate(() => { const it = mq.items[mq.i]; [...document.querySelectorAll('#mqBox .pl-choices button')].find(x => x.textContent === it.g.c[0]).click(); document.querySelector('#mqBox .gq-next').click(); }); await p.waitForTimeout(60); }
-  await p.waitForTimeout(400);
-  const r = await p.evaluate(() => ({ best: grammarBest.A1, done: Object.keys(grammarDone).length, txt: document.getElementById('mqBox').innerText, info: document.getElementById('grammarBtnInfo').textContent }));
-  assert(r.best === 9 && r.done === 9 && r.txt.includes('9') && r.txt.includes('ふり返り') && r.info.includes('9/30'), JSON.stringify(r));
-  // 2回目はまだ正解していない問題が先に出る
-  const fresh = await p.evaluate(async () => { await openGrammar(); return mq.items.slice(0, 21).filter(x => grammarDone[x.g.id]).length; });
-  assert(fresh === 0, 'クリア済みが先に出ている');
+  assert(['A1', 'A2', 'B1', 'B2', 'PT'].every(k => per[k] === 60), JSON.stringify(per));
+  assert(new Set(data.map(g => g.q)).size === data.length, '同じ問題文がある');
+  const p = await openApp(b, { seed: { cardMergeV1: '1', unlockedCards: ids('a1', 1, 20) } });
+  assert((await p.evaluate(() => !!document.getElementById('grammarBtn'))) === false, '別ボタンが残っている');
+  await p.evaluate(() => enterAdventureMode()); await p.waitForTimeout(1500);
+  await p.evaluate(() => { closeTrainingModal(false); openTrainingMode(); }); await p.waitForTimeout(1200);
+  await p.evaluate(() => { trainingSession.qCount = 2; showTrainingQuiz(); }); await p.waitForTimeout(300);
+  const q = await p.evaluate(() => ({ title: document.getElementById('quizTitle').innerText, sent: !!document.querySelector('#quizSentence .gq-sent .bl'), n: document.querySelectorAll('#quizChoices .quiz-choice-btn').length, cards: trainingSession.cards.length }));
+  assert(q.title.includes('文法') && q.sent && q.n === 4, JSON.stringify(q));
+  if (process.env.SHOT) await p.screenshot({ path: process.env.SHOT + '/adv-grammar-q.png' });
+  const x0 = await p.evaluate(() => ({ xp: xpData.totalXP, g: gold, base: Math.round(ADVENTURE_BASE.xp * adventureTier().mult) }));
+  await p.evaluate(() => document.querySelector('#quizChoices .quiz-choice-btn[data-correct="1"]').click()); await p.waitForTimeout(1100);
+  const r1 = await p.evaluate(() => ({ xp: xpData.totalXP, g: gold, done: Object.keys(grammarDone).length, cards: trainingSession.cards.length, exp: !!document.querySelector('#quizChoices .gq-result.ok'), fill: document.querySelector('#quizSentence .bl').textContent }));
+  assert(r1.done === 1 && r1.cards === q.cards && r1.exp && r1.xp - x0.xp >= x0.base * 3, JSON.stringify({ x0, r1 }));
+  if (process.env.SHOT) await p.screenshot({ path: process.env.SHOT + '/adv-grammar-ok.png' });
+  await p.evaluate(() => [...document.querySelectorAll('#quizChoices .action-btn')].pop().click()); await p.waitForTimeout(400);
+  assert(!(await p.evaluate(() => document.getElementById('quizTitle').innerText)).includes('文法'), '文法が続いた');
+  await p.evaluate(() => { trainingSession.qCount = 7; showTrainingQuiz(); }); await p.waitForTimeout(300);
+  const id2 = await p.evaluate(() => Object.keys(trainingSession.gSeen));
+  await p.evaluate(() => document.querySelector('#quizChoices .quiz-choice-btn:not([data-correct])').click()); await p.waitForTimeout(1100);
+  const r2 = await p.evaluate(() => ({ ng: !!document.querySelector('#quizChoices .gq-result.ng'), txt: document.querySelector('#quizChoices .gq-result').innerText }));
+  assert(id2.length === 2 && id2[0] !== id2[1] && r2.ng && r2.txt.includes('正解は'), JSON.stringify({ id2, r2 }));
+  if (process.env.SHOT) await p.screenshot({ path: process.env.SHOT + '/adv-grammar-ng.png' });
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 

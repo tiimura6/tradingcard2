@@ -2322,10 +2322,30 @@
         .pl-choices button:hover { background: #f0dcaa; }
         .pl-choices button.ok { background: #d4edda; border-color: #2a8a50; }
         .pl-choices button.ng { background: #f8d7da; border-color: #8a2a2a; }
+        /* みんなで倒すレイドボス */
+        #raidBox h3 { margin: 0 0 2px; color: #ffd0b0; font-family: 'Noto Serif JP', serif; }
+        .raid-boss { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+        .raid-boss img { width: 92px; height: 92px; object-fit: contain; filter: drop-shadow(0 0 14px rgba(255,80,60,.7)); animation: raid-float 3s ease-in-out infinite; }
+        @keyframes raid-float { 50% { transform: translateY(-6px) scale(1.03); } }
+        .raid-hp { height: 14px; border-radius: 7px; background: rgba(255,255,255,.1); overflow: hidden; border: 1px solid rgba(255,120,100,.5); }
+        .raid-hp i { display: block; height: 100%; background: linear-gradient(90deg,#ff3a3a,#ff9a3a); transition: width .8s ease; }
+        .raid-info { font-size: 12px; color: #e8c8c0; line-height: 1.7; }
+        .raid-top { margin-top: 10px; font-size: 12px; background: rgba(255,255,255,.05); border-radius: 10px; padding: 8px 10px; }
+        .raid-top div { display: flex; justify-content: space-between; padding: 2px 0; }
+        .raid-go { width: 100%; margin-top: 12px; padding: 12px; border-radius: 12px; border: 2px solid #ffb070; background: linear-gradient(135deg,#a02010,#5a0a04); color: #fff; font-size: 15px; font-weight: bold; cursor: pointer; font-family: 'Noto Serif JP', serif; }
+        .raid-go:disabled { opacity: .45; cursor: default; }
+        .raid-note { font-size: 11.5px; color: #c8a8a0; margin-top: 8px; line-height: 1.6; }
         /* 文法の試練 */
         .gq-tag { display: inline-block; font-size: 11px; color: #8a5a10; background: rgba(192,138,48,.15); border-radius: 8px; padding: 2px 8px; margin-bottom: 6px; }
         .gq-sent { font-family: Georgia, 'Noto Serif JP', serif; font-size: 18px; line-height: 1.6; color: #2a1a08; margin: 4px 0 14px; text-align: left; overflow-wrap: anywhere; }
         .gq-sent .bl { display: inline-block; min-width: 3.5em; border-bottom: 2px solid #8a5a10; text-align: center; color: #1a7a3a; font-weight: bold; }
+        .gq-badge { display: inline-block; font-size: 11px; font-weight: bold; color: #fff; background: linear-gradient(90deg, #4a8a1a, #a08a10); border-radius: 10px; padding: 2px 10px; margin-bottom: 6px; }
+        .gq-result { grid-column: 1/-1; text-align: left; border-radius: 12px; padding: 12px 14px; font-size: 13px; line-height: 1.65; margin: 4px 0 6px; }
+        .gq-result.ok { background: rgba(30,120,60,0.13); border: 1px solid rgba(40,160,80,0.35); color: #2a1a08; }
+        .gq-result.ng { background: rgba(160,30,30,0.10); border: 1px solid rgba(200,40,40,0.25); color: #2a1a08; }
+        .gq-result.adv { color: #f0e8c8; } .gq-result.adv.ok { background: rgba(30,120,60,0.30); } .gq-result.adv.ng { background: rgba(160,30,30,0.30); }
+        .gq-result .v { font-weight: bold; font-size: 15px; margin-bottom: 6px; } .gq-result .gain { font-size: 12px; color: #c89a10; margin-left: 4px; }
+        .gq-result .ja { opacity: .85; margin-bottom: 4px; } .gq-result .st { font-size: 11px; opacity: .75; margin-top: 6px; }
         .gq-exp { text-align: left; background: #fff8e4; border: 1px solid #e0c890; border-radius: 10px; padding: 10px 12px; font-size: 13px; line-height: 1.65; color: #3a2a10; margin: 0 0 10px; }
         .gq-exp .ja { color: #6a5a40; margin-bottom: 4px; }
         .gq-exp .v { font-weight: bold; margin-bottom: 4px; }
@@ -2489,7 +2509,7 @@
         <button id="settingsBtn" onclick="openSettings()" title="設定"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 9px;font-size:12px;cursor:pointer;color:rgba(240,200,90,0.95);flex-shrink:0;font-family:'Noto Serif JP',serif;">⚙️ 設定</button>
         <button id="accountChip" style="display:none" aria-hidden="true"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.04-2000</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.04-2130</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -2526,12 +2546,6 @@
     </button>
     <button class="action-btn btn-study" id="adventureBattleBtn" onclick="adventureOrBattle()" style="grid-column:span 2;">
         <span class="btn-icon" id="adventureBattleBtnIcon">🗺️</span><span id="adventureBattleBtnLabel">冒険</span>
-    </button>
-    <button class="action-btn" id="reportBtn" onclick="openReport()" style="grid-column:1/-1;background:linear-gradient(150deg,#12405a,#08202e);color:#c8ecff;border:1px solid rgba(110,200,255,0.45);">
-        <span class="btn-icon">📈</span>学習レポート <span id="reportBtnInfo" style="font-size:11px;opacity:.9;"></span>
-    </button>
-    <button class="action-btn" id="grammarBtn" onclick="openGrammar()" style="grid-column:1/-1;background:linear-gradient(150deg,#2a3a12,#121c06);color:#e0f0b0;border:1px solid rgba(170,210,90,0.45);">
-        <span class="btn-icon">📝</span>文法の試練 <span id="grammarBtnInfo" style="font-size:11px;opacity:.9;"></span>
     </button>
     <button class="action-btn" id="raidBtn" onclick="openRaid()" style="grid-column:1/-1;background:linear-gradient(150deg,#5a1020,#2a0610);color:#ffd0c0;border:1px solid rgba(255,110,90,0.5);">
         <span class="btn-icon">🐉</span>みんなで倒すレイドボス <span id="raidBtnInfo" style="font-size:11px;opacity:.85;"></span>
@@ -2892,7 +2906,7 @@ const Cloud = (function () {
         'unlockedCards', 'srsData', 'dailyGachaStorage', 'loginStreak', 'xpData',
         'specialTickets', 'spEnhanceData', 'dailyStudyData', 'dailyChallenges',
         'weeklyChallenges', 'hallOfFame', 'battleProgress', 'notebookState', 'gold', 'awakened',
-        'cardMergeV1', 'advArea', 'advAreaV2', 'advStep', 'advMiss', 'advProg', 'placementDone', 'placementResult', 'achv', 'playStats', 'studyLog', 'reportHist', 'testHist', 'grammarDone', 'grammarBest',   // カード番号移行済みの印（別端末で取り込んだときに二重移行しないため）／冒険の道の地域
+        'cardMergeV1', 'advArea', 'advAreaV2', 'advStep', 'advMiss', 'advProg', 'placementDone', 'placementResult', 'achv', 'playStats', 'studyLog', 'reportHist', 'grammarDone',   // カード番号移行済みの印（別端末で取り込んだときに二重移行しないため）／冒険の道の地域
     ];
     const K = { SESSION: 'authSession', GUEST: 'authGuest', DIRTY: 'authDirty', QUEUE: 'logQueue', LAST: 'authLastSync', ACTIVE: 'authLastActive' };
     // 共用の端末：最後の操作からこの時間がたったら、次に開いたとき自動でログアウトする（記録は保存してから）
@@ -5022,7 +5036,7 @@ const Cloud = (function () {
             ${GAS_URL ? `<button class="set-link" onclick="closeSettings();Cloud.chipClick()"><span>👤 ${Cloud.isLoggedIn() ? 'アカウント' : 'ログイン・新規登録'}<small style="display:block;font-size:11px;color:#c8b090;">${Cloud.accountLabel()}</small></span><span>›</span></button>` : ''}
             <button class="set-link" onclick="closeSettings();openCouponModal()"><span>🗝️ 秘密の鍵</span><span>›</span></button>
             <button class="set-link" onclick="closeSettings();openPlacement(true)"><span>🎯 レベル判定テストを受ける</span><span>›</span></button>
-            <button class="set-link" onclick="closeSettings();openReport()"><span>📈 学習レポート・力だめしテスト</span><span>›</span></button>
+            <button class="set-link" onclick="closeSettings();openReport()"><span>📈 学習レポート</span><span>›</span></button>
             <button class="set-link" onclick="closeSettings();openTutorial()"><span>📘 遊び方</span><span>›</span></button>
             <button class="set-link" onclick="installApp()"><span>📲 ホーム画面に追加</span><span>›</span></button>
             <button class="modal-cancel-btn" onclick="closeSettings()" style="margin-top:12px;">閉じる</button>`;
@@ -5043,12 +5057,11 @@ const Cloud = (function () {
     applySettings();
     // 演出を減らす設定のときは紙吹雪を出さない
     (function () { const cf = window.confetti; window.confetti = function () { if (reduceMotion()) return; return cf && cf.apply(this, arguments); }; })();
-    /* ========== 学習の記録・学習レポート・力だめしテスト・苦手な単語 ==========
-       studyLog：日ごとの回答数と正解数／reportHist：日ごとの「集めたカード・★3以上・★5」／testHist：力だめしテストの結果
-       （どれも同期の対象。力だめしテストの結果はサーバーの学習ログにも記録する） */
+    /* ========== 学習の記録・学習レポート・苦手な単語 ==========
+       studyLog：日ごとの回答数と正解数／reportHist：日ごとの「集めたカード・★3以上・★5」
+       （どれも同期の対象） */
     let studyLog = safeParse('studyLog', null) || {};
     let reportHist = safeParse('reportHist', null) || {};
-    let testHist = safeParse('testHist', null) || [];
     function dayKey(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
     function todayKey() { return dayKey(new Date()); }
     function trimDays(obj, n) { const ks = Object.keys(obj).sort(); ks.slice(0, Math.max(0, ks.length - n)).forEach(k => delete obj[k]); }
@@ -5062,12 +5075,6 @@ const Cloud = (function () {
         reportHist[todayKey()] = [allCompletion().have, starCount(3), starCount(5)];
         trimDays(reportHist, 400);
         try { localStorage.setItem('reportHist', JSON.stringify(reportHist)); } catch (e) {}
-    }
-    function testDue() { const last = testHist[testHist.length - 1]; return !last || (Date.now() - new Date(last.d).getTime()) > 30 * 86400000; }
-    function updateReportBtn() {
-        try { updateGrammarBtn(); } catch (e) {}
-        const el = document.getElementById('reportBtnInfo');
-        if (el) el.textContent = testHist.length === 0 ? '（はじめの力だめしテストを受けよう）' : testDue() ? '（⏰ 力だめしテストの時期です）' : '';
     }
     // 折れ線・棒グラフ（SVG）。series: [{ vals, color, kind: 'line'|'bar', max }]
     function miniChart(labels, series, opt) {
@@ -5097,6 +5104,7 @@ const Cloud = (function () {
         return g + '</svg>';
     }
     function openReport() {
+        if (!grammarData) loadGrammar().then(() => { if (document.getElementById('report-modal').style.display === 'flex') openReport(); }).catch(() => {});
         recordSnapshot();
         const days = Object.keys(studyLog).sort();
         const last30 = []; for (let i = 29; i >= 0; i--) last30.push(dayKey(new Date(Date.now() - i * 86400000)));
@@ -5117,22 +5125,17 @@ const Cloud = (function () {
             <div class="rp-sec">この30日の回答数と正答率</div>
             <div class="rp-chart">${miniChart(last30.map(lab), [{ vals: last30.map(k => (studyLog[k] || [0])[0]), color: 'rgba(90,200,255,.55)', kind: 'bar' }, { vals: last30.map(k => studyLog[k] && studyLog[k][0] ? Math.round(studyLog[k][1] / studyLog[k][0] * 100) : null), color: '#ffb84a', max: 100 }], { right: true, label: '回答数と正答率' })}</div>
             <div class="rp-note"><span style="color:#5ac8ff">■</span> 回答数（左の目盛り）　<span style="color:#ffb84a">━</span> 正答率（右の目盛り）</div>
-            <div class="rp-sec">🎯 力だめしテスト（各手帖10問・全50問）</div>`;
-        if (testHist.length) {
-            html += `<div class="rp-chart">${miniChart(testHist.map(h => lab(h.d)), [{ vals: testHist.map(h => h.score), color: '#b39aff', max: 50 }], { label: '力だめしテストの得点' })}</div>
-                <table class="rp-table"><tr><th>日付</th><th>得点</th><th>鉄</th><th>銅</th><th>銀</th><th>金</th><th>白金</th></tr>${testHist.slice(-6).reverse().map(h => `<tr><td>${h.d}</td><td><b>${h.score}</b>/50</td>${PT_ORDER.map(k => `<td>${h.per[k]}</td>`).join('')}</tr>`).join('')}</table>`;
-        }
-        const last = testHist[testHist.length - 1];
-        html += `<div class="rp-note">毎回同じ50問なので、得点の変化がそのまま語彙力の伸びになります。<b>1か月に1回</b>受けるのがおすすめです。${last ? (testDue() ? '<br>⏰ 前回から1か月たちました。' : `<br>次のおすすめ：${new Date(new Date(last.d).getTime() + 30 * 86400000).toLocaleDateString('ja-JP')} ごろ`) : ''}</div>
-            <button class="rp-btn" onclick="startPowerTest()">🎯 力だめしテストを受ける（約10分）</button>
-            <button class="rp-btn sub" onclick="openWeak()">🧠 苦手な単語を見る（${currentNB.name}）</button>
+            <div class="rp-sec">📝 文法の試練（冒険の5問に1問・クリアした問題数）</div>
+            <div class="rp-note">${grammarData ? ['A1', 'A2', 'B1', 'B2', 'PT'].map(k => { const st = grammarStat(k); return `${NB_BY_KEY[k].name.replace('の手帖', '')} <b>${st.done}</b>/${st.total}`; }).join('　') : '冒険を始めると記録されます'}</div>
+`;
+        html += `            <button class="rp-btn sub" onclick="openWeak()">🧠 苦手な単語を見る（${currentNB.name}）</button>
             <button class="modal-cancel-btn" onclick="closeReport()" style="margin-top:10px;">閉じる</button>`;
         document.getElementById('reportBox').innerHTML = html;
         document.getElementById('report-modal').style.display = 'flex';
     }
-    function closeReport() { document.getElementById('report-modal').style.display = 'none'; updateReportBtn(); }
+    function closeReport() { document.getElementById('report-modal').style.display = 'none'; }
 
-    /* ---- 小テストの共通画面（力だめしテスト・苦手な単語の復習） ---- */
+    /* ---- 小テストの共通画面（苦手な単語の復習） ---- */
     let mq = null;
     function mqStart(o) { mq = Object.assign({ i: 0, res: [] }, o); mqShow(); document.getElementById('mq-overlay').style.display = 'flex'; }
     function mqClose() { stopCountdown(); document.getElementById('mq-overlay').style.display = 'none'; mq = null; }
@@ -5176,59 +5179,6 @@ const Cloud = (function () {
         setTimeout(next, ok ? 450 : 1100);
     }
 
-    /* ---- 力だめしテスト：いつも同じ50問（各手帖10問）。選択肢も毎回同じ組み合わせ（得点を比べられるように） ---- */
-    const PT_ORDER = ['A1', 'A2', 'B1', 'B2', 'PT'];
-    let _powerItems = null;
-    async function powerTestItems() {
-        if (_powerItems) return _powerItems;
-        const out = [];
-        for (const k of PT_ORDER) {
-            const items = (await placementItems(k)).slice().sort((a, b) => wordHash(a.answer + '|rikidameshi') - wordHash(b.answer + '|rikidameshi'));
-            const qs = [];
-            for (const q of items) {
-                if (qs.length >= 10) break;
-                if (qs.some(x => plClash(x.q, q))) continue;
-                const cands = items.filter(d => d !== q).sort((a, b) => wordHash(a.answer + '|' + q.answer) - wordHash(b.answer + '|' + q.answer));
-                const ds = [];
-                for (const d of cands) { if (ds.length >= 3) break; if (plClash(d, q) || ds.some(x => plClash(x, d))) continue; ds.push(d); }
-                if (ds.length < 3) continue;
-                const ch = ds.map(d => d.meaning).concat([q.meaning]).sort((a, b) => wordHash(a + q.answer) - wordHash(b + q.answer));
-                qs.push({ q, choices: ch, nb: k });
-            }
-            out.push(...qs);
-        }
-        return (_powerItems = out);
-    }
-    async function startPowerTest() {
-        closeReport();
-        appLoading(true, '問題を準備しています…');
-        let items = null;
-        try { items = await powerTestItems(); } catch (e) {}
-        appLoading(false);
-        if (!items || items.length < 50) { alert('問題を読み込めませんでした。通信状態を確認してください。'); return; }
-        const t0 = Date.now();
-        mqStart({ title: '🎯 力だめしテスト', items, timer: 12, onDone: res => {
-            const per = {}; PT_ORDER.forEach(k => per[k] = 0);
-            res.forEach(r => { if (r.ok) per[r.it.nb]++; });
-            const score = res.filter(r => r.ok).length;
-            const h = { d: todayKey(), score, total: res.length, per, sec: Math.round((Date.now() - t0) / 1000) };
-            testHist.push(h); testHist = testHist.slice(-60);
-            try { localStorage.setItem('testHist', JSON.stringify(testHist)); } catch (e) {}
-            if (GAS_URL) try {
-                Cloud.log({ timestamp: Date.now(), eventType: 'test', cardNo: testHist.length, word: '力だめしテスト',
-                    meaning: `得点 ${score}/${res.length}（鉄${per.A1} 銅${per.A2} 銀${per.B1} 金${per.B2} 白金${per.PT}）`,
-                    level: String(score), notebook: currentNB.key, responseTime: h.sec, totalUnlocked: unlockedCards.length });
-            } catch (e) {}
-            const prev = testHist[testHist.length - 2];
-            document.getElementById('mqBox').innerHTML = `<h3 class="pl-title">🎯 力だめしテストの結果</h3>
-                <div style="font-size:42px;font-weight:bold;color:#5a3a10;font-family:Georgia,serif;">${score}<span style="font-size:18px;"> / ${res.length}</span></div>
-                ${prev ? `<div class="pl-sub">前回（${prev.d}）は ${prev.score}点 → <b style="color:${score >= prev.score ? '#1a7a3a' : '#a03020'}">${score >= prev.score ? '+' : ''}${score - prev.score}点</b></div>` : '<div class="pl-sub">はじめての記録です。1か月後にもう一度受けて、伸びを確かめよう！</div>'}
-                <table class="rp-table" style="color:#3a2a10;margin:6px 0 10px;"><tr>${PT_ORDER.map(k => `<th style="color:#7a6a50">${NB_BY_KEY[k].name.replace('の手帖', '')}</th>`).join('')}</tr><tr>${PT_ORDER.map(k => `<td><b>${per[k]}</b>/10</td>`).join('')}</tr></table>
-                <button class="pl-start" onclick="mqClose();openReport()">学習レポートを見る</button>`;
-            updateReportBtn();
-        } });
-    }
-
     /* ---- 苦手な単語：今の手帖で、まちがえた回数が多い単語 ---- */
     function weakCards() {
         return cardsData.filter(c => isOwned(c.id) && srsData[c.id] && srsData[c.id].incorrect > 0)
@@ -5263,54 +5213,86 @@ const Cloud = (function () {
                     <button class="pl-start" onclick="mqClose();openWeak()">苦手な単語に戻る</button>`;
             } });
     }
-    /* ---- 文法の試練：今の手帖のレベルの文法問題（各手帖30問）から10問。まだ正解していない問題を優先 ---- */
-    let grammarData = null;
+    /* ---- 文法の試練：冒険の5問に1問、今の手帖のレベルの文法問題（各手帖60問）を出す。まだ正解していない問題を優先。
+       カードの出題とは別枠（カードは減らない）。正解すると単語問題の3倍のXP・ゴールド ---- */
+    let grammarData = null, _grammarLoading = null;
     let grammarDone = safeParse('grammarDone', null) || {};   // 一度でも正解した問題 id → 1
-    let grammarBest = safeParse('grammarBest', null) || {};   // 手帖ごとの最高点（10問中）
-    const GRAMMAR_N = 10;
-    async function loadGrammar() {
-        if (grammarData) return grammarData;
-        const r = await fetch(`data/grammar.json?v=${NB_DATA_VERSION}`).then(r => r.json());
-        return (grammarData = r.items);
+    const GRAMMAR_EVERY = 5, GRAMMAR_BONUS = 3;
+    function loadGrammar() {
+        if (grammarData) return Promise.resolve(grammarData);
+        if (!_grammarLoading) _grammarLoading = fetch(`data/grammar.json?v=${NB_DATA_VERSION}`).then(r => r.json()).then(r => (grammarData = r.items)).catch(e => { _grammarLoading = null; throw e; });
+        return _grammarLoading;
     }
     function grammarNbKey() { return NB_BY_KEY[currentNB.key] ? currentNB.key : 'A1'; }
-    function grammarCleared(key) { return (grammarData || []).filter(g => g.nb === key && grammarDone[g.id]).length; }
-    function updateGrammarBtn() {
-        const el = document.getElementById('grammarBtnInfo'); if (!el) return;
-        if (!grammarData) { if (!updateGrammarBtn._l) { updateGrammarBtn._l = 1; loadGrammar().then(updateGrammarBtn).catch(() => { updateGrammarBtn._l = 0; }); } return; }
-        const key = grammarNbKey();
-        el.textContent = grammarData ? `（${NB_BY_KEY[key].name.replace('の手帖', '')}：${grammarCleared(key)}/${grammarData.filter(g => g.nb === key).length}問クリア）` : '';
+    function grammarStat(key) { const pool = (grammarData || []).filter(g => g.nb === key); return { done: pool.filter(g => grammarDone[g.id]).length, total: pool.length }; }
+    function pickGrammar() {
+        if (!grammarData) return null;
+        const key = grammarNbKey(), seen = trainingSession.gSeen || (trainingSession.gSeen = {});
+        const pool = grammarData.filter(g => g.nb === key && !seen[g.id]);
+        if (!pool.length) return null;
+        const fresh = pool.filter(g => !grammarDone[g.id]), from = fresh.length ? fresh : pool;
+        return from[Math.floor(Math.random() * from.length)];
     }
-    async function openGrammar() {
-        appLoading(true, '問題を準備しています…');
-        let all = null;
-        try { all = await loadGrammar(); } catch (e) {}
-        appLoading(false);
-        if (!all) { alert('問題を読み込めませんでした。通信状態を確認してください。'); return; }
-        const key = grammarNbKey(), pool = all.filter(g => g.nb === key);
-        const shuf = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
-        const fresh = shuf(pool.filter(g => !grammarDone[g.id])), old = shuf(pool.filter(g => grammarDone[g.id]));
-        const items = fresh.concat(old).slice(0, GRAMMAR_N).map(g => ({ g, choices: shuf(g.c) }));
-        mqStart({ title: `📝 文法の試練（${NB_BY_KEY[key].name}）`, items,
-            onAnswer: (it, ok) => {
-                recordAnswer(ok);
-                if (ok) { grammarDone[it.g.id] = 1; try { localStorage.setItem('grammarDone', JSON.stringify(grammarDone)); } catch (e) {} }
-                if (GAS_URL) try { Cloud.log({ timestamp: Date.now(), eventType: 'grammar', cardNo: it.g.id, word: it.g.tag, meaning: ok ? '正解' : '不正解',
-                    level: ok ? '1' : '0', notebook: key, responseTime: 0, totalUnlocked: unlockedCards.length }); } catch (e) {}
-            },
-            onDone: res => {
-                const n = res.filter(r => r.ok).length, prev = grammarBest[key] || 0;
-                if (n > prev) { grammarBest[key] = n; try { localStorage.setItem('grammarBest', JSON.stringify(grammarBest)); } catch (e) {} }
-                if (n) { addXP(n * 8, null); addGold(n * 15, null); }
-                const miss = res.filter(r => !r.ok), esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
-                document.getElementById('mqBox').innerHTML = `<h3 class="pl-title">📝 文法の試練の結果</h3>
-                    <div style="font-size:42px;font-weight:bold;color:#5a3a10;font-family:Georgia,serif;">${n}<span style="font-size:18px;"> / ${res.length}</span></div>
-                    <div class="pl-sub">${n > prev && prev ? `自己ベスト更新！（前回までの最高 ${prev}点）<br>` : ''}${NB_BY_KEY[key].name}：${grammarCleared(key)} / ${pool.length}問クリア${n ? `<br>+${n * 8}XP・+${n * 15}G` : ''}</div>
-                    ${miss.length ? `<div class="gq-exp"><div class="v">ふり返り（まちがえた問題）</div>${miss.map(r => `<div style="margin-top:6px;">${esc(r.it.g.q).replace('＿＿＿', '<b style="color:#1a7a3a">' + esc(r.it.g.c[0]) + '</b>')}<br><span style="color:#7a6a50;font-size:12px;">${esc(r.it.g.ex)}</span></div>`).join('')}</div>` : ''}
-                    <button class="pl-start" onclick="openGrammar()">もう一度挑戦する</button>
-                    <button class="pl-skip" onclick="mqClose()">閉じる</button>`;
-                updateGrammarBtn();
-            } });
+    function showGrammarQuiz(g) {
+        stopCountdown();
+        trainingSession.gSeen[g.id] = 1;
+        const esc = x => String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        document.getElementById('quizTitle').innerText = '📝 文法の試練';
+        document.getElementById('quizSentence').innerHTML =
+            `<div class="gq-badge">📝 文法の試練　正解で XP・G ${GRAMMAR_BONUS}倍！</div><div class="gq-tag">${esc(g.tag)}</div>` +
+            `<div class="gq-sent">${esc(g.q).replace('＿＿＿', '<span class="bl">　</span>')}</div>`;
+        const choicesEl = document.getElementById('quizChoices');
+        choicesEl.innerHTML = '';
+        g.c.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).forEach(([, ans]) => {
+            const btn = document.createElement('button');
+            btn.className = 'quiz-choice-btn';
+            btn.textContent = ans;
+            if (ans === g.c[0]) btn.dataset.correct = '1';
+            btn.onclick = () => submitGrammar(ans === g.c[0], g, btn);
+            choicesEl.appendChild(btn);
+        });
+        document.getElementById('quiz-overlay').style.display = 'flex';
+    }
+    function submitGrammar(ok, g, btnEl) {
+        document.querySelectorAll('.quiz-choice-btn').forEach(b => { b.disabled = true; if (!ok && b.dataset.correct === '1') b.classList.add('correct'); });
+        btnEl.classList.add(ok ? 'correct' : 'wrong');
+        showJudgeEffect(ok);
+        wellbeingTick();
+        advAfterAnswer(ok);
+        const key = grammarNbKey();
+        setTimeout(() => {
+            if (!trainingSession.active) return;
+            updateCombo(ok);
+            recordAnswer(ok);
+            if (ok) {
+                const tier = adventureTier();
+                const gainXP = Math.round(ADVENTURE_BASE.xp * tier.mult * GRAMMAR_BONUS), gainG = Math.round(ADVENTURE_BASE.gold * tier.mult * GRAMMAR_BONUS);
+                addXP(gainXP, btnEl); addGold(gainG, btnEl);
+                trainingSession.totalXP += gainXP;
+                trainingSession.totalGold = (trainingSession.totalGold || 0) + gainG;
+                trainingSession.correct++;
+                trainingSession.gCorrect = (trainingSession.gCorrect || 0) + 1;
+                grammarDone[g.id] = 1;
+                try { localStorage.setItem('grammarDone', JSON.stringify(grammarDone)); } catch (e) {}
+                g._gain = [gainXP, gainG];
+            } else trainingSession.incorrect++;
+            if (GAS_URL) try { Cloud.log({ timestamp: Date.now(), eventType: 'grammar', cardNo: g.id, word: g.tag, meaning: ok ? '正解' : '不正解',
+                level: ok ? '1' : '0', notebook: key, responseTime: 0, totalUnlocked: unlockedCards.length }); } catch (e) {}
+            const isAdv = document.body.classList.contains('adventure-mode'), esc = x => String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+            const bl = document.querySelector('#quizSentence .gq-sent .bl'); if (bl) bl.textContent = g.c[0];
+            const st = grammarStat(key);
+            const choicesEl = document.getElementById('quizChoices');
+            choicesEl.innerHTML = `<div class="gq-result ${ok ? 'ok' : 'ng'} ${isAdv ? 'adv' : ''}">
+                <div class="v">${ok ? `✅ 正解！ <span class="gain">+${g._gain[0]}XP・+${g._gain[1]}G</span>` : `❌ 正解は「${esc(g.c[0])}」`}</div>
+                <div class="ja">${esc(g.ja)}</div><div class="ex">💡 ${esc(g.ex)}</div>
+                <div class="st">${NB_BY_KEY[key].name}の文法：${st.done} / ${st.total}問クリア</div></div>`;
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'action-btn';
+            nextBtn.style.cssText = 'grid-column:1/-1;width:100%;margin-top:8px;padding:12px;font-size:15px;font-weight:bold;';
+            nextBtn.textContent = '次へ →';
+            nextBtn.onclick = () => showTrainingQuiz();
+            choicesEl.appendChild(nextBtn);
+        }, 700);
     }
 
     /* ========== 遊び方の案内（はじめての人に1回。設定の「遊び方」からいつでも見られる） ========== */
@@ -5397,7 +5379,7 @@ const Cloud = (function () {
     let _achvTimer = null;
     function scheduleAchvCheck() { clearTimeout(_achvTimer); _achvTimer = setTimeout(checkAchievements, 700); }
     function checkAchievements() {
-        try { recordSnapshot(); updateReportBtn(); } catch (e) {}
+        try { recordSnapshot(); } catch (e) {}
         const first = !achv;   // はじめて調べるとき（これまでの記録でまとめて解除）
         if (!achv) achv = {};
         const today = new Date().toISOString().slice(0, 10);
@@ -8961,6 +8943,7 @@ const Cloud = (function () {
                     </div>
                 </div>
                 ${trainingSession.masteredIds.size > 0 ? `<div style="margin-top:10px;font-size:12px;color:#5080a0;">🌟 正解した単語: ${trainingSession.masteredIds.size}語</div>` : ''}
+                ${trainingSession.gCorrect ? `<div style="margin-top:4px;font-size:12px;color:#5a8a20;">📝 文法の試練: ${trainingSession.gCorrect}問正解（XP・G ${GRAMMAR_BONUS}倍）</div>` : ''}
             </div>`;
         countUpNumbers(sentenceEl);
         choicesEl.innerHTML = '';
@@ -9590,7 +9573,8 @@ const Cloud = (function () {
             [pool[i], pool[j]] = [pool[j], pool[i]];
         }
         trainingSession = { active: true, cards: pool, index: 0, levelFilter: 'all', masteredIds: new Set(), correct: 0, incorrect: 0, totalXP: 0,
-                            xpStart: xpData.totalXP, goldStart: gold };   // 今回の冒険で得たXP・ゴールド（チャレンジ報酬も含む）を差分で出す
+                            xpStart: xpData.totalXP, goldStart: gold, gSeen: {} };   // 今回の冒険で得たXP・ゴールド（チャレンジ報酬も含む）を差分で出す
+        loadGrammar().catch(() => {});   // 文法の試練（3問目から）に間に合うよう先に読み込む
         showTrainingQuiz();
     }
 
@@ -9905,6 +9889,10 @@ const Cloud = (function () {
         // 4問に1回、★2のカード（まだ覚醒していない）があれば覚醒クエストを出す
         trainingSession.qCount = (trainingSession.qCount || 0) + 1;
         advBeforeQuestion();
+        if (trainingSession.qCount % GRAMMAR_EVERY === 3) {   // 3問目・8問目・13問目…は文法の試練
+            const g = pickGrammar();
+            if (g) { showGrammarQuiz(g); return; }
+        }
         if (trainingSession.qCount % 4 === 0) {
             const cand = cardsData.slice(0, Math.min((getCurrentGachaTabIndex() + 1) * COLLECTION_PAGE_SIZE, cardsData.length))
                 .find(c => getStars(c.id) === 2);
