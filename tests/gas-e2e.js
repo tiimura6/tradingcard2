@@ -224,7 +224,6 @@ async function newDevice(b, gas, name) {
   check(await A.p.evaluate(() => !!document.querySelector('#raidBox .raid-go') && document.querySelector('#raidBox').innerText.includes('今日あと3回')), 'レイドの画面が開き、挑戦できる（今日あと3回）');
   if (process.env.SHOT) await A.p.screenshot({ path: process.env.SHOT + '/raid.png' });
   await A.p.evaluate(() => startRaid()); await A.p.waitForTimeout(400);
-  for (let n = 0; n < 3; n++) await A.p.evaluate(() => document.querySelector('#formationCardPool .formation-pool-card:not(.used)').click());
   await A.p.evaluate(() => confirmFormationAndStart()); await A.p.waitForTimeout(2000);
   const rs = await A.p.evaluate(() => ({ type: battleSession.stage.type, hp: battleSession.enemyMaxHP }));
   await A.p.evaluate(() => { battleSession.enemyHP = Math.round(battleSession.enemyMaxHP * 0.6); battleSession.turnCount = 6; endBattle(); });
