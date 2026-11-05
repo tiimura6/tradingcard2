@@ -354,7 +354,7 @@ test('カードのイラスト：一覧にある絵を使い、無いカード�
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
   await ctx.addInitScript(() => { window.confetti = () => {}; window.alert = () => {}; localStorage.setItem('placementDone', 'test'); localStorage.setItem('cardMergeV1', '1');
     localStorage.setItem('unlockedCards', JSON.stringify(['a1-1', 'a1-2', 'a1-3'])); });
-  await ctx.route(/\/index\.html(\?.*)?$/, async r => { const res = await r.fetch(); r.fulfill({ response: res, body: (await res.text()).replace(/const GAS_URL = '[^']*';/, "const GAS_URL = '';").replace("const IMG_BASE = '';", "const IMG_BASE = 'http://localhost:8765/__img/';") }); });
+  await ctx.route(/\/index\.html(\?.*)?$/, async r => { const res = await r.fetch(); r.fulfill({ response: res, body: (await res.text()).replace(/const GAS_URL = '[^']*';/, "const GAS_URL = '';").replace(/const IMG_BASE = '[^']*';/, "const IMG_BASE = 'http://localhost:8765/__img/';") }); });
   await ctx.route(/\/__img\//, r => {
     const rel = new (require('url').URL)(r.request().url()).pathname.replace('/__img/', '');
     const f = path.join(__dirname, 'fixtures', 'img', rel);

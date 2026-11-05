@@ -2673,7 +2673,7 @@
         <button id="settingsBtn" onclick="openSettings()" title="設定"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 9px;font-size:12px;cursor:pointer;color:rgba(240,200,90,0.95);flex-shrink:0;font-family:'Noto Serif JP',serif;">⚙️ 設定</button>
         <button id="accountChip" style="display:none" aria-hidden="true"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.05-1800</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.06-0830</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -4695,7 +4695,7 @@ const Cloud = (function () {
        画像は別のリポジトリ（GitHub Pages）に置く：{IMG_BASE}{手帖}/{カードID}.webp（拡大用）と {手帖}/t/{カードID}.webp（一覧用）
        manifest.json に「画像があるカード」の一覧。無いカードは今までどおり文字のカード（SVG）
        作り方は tools/cardimg/make_card_images.py。IMG_BASE が空のあいだは画像を使わない */
-    const IMG_BASE = '';
+    const IMG_BASE = 'https://tiimura6.github.io/tradingcard-img/';
     let _imgMan = null, _imgHave = null;
     function setImgManifest(m) {
         if (!m || !m.have) return false;
