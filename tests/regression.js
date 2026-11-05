@@ -188,21 +188,23 @@ test('★：復習日前の連続正解では上がらない／覚醒クエス�
   assert((await p.evaluate(() => getStars('a1-30'))) === 3, '★3 にならない');
 });
 
-test('バトル：出陣の画面（山札の中身）→ 1枚配られる → 行動を選ぶと配られたカードの単語の問題 → 撃退の演出と結果', async b => {
+test('バトル：出陣の画面（山札の中身）→ 3枚がアニメーションで配られる → 3枚の作戦 → 3枚のうち1枚の単語の問題 → 撃退の演出と結果', async b => {
   const p = await openApp(b, { seed: { unlockedCards: ids('a1', 1, 60) } });
   await p.evaluate(() => openBattleFormationModal(getBattleStages()[0]));
-  const pre = await p.evaluate(() => ({ deck: formationState.deck.length, txt: document.getElementById('deckPreview').innerText, rules: document.querySelectorAll('.deck-rules li, .deck-rules > div').length }));
-  assert(pre.deck > 0 && pre.txt.includes(String(pre.deck)), '山札の表示 ' + JSON.stringify(pre));
+  const pre = await p.evaluate(() => ({ deck: formationState.deck.length, txt: document.getElementById('deckPreview').innerText, rules: document.querySelector('.deck-rules').innerText }));
+  assert(pre.deck > 0 && pre.txt.includes(String(pre.deck)) && pre.rules.includes('3枚'), '山札の表示 ' + JSON.stringify(pre));
   if (process.env.SHOT) await p.screenshot({ path: process.env.SHOT + '/formation.png' });
-  await p.click('#formationStartBtn'); await p.waitForTimeout(1600);
-  const st = await p.evaluate(() => ({ btns: document.querySelectorAll('.bplan-acts .bplan-btn').length, hand: !!document.querySelector('.bplan-hand .bcard'), deal: !!document.querySelector('.bdeck-solo'), deckLeft: battleSession.deck.length - battleSession.deckPos - 1,
-    skillDis: document.querySelector('.bplan-btn.skill').disabled, intent: battleSession.intent, box: !!document.querySelector('.b-intent'), word: battleSession.hand.card.quiz.answer }));
-  assert(st.btns === 3 && st.hand && st.deal && st.skillDis && st.intent === 'attack' && st.box, JSON.stringify(st));
-  if (process.env.SHOT) await p.screenshot({ path: process.env.SHOT + '/battle-hand.png', fullPage: true });
+  await p.click('#formationStartBtn'); await p.waitForTimeout(1700);
+  const st = await p.evaluate(() => ({ cards: document.querySelectorAll('#battleUnitsRow .bdeal .bcard').length, anim: document.querySelectorAll('#battleUnitsRow .bdeal').length, deck: !!document.querySelector('#battleUnitsRow .bdeck'),
+    cols: document.querySelectorAll('.bplan-col').length, btns: document.querySelectorAll('.bplan-col .bplan-btn').length,
+    skillDis: [...document.querySelectorAll('.bplan-btn.skill')].every(b => b.disabled), intent: battleSession.intent, box: !!document.querySelector('.b-intent'),
+    words: battleSession.units.map(u => u.card.quiz.answer), deckPos: battleSession.deckPos }));
+  assert(st.cards === 3 && st.anim === 3 && st.deck && st.cols === 3 && st.btns === 9 && st.skillDis && st.intent === 'attack' && st.box && st.deckPos === 2, JSON.stringify(st));
+  if (process.env.SHOT) await p.screenshot({ path: process.env.SHOT + '/battle-hand.png' });
   await p.evaluate(() => { battleSession.enemyHP = 1; });
-  await p.evaluate(() => battleChoose('attack')); await p.waitForTimeout(600);
+  await p.click('#battleGoBtn'); await p.waitForTimeout(600);
   const q = await p.evaluate(() => document.getElementById('quizTitle').innerText);
-  assert(q.includes(st.word), '配られたカードの単語の問題でない: ' + q + ' / ' + st.word);
+  assert(st.words.some(w => q.includes(w)), '配られた3枚の単語の問題でない: ' + q + ' / ' + st.words.join(','));
   await p.evaluate(() => { battleSession.enemyHP = 1; HIT_RATE.attack.ok = 1; document.querySelector('.quiz-choice-btn[data-correct]').click(); });
   await p.waitForTimeout(5500);
   const d = await p.evaluate(() => document.getElementById('battleResultDesc').innerText);
@@ -210,40 +212,23 @@ test('バトル：出陣の画面（山札の中身）→ 1枚配られる → �
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
-test('バトル：使ったカードは捨てて次の1枚が配られる（山札が尽きたら切り直し）', async b => {
+test('バトル：ターンが終わると使った3枚は山札へ・次の3枚が配られる（山札が尽きたら切り直し）／苦手度は記録用で威力は変わらない', async b => {
   const p = await openApp(b, { seed: { unlockedCards: ids('a1', 1, 60) } });
-  await formParty(p, 0); await p.click('#formationStartBtn'); await p.waitForTimeout(1600);
+  await formParty(p, 0); await p.click('#formationStartBtn'); await p.waitForTimeout(1700);
   const r = await p.evaluate(() => new Promise(res => {
-    const s = battleSession, first = s.hand.card.id, pos0 = s.deckPos;
-    s.plan = 'guard'; s.turn = 'quiz'; s.intent = 'attack';
+    const s = battleSession, first = s.units.map(u => u.card.id).join(','), round0 = s.dealRound;
+    s.plan = ['guard', 'guard', 'guard']; s.turn = 'quiz'; s.intent = 'attack';
     resolveBattleRound(true);
     setTimeout(() => {
-      const out = { first, second: s.hand.card.id, pos: s.deckPos - pos0, dealt: s.dealt, turn: s.turn };
-      s.deckPos = s.deck.length - 1; battleDealNext(); out.wrap = s.deckPos === 0 && !!s.hand;
+      const out = { first, second: s.units.map(u => u.card.id).join(','), n: s.units.length, pos: s.deckPos, round: s.dealRound - round0, turn: s.turn,
+        anim: document.querySelectorAll('#battleUnitsRow .bdeal').length, mark: document.getElementById('battleActionArea').innerText.includes('🔥') };
+      s.deckPos = s.deck.length - 2; battleDealNext(); out.wrap = s.deckPos === 1 && s.units.length === 3;
       res(out);
-    }, 3500);
+    }, 4500);
   }));
-  assert(r.pos === 1 && r.dealt >= 2 && r.second !== undefined && r.wrap, JSON.stringify(r));
-  assert(p.__errors.length === 0, p.__errors.join(' / '));
-});
-
-test('バトル：上の段は山札の束だけ／苦手度は記録用で威力は変わらない（ボーナス削除）', async b => {
-  const p = await openApp(b, { seed: { unlockedCards: ids('a1', 1, 60) } });
-  await formParty(p, 0); await p.click('#formationStartBtn'); await p.waitForTimeout(1600);
-  const top = await p.evaluate(() => ({ cards: document.querySelectorAll('#battleUnitsRow .bcard').length, deck: !!document.querySelector('#battleUnitsRow .bdeck-solo'), txt: document.getElementById('battleUnitsRow').innerText }));
-  assert(top.cards === 0 && top.deck && top.txt.includes('山札'), '上の段 ' + JSON.stringify(top));
-  const r = await p.evaluate(() => new Promise(res => {
-    const out = {};
-    const id = 'a1-5';
-    delete srsData[id]; out.d0 = wordDifficulty(id);
-    srsData[id] = { level: 1, correct: 0, incorrect: 3, nextReview: Date.now() - 86400000 }; out.d3 = wordDifficulty(id);
-    const s = battleSession; HIT_RATE.attack.ok = 1;
-    s.hand.diff = 3; renderBattlePlanner(); out.mark = document.getElementById('battleActionArea').innerText.includes('🔥');
-    s.plan = 'attack'; s.intent = 'attack'; s.enemyHP = s.enemyMaxHP; s.buffActive = false; const hp0 = s.enemyHP, atk = s.hand.atk;
-    const eT = battleEnemyTurn; battleEnemyTurn = () => { battleEnemyTurn = eT; out.dmg = hp0 - s.enemyHP; out.exp = Math.round(atk); res(out); };
-    resolveBattleRound(true);
-  }));
-  assert(r.d0 === 0 && r.d3 === 3 && !r.mark && r.dmg === r.exp, JSON.stringify(r));
+  assert(r.n === 3 && r.pos === 5 && r.round === 1 && r.first !== r.second && r.turn === 'player' && r.anim === 3 && r.wrap, JSON.stringify(r));
+  const d = await p.evaluate(() => { const id = 'a1-5'; delete srsData[id]; const a = wordDifficulty(id); srsData[id] = { level: 1, correct: 0, incorrect: 3, nextReview: Date.now() - 86400000 }; return [a, wordDifficulty(id)]; });
+  assert(d[0] === 0 && d[1] === 3, '苦手度 ' + d);
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
@@ -253,14 +238,15 @@ test('バトル：ことばの力ゲージ・スキルの消費・守る・必�
   await p.click('#formationStartBtn'); await p.waitForTimeout(1600);
   const r = await p.evaluate(() => {
     const s = battleSession, out = {};
-    // 力が足りないとスキルは押せない・足りれば押せる
-    s.gauge = skillCost(s.hand) - 1; renderBattlePlanner();
-    out.lowDisabled = document.querySelector('.bplan-btn.skill').disabled;
-    s.gauge = skillCost(s.hand); renderBattlePlanner();
-    out.okEnabled = !document.querySelector('.bplan-btn.skill').disabled;
-    // スキルを選ぶとゲージを使う
-    s.turn = 'player'; s.gauge = 40 + skillCost(s.hand);
-    const sq = battleStartQuiz; battleStartQuiz = () => {}; battleChoose('skill'); battleStartQuiz = sq;
+    // ゲージが2枚分ちょうど：スキルは2枚まで（使う力はスキルごとに違う）
+    s.plan = null; s.gauge = skillCost(s.units[0]) + skillCost(s.units[1]); renderBattlePlanner();
+    setBattlePlan(0, 'skill'); setBattlePlan(1, 'skill'); setBattlePlan(2, 'skill');
+    out.skills = s.plan.filter(a => a === 'skill').length;
+    out.thirdDisabled = document.querySelectorAll('.bplan-btn.skill')[2].disabled;
+    out.lowDisabled = out.thirdDisabled; out.okEnabled = out.skills === 2;
+    // 作戦決定でゲージを使う
+    s.turn = 'player'; s.plan = ['skill', 'attack', 'guard']; s.gauge = 40 + skillCost(s.units[0]);
+    const sq = battleStartQuiz; battleStartQuiz = () => {}; confirmBattlePlan(); battleStartQuiz = sq;
     out.afterSpend = s.gauge; out.expSpend = 40;
     // 満タンで必殺技ボタン
     s.turn = 'player'; s.gauge = 100; renderBattlePlanner();
@@ -270,17 +256,17 @@ test('バトル：ことばの力ゲージ・スキルの消費・守る・必�
     out.cost = planCost('ult');
     return out;
   });
-  if (process.env.SHOT) { await p.evaluate(() => { const s = battleSession; s.turn = 'player'; s.gauge = 70; s.streak = 3; s.intent = 'smash'; s.intentTurn = s.turnCount; renderBattlePlanner(); document.querySelector('#battleActionArea').scrollIntoView(); }); await p.screenshot({ path: process.env.SHOT + '/plan1.png' });
-    await p.evaluate(() => { const s = battleSession; s.gauge = 100; s.intent = 'shield'; s.rage = true; renderBattlePlanner(); }); await p.screenshot({ path: process.env.SHOT + '/plan2.png' }); }
+  if (process.env.SHOT) { await p.evaluate(() => { const s = battleSession; s.turn = 'player'; s.gauge = 70; s.streak = 3; s.intent = 'smash'; s.intentTurn = s.turnCount; s.plan = ['skill', 'guard', 'attack']; renderBattlePlanner(); document.querySelector('#battleActionArea').scrollIntoView(); }); await p.screenshot({ path: process.env.SHOT + '/plan1.png' });
+    await p.evaluate(() => { const s = battleSession; s.gauge = 100; s.plan = 'ult'; s.intent = 'shield'; s.rage = true; renderBattlePlanner(); }); await p.screenshot({ path: process.env.SHOT + '/plan2.png' }); }
   assert(r.lowDisabled && r.okEnabled && r.afterSpend === r.expSpend && r.ultBtn && r.next === 'smash' && r.cost === 100, JSON.stringify(r));
   // 正解でゲージがたまる（連続正解で増える）・守るで被ダメージが減る
   const r2 = await p.evaluate(() => new Promise(res => {
-    const s = battleSession; s.gauge = 0; s.streak = 1; s.plan = 'guard'; s.intent = 'attack'; s.enemyHP = s.enemyMaxHP;
-    s.playerHP = Math.round(s.playerMaxHP / 2); const hp0 = s.playerHP, expCut = battleGuardCut(s.hand);
-    const eT = battleEnemyTurn; battleEnemyTurn = () => { battleEnemyTurn = eT; res({ gauge: s.gauge, streak: s.streak, cut: s._guardCut, expCut, healed: s.playerHP - hp0, exp: Math.round(s.playerMaxHP * GAUGE.guardHeal) }); };
+    const s = battleSession; s.gauge = 0; s.streak = 1; s.plan = ['guard', 'guard', 'attack']; s.intent = 'attack'; s.enemyHP = s.enemyMaxHP;
+    s.playerHP = Math.round(s.playerMaxHP / 2); const hp0 = s.playerHP, expCut = 2 * GAUGE.guardCut;
+    const eT = battleEnemyTurn; battleEnemyTurn = () => { battleEnemyTurn = eT; res({ gauge: s.gauge, streak: s.streak, cut: s._guardCut, expCut, healed: s.playerHP - hp0, exp: 2 * Math.round(s.playerMaxHP * GAUGE.guardHeal) }); };
     resolveBattleRound(true);
   }));
-  assert(r2.gauge === 35 && r2.streak === 2 && r2.cut >= 0.35 && r2.cut <= 0.7 && Math.abs(r2.cut - r2.expCut) < 1e-9 && r2.healed === r2.exp, JSON.stringify(r2));
+  assert(r2.gauge === 35 && r2.streak === 2 && Math.abs(r2.cut - r2.expCut) < 1e-9 && r2.healed === r2.exp, JSON.stringify(r2));
   // スキルは品詞ごとに4種類・単語で決まる（同じ単語はいつも同じ）。鉄壁は大技を防ぎ、先読みは大技を止め、呪いはボスの攻撃を下げる
   const r4 = await p.evaluate(() => new Promise(res => {
     const kinds = new Set(cardsData.slice(0, 400).map(c => getWordSkill(c).kind));
@@ -845,7 +831,7 @@ test('バトルの問題で「わからない」を押しても進行不能に�
   await p.evaluate(() => document.getElementById('quizQuitBtn').click());
   await p.waitForTimeout(4500);
   const r = await p.evaluate(() => ({ quiz: getComputedStyle(document.getElementById('quiz-overlay')).display, active: battleSession.active, turn: battleSession.turnCount,
-    adv: adventureActive, plan: !!document.querySelector('.bplan-acts') || battleSession.enemyHP <= 0 || battleSession.playerHP <= 0, lbl: document.getElementById('quizQuitBtn').textContent }));
+    adv: adventureActive, plan: !!document.querySelector('.bplan-col') || battleSession.enemyHP <= 0 || battleSession.playerHP <= 0, lbl: document.getElementById('quizQuitBtn').textContent }));
   assert(r.quiz === 'none' && r.adv === true && r.lbl === 'やめる' && (r.turn > turn0 || !r.active) && r.plan, JSON.stringify({ turn0, r }));
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });

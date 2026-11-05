@@ -1899,8 +1899,12 @@
         .bdeck-sub { color: #a898c8; font-size: 11px; margin-left: 4px; }
         @keyframes bdeck-pulse { 0% { transform: translateY(0) scale(1); } 40% { transform: translateY(-4px) scale(1.08); } 100% { transform: none; } }
         body.reduce-motion .bdeck-solo .bdeck-stack { animation: none; }
-        .battle-units-row:has(.bdeal) { grid-template-columns: 1fr auto; max-width: min(300px, 80vw); margin-left: auto; margin-right: auto; align-items: center; }
-        .battle-unit-card.bdeal { padding: 0; border: 0; background: none; animation: bdeal-in .45s cubic-bezier(.2,1.2,.4,1); }
+        .battle-units-row:has(.bdeal) { grid-template-columns: repeat(3, 1fr) 44px; gap: 6px; max-width: min(460px, 96vw); margin-left: auto; margin-right: auto; align-items: center; }
+        .battle-unit-card.bdeal.active-unit .bcard { box-shadow: 0 0 0 2px #ffd700, 0 0 14px rgba(255,215,0,.55); transform: translateY(-3px); transition: transform .2s; }
+        .battle-unit-card.bdeal { padding: 0; border: 0; background: none; }
+        .battle-unit-card.bdeal.bdeal-anim { animation: bdeal-in .45s cubic-bezier(.2,1.2,.4,1) both; }
+        .battle-unit-card.bdeal.unit-attack-anim { animation: unitAttackSlide 0.45s ease forwards; }
+        body.reduce-motion .battle-unit-card.bdeal.bdeal-anim { animation: none; }
         @keyframes bdeal-in { from { opacity: 0; transform: translate(70px, -10px) rotate(12deg) scale(.7); } to { opacity: 1; transform: none; } }
         .bdeck { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #d8c8f0; font-size: 10px; text-align: center; }
         .bdeck b { font-size: 14px; color: #ffe9a8; }
@@ -2669,7 +2673,7 @@
         <button id="settingsBtn" onclick="openSettings()" title="設定"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 9px;font-size:12px;cursor:pointer;color:rgba(240,200,90,0.95);flex-shrink:0;font-family:'Noto Serif JP',serif;">⚙️ 設定</button>
         <button id="accountChip" style="display:none" aria-hidden="true"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.05-1445</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.05-1800</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -2777,9 +2781,9 @@
         <div style="font-size:11px;color:#a08060;text-align:center;margin-bottom:10px;" id="formationEnemyLabel"></div>
         <div id="deckPreview" class="deck-preview"></div>
         <div class="deck-rules">
-            <div>🃏 持っているカードが<b>1枚ずつ配られます</b>。</div>
-            <div>⚔️ 攻撃・🔮 スキル・🛡️ 守る から1つ選ぶと、<b>そのカードの単語の意味</b>を答える問題が出ます。正解すると強く当たります。</div>
-            <div>♻️ 使ったカードは山札の下へ。次のカードが配られます。苦手・忘れかけの単語ほど早く配られます。</div>
+            <div>🃏 毎ターン、持っているカードが<b>3枚ずつ配られます</b>。</div>
+            <div>⚔️ 3枚それぞれ 攻撃・🔮 スキル・🛡️ 守る を選ぶと、<b>3枚のうち1枚の単語の意味</b>を答える問題が出ます。正解すると強く当たります。</div>
+            <div>♻️ 使った3枚は山札の下へ。次の3枚が配られます。苦手・忘れかけの単語ほど早く配られます。</div>
         </div>
         <button class="action-btn btn-battle" id="formationStartBtn" onclick="confirmFormationAndStart()"
             style="width:100%;padding:14px;font-size:16px;font-weight:bold;margin-top:12px;">⚔️ 挑む！</button>
@@ -2790,7 +2794,7 @@
 <div id="battle-stage-modal" class="modal-overlay" style="display:none;">
     <div class="custom-box" style="width:92%;max-width:360px;">
         <h3 style="margin:0 0 4px;color:#ff8888;font-family:'Noto Serif JP',serif;">⚔️ バトルステージ</h3>
-        <p style="font-size:12px;color:#aa7070;margin:0 0 14px;">山札はそのタブ周辺の所持カード。1枚ずつランダムに配られます</p>
+        <p style="font-size:12px;color:#aa7070;margin:0 0 14px;">山札はそのタブ周辺の所持カード。毎ターン3枚ずつ配られます</p>
         <div class="battle-stage-list" id="battleStageList"></div>
         <button class="modal-cancel-btn" onclick="closeBattleStageModal()" style="margin-top:14px;">キャンセル</button>
     </div>
@@ -5432,7 +5436,7 @@ const Cloud = (function () {
     const TUTORIAL = [
         { ic: '🧭', t: 'カードを探す', p: 'ゴールドを使って、英単語のカードを探しに行こう。問題に答えると、その単語のカードが手に入ります。<br>新しいカードは1日100枚まで。' },
         { ic: '🗺️', t: '冒険で鍛える', p: '「冒険」で問題に答えて先へ進もう。正解するとゴールドと経験値がもらえます。<br>まちがえた単語は、あとで復習に出てきます。' },
-        { ic: '⚔️', t: 'スライムとバトル', p: '持っているカードが1枚ずつ配られるよ。配られたカードの単語に答えて、攻撃・スキル・守るのどれかを使おう。<br>「ボスの様子」を見て使い分けるのがコツ。討伐すると次のタブが開きます。' },
+        { ic: '⚔️', t: 'スライムとバトル', p: '毎ターン、持っているカードが3枚ずつ配られるよ。3枚それぞれ攻撃・スキル・守るを選んで、配られたカードの単語に答えよう。<br>「ボスの様子」を見て使い分けるのがコツ。討伐すると次のタブが開きます。' },
         { ic: '⭐', t: '覚えるほど強くなる', p: '日をあけて正解するほど、カードの★が増えて強くなります。<br>🔊で発音を聞いたり、📈学習レポートで成長を確かめたりしながら、毎日少しずつ続けよう！' },
     ];
     let _tuIdx = 0;
@@ -5935,9 +5939,9 @@ const Cloud = (function () {
      *   ※以下の旧コメントは参考：
      *   討伐戦：約9回の正解で倒せる／敵の攻撃に約11回耐えられる（ミスは1回程度まで。★・レベル・スキル・防御で余裕が出る）
      * プレイヤーレベルのボーナスは含めない（冒険するほど楽になる） */
-    /* 2026-11-05 配られたカードで1枚ずつ戦う方式に合わせて再調整（モンテカルロ試算、正答率80%・山札30枚）
-       撃退戦：★0のカード想定・全問正解で約6ターン／討伐戦：約7ターン。ボスの攻撃力2倍（Takaの指示）は維持。
-       試算の勝率：撃退戦 ★1デッキ約46%・★2約71%・★3約89%／討伐戦 ★1約42%・★2約64%・★3約85%
+    /* 2026-11-05 毎ターン3枚配られる方式に合わせて調整（モンテカルロ試算、正答率80%・山札30枚・大技は2枚で守る）
+       撃退戦：★0のカード想定・3枚とも攻撃で正解し続けて約6ターン／討伐戦：約7ターン。ボスの攻撃力2倍（Takaの指示）は維持。
+       試算の勝率：撃退戦 ★1デッキ約48%・★2約78%・★3約94%／討伐戦 ★1約40%・★2約69%・★3約87%
        Rounds＝「攻撃」で正解し続けて倒せるターン数／Survive＝敵の通常攻撃に耐えられる回数 */
     const BOSS_TUNING = { midStars: 0, midRounds: 6, midSurvive: 6, finalStars: 0, finalRounds: 7, finalSurvive: 6 };
     const HIT_RATE = { attack: { ok: 0.9, ng: 0.3 }, skill: { ok: 0.8, ng: 0.2 } };
@@ -5953,7 +5957,7 @@ const Cloud = (function () {
         const party = stars => {
             const A = base * (1 + STAR_BONUS * stars) * 1.04;   // 想定する攻撃力（品詞ボーナス程度）
             const D = base * (1 + STAR_BONUS * stars);          // 想定する守備力
-            return { hp: D * 3 * (0.8 + 1.3 + 1.0), perRound: A * HIT_RATE.attack.ok };   // カード1枚で「攻撃」に正解したときの1ターンの期待ダメージ
+            return { hp: D * 3 * (0.8 + 1.3 + 1.0), perRound: A * 3 * HIT_RATE.attack.ok };   // 配られた3枚で「攻撃」に正解したときの1ターンの期待ダメージ
         };
         const m = party(T.midStars), f = party(T.finalStars);
         return {
@@ -7887,10 +7891,10 @@ const Cloud = (function () {
         // 後方互換：問題用のプール（今は配られたカードの単語を出題する）
         const poolTabEnd = stage.tabUnlock != null ? stage.tabUnlock : stage.tabIdx;
         const questionPool = cardsData.slice(0, Math.min((poolTabEnd + 1) * COLLECTION_PAGE_SIZE, cardsData.length));
-        const first = battleUnitFor(deck[0]);
+        const first3 = [0, 1, 2].map(i => battleUnitFor(deck[i % deck.length]));
 
         battleSession = {
-            active: true, stage, units: [first], hand: first, deck, deckPos: 0, dealt: 1,
+            active: true, stage, units: first3, hand: first3[0], deck, deckPos: 2, dealt: 3, dealRound: 1,
             currentUnitIdx: -1, plan: null, _defReduction: 0, _victoryShown: false, guardRate: 0,
             playerHP: playerMaxHP, playerMaxHP,
             enemyHP: stage.hp, enemyMaxHP: stage.hp,
@@ -7925,7 +7929,7 @@ const Cloud = (function () {
         renderBattleUI();
         addBattleLog(stage.type === 'mid' ? `⚔️ ${stage.name}が現れた！ 撃退せよ！`
                    : stage.type === 'final' ? `👑 ${stage.name}討伐戦、開始！` : `⚔️ ${stage.emoji} ${stage.name}とのバトル開始！`);
-        addBattleLog(`🃏 山札${deck.length}枚。1枚目は「${first.card.quiz.answer}」`);
+        addBattleLog(`🃏 山札${deck.length}枚から3枚配られた：${first3.map(u => '「' + u.card.quiz.answer + '」').join('')}`);
 
         // ボスバトル背景・BGM開始
         document.body.classList.add('battle-mode');
@@ -8035,32 +8039,39 @@ const Cloud = (function () {
     function renderBattleUnits() {
         const row = document.getElementById('battleUnitsRow');
         const s = battleSession;
-        if (row && s.hand) {
-            const key = s.hand.card.id + '|' + s.dealt;
+        if (row && s.units && s.units.length) {
+            const key = s.dealRound + '|' + s.units.map(u => u.card.id).join(',');
+            const left = Math.max(0, s.deck.length - 1 - (s.deckPos % s.deck.length));
             if (row.dataset.key !== key) {
+                // 新しく3枚配られたとき：山札から1枚ずつ飛んでくる
                 row.dataset.key = key;
-                const left = s.deck.length - 1 - (s.deckPos % s.deck.length);
-                // 上の段は山札の束だけ（配られたカードは下の「配られたカード」に1回だけ出す）
-                row.innerHTML = `<div class="bdeck bdeck-solo"><div class="bdeck-stack"><i></i><i></i><i></i></div>
-                    <div class="bdeck-n">山札 <b>${Math.max(0, left)}</b>枚<span class="bdeck-sub">｜ ${s.dealt}枚目を配った</span></div></div>`;
+                row.innerHTML = s.units.map((u, i) => `<div class="battle-unit-card bdeal bdeal-anim" style="animation-delay:${i * 0.16}s" onanimationend="if(event.animationName==='bdeal-in')this.classList.remove('bdeal-anim')">${battleCardHTML(u, false)}</div>`).join('') +
+                    `<div class="bdeck"><div class="bdeck-stack"><i></i><i></i><i></i></div><div class="bdeck-n">山札<br><b>${left}</b>枚</div></div>`;
             }
+            row.querySelectorAll('.battle-unit-card').forEach((el, i) => el.classList.toggle('active-unit', i === s.currentUnitIdx));
+            const n = row.querySelector('.bdeck-n b'); if (n) n.textContent = left;
         }
         const el = document.getElementById('battleTotalStats');
-        if (el) el.innerHTML = `❤️ HP: <b>${s.playerMaxHP}</b>`;
+        if (el) el.innerHTML = `⚔️ 3枚のP合計: <b>${s.units.reduce((a, u) => a + u.atk, 0)}</b>　❤️ HP: <b>${s.playerMaxHP}</b>`;
     }
-    // 次のカードを配る（山札を使い切ったら配る順を作り直す）
+    // 次の3枚を配る（使った3枚は山札の下へ。山札を使い切ったら配る順を作り直す）
     function battleDealNext() {
         const s = battleSession;
-        s.deckPos++;
-        if (s.deckPos >= s.deck.length) { s.deck = battleDealOrder(s.deck); s.deckPos = 0; addBattleLog('♻️ 山札を切り直した'); }
-        s.hand = battleUnitFor(s.deck[s.deckPos]);
-        s.units = [s.hand];
-        s.dealt++;
+        const next = [];
+        for (let k = 0; k < 3; k++) {
+            s.deckPos++;
+            if (s.deckPos >= s.deck.length) { s.deck = battleDealOrder(s.deck); s.deckPos = 0; addBattleLog('♻️ 山札を切り直した'); }
+            next.push(battleUnitFor(s.deck[s.deckPos]));
+        }
+        s.units = next; s.hand = next[0];
+        s.dealt += 3; s.dealRound = (s.dealRound || 1) + 1;
+        s.plan = null; s.currentUnitIdx = -1;
     }
 
     /* ===== ターンの流れ =====
-     * ① 山札から1枚配られる → ② そのカードで攻撃／スキル／守る（満タンなら必殺技）を選ぶ → ③ そのカードの単語の意味を1問
-     * ④ 正解なら命中率90%（スキル80%）、不正解なら30%（スキル20%）→ ⑤ ボスのターン → 使ったカードは捨てて次の1枚
+     * ① 山札から3枚配られる → ② 3枚それぞれの行動（攻撃／スキル／守る）を選ぶ（満タンなら3枚合体の必殺技）
+     * ③ 3枚のうち1枚の単語の意味を1問 → ④ 正解なら命中率90%（スキル80%）、不正解なら30%（スキル20%）で3枚が順に行動
+     * ⑤ ボスのターン → 使った3枚は山札の下へ、次の3枚が配られる（2026-11-05 Takaの指示で1枚方式から3枚方式に）
      */
     const BATTLE_ACTIONS = {
         attack: { icon: '⚔️', name: '攻撃' },
@@ -8068,9 +8079,9 @@ const Cloud = (function () {
         guard:  { icon: '🛡️', name: '守る' },
     };
     /* ===== ことばの力ゲージ（0〜100） =====
-       正解でたまる（連続正解ほど多い：25→35→45）。スキルはスキルごとの力を使う。満タンで必殺技（配られたカードのPower×3）。
-       守る：攻撃しない代わりに、このターンの被ダメージ-35%〜70%（Guardが高いほど大きい）・HPを10%回復（不正解なら回復は半分） */
-    const GAUGE = { gain: [25, 35, 45], skill: 30, max: 100, guardCut: 0.35, guardHeal: 0.1, ultMult: 3.0 };
+       正解でたまる（連続正解ほど多い：25→35→45）。スキルはスキルごとの力を使う。満タンで3枚合体の必殺技（3枚のPower合計×2.2）。
+       守る：そのカードは攻撃しない代わりに、1枚につき このターンの被ダメージ-30%（最大75%）・HPを8%回復 */
+    const GAUGE = { gain: [25, 35, 45], skill: 30, max: 100, guardCut: 0.3, guardHeal: 0.08, ultMult: 2.2 };
     /* ===== ボスの予告（次の行動をターンの初めに見せる） =====
        通常攻撃／力をためる（次のターンに大技2.5倍）／守りを固める（こちらの攻撃が半分、ボスの攻撃も0.6倍）
        HPが半分を切ると怒り状態：攻撃1.25倍、2連撃が加わり、力をためる回数が増える */
@@ -8092,120 +8103,147 @@ const Cloud = (function () {
         return 'attack';
     }
     function skillCost(u) { return (u && u.skill && u.skill.cost) || GAUGE.skill; }
-    function planCost(plan) { const u = battleSession.hand; return plan === 'ult' ? GAUGE.max : plan === 'skill' ? skillCost(u) : 0; }
+    function planCost(plan) { return plan === 'ult' ? GAUGE.max : (Array.isArray(plan) ? plan : []).reduce((a, x, i) => a + (x === 'skill' ? skillCost(battleSession.units[i]) : 0), 0); }
     function renderBattlePlanner() {
         const area = document.getElementById('battleActionArea');
         if (!area) return;
-        const s = battleSession, u = s.hand;
+        const s = battleSession;
         if (s.gauge == null) s.gauge = 0;
         // ターンの初めにボスの次の行動を決めて見せる
         if (s.intentTurn !== s.turnCount) { s.intent = pickBossIntent(); s.intentTurn = s.turnCount; }
-        const I = BOSS_INTENTS[s.intent], full = s.gauge >= GAUGE.max;
+        if (s.plan === 'ult' && s.gauge < GAUGE.max) s.plan = null;
+        if (s.plan !== 'ult' && (!Array.isArray(s.plan) || s.plan.length !== s.units.length)) s.plan = s.units.map(() => 'attack');
+        // ゲージが足りなくなったスキルは攻撃に戻す
+        if (Array.isArray(s.plan)) { let left = s.gauge; s.plan = s.plan.map((a, i) => { if (a !== 'skill') return a; const c = skillCost(s.units[i]); if (left >= c) { left -= c; return a; } return 'attack'; }); }
+        const I = BOSS_INTENTS[s.intent], cost = planCost(s.plan), full = s.gauge >= GAUGE.max;
         const raidTurn = s.stage && s.stage.type === 'raid' ? `<div class="b-intent shield" style="justify-content:center;"><b>🐉 レイド　ターン ${Math.min(s.turnCount, RAID_TURNS)} / ${RAID_TURNS}　｜　いまの点数 ${raidPoints().toLocaleString()}</b></div>` : '';
         const intentHtml = raidTurn + `<div class="b-intent ${s.intent}${s.rage ? ' rage' : ''}"><span class="ic">${I.ic}</span><div><b>${s.rage ? '😡 ' : ''}ボスの様子：${I.name}</b><br>${I.desc}</div></div>`;
         const gaugeHtml = `<div class="b-gauge${full ? ' full' : ''}"><div class="fill" style="width:${s.gauge}%"></div>` +
-            `<div class="lbl">✨ ことばの力 ${s.gauge} / ${GAUGE.max}${s.streak >= 2 ? `　🔥${s.streak}連続正解` : ''}</div></div>`;
-        const guardCut = Math.round(battleGuardCut(u) * 100);
-        const btn = (a, sub, dis) => `<button class="bplan-btn ${a}" ${dis ? 'disabled' : ''} onclick="battleChoose('${a}')">${BATTLE_ACTIONS[a].icon}${BATTLE_ACTIONS[a].name}<small>${sub}</small></button>`;
+            `<div class="rsv" style="left:${Math.max(0, s.gauge - cost)}%;width:${Math.min(cost, s.gauge)}%"></div>` +
+            `<div class="lbl">✨ ことばの力 ${s.gauge} / ${GAUGE.max}${cost ? `（使う予定 ${cost}）` : ''}${s.streak >= 2 ? `　🔥${s.streak}連続正解` : ''}</div></div>`;
+        const ult = full ? `<button class="bplan-ult${s.plan === 'ult' ? ' sel' : ''}" onclick="setBattlePlan(-1,'ult')">💥 3枚合体・必殺技！${s.plan === 'ult' ? '（選択中・もう一度で解除）' : '（ことばの力を全部使う）'}</button>` : '';
+        const esc = x => String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        let left = s.gauge - cost;
         area.style.display = 'grid';
-        area.innerHTML = `<div class="bplan-top">${intentHtml}${gaugeHtml}</div>
-            <div class="bplan-hand"><div class="bh-lbl">🃏 配られたカード</div>${battleCardHTML(u, true)}
-                <div class="bh-sk">${u.skill.icon}<b>${u.skill.name}</b>（力${skillCost(u)}）${u.skill.desc}</div></div>
-            <div class="bplan-acts">
-                ${btn('attack', `P${u.atk}・命中90%`, false)}
-                ${btn('skill', `${u.skill.icon}${u.skill.name}・力${skillCost(u)}`, s.gauge < skillCost(u))}
-                ${btn('guard', `被ダメ-${guardCut}%・HP+${Math.round(GAUGE.guardHeal * 100)}%`, false)}
-            </div>
-            ${full ? `<button class="bplan-ult" onclick="battleChoose('ult')">💥 必殺技！「${u.card.quiz.answer}」で大ダメージ（ことばの力を全部使う）</button>` : ''}
-            <div class="bplan-note">行動を選ぶと「${u.card.quiz.answer}」の意味の問題が出ます</div>`;
+        area.innerHTML = `<div class="bplan-top">${intentHtml}${gaugeHtml}</div>` + ult + s.units.map((u, i) => `
+            <div class="bplan-col">
+                <div class="bplan-head">「${esc((u.card.quiz.answer || '').slice(0, 12))}」</div>
+                ${['attack', 'skill', 'guard'].map(a => {
+                    const sel = s.plan !== 'ult' && s.plan[i] === a;
+                    const dis = s.plan === 'ult' || (a === 'skill' && !sel && left < skillCost(u));
+                    const sub = a === 'attack' ? `P${u.atk}・命中90%` : a === 'skill' ? `${u.skill.icon}${esc(u.skill.name)}・力${skillCost(u)}` : `被ダメ-${Math.round(GAUGE.guardCut * 100)}%・HP+${Math.round(GAUGE.guardHeal * 100)}%`;
+                    return `<button class="bplan-btn ${a}${sel ? ' sel' : ''}" ${dis ? 'disabled' : ''} onclick="setBattlePlan(${i},'${a}')">${BATTLE_ACTIONS[a].icon}${BATTLE_ACTIONS[a].name}<small>${sub}</small></button>`;
+                }).join('')}
+            </div>`).join('') +
+            `<div class="bplan-skills">${s.units.map(u => `<div>${u.skill.icon}<b>${esc(u.skill.name)}</b>（力${skillCost(u)}）${u.skill.desc}</div>`).join('')}</div>` +
+            `<button class="bplan-go" id="battleGoBtn" onclick="confirmBattlePlan()">📜 作戦決定 → 問題へ</button>` +
+            `<div class="bplan-note">3枚のうち、どれか1枚の単語の意味が出題されます</div>`;
     }
-    // 守る：被ダメージの軽減率（基本35%＋カードのGuardが高いほど大きく。最大70%）
-    function battleGuardCut(u) { return Math.min(0.7, GAUGE.guardCut + guardRateFor(u ? u.def : 0, battleSession.stage ? battleSession.stage.atk : 1)); }
-    function battleChoose(action) {
+    function setBattlePlan(i, action) {
+        if (!battleSession.active || battleSession.turn !== 'player') return;
         const s = battleSession;
-        if (!s.active || s.turn !== 'player') return;
-        if (action === 'skill' && s.gauge < skillCost(s.hand)) return;
-        if (action === 'ult' && s.gauge < GAUGE.max) return;
-        s.plan = action;
-        s.turn = 'quiz';
-        s.gauge = Math.max(0, (s.gauge || 0) - planCost(action));   // スキル・必殺技のことばの力を使う
+        if (action === 'ult') { s.plan = s.plan === 'ult' ? null : 'ult'; renderBattlePlanner(); return; }
+        if (s.plan === 'ult' || !Array.isArray(s.plan)) return;
+        if (action === 'skill' && s.plan[i] !== 'skill' && s.gauge - planCost(s.plan) < skillCost(s.units[i])) return;
+        s.plan[i] = action;
+        renderBattlePlanner();
+    }
+    function confirmBattlePlan() {
+        if (!battleSession.active || battleSession.turn !== 'player') return;
+        battleSession.turn = 'quiz';
+        battleSession.gauge = Math.max(0, (battleSession.gauge || 0) - planCost(battleSession.plan));   // スキル・必殺技のことばの力を使う
         const area = document.getElementById('battleActionArea');
         if (area) area.style.display = 'none';
         battleStartQuiz();
     }
-    // 後方互換（以前の作戦画面の呼び出し）
-    function setBattlePlan(i, action) { if (battleSession.active && battleSession.turn === 'player') battleSession.plan = action; }
-    function confirmBattlePlan() { battleChoose(battleSession.plan || 'attack'); }
+    // 後方互換：1枚方式のときの呼び出し（全員同じ行動にして決定）
+    function battleChoose(action) {
+        const s = battleSession;
+        if (!s.active || s.turn !== 'player') return;
+        if (action === 'ult') { if (s.gauge < GAUGE.max) return; s.plan = 'ult'; }
+        else { s.plan = s.units.map(() => action); if (action === 'skill' && planCost(s.plan) > s.gauge) s.plan = s.units.map((u, i) => i === 0 ? 'skill' : 'attack'); }
+        confirmBattlePlan();
+    }
 
-    // 配られたカードの行動を解決（命中判定つき）→ ボスのターン
+    // 3枚の行動を順に解決（命中判定つき）→ ボスのターン
     function resolveBattleRound(isCorrect) {
-        const S = battleSession, u = S.hand, act = S.plan, stage = S.stage;
+        const S = battleSession, units = S.units, plan = S.plan;
         const key = isCorrect ? 'ok' : 'ng';
         S._defReduction = 0;   // 名詞スキル（堅固な存在など）で軽減されたときだけ使う
         // ことばの力ゲージ：正解でたまる（連続正解ほど多い）
         S.streak = isCorrect ? (S.streak || 0) + 1 : 0;
         const gain = isCorrect ? GAUGE.gain[Math.min(S.streak, 3) - 1] : 0;
         S.gauge = Math.min(GAUGE.max, (S.gauge || 0) + gain);
-        addBattleLog(isCorrect ? `✅ 正解！ 命中率アップ　✨ことばの力 +${gain}` : '❌ 不正解… 命中率ダウン、当たっても威力は半分');
-        S._shieldBroken = S.intent === 'shield' && act === 'skill' && u.skill.kind === 'break';
+        addBattleLog(isCorrect ? `✅ 正解！ 命中率アップ（攻撃90%・スキル80%）　✨ことばの力 +${gain}` : '❌ 不正解… 命中率ダウン（攻撃30%・スキル20%）、当たっても威力は半分');
+        S._shieldBroken = false;
+        // 盾砕きのスキルを使う予定なら、守りは最初から崩れる（順番に関係なく全員に効く）
+        if (S.intent === 'shield' && Array.isArray(plan) && plan.some((a, i) => a === 'skill' && units[i].skill.kind === 'break')) S._shieldBroken = true;
         const shieldCut = (S.intent === 'shield' && !S._shieldBroken) ? 0.5 : 1;   // ボスが守りを固めているターンは半分
-        if (S.intent === 'shield' && act !== 'guard') addBattleLog(S._shieldBroken ? '🔨 ボスの守りを崩した！ 攻撃は半分にならない' : '🧱 ボスは守りを固めている… こちらの攻撃は半分');
+        if (S.intent === 'shield') addBattleLog(S._shieldBroken ? '🔨 ボスの守りを崩した！ 攻撃は半分にならない' : '🧱 ボスは守りを固めている… こちらの攻撃は半分');
         const focus = S._focus || 0;   // 集中：このターンは必中（明鏡止水は攻撃×1.2）
         S._focus = 0;
-        if (focus && act !== 'guard') addBattleLog('🧘 集中！ このターンは必ず当たる');
+        if (focus) addBattleLog('🧘 集中！ このターンはすべて命中');
         const enhance = (S.buffActive ? (S._enhancePower || 1.5) : 1) * (isCorrect ? 1 : WRONG_DAMAGE_MULT) * shieldCut * (focus || 1);
         S.buffActive = false; S._enhancePower = null;
-        S._guardCut = 0;
-        S.currentUnitIdx = 0;
-        renderBattleUnits();
-        const finish = (wait) => setTimeout(() => {
+        // 守る：1枚につき被ダメージ -30%（最大75%はボスのターンで制限）
+        S._guardCut = plan === 'ult' ? 0 : plan.filter(a => a === 'guard').length * GAUGE.guardCut;
+        if (plan === 'ult') { resolveUltimate(isCorrect, enhance / shieldCut); return; }
+        let i = 0;
+        const step = () => {
             if (!S.active) return;
-            if (S.enemyHP <= 0 || S.playerHP <= 0) endBattle();
-            else { S.turn = 'enemy'; battleEnemyTurn(); }
-        }, wait);
-        if (act === 'ult') { resolveUltimate(isCorrect, enhance / shieldCut); return; }
-        if (act === 'guard') {
-            // 守る：このターンの被ダメージを軽減し、HPを回復（不正解だと回復は半分）
-            S._guardCut = battleGuardCut(u);
-            const heal = Math.min(S.playerMaxHP - S.playerHP, Math.round(S.playerMaxHP * GAUGE.guardHeal * (isCorrect ? 1 : WRONG_DAMAGE_MULT)));
-            S.playerHP += heal;
-            addBattleLog(`${u.bonus.label}で守りを固めた 🛡️（被ダメージ -${Math.round(S._guardCut * 100)}%・HP+${heal}）`);
-            if (heal > 0) showDamageFloat('+' + heal, false, '#7dffa0');
+            if (i >= units.length || S.enemyHP <= 0) {
+                setTimeout(() => {
+                    if (!S.active) return;
+                    if (S.enemyHP <= 0 || S.playerHP <= 0) endBattle();
+                    else { S.turn = 'enemy'; S.currentUnitIdx = -1; renderBattleUnits(); battleEnemyTurn(); }
+                }, 500);
+                return;
+            }
+            const u = units[i], act = plan[i];
+            S.currentUnitIdx = i;
+            renderBattleUnits();
+            if (act === 'guard') {
+                const heal = Math.min(S.playerMaxHP - S.playerHP, Math.round(S.playerMaxHP * GAUGE.guardHeal));
+                S.playerHP += heal;
+                addBattleLog(`${u.bonus.label}は守りを固めた 🛡️（被ダメージ -${Math.round(GAUGE.guardCut * 100)}%・HP+${heal}）`);
+                if (heal > 0) showDamageFloat('+' + heal, false, '#7dffa0');
+                renderBattleUI_hpOnly();
+                i++; setTimeout(step, 450); return;
+            }
+            const rate = focus ? 1 : HIT_RATE[act][key];
+            const hit = Math.random() < rate;
+            const tag = `<span class="bhit ${hit ? 'hit' : 'miss'}">${hit ? 'HIT' : 'MISS'}</span>`;
+            if (!hit) {
+                addBattleLog(`${u.bonus.label}の${BATTLE_ACTIONS[act].name}（命中${Math.round(rate * 100)}%）${tag}`);
+                showDamageFloat('MISS', true, '#aaaaaa');
+                i++; setTimeout(step, 550); return;
+            }
+            if (act === 'attack') {
+                const dmg = Math.round(u.atk * enhance);
+                S.enemyHP = Math.max(0, S.enemyHP - dmg);
+                addBattleLog(`${u.bonus.label}の攻撃（命中${Math.round(rate * 100)}%）${tag} ${dmg}ダメージ`);
+                animateUnitAttack(() => { playPunchSE(); bossHitAnim(); battleFlash('atk-flash'); showDamageFloat(dmg, true, '#ff4444'); });
+            } else {
+                applySkillEffect(u, enhance, rate, tag);
+            }
             renderBattleUI_hpOnly();
-            finish(700); return;
-        }
-        const rate = focus ? 1 : HIT_RATE[act][key];
-        const hit = Math.random() < rate;
-        const tag = `<span class="bhit ${hit ? 'hit' : 'miss'}">${hit ? 'HIT' : 'MISS'}</span>`;
-        if (!hit) {
-            addBattleLog(`${u.bonus.label}の${BATTLE_ACTIONS[act].name}（命中${Math.round(rate * 100)}%）${tag}`);
-            showDamageFloat('MISS', true, '#aaaaaa');
-            finish(800); return;
-        }
-        if (act === 'attack') {
-            const dmg = Math.round(u.atk * enhance);
-            S.enemyHP = Math.max(0, S.enemyHP - dmg);
-            addBattleLog(`${u.bonus.label}の攻撃（命中${Math.round(rate * 100)}%）${tag} ${dmg}ダメージ`);
-            animateUnitAttack(() => { playPunchSE(); bossHitAnim(); battleFlash('atk-flash'); showDamageFloat(dmg, true, '#ff4444'); });
-        } else {
-            applySkillEffect(u, enhance, rate, tag);
-        }
-        renderBattleUI_hpOnly();
-        finish(1000);
+            i++; setTimeout(step, 750);
+        };
+        step();
     }
-    // 必殺技：配られたカードの攻撃力×3を必ず当てる（不正解なら威力半分・ボスの守りは関係なし）
+    // 必殺技：配られた3枚の攻撃力の合計×2.2を必ず当てる（不正解なら威力半分・ボスの守りは関係なし）
     function resolveUltimate(isCorrect, enhance) {
         const s = battleSession;
         statInc('ultUsed');
-        const dmg = Math.round(s.hand.atk * GAUGE.ultMult * enhance);
+        const dmg = Math.round(s.units.reduce((a, u) => a + u.atk, 0) * GAUGE.ultMult * enhance);
         const fx = document.createElement('div'); fx.id = 'battle-ult';
-        fx.innerHTML = `<div class="flash"></div><div class="txt">💥 必殺技！「${s.hand.card.quiz.answer}」</div>`;
+        fx.innerHTML = `<div class="flash"></div><div class="txt">💥 3枚合体・必殺技！</div>`;
         document.body.appendChild(fx); setTimeout(() => fx.remove(), 1200);
         playSE('unlock');
         setTimeout(() => {
             if (!s.active) return;
             s.enemyHP = Math.max(0, s.enemyHP - dmg);
-            addBattleLog(`💥 必殺技！ ${dmg}ダメージ${isCorrect ? '' : '（不正解で威力半分）'}`);
+            addBattleLog(`💥 3枚合体・必殺技！ ${dmg}ダメージ${isCorrect ? '' : '（不正解で威力半分）'}`);
             playPunchSE(); bossHitAnim(); battleFlash('atk-flash'); showDamageFloat(dmg, true, '#ff80ff');
             renderBattleUI_hpOnly();
             setTimeout(() => {
@@ -8365,7 +8403,13 @@ const Cloud = (function () {
     }
 
     function battleStartQuiz() {
-        const questionCard = battleSession.hand.card;   // 配られたカードの単語を出題
+        // 配られた3枚のうち1枚の単語を出題（苦手・忘れかけの単語を少し選びやすく）
+        const us = battleSession.units;
+        const wts = us.map(u => 1 + (srsData[u.card.id] && srsData[u.card.id].incorrect ? 1 : 0) + (typeof isReviewDue === 'function' && isReviewDue(u.card.id) ? 1 : 0));
+        let r = Math.random() * wts.reduce((a, b) => a + b, 0), qi = 0;
+        for (; qi < us.length - 1; qi++) { if ((r -= wts[qi]) < 0) break; }
+        battleSession.qIdx = qi;
+        const questionCard = us[qi].card;
         battleSession.questionCard = questionCard;
         gachaSession.isGachaMode = false;
         trainingSession.active = false;
@@ -9256,7 +9300,7 @@ const Cloud = (function () {
                 quizOv.style.display = 'none';
                 quizOv.classList.remove('battle-quiz-mode');
                 { const qb = document.getElementById('quizQuitBtn'); if (qb) qb.textContent = 'やめる'; }
-                logEvent('battle', card, isCorrect, { diff: battleSession && battleSession.hand ? (battleSession.hand.diff || 0) : null });   // 効果検証：苦手度ごとの正答率
+                logEvent('battle', card, isCorrect, { diff: battleSession && battleSession.units && battleSession.units[battleSession.qIdx || 0] ? (battleSession.units[battleSession.qIdx || 0].diff || 0) : null });   // 効果検証：苦手度ごとの正答率
                 processBattleAnswer(isCorrect, card);
             } else {
                 // （旧：実力ガチャ・QRカード取得の出題。現在はどちらも使われていない）
