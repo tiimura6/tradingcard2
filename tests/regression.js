@@ -227,7 +227,7 @@ test('バトル：使ったカードは捨てて次の1枚が配られる（山�
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
-test('バトル：苦手な単語ほど正解したときの威力が大きい／上の段は山札の束だけ', async b => {
+test('バトル：上の段は山札の束だけ／苦手度は記録用で威力は変わらない（ボーナス削除）', async b => {
   const p = await openApp(b, { seed: { unlockedCards: ids('a1', 1, 60) } });
   await formParty(p, 0); await p.click('#formationStartBtn'); await p.waitForTimeout(1600);
   const top = await p.evaluate(() => ({ cards: document.querySelectorAll('#battleUnitsRow .bcard').length, deck: !!document.querySelector('#battleUnitsRow .bdeck-solo'), txt: document.getElementById('battleUnitsRow').innerText }));
@@ -236,19 +236,14 @@ test('バトル：苦手な単語ほど正解したときの威力が大きい�
     const out = {};
     const id = 'a1-5';
     delete srsData[id]; out.d0 = wordDifficulty(id);
-    srsData[id] = { level: 1, correct: 0, incorrect: 1, nextReview: Date.now() + 86400000 }; out.d1 = wordDifficulty(id);
-    srsData[id] = { level: 1, correct: 1, incorrect: 2, nextReview: Date.now() + 86400000 }; out.d2 = wordDifficulty(id);
     srsData[id] = { level: 1, correct: 0, incorrect: 3, nextReview: Date.now() - 86400000 }; out.d3 = wordDifficulty(id);
-    srsData[id] = { level: 2, correct: 6, incorrect: 2, nextReview: Date.now() + 86400000 }; out.overcome = wordDifficulty(id);
-    // 苦手度2のカードで攻撃して正解 → ふつうの1.5倍
     const s = battleSession; HIT_RATE.attack.ok = 1;
-    s.hand.diff = 2; renderBattlePlanner(); out.badge = (document.querySelector('.bplan-hand .bh-diff') || {}).textContent || '';
+    s.hand.diff = 3; renderBattlePlanner(); out.mark = document.getElementById('battleActionArea').innerText.includes('🔥');
     s.plan = 'attack'; s.intent = 'attack'; s.enemyHP = s.enemyMaxHP; s.buffActive = false; const hp0 = s.enemyHP, atk = s.hand.atk;
-    const eT = battleEnemyTurn; battleEnemyTurn = () => { battleEnemyTurn = eT; out.dmg = hp0 - s.enemyHP; out.exp = Math.round(atk * 1.5); out.log = s.log ? s.log.join('|') : document.getElementById('battleLog').innerText; res(out); };
+    const eT = battleEnemyTurn; battleEnemyTurn = () => { battleEnemyTurn = eT; out.dmg = hp0 - s.enemyHP; out.exp = Math.round(atk); res(out); };
     resolveBattleRound(true);
   }));
-  assert(r.d0 === 0 && r.d1 === 1 && r.d2 === 2 && r.d3 === 3 && r.overcome === 0, '苦手度 ' + JSON.stringify(r));
-  assert(r.dmg === r.exp && r.badge.includes('×1.5') && r.log.includes('苦手な単語'), '威力アップ ' + JSON.stringify(r));
+  assert(r.d0 === 0 && r.d3 === 3 && !r.mark && r.dmg === r.exp, JSON.stringify(r));
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 

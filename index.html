@@ -1902,12 +1902,6 @@
         .battle-units-row:has(.bdeal) { grid-template-columns: 1fr auto; max-width: min(300px, 80vw); margin-left: auto; margin-right: auto; align-items: center; }
         .battle-unit-card.bdeal { padding: 0; border: 0; background: none; animation: bdeal-in .45s cubic-bezier(.2,1.2,.4,1); }
         @keyframes bdeal-in { from { opacity: 0; transform: translate(70px, -10px) rotate(12deg) scale(.7); } to { opacity: 1; transform: none; } }
-        .bh-diff { margin-bottom: 6px; font-weight: bold; color: #ffd27a; font-size: 12px; text-shadow: 0 0 6px rgba(255,120,40,.6); }
-        .bh-diff.d3 { color: #ff9a6a; }
-        .bc-diff { display: block; margin: 0 auto 2px; line-height: 1; font-size: 10px; font-weight: bold; color: #ffd27a; text-shadow: 0 0 6px rgba(255,120,40,.7); }
-        .bc-diff.d3 { color: #ff9a6a; animation: bc-diff-glow 1.2s ease-in-out infinite alternate; }
-        @keyframes bc-diff-glow { from { text-shadow: 0 0 4px rgba(255,90,40,.6); } to { text-shadow: 0 0 12px rgba(255,90,40,1); } }
-        body.reduce-motion .bc-diff.d3 { animation: none; }
         .bdeck { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #d8c8f0; font-size: 10px; text-align: center; }
         .bdeck b { font-size: 14px; color: #ffe9a8; }
         .bdeck-stack { position: relative; width: 38px; height: 50px; }
@@ -2675,7 +2669,7 @@
         <button id="settingsBtn" onclick="openSettings()" title="設定"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 9px;font-size:12px;cursor:pointer;color:rgba(240,200,90,0.95);flex-shrink:0;font-family:'Noto Serif JP',serif;">⚙️ 設定</button>
         <button id="accountChip" style="display:none" aria-hidden="true"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.05-1300</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.05-1445</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -2786,7 +2780,6 @@
             <div>🃏 持っているカードが<b>1枚ずつ配られます</b>。</div>
             <div>⚔️ 攻撃・🔮 スキル・🛡️ 守る から1つ選ぶと、<b>そのカードの単語の意味</b>を答える問題が出ます。正解すると強く当たります。</div>
             <div>♻️ 使ったカードは山札の下へ。次のカードが配られます。苦手・忘れかけの単語ほど早く配られます。</div>
-            <div>🔥 <b>苦手な単語ほど、正解したときの威力が大きい</b>（最大×1.75）。苦手を克服するのが勝利への近道！</div>
         </div>
         <button class="action-btn btn-battle" id="formationStartBtn" onclick="confirmFormationAndStart()"
             style="width:100%;padding:14px;font-size:16px;font-weight:bold;margin-top:12px;">⚔️ 挑む！</button>
@@ -5439,7 +5432,7 @@ const Cloud = (function () {
     const TUTORIAL = [
         { ic: '🧭', t: 'カードを探す', p: 'ゴールドを使って、英単語のカードを探しに行こう。問題に答えると、その単語のカードが手に入ります。<br>新しいカードは1日100枚まで。' },
         { ic: '🗺️', t: '冒険で鍛える', p: '「冒険」で問題に答えて先へ進もう。正解するとゴールドと経験値がもらえます。<br>まちがえた単語は、あとで復習に出てきます。' },
-        { ic: '⚔️', t: 'スライムとバトル', p: '持っているカードが1枚ずつ配られるよ。配られたカードの単語に答えて、攻撃・スキル・守るのどれかを使おう。🔥苦手な単語ほど、正解すると大ダメージ！<br>「ボスの様子」を見て使い分けるのがコツ。討伐すると次のタブが開きます。' },
+        { ic: '⚔️', t: 'スライムとバトル', p: '持っているカードが1枚ずつ配られるよ。配られたカードの単語に答えて、攻撃・スキル・守るのどれかを使おう。<br>「ボスの様子」を見て使い分けるのがコツ。討伐すると次のタブが開きます。' },
         { ic: '⭐', t: '覚えるほど強くなる', p: '日をあけて正解するほど、カードの★が増えて強くなります。<br>🔊で発音を聞いたり、📈学習レポートで成長を確かめたりしながら、毎日少しずつ続けよう！' },
     ];
     let _tuIdx = 0;
@@ -7742,12 +7735,8 @@ const Cloud = (function () {
             return [k, c];
         }).sort((a, b) => a[0] - b[0]).map(x => x[1]);
     }
-    /* 単語の難しさ（その生徒にとって）：0〜3。正解すると威力が上がる（×1.0 / 1.25 / 1.5 / 1.75）
-       これまでの間違い（間違い×2−正解）が多いほど難しい。忘れかけ（復習日を過ぎた）ならさらに+1。
-       正解を重ねて苦手を克服すると下がる＝伸びた証。苦手な単語ほど早く配られる（battleDealOrder）ので、
-       「苦手な単語に挑んで正解する」ことがいちばん強い戦い方になる */
-    const DIFF_MULT = [1, 1.25, 1.5, 1.75];
-    const DIFF_LABEL = ['', 'ちょっと苦手', '苦手', '超苦手'];
+    /* 単語の苦手度（その生徒にとって）：0〜3。バトルの威力には影響しない（2026-11-05 Takaの指示で威力ボーナスは削除）。
+       効果検証レポート用に学習ログへ記録するだけ。間違い×2−正解が多いほど高く、忘れかけ（復習日を過ぎた）なら+1 */
     function wordDifficulty(cardId) {
         const e = srsData[cardId];
         if (!e) return 0;
@@ -8037,9 +8026,8 @@ const Cloud = (function () {
     // 配られたカード（意味は書かない：問題の答えになるため）と山札
     function battleCardHTML(u, big) {
         const r = getRarity(u.card.no), esc = x => String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;');
-        const dd = u.diff ? `<span class="bc-diff d${u.diff}" title="${DIFF_LABEL[u.diff]}：正解で威力×${DIFF_MULT[u.diff]}">${'🔥'.repeat(u.diff)}</span>` : '';
         return `<div class="bcard ${r}${big ? ' big' : ''}"><span class="bc-r">${r}</span>
-            <div class="bc-w">${esc(u.card.quiz.answer)}</div>${dd}<div class="bc-pos">${esc(u.card.quiz.pos || '')}</div>
+            <div class="bc-w">${esc(u.card.quiz.answer)}</div><div class="bc-pos">${esc(u.card.quiz.pos || '')}</div>
             <div class="bc-st">${starsHTML(getStars(u.card.id), big ? 11 : 9)}</div>
             <div class="bc-pg"><b class="p">P ${u.atk}</b><b class="g">G ${u.def}</b></div>
             <div class="bc-sk">${u.skill.icon}${esc(u.skill.name)}</div></div>`;
@@ -8122,7 +8110,7 @@ const Cloud = (function () {
         area.style.display = 'grid';
         area.innerHTML = `<div class="bplan-top">${intentHtml}${gaugeHtml}</div>
             <div class="bplan-hand"><div class="bh-lbl">🃏 配られたカード</div>${battleCardHTML(u, true)}
-                <div class="bh-sk">${u.diff ? `<div class="bh-diff d${u.diff}">${'🔥'.repeat(u.diff)} ${DIFF_LABEL[u.diff]}な単語！ 正解で威力×${DIFF_MULT[u.diff]}</div>` : ''}${u.skill.icon}<b>${u.skill.name}</b>（力${skillCost(u)}）${u.skill.desc}</div></div>
+                <div class="bh-sk">${u.skill.icon}<b>${u.skill.name}</b>（力${skillCost(u)}）${u.skill.desc}</div></div>
             <div class="bplan-acts">
                 ${btn('attack', `P${u.atk}・命中90%`, false)}
                 ${btn('skill', `${u.skill.icon}${u.skill.name}・力${skillCost(u)}`, s.gauge < skillCost(u))}
@@ -8165,14 +8153,7 @@ const Cloud = (function () {
         const focus = S._focus || 0;   // 集中：このターンは必中（明鏡止水は攻撃×1.2）
         S._focus = 0;
         if (focus && act !== 'guard') addBattleLog('🧘 集中！ このターンは必ず当たる');
-        // 苦手な単語に正解すると威力アップ（難しさ1〜3で×1.25〜×1.75）
-        const diffMult = isCorrect ? (DIFF_MULT[u.diff || 0] || 1) : 1;
-        if (isCorrect && diffMult > 1 && act !== 'guard') {
-            addBattleLog(`🔥 苦手な単語「${u.card.quiz.answer}」に正解！ 威力×${diffMult}`);
-            S.diffHits = (S.diffHits || 0) + 1;
-            statInc('diffHits');
-        }
-        const enhance = (S.buffActive ? (S._enhancePower || 1.5) : 1) * (isCorrect ? 1 : WRONG_DAMAGE_MULT) * shieldCut * (focus || 1) * diffMult;
+        const enhance = (S.buffActive ? (S._enhancePower || 1.5) : 1) * (isCorrect ? 1 : WRONG_DAMAGE_MULT) * shieldCut * (focus || 1);
         S.buffActive = false; S._enhancePower = null;
         S._guardCut = 0;
         S.currentUnitIdx = 0;
