@@ -80,7 +80,7 @@ const HEADERS = {
   PROGRESS: ['ログインID', '更新日時', 'リビジョン', '分割数'].concat(
               Array.from({ length: MAX_CHUNKS }, (_, i) => 'データ' + (i + 1))),
   LOG:      ['タイムスタンプ', 'ユーザー', '区分', 'セッションID', 'イベント', 'カードNo', '英単語', '意味',
-             'レベル', '正誤', '回答時間(秒)', '取得カード数', '連続正解', '手帖'],
+             'レベル', '正誤', '回答時間(秒)', '取得カード数', '連続正解', '手帖', '苦手度'],
   DAILY:    ['日付', 'ログインID', '回答数', '正解数', 'キー'],
   STATUS:   ['ログインID', 'ニックネーム', 'メモ（先生用）', 'クラス（先生用）', '登録日', '最終利用', '未利用日数', '利用日数',
              '直近7日の回答数', '累計回答数', '正解数', '正答率', '獲得カード', '収集率', 'レベル', '累計XP',
@@ -102,7 +102,7 @@ const ST = {
 };
 
 // 回答として数えるイベント
-const ANSWER_EVENTS = ['training', 'gacha', 'challenge', 'battle'];
+const ANSWER_EVENTS = ['training', 'gacha', 'challenge', 'battle', 'grammar'];
 
 /* ================= エントリーポイント ================= */
 function doPost(e) {
@@ -440,6 +440,7 @@ function log_(req) {
     typeof ev.isCorrect === 'boolean' ? (ev.isCorrect ? '正解' : '不正解') : '-',
     ev.responseTime || '', ev.totalUnlocked || '', ev.combo || '',
     ((NOTEBOOKS.find(n => n.key === ev.notebook) || {}).name || ''),
+    (ev.diff === 0 || ev.diff) ? Math.max(0, Math.min(3, Number(ev.diff) || 0)) : '',   // バトルで配られた単語の苦手度（0〜3）
   ]);
 
   return withLock_(() => {
@@ -704,6 +705,9 @@ function onOpen() {
     .addItem('管理者キーを設定・変更', 'setAdminKey')
     .addItem('問い合わせの通知先を設定', 'setContactNotify')
     .addItem('レイドボスのHPを設定', 'setRaidHp')
+    .addSeparator()
+    .addItem('効果検証レポートを作成（学習ログの集計）', 'buildEffectReportFromMenu')
+    .addItem('効果検証レポートを毎朝自動で更新', 'installEffectReportTrigger')
     .addToUi();
 }
 
@@ -1068,4 +1072,185 @@ function testFlow() {
     events: [{ timestamp: Date.now(), eventType: 'training', cardNo: 1, word: 'abandon', isCorrect: true }] }));
   Logger.log(call({ action: 'loadProgress', token: reg.token }));
   Logger.log(hofRanking_());
+}
+
+
+/* ================= 効果検証レポート（学習ログの集計） =================
+ * 「学習ログ」シートの会員の回答だけを集計し、「効果検証」シートに書き出す。何度実行しても上書きされるだけで安全。
+ * 中心の指標＝間隔をあけた再挑戦（同じ生徒が同じ単語・文法問題に、1日以上／7日以上あけて再び答えたとき正解できたか）。
+ *   ・初回で間違えた単語を、後日どれだけ正解できるようになったか（克服率）
+ *   ・正解までの回答時間が初回より短くなったか（定着・自動化）
+ *   ・よく使った生徒ほど伸びたか（利用日数で3グループに分けて比較＝用量反応）
+ * 限界：4択の再認であり、事前・事後テストのような外部の学力指標ではない。対照群もない（シートの末尾にも明記）。 */
+const EFFECT_SHEET = '効果検証';
+const DAY_MS = 86400000;
+
+function effectStats_(rows) {
+  // rows: 学習ログの値（見出しなし）。列：A時刻 B生徒 C区分 E種類 F番号 G英単語 J正誤 K回答時間 N手帖 O苦手度
+  const byUser = {};
+  let first = null, last = null, n = 0;
+  rows.forEach(r => {
+    if (r[2] !== '会員') return;
+    const ev = String(r[4]);
+    if (ANSWER_EVENTS.indexOf(ev) < 0) return;
+    if (r[9] !== '正解' && r[9] !== '不正解') return;
+    const t = r[0] instanceof Date ? r[0].getTime() : new Date(r[0]).getTime();
+    if (!isFinite(t)) return;
+    const user = String(r[1]);
+    const key = (ev === 'grammar' ? 'G|' : String(r[13]) + '|') + (r[5] !== '' ? r[5] : r[6]);
+    const u = byUser[user] = byUser[user] || { items: {}, days: {}, n: 0, c: 0 };
+    (u.items[key] = u.items[key] || []).push({ t, ok: r[9] === '正解', rt: Number(r[10]) || 0, ev, diff: r[14] === '' ? null : Number(r[14]) });
+    u.days[Utilities.formatDate(new Date(t), 'Asia/Tokyo', 'yyyy-MM-dd')] = 1;
+    u.n++; if (r[9] === '正解') u.c++;
+    n++; if (!first || t < first) first = t; if (!last || t > last) last = t;
+  });
+  return { byUser, first, last, n };
+}
+
+/** 1つの単語の回答の並び（時刻順）から、初回と「gap日以上あとの最初の再挑戦」を取り出す */
+function effectLater_(list, gapDays) {
+  const t0 = list[0].t;
+  for (let i = 1; i < list.length; i++) if (list[i].t - t0 >= gapDays * DAY_MS) return list[i];
+  return null;
+}
+
+function effectRate_(a, b) { return b ? Math.round(a / b * 1000) / 10 : ''; }
+function effectMedian_(a) { if (!a.length) return ''; a = a.slice().sort((x, y) => x - y); const m = Math.floor(a.length / 2); return a.length % 2 ? a[m] : Math.round((a[m - 1] + a[m]) / 2 * 10) / 10; }
+
+function effectReport_(rows) {
+  const S = effectStats_(rows);
+  const users = Object.keys(S.byUser);
+  const acc = () => ({ pairs: 0, firstOk: 0, l1: 0, l1ok: 0, l7: 0, l7ok: 0, ng1: 0, ng1ok: 0, ng7: 0, ng7ok: 0, rt0: [], rt1: [] });
+  const all = acc(), gram = acc();
+  const perUser = [];
+  const add = (A, list) => {
+    list.sort((a, b) => a.t - b.t);
+    const f = list[0], a1 = effectLater_(list, 1), a7 = effectLater_(list, 7);
+    A.pairs++; if (f.ok) A.firstOk++;
+    if (a1) { A.l1++; if (a1.ok) A.l1ok++; if (!f.ok) { A.ng1++; if (a1.ok) A.ng1ok++; } if (f.ok && a1.ok && f.rt && a1.rt) { A.rt0.push(f.rt); A.rt1.push(a1.rt); } }
+    if (a7) { A.l7++; if (a7.ok) A.l7ok++; if (!f.ok) { A.ng7++; if (a7.ok) A.ng7ok++; } }
+  };
+  // バトルの苦手度ごとの正答率
+  const diff = [0, 1, 2, 3].map(() => ({ n: 0, c: 0 }));
+  users.forEach(id => {
+    const U = S.byUser[id], me = acc();
+    Object.keys(U.items).forEach(k => {
+      add(all, U.items[k]); add(me, U.items[k]);
+      if (k.indexOf('G|') === 0) add(gram, U.items[k]);
+      U.items[k].forEach(x => { if (x.ev === 'battle' && x.diff !== null && diff[x.diff]) { diff[x.diff].n++; if (x.ok) diff[x.diff].c++; } });
+    });
+    perUser.push({ id, days: Object.keys(U.days).length, n: U.n, rate: effectRate_(U.c, U.n), first: effectRate_(me.firstOk, me.pairs),
+      later: effectRate_(me.l1ok, me.l1), gain: (me.l1 && me.pairs) ? Math.round((me.l1ok / me.l1 - me.firstOk / me.pairs) * 1000) / 10 : '',
+      ng: me.ng1, recover: effectRate_(me.ng1ok, me.ng1), _ng1ok: me.ng1ok });
+  });
+  perUser.sort((a, b) => b.n - a.n);
+
+  // 週ごとの推移（月曜はじまり）
+  const weeks = {};
+  users.forEach(id => Object.keys(S.byUser[id].items).forEach(k => S.byUser[id].items[k].forEach((x, i) => {
+    const d = new Date(x.t + 9 * 3600000); const dow = (d.getUTCDay() + 6) % 7;
+    const wk = Utilities.formatDate(new Date(x.t - dow * DAY_MS), 'Asia/Tokyo', 'yyyy-MM-dd');
+    const W = weeks[wk] = weeks[wk] || { users: {}, n: 0, c: 0, fn: 0, fc: 0, rn: 0, rc: 0 };
+    W.users[id] = 1; W.n++; if (x.ok) W.c++;
+    if (i === 0) { W.fn++; if (x.ok) W.fc++; } else { W.rn++; if (x.ok) W.rc++; }
+  })));
+
+  // 利用日数で3グループ（回答20以上の生徒）→ 初回に間違えた単語の克服率を比べる
+  const el = perUser.filter(u => u.n >= 20 && u.ng > 0).sort((a, b) => a.days - b.days);
+  const groups = [];
+  if (el.length >= 3) {
+    const cut = [0, Math.floor(el.length / 3), Math.floor(el.length * 2 / 3), el.length];
+    ['少ない', 'ふつう', '多い'].forEach((name, g) => {
+      const part = el.slice(cut[g], cut[g + 1]);
+      const ng = part.reduce((a, u) => a + u.ng, 0), ok = part.reduce((a, u) => a + u._ng1ok, 0);
+      groups.push([`利用日数が${name}グループ`, part.length, `${part[0].days}〜${part[part.length - 1].days}日`, effectRate_(ok, ng), Math.round(part.reduce((a, u) => a + u.n, 0) / part.length)]);
+    });
+  }
+  return { S, users, all, gram, perUser, weeks, groups, diff };
+}
+
+/** レポートを「効果検証」シートに書き出す */
+function buildEffectReport() {
+  const log = sheet_(SHEET.LOG);
+  const nRows = log.getLastRow() - 1;
+  const rows = nRows > 0 ? log.getRange(2, 1, nRows, 15).getValues() : [];
+  const R = effectReport_(rows), A = R.all, tz = 'Asia/Tokyo';
+  const fmt = t => t ? Utilities.formatDate(new Date(t), tz, 'yyyy/MM/dd') : '-';
+  const out = [];
+  const W = 8;
+  const row = (...v) => { const a = v.slice(0, W); while (a.length < W) a.push(''); out.push(a); };
+  const bold = [];
+  const head = (...v) => { bold.push(out.length + 1); row(...v); };
+
+  head('■ 効果検証レポート（学習ログの集計）');
+  row('作成日時', Utilities.formatDate(new Date(), tz, 'yyyy/MM/dd HH:mm'));
+  row('対象期間', fmt(R.S.first) + ' 〜 ' + fmt(R.S.last));
+  row('対象', `会員 ${R.users.length}人・回答 ${R.S.n}件（ゲストは含まない）`);
+  row('');
+  head('■ 要約（応募書類・報告にそのまま使える文）');
+  const lines = [];
+  if (A.ng7) lines.push(`初回で間違えた単語のうち、7日以上あとの再挑戦で正解できた割合は ${effectRate_(A.ng7ok, A.ng7)}%（${A.ng7}語）。`);
+  if (A.ng1) lines.push(`初回で間違えた単語のうち、翌日以降の再挑戦で正解できた割合は ${effectRate_(A.ng1ok, A.ng1)}%（${A.ng1}語）。`);
+  if (A.l1) lines.push(`単語ごとの正答率は、初回 ${effectRate_(A.firstOk, A.pairs)}% → 翌日以降の再挑戦 ${effectRate_(A.l1ok, A.l1)}%。`);
+  if (A.rt0.length) lines.push(`初回も再挑戦も正解した単語では、回答時間の中央値が ${effectMedian_(A.rt0)}秒 → ${effectMedian_(A.rt1)}秒。`);
+  if (R.groups.length === 3) lines.push(`利用日数の多いグループほど克服率が高いか：少ない ${R.groups[0][3]}% ／ ふつう ${R.groups[1][3]}% ／ 多い ${R.groups[2][3]}%。`);
+  if (!lines.length) lines.push('まだ再挑戦のデータが足りません（同じ単語に1日以上あけて答えた記録が必要）。');
+  lines.forEach(l => row(l));
+  row('');
+
+  head('■ 1. 間隔をあけた再挑戦（同じ生徒が同じ単語に、日をあけて答えたとき）', '単語数', '正答率(%)');
+  row('初回の回答', A.pairs, effectRate_(A.firstOk, A.pairs));
+  row('翌日以降の最初の再挑戦', A.l1, effectRate_(A.l1ok, A.l1));
+  row('7日以降の最初の再挑戦', A.l7, effectRate_(A.l7ok, A.l7));
+  row('初回不正解 → 翌日以降に正解（克服率）', A.ng1, effectRate_(A.ng1ok, A.ng1));
+  row('初回不正解 → 7日以降に正解（克服率）', A.ng7, effectRate_(A.ng7ok, A.ng7));
+  row('回答時間の中央値（秒）：初回 → 翌日以降（どちらも正解の単語）', A.rt0.length, effectMedian_(A.rt0) + ' → ' + effectMedian_(A.rt1));
+  if (R.gram.pairs) {
+    row('（文法問題のみ）初回の回答', R.gram.pairs, effectRate_(R.gram.firstOk, R.gram.pairs));
+    row('（文法問題のみ）翌日以降の最初の再挑戦', R.gram.l1, effectRate_(R.gram.l1ok, R.gram.l1));
+    row('（文法問題のみ）初回不正解 → 翌日以降に正解', R.gram.ng1, effectRate_(R.gram.ng1ok, R.gram.ng1));
+  }
+  row('');
+
+  head('■ 2. 利用量と伸び（回答20件以上の生徒を利用日数で3等分）', '人数', '利用日数', '克服率(%)', '平均回答数');
+  if (R.groups.length) R.groups.forEach(g => row(...g)); else row('（対象の生徒が3人未満）');
+  row('');
+
+  head('■ 3. バトル：配られた単語の苦手度ごとの正答率', '回答数', '正答率(%)');
+  ['苦手度0（ふつう）', '苦手度1（ちょっと苦手）', '苦手度2（苦手）', '苦手度3（超苦手）'].forEach((l, i) => row(l, R.diff[i].n, effectRate_(R.diff[i].c, R.diff[i].n)));
+  row('');
+
+  head('■ 4. 週ごとの推移（月曜はじまり）', '利用した人数', '回答数', '正答率(%)', '初めての単語の正答率(%)', '2回目以降の単語の正答率(%)');
+  Object.keys(R.weeks).sort().forEach(k => { const w = R.weeks[k]; row(k, Object.keys(w.users).length, w.n, effectRate_(w.c, w.n), effectRate_(w.fc, w.fn), effectRate_(w.rc, w.rn)); });
+  row('');
+
+  head('■ 5. 生徒ごと（回答数の多い順）', '利用日数', '回答数', '正答率(%)', '初回正答率(%)', '再挑戦の正答率(%)', '伸び(ポイント)', '克服率(%)');
+  R.perUser.forEach(u => row(u.id, u.days, u.n, u.rate, u.first, u.later, u.gain, u.recover));
+  row('');
+
+  head('■ 読み方と限界');
+  row('・「再挑戦」は、同じ単語（同じ手帖の同じカード）・同じ文法問題に、初回から1日（7日）以上あけて最初に答えたときの結果です。');
+  row('・すべて4択などアプリ内の回答で、外部の学力テストではありません。対照群（使わなかった生徒）との比較もありません。');
+  row('・苦手な単語・忘れかけの単語ほど再び出やすい仕組みのため、再挑戦の単語は難しめに偏ります（伸びは控えめに出ます）。');
+  row('・生徒の名前は出していません（ログインIDのみ）。外部に出すときは要約と表1〜4だけを使ってください。');
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sh = ss.getSheetByName(EFFECT_SHEET) || ss.insertSheet(EFFECT_SHEET);
+  sh.clear();
+  sh.getRange(1, 1, out.length, W).setValues(out);
+  bold.forEach(r => sh.getRange(r, 1, 1, W).setFontWeight('bold').setBackground('#3b2f12').setFontColor('#f3e2a9'));
+  sh.setColumnWidth(1, 420);
+  sh.setColumnWidths(2, W - 1, 110);
+  return { users: R.users.length, answers: R.S.n, rows: out.length };
+}
+
+function buildEffectReportFromMenu() {
+  const r = buildEffectReport();
+  SpreadsheetApp.getUi().alert(`「${EFFECT_SHEET}」シートを更新しました（会員 ${r.users}人・回答 ${r.answers}件）。`);
+}
+function dailyEffectReport() { buildEffectReport(); }   // トリガーから呼ぶ
+function installEffectReportTrigger() {
+  ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'dailyEffectReport').forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('dailyEffectReport').timeBased().everyDays(1).atHour(5).create();
+  SpreadsheetApp.getUi().alert('毎朝5時ごろに「効果検証」シートを自動で更新します。');
 }

@@ -195,7 +195,7 @@ test('バトル：出陣の画面（山札の中身）→ 1枚配られる → �
   assert(pre.deck > 0 && pre.txt.includes(String(pre.deck)), '山札の表示 ' + JSON.stringify(pre));
   if (process.env.SHOT) await p.screenshot({ path: process.env.SHOT + '/formation.png' });
   await p.click('#formationStartBtn'); await p.waitForTimeout(1600);
-  const st = await p.evaluate(() => ({ btns: document.querySelectorAll('.bplan-acts .bplan-btn').length, hand: !!document.querySelector('.bplan-hand .bcard'), deal: !!document.querySelector('.bdeal'), deckLeft: battleSession.deck.length - battleSession.deckPos - 1,
+  const st = await p.evaluate(() => ({ btns: document.querySelectorAll('.bplan-acts .bplan-btn').length, hand: !!document.querySelector('.bplan-hand .bcard'), deal: !!document.querySelector('.bdeck-solo'), deckLeft: battleSession.deck.length - battleSession.deckPos - 1,
     skillDis: document.querySelector('.bplan-btn.skill').disabled, intent: battleSession.intent, box: !!document.querySelector('.b-intent'), word: battleSession.hand.card.quiz.answer }));
   assert(st.btns === 3 && st.hand && st.deal && st.skillDis && st.intent === 'attack' && st.box, JSON.stringify(st));
   if (process.env.SHOT) await p.screenshot({ path: process.env.SHOT + '/battle-hand.png', fullPage: true });
@@ -224,6 +224,31 @@ test('バトル：使ったカードは捨てて次の1枚が配られる（山�
     }, 3500);
   }));
   assert(r.pos === 1 && r.dealt >= 2 && r.second !== undefined && r.wrap, JSON.stringify(r));
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('バトル：苦手な単語ほど正解したときの威力が大きい／上の段は山札の束だけ', async b => {
+  const p = await openApp(b, { seed: { unlockedCards: ids('a1', 1, 60) } });
+  await formParty(p, 0); await p.click('#formationStartBtn'); await p.waitForTimeout(1600);
+  const top = await p.evaluate(() => ({ cards: document.querySelectorAll('#battleUnitsRow .bcard').length, deck: !!document.querySelector('#battleUnitsRow .bdeck-solo'), txt: document.getElementById('battleUnitsRow').innerText }));
+  assert(top.cards === 0 && top.deck && top.txt.includes('山札'), '上の段 ' + JSON.stringify(top));
+  const r = await p.evaluate(() => new Promise(res => {
+    const out = {};
+    const id = 'a1-5';
+    delete srsData[id]; out.d0 = wordDifficulty(id);
+    srsData[id] = { level: 1, correct: 0, incorrect: 1, nextReview: Date.now() + 86400000 }; out.d1 = wordDifficulty(id);
+    srsData[id] = { level: 1, correct: 1, incorrect: 2, nextReview: Date.now() + 86400000 }; out.d2 = wordDifficulty(id);
+    srsData[id] = { level: 1, correct: 0, incorrect: 3, nextReview: Date.now() - 86400000 }; out.d3 = wordDifficulty(id);
+    srsData[id] = { level: 2, correct: 6, incorrect: 2, nextReview: Date.now() + 86400000 }; out.overcome = wordDifficulty(id);
+    // 苦手度2のカードで攻撃して正解 → ふつうの1.5倍
+    const s = battleSession; HIT_RATE.attack.ok = 1;
+    s.hand.diff = 2; renderBattlePlanner(); out.badge = (document.querySelector('.bplan-hand .bh-diff') || {}).textContent || '';
+    s.plan = 'attack'; s.intent = 'attack'; s.enemyHP = s.enemyMaxHP; s.buffActive = false; const hp0 = s.enemyHP, atk = s.hand.atk;
+    const eT = battleEnemyTurn; battleEnemyTurn = () => { battleEnemyTurn = eT; out.dmg = hp0 - s.enemyHP; out.exp = Math.round(atk * 1.5); out.log = s.log ? s.log.join('|') : document.getElementById('battleLog').innerText; res(out); };
+    resolveBattleRound(true);
+  }));
+  assert(r.d0 === 0 && r.d1 === 1 && r.d2 === 2 && r.d3 === 3 && r.overcome === 0, '苦手度 ' + JSON.stringify(r));
+  assert(r.dmg === r.exp && r.badge.includes('×1.5') && r.log.includes('苦手な単語'), '威力アップ ' + JSON.stringify(r));
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 

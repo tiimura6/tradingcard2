@@ -1893,9 +1893,21 @@
         .bc-sk { font-size: 9.5px; color: #f0dcff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .bcard.big .bc-w { font-size: 22px; margin-top: 12px; }
         .bcard.big .bc-pg b { font-size: 12px; }
+        .battle-units-row:has(.bdeck-solo) { grid-template-columns: 1fr; justify-items: center; margin: 2px auto 4px; }
+        .bdeck.bdeck-solo { flex-direction: row; gap: 10px; font-size: 12px; }
+        .bdeck-solo .bdeck-stack { width: 30px; height: 40px; animation: bdeck-pulse .45s ease-out; }
+        .bdeck-sub { color: #a898c8; font-size: 11px; margin-left: 4px; }
+        @keyframes bdeck-pulse { 0% { transform: translateY(0) scale(1); } 40% { transform: translateY(-4px) scale(1.08); } 100% { transform: none; } }
+        body.reduce-motion .bdeck-solo .bdeck-stack { animation: none; }
         .battle-units-row:has(.bdeal) { grid-template-columns: 1fr auto; max-width: min(300px, 80vw); margin-left: auto; margin-right: auto; align-items: center; }
         .battle-unit-card.bdeal { padding: 0; border: 0; background: none; animation: bdeal-in .45s cubic-bezier(.2,1.2,.4,1); }
         @keyframes bdeal-in { from { opacity: 0; transform: translate(70px, -10px) rotate(12deg) scale(.7); } to { opacity: 1; transform: none; } }
+        .bh-diff { margin-bottom: 6px; font-weight: bold; color: #ffd27a; font-size: 12px; text-shadow: 0 0 6px rgba(255,120,40,.6); }
+        .bh-diff.d3 { color: #ff9a6a; }
+        .bc-diff { display: block; margin: 0 auto 2px; line-height: 1; font-size: 10px; font-weight: bold; color: #ffd27a; text-shadow: 0 0 6px rgba(255,120,40,.7); }
+        .bc-diff.d3 { color: #ff9a6a; animation: bc-diff-glow 1.2s ease-in-out infinite alternate; }
+        @keyframes bc-diff-glow { from { text-shadow: 0 0 4px rgba(255,90,40,.6); } to { text-shadow: 0 0 12px rgba(255,90,40,1); } }
+        body.reduce-motion .bc-diff.d3 { animation: none; }
         .bdeck { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #d8c8f0; font-size: 10px; text-align: center; }
         .bdeck b { font-size: 14px; color: #ffe9a8; }
         .bdeck-stack { position: relative; width: 38px; height: 50px; }
@@ -2663,7 +2675,7 @@
         <button id="settingsBtn" onclick="openSettings()" title="設定"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 9px;font-size:12px;cursor:pointer;color:rgba(240,200,90,0.95);flex-shrink:0;font-family:'Noto Serif JP',serif;">⚙️ 設定</button>
         <button id="accountChip" style="display:none" aria-hidden="true"></button>
-        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.05-1200</span></div>
+        <div style="font-size:9px;letter-spacing:0.12em;color:rgba(200,170,80,0.45);font-family:'Noto Serif JP',serif;text-align:center;flex:1;padding:0 6px;">Designed by Takahiro Iimura<br><span id="appVersion" style="opacity:.8;">ver. 2026.11.05-1300</span></div>
         <button id="bgmBtn" onclick="toggleBGM()" title="BGM ON/OFF"
             style="background:rgba(30,20,5,0.7);border:1.5px solid rgba(220,170,50,0.7);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;color:rgba(220,170,50,0.85);display:flex;align-items:center;gap:4px;transition:all 0.3s;font-family:'Noto Serif JP',serif;letter-spacing:0.05em;flex-shrink:0;">🔇 BGM</button>
     </div>
@@ -2773,7 +2785,8 @@
         <div class="deck-rules">
             <div>🃏 持っているカードが<b>1枚ずつ配られます</b>。</div>
             <div>⚔️ 攻撃・🔮 スキル・🛡️ 守る から1つ選ぶと、<b>そのカードの単語の意味</b>を答える問題が出ます。正解すると強く当たります。</div>
-            <div>♻️ 使ったカードは山札の下へ。次のカードが配られます。忘れかけの単語ほど早く配られます。</div>
+            <div>♻️ 使ったカードは山札の下へ。次のカードが配られます。苦手・忘れかけの単語ほど早く配られます。</div>
+            <div>🔥 <b>苦手な単語ほど、正解したときの威力が大きい</b>（最大×1.75）。苦手を克服するのが勝利への近道！</div>
         </div>
         <button class="action-btn btn-battle" id="formationStartBtn" onclick="confirmFormationAndStart()"
             style="width:100%;padding:14px;font-size:16px;font-weight:bold;margin-top:12px;">⚔️ 挑む！</button>
@@ -3639,10 +3652,10 @@ const Cloud = (function () {
      * @param {object} card       cardsData の要素
      * @param {boolean|null} isCorrect
      */
-    function logEvent(eventType, card, isCorrect) {
+    function logEvent(eventType, card, isCorrect, extra) {
         if (!GAS_URL) return;  // URL未設定時はスキップ
-        const tabIndex = card ? Math.floor((card.no - 1) / COLLECTION_PAGE_SIZE) : null;
-        Cloud.log({
+        const tabIndex = card && typeof card.no === 'number' ? Math.floor((card.no - 1) / COLLECTION_PAGE_SIZE) : null;
+        Cloud.log(Object.assign({
             timestamp:      Date.now(),
             eventType:      eventType,
             cardNo:         card ? card.no : null,
@@ -3655,7 +3668,7 @@ const Cloud = (function () {
             tabIndex:       tabIndex,
             totalUnlocked:  unlockedCards.length,
             combo:          comboCount,
-        });  // まとめて送信（Cloud.log がキューに積み、15秒ごと or 20件ごとに送る）
+        }, extra || {}));  // まとめて送信（Cloud.log がキューに積み、15秒ごと or 20件ごとに送る）
     }
 
     /* ========== RARITY SYSTEM ========== */
@@ -5385,6 +5398,8 @@ const Cloud = (function () {
         wellbeingTick();
         advAfterAnswer(ok);
         const key = grammarNbKey();
+        // 効果検証用：文法問題の回答も学習ログに送る（番号＝問題ID、英単語の欄＝文法項目）
+        logEvent('grammar', { no: g.id, quiz: { answer: g.tag || g.id, meaning: '', level: g.nb || '' } }, ok);
         setTimeout(() => {
             if (!trainingSession.active) return;
             updateCombo(ok);
@@ -5424,7 +5439,7 @@ const Cloud = (function () {
     const TUTORIAL = [
         { ic: '🧭', t: 'カードを探す', p: 'ゴールドを使って、英単語のカードを探しに行こう。問題に答えると、その単語のカードが手に入ります。<br>新しいカードは1日100枚まで。' },
         { ic: '🗺️', t: '冒険で鍛える', p: '「冒険」で問題に答えて先へ進もう。正解するとゴールドと経験値がもらえます。<br>まちがえた単語は、あとで復習に出てきます。' },
-        { ic: '⚔️', t: 'スライムとバトル', p: '持っているカードが1枚ずつ配られるよ。配られたカードの単語に答えて、攻撃・スキル・守るのどれかを使おう。<br>「ボスの様子」を見て使い分けるのがコツ。討伐すると次のタブが開きます。' },
+        { ic: '⚔️', t: 'スライムとバトル', p: '持っているカードが1枚ずつ配られるよ。配られたカードの単語に答えて、攻撃・スキル・守るのどれかを使おう。🔥苦手な単語ほど、正解すると大ダメージ！<br>「ボスの様子」を見て使い分けるのがコツ。討伐すると次のタブが開きます。' },
         { ic: '⭐', t: '覚えるほど強くなる', p: '日をあけて正解するほど、カードの★が増えて強くなります。<br>🔊で発音を聞いたり、📈学習レポートで成長を確かめたりしながら、毎日少しずつ続けよう！' },
     ];
     let _tuIdx = 0;
@@ -7727,9 +7742,24 @@ const Cloud = (function () {
             return [k, c];
         }).sort((a, b) => a[0] - b[0]).map(x => x[1]);
     }
+    /* 単語の難しさ（その生徒にとって）：0〜3。正解すると威力が上がる（×1.0 / 1.25 / 1.5 / 1.75）
+       これまでの間違い（間違い×2−正解）が多いほど難しい。忘れかけ（復習日を過ぎた）ならさらに+1。
+       正解を重ねて苦手を克服すると下がる＝伸びた証。苦手な単語ほど早く配られる（battleDealOrder）ので、
+       「苦手な単語に挑んで正解する」ことがいちばん強い戦い方になる */
+    const DIFF_MULT = [1, 1.25, 1.5, 1.75];
+    const DIFF_LABEL = ['', 'ちょっと苦手', '苦手', '超苦手'];
+    function wordDifficulty(cardId) {
+        const e = srsData[cardId];
+        if (!e) return 0;
+        const w = (e.incorrect || 0) * 2 - (e.correct || 0);
+        let d = w >= 3 ? 2 : w >= 1 ? 1 : 0;
+        if (typeof isReviewDue === 'function' && isReviewDue(cardId)) d++;
+        return Math.min(3, d);
+    }
     function battleUnitFor(card) {
         const st = getCardStats(card);
         return { card, atk: st.atk, def: st.def, maxHp: st.def * 3, hp: st.def * 3, skill: getWordSkill(card),
+                 diff: wordDifficulty(card.id),   // 配った時点の難しさ（答えた結果で変わる前の値を使う）
                  bonus: { label: `「${card.quiz.answer}」` } };
     }
     function openBattleFormationModal(stage) {
@@ -8007,8 +8037,9 @@ const Cloud = (function () {
     // 配られたカード（意味は書かない：問題の答えになるため）と山札
     function battleCardHTML(u, big) {
         const r = getRarity(u.card.no), esc = x => String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        const dd = u.diff ? `<span class="bc-diff d${u.diff}" title="${DIFF_LABEL[u.diff]}：正解で威力×${DIFF_MULT[u.diff]}">${'🔥'.repeat(u.diff)}</span>` : '';
         return `<div class="bcard ${r}${big ? ' big' : ''}"><span class="bc-r">${r}</span>
-            <div class="bc-w">${esc(u.card.quiz.answer)}</div><div class="bc-pos">${esc(u.card.quiz.pos || '')}</div>
+            <div class="bc-w">${esc(u.card.quiz.answer)}</div>${dd}<div class="bc-pos">${esc(u.card.quiz.pos || '')}</div>
             <div class="bc-st">${starsHTML(getStars(u.card.id), big ? 11 : 9)}</div>
             <div class="bc-pg"><b class="p">P ${u.atk}</b><b class="g">G ${u.def}</b></div>
             <div class="bc-sk">${u.skill.icon}${esc(u.skill.name)}</div></div>`;
@@ -8021,12 +8052,13 @@ const Cloud = (function () {
             if (row.dataset.key !== key) {
                 row.dataset.key = key;
                 const left = s.deck.length - 1 - (s.deckPos % s.deck.length);
-                row.innerHTML = `<div class="battle-unit-card bdeal active-unit">${battleCardHTML(s.hand, false)}</div>
-                    <div class="bdeck"><div class="bdeck-stack"><i></i><i></i><i></i></div><div class="bdeck-n">山札<br><b>${Math.max(0, left)}</b>枚</div></div>`;
+                // 上の段は山札の束だけ（配られたカードは下の「配られたカード」に1回だけ出す）
+                row.innerHTML = `<div class="bdeck bdeck-solo"><div class="bdeck-stack"><i></i><i></i><i></i></div>
+                    <div class="bdeck-n">山札 <b>${Math.max(0, left)}</b>枚<span class="bdeck-sub">｜ ${s.dealt}枚目を配った</span></div></div>`;
             }
         }
         const el = document.getElementById('battleTotalStats');
-        if (el) el.innerHTML = `🃏 山札 <b>${s.deck.length}</b>枚　❤️ HP: <b>${s.playerMaxHP}</b>　🔄 ${s.dealt}枚目`;
+        if (el) el.innerHTML = `❤️ HP: <b>${s.playerMaxHP}</b>`;
     }
     // 次のカードを配る（山札を使い切ったら配る順を作り直す）
     function battleDealNext() {
@@ -8090,7 +8122,7 @@ const Cloud = (function () {
         area.style.display = 'grid';
         area.innerHTML = `<div class="bplan-top">${intentHtml}${gaugeHtml}</div>
             <div class="bplan-hand"><div class="bh-lbl">🃏 配られたカード</div>${battleCardHTML(u, true)}
-                <div class="bh-sk">${u.skill.icon}<b>${u.skill.name}</b>（力${skillCost(u)}）${u.skill.desc}</div></div>
+                <div class="bh-sk">${u.diff ? `<div class="bh-diff d${u.diff}">${'🔥'.repeat(u.diff)} ${DIFF_LABEL[u.diff]}な単語！ 正解で威力×${DIFF_MULT[u.diff]}</div>` : ''}${u.skill.icon}<b>${u.skill.name}</b>（力${skillCost(u)}）${u.skill.desc}</div></div>
             <div class="bplan-acts">
                 ${btn('attack', `P${u.atk}・命中90%`, false)}
                 ${btn('skill', `${u.skill.icon}${u.skill.name}・力${skillCost(u)}`, s.gauge < skillCost(u))}
@@ -8133,7 +8165,14 @@ const Cloud = (function () {
         const focus = S._focus || 0;   // 集中：このターンは必中（明鏡止水は攻撃×1.2）
         S._focus = 0;
         if (focus && act !== 'guard') addBattleLog('🧘 集中！ このターンは必ず当たる');
-        const enhance = (S.buffActive ? (S._enhancePower || 1.5) : 1) * (isCorrect ? 1 : WRONG_DAMAGE_MULT) * shieldCut * (focus || 1);
+        // 苦手な単語に正解すると威力アップ（難しさ1〜3で×1.25〜×1.75）
+        const diffMult = isCorrect ? (DIFF_MULT[u.diff || 0] || 1) : 1;
+        if (isCorrect && diffMult > 1 && act !== 'guard') {
+            addBattleLog(`🔥 苦手な単語「${u.card.quiz.answer}」に正解！ 威力×${diffMult}`);
+            S.diffHits = (S.diffHits || 0) + 1;
+            statInc('diffHits');
+        }
+        const enhance = (S.buffActive ? (S._enhancePower || 1.5) : 1) * (isCorrect ? 1 : WRONG_DAMAGE_MULT) * shieldCut * (focus || 1) * diffMult;
         S.buffActive = false; S._enhancePower = null;
         S._guardCut = 0;
         S.currentUnitIdx = 0;
@@ -9236,7 +9275,7 @@ const Cloud = (function () {
                 quizOv.style.display = 'none';
                 quizOv.classList.remove('battle-quiz-mode');
                 { const qb = document.getElementById('quizQuitBtn'); if (qb) qb.textContent = 'やめる'; }
-                logEvent('battle', card, isCorrect);
+                logEvent('battle', card, isCorrect, { diff: battleSession && battleSession.hand ? (battleSession.hand.diff || 0) : null });   // 効果検証：苦手度ごとの正答率
                 processBattleAnswer(isCorrect, card);
             } else {
                 // （旧：実力ガチャ・QRカード取得の出題。現在はどちらも使われていない）

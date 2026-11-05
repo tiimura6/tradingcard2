@@ -31,6 +31,37 @@ async function newDevice(b, gas, name) {
 }
 
 (async () => {
+  // ---------- サーバー単体：効果検証レポート ----------
+  console.log('効果検証レポート（Code.gs）');
+  {
+    const env = makeEnv(); const { ctx: gas, sheets } = env; gas.setup();
+    const D = (d, h) => new Date(Date.UTC(2026, 10, d, h || 1));   // 2026-11-d 日本時間 10時
+    const L = [];
+    const ev = (user, day, card, ok, rt, opt = {}) => L.push([D(day), user, opt.kind || '会員', 's', opt.ev || 'training', card, 'w' + card, '', '', ok ? '正解' : '不正解', rt, 1, 0, '鉄', opt.diff === undefined ? '' : opt.diff]);
+    // u1：カード1〜4。初回は1,2が不正解 → 翌日と8日後に再挑戦して正解。回答時間が短くなる
+    ev('u1', 2, 1, false, 9); ev('u1', 2, 2, false, 8); ev('u1', 2, 3, true, 6); ev('u1', 2, 4, true, 6);
+    ev('u1', 3, 1, true, 5); ev('u1', 3, 2, false, 7); ev('u1', 3, 3, true, 3); ev('u1', 3, 4, true, 4);
+    ev('u1', 10, 1, true, 3); ev('u1', 10, 2, true, 4);
+    // u2：同じ日にしか答えていない（再挑戦にならない）＋ ゲストの回答と回答でないイベントは数えない
+    ev('u2', 4, 1, false, 9); ev('u2', 4, 1, true, 4);
+    ev('g1', 4, 1, true, 3, { kind: 'ゲスト' }); L.push([D(4), 'u2', '会員', 's', 'unlock', 5, 'w5', '', '', '-', '', 1, 0, '鉄', '']);
+    // 文法とバトルの苦手度
+    ev('u1', 4, 'g-a1-01', false, 10, { ev: 'grammar' }); ev('u1', 6, 'g-a1-01', true, 8, { ev: 'grammar' });
+    ev('u1', 5, 7, true, 5, { ev: 'battle', diff: 2 }); ev('u1', 5, 8, false, 5, { ev: 'battle', diff: 2 }); ev('u1', 5, 9, true, 5, { ev: 'battle', diff: 0 });
+    sheets['学習ログ'].getRange(2, 1, L.length, 15).setValues(L);
+    const r = gas.buildEffectReport();
+    const out = sheets['効果検証'].data.map(x => x.map(v => v === undefined ? '' : v));
+    const find = t => out.find(x => String(x[0]).startsWith(t)) || [];
+    check(r.users === 2 && r.answers === 17, `会員の回答だけを数える（${r.users}人・${r.answers}件）`);
+    check(find('初回の回答')[1] === 9 && find('翌日以降の最初の再挑戦')[1] === 5 && find('翌日以降の最初の再挑戦')[2] === 80, '単語ごとの初回と翌日以降の再挑戦 ' + JSON.stringify([find('初回の回答'), find('翌日以降の最初の再挑戦')]));
+    check(find('初回不正解 → 翌日以降に正解')[1] === 3 && find('初回不正解 → 翌日以降に正解')[2] === 66.7 && find('初回不正解 → 7日以降に正解')[2] === 100, '克服率（翌日以降・7日以降） ' + JSON.stringify([find('初回不正解 → 翌日以降'), find('初回不正解 → 7日以降')]));
+    check(String(find('回答時間の中央値')[2]) === '6 → 3.5', '正解した単語の回答時間が短くなったか ' + find('回答時間の中央値')[2]);
+    check(find('（文法問題のみ）初回不正解')[2] === 100 && find('苦手度2')[1] === 2 && find('苦手度2')[2] === 50, '文法問題とバトルの苦手度ごとの集計');
+    check(out.some(x => String(x[0]).includes('7日以上あとの再挑戦で正解できた割合は 100%')) && find('2026-11-02')[1] === 2, '要約の文・週ごとの推移');
+    gas.installEffectReportTrigger();
+    check(env.triggers.filter(t => t.fn === 'dailyEffectReport').length === 1, '毎朝の自動更新を設定できる');
+  }
+
   // ---------- サーバー単体：レイドボス ----------
   console.log('レイドボス（Code.gs）');
   {

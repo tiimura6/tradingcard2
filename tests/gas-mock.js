@@ -22,6 +22,7 @@ function makeEnv() {
   class Sheet {
     constructor(name) { this.name = name; this.data = []; }
     getName() { return this.name; }
+    clear() { this.data = []; return this; }
     getRange(a, b, c, d) { if (typeof a === 'string') return new Range(this, 2, 1, 1000, 30); return new Range(this, a, b, c, d); }
     getLastRow() { let n = this.data.length; while (n > 0 && !(this.data[n - 1] || []).some(x => x !== '' && x !== undefined)) n--; return n; }
     getMaxRows() { return Math.max(1000, this.data.length); }
@@ -44,7 +45,7 @@ function makeEnv() {
   const ctx = {
     SpreadsheetApp: { getActiveSpreadsheet: () => ss, newConditionalFormatRule: rule,
       create: name => { const id = 'F' + Object.keys(files).length; const sh = { 'シート1': new Sheet('シート1') }; files[id] = makeSS(sh, id); files[id].__sheets = sh; files[id].__name = name; return files[id]; },
-      openById: id => { if (!files[id]) throw new Error('not found'); return files[id]; }, getUi: () => ({ createMenu: () => ({ addItem() { return this; }, addSeparator() { return this; }, addToUi() {} }) }) },
+      openById: id => { if (!files[id]) throw new Error('not found'); return files[id]; }, getUi: () => ({ alert() {}, createMenu: () => ({ addItem() { return this; }, addSeparator() { return this; }, addToUi() {} }) }) },
     Utilities: { getUuid: () => crypto.randomUUID(), formatDate: (d, tz, f) => { const z = new Date(d.getTime() + 9 * 3600000); const p = n => String(n).padStart(2, '0');
         return f.replace('yyyy', z.getUTCFullYear()).replace('MM', p(z.getUTCMonth() + 1)).replace('dd', p(z.getUTCDate())).replace('HH', p(z.getUTCHours())).replace('hh', p(z.getUTCHours())).replace('mm', p(z.getUTCMinutes())); },
       computeDigest: (a, s) => [...crypto.createHash('sha256').update(s, 'utf8').digest()].map(b => b > 127 ? b - 256 : b),
@@ -54,7 +55,7 @@ function makeEnv() {
     CacheService: { getScriptCache: () => ({ get: k => cache[k] || null, put: (k, v) => { cache[k] = v; }, remove: k => { delete cache[k]; } }) },
     ContentService: { createTextOutput: t => ({ _t: t, setMimeType() { return this; }, getContent() { return this._t; } }), MimeType: { JSON: 'json' } },
     ScriptApp: { getProjectTriggers: () => triggers.slice(), deleteTrigger: t => triggers.splice(triggers.indexOf(t), 1), WeekDay: { SUNDAY: 'SUNDAY' },
-      newTrigger: fn => { const t = { fn, getHandlerFunction: () => fn }; const b = { timeBased: () => b, onWeekDay: () => b, atHour: () => b, everyWeeks: () => b, create: () => { triggers.push(t); return t; } }; return b; } },
+      newTrigger: fn => { const t = { fn, getHandlerFunction: () => fn }; const b = { timeBased: () => b, onWeekDay: () => b, atHour: () => b, everyWeeks: () => b, everyDays: () => b, create: () => { triggers.push(t); return t; } }; return b; } },
     PropertiesService: { getScriptProperties: () => ({ getProperty: k => props[k] || null, setProperties: o => Object.assign(props, o), setProperty: (k, v) => { props[k] = v; } }) },
     Logger: { log: (...a) => {} }, console, Date, JSON, Math, String, Number, Array, Object, Error,
   };
