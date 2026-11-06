@@ -23,7 +23,8 @@ FONT_IT = '/usr/share/fonts/truetype/dejavu/DejaVuSerifCondensed-Italic.ttf'
 W, H = 600, 992          # 拡大表示用（アプリの文字カード 400×661 の1.5倍）
 TW = 240                 # 一覧用の幅
 S = W / 400              # 400×661 の座標から拡大する倍率
-ART = (26, 26, 374, 300) # イラストの窓（400×661 の座標）
+ART = (26, 26, 374, 300) # イラストの窓（400×661 の座標）※今は内側いっぱいに敷く
+PANEL_ALPHA = 0.62      # 文字の下の暗い膜の濃さ（0=透明〜1=真っ黒）。上げるほど文字は読みやすく、絵は見えにくい
 RARITY_COL = {'UR': '#ff80ff', 'SR': '#f0c840', 'R': '#6aa8ff'}
 PREFIX = {'a1': 'A1', 'a2': 'A2', 'b1': 'B1', 'b2': 'B2', 'card': 'PT', 'pt': 'PT'}
 
@@ -81,22 +82,24 @@ def compose(meta, art_path):
     card.paste(gradient((W, H), c0, c1, c2), (0, 0), rounded_mask((W, H), 28 * S))
     ib = inner_bg()
     card.paste(ib, tuple(sc(14, 14)), rounded_mask(ib.size, 20 * S))
-    # イラスト：窓の比率に合わせて中央を切り抜く
-    ax0, ay0, ax1, ay1 = sc(*ART)
-    aw, ah = ax1 - ax0, ay1 - ay0
+    # イラスト：カードの内側いっぱいに敷く（中央を基準に切り抜き）。2026-11-06 Takaの指示で、文字の下も絵が透けて見える形に
+    ix0, iy0 = sc(14, 14); iw, ih = ib.size
     art = Image.open(art_path).convert('RGB')
-    r = max(aw / art.width, ah / art.height)
-    art = art.resize((max(aw, int(art.width * r + .5)), max(ah, int(art.height * r + .5))), Image.LANCZOS)
-    l, t = (art.width - aw) // 2, (art.height - ah) // 2
-    art = art.crop((l, t, l + aw, t + ah)).convert('RGBA')
-    # 下の端を背景になじませる
-    fade = Image.new('L', (aw, ah), 255); fd = ImageDraw.Draw(fade)
-    fh = int(ah * .22)
-    for i in range(fh): fd.line([(0, ah - fh + i), (aw, ah - fh + i)], fill=int(255 * (1 - i / fh) ** 1.2))
-    m = rounded_mask((aw, ah), 14 * S)
-    from PIL import ImageChops
-    art.putalpha(ImageChops.multiply(m, fade))
-    card.alpha_composite(art, (ax0, ay0))
+    r = max(iw / art.width, ih / art.height)
+    art = art.resize((max(iw, int(art.width * r + .5)), max(ih, int(art.height * r + .5))), Image.LANCZOS)
+    l, t = (art.width - iw) // 2, int((art.height - ih) * .35)   # 少し上寄り（主役が上の窓に入るように）
+    art = art.crop((l, t, l + iw, t + ih)).convert('RGBA')
+    # 文字の下だけ暗い半透明の膜を重ねる：上の窓（〜y=250）は透明、そこから徐々に濃く（最大で不透明度 PANEL_ALPHA）
+    veil = Image.new('RGBA', (iw, ih), hexrgb('#0d0a1e') + (0,))
+    va = Image.new('L', (iw, ih), 0); vd = ImageDraw.Draw(va)
+    y0, y1 = int((236 - 14) * S), int((340 - 14) * S)
+    for y in range(ih):
+        k = 0 if y < y0 else min(1, (y - y0) / (y1 - y0))
+        vd.line([(0, y), (iw, y)], fill=int(255 * PANEL_ALPHA * (k ** 1.3)))
+    veil.putalpha(va)
+    art.alpha_composite(veil)
+    art.putalpha(rounded_mask((iw, ih), 20 * S))
+    card.alpha_composite(art, (ix0, iy0))
     d = ImageDraw.Draw(card)
     # 枠（手帖の色・レアリティの色）
     d.rounded_rectangle(sc(26, 26, 374, 635), int(14 * S), outline=hexrgb(c1) + (140,), width=int(2 * S))
@@ -107,12 +110,12 @@ def compose(meta, art_path):
     base = 72 if len(word) <= 5 else 64 if len(word) <= 7 else 54 if len(word) <= 9 else 44 if len(word) <= 12 else 36 if len(word) <= 16 else 28
     fw = fit_text(d, word, FONT_EN, base, 330)
     d.text((200 * S, 338 * S), word, font=fw, fill='#ffffff', anchor='mm', stroke_width=int(2 * S), stroke_fill=(10, 6, 24))
-    d.text((200 * S, 380 * S), meta['pos'], font=fit_text(d, meta['pos'], FONT_IT, 22, 320), fill='#c8bce8', anchor='mm')
+    d.text((200 * S, 380 * S), meta['pos'], font=fit_text(d, meta['pos'], FONT_IT, 22, 320), fill='#d8ceef', anchor='mm', stroke_width=int(1.5 * S), stroke_fill=(10, 6, 24))
     d.line(sc(90, 400, 310, 400), fill=hexrgb(c1) + (150,), width=max(1, int(1.5 * S)))
     for i, t in enumerate(meta['ja'][:3]):
         sz = 38 if len(t) <= 6 else 32 if len(t) <= 9 else 27 if len(t) <= 12 else 22
-        d.text((200 * S, (446 + i * 52) * S), t, font=fit_text(d, t, FONT_JA[0], sz, 330, FONT_JA[1]), fill='#f3ead6', anchor='mm')
-    d.text((200 * S, 608 * S), meta['nbName'], font=font(FONT_JA[0], 17, FONT_JA[1]), fill=hexrgb(c1) + (230,), anchor='mm')
+        d.text((200 * S, (446 + i * 52) * S), t, font=fit_text(d, t, FONT_JA[0], sz, 330, FONT_JA[1]), fill='#f3ead6', anchor='mm', stroke_width=int(2 * S), stroke_fill=(10, 6, 24))
+    d.text((200 * S, 608 * S), meta['nbName'], font=font(FONT_JA[0], 17, FONT_JA[1]), fill=hexrgb(c1) + (240,), anchor='mm', stroke_width=int(1.2 * S), stroke_fill=(10, 6, 24))
     return card
 
 def card_id(fname):
