@@ -62,6 +62,46 @@ async function newDevice(b, gas, name) {
     check(env.triggers.filter(t => t.fn === 'dailyEffectReport').length === 1, '毎朝の自動更新を設定できる');
   }
 
+  // ---------- サーバー単体：学習ログは新しいものが上・古いログは保管ファイルへ ----------
+  console.log('学習ログの並び順と保管（Code.gs）');
+  {
+    const env = makeEnv(); const { ctx: gas, sheets, files, props } = env; gas.setup();
+    const call = o => JSON.parse(gas.doPost({ postData: { contents: JSON.stringify(o) } }).getContent());
+    call({ action: 'register', loginId: 'logu', nickname: 'ろぐ', password: 'secret123' });
+    call({ action: 'register', loginId: 'logv', nickname: 'ろぐ2', password: 'secret123' });
+    const tk = call({ action: 'login', loginId: 'logu', password: 'secret123' }).token;
+    const tv = call({ action: 'login', loginId: 'logv', password: 'secret123' }).token;
+    const now = Date.now(), DAY = 86400000;
+    const e = (ago, card, ok = true) => ({ timestamp: now - ago * DAY, eventType: 'training', cardNo: card, word: 'w' + card, isCorrect: ok });
+    call({ action: 'log', token: tk, sessionId: 's', events: [e(200, 1), e(120, 2), e(100, 3, false)] });   // 古い3件（1回で送ると古い順のことがある）
+    call({ action: 'log', token: tv, sessionId: 's', events: [e(150, 9)] });
+    call({ action: 'log', token: tk, sessionId: 's', events: [e(10, 4), e(1, 5)] });
+    const L = sheets['学習ログ'];
+    const times = () => L.data.slice(1, L.getLastRow()).map(r => r[0].getTime());
+    const t0 = times();
+    // 届いた順に上へ積む（最後に届いた送信が一番上）。1回の送信の中は新しい順
+    check(JSON.stringify(t0.map(t => Math.round((now - t) / DAY))) === '[1,10,150,100,120,200]' && L.data[0][0] === 'タイムスタンプ', '新しく届いたものが上・1回の送信の中は新しい順（見出しは1行目のまま）' + JSON.stringify(t0.map(t => Math.round((now - t) / DAY))));
+    // 既存の古い順のシートは setup で新しい順に並べ替える
+    L.data.splice(1, 6, ...L.data.slice(1, 7).reverse()); gas.setup();
+    const t1 = times();
+    check(t1.every((t, i) => i === 0 || t1[i - 1] >= t), 'setup で既存のログを新しい順に並べ替える');
+    // 90日より前は保管ファイルへ
+    const moved = gas.archiveOldLogs();
+    const arch = files[props.LOG_ARCHIVE_ID];
+    const archRows = arch ? arch.getSheets().filter(sh => /^\d{4}-\d{2}$/.test(sh.getName())).reduce((a, sh) => a + sh.getLastRow() - 1, 0) : 0;
+    check(moved === 4 && L.getLastRow() === 3 && archRows === 4 && !arch.getSheetByName('シート1'), `古い4行を保管ファイルへ移し、学習ログには新しい2行だけ（移動 ${moved} / 残り ${L.getLastRow() - 1} / 保管 ${archRows}）`);
+    check(gas.archiveOldLogs() === 0, 'もう一度実行しても何も起きない');
+    // 効果検証レポートは保管分も数える
+    const rep = gas.buildEffectReport();
+    check(rep.answers === 6, '効果検証レポートは保管ファイルの分も読む（回答 ' + rep.answers + '件）');
+    // 生徒データの削除は保管ファイルからも消す
+    gas.deleteUserData_('logu');
+    const left = arch.getSheets().filter(sh => /^\d{4}-\d{2}$/.test(sh.getName())).reduce((a, sh) => a.concat(sh.data.slice(1, sh.getLastRow()).map(r => r[1])), []);
+    check(left.length === 1 && left[0] === 'logv' && L.getLastRow() === 1, '生徒データの削除は保管ファイルの行も消す ' + JSON.stringify(left));
+    gas.installLogArchiveTrigger();
+    check(env.triggers.filter(t => t.fn === 'dailyLogArchive').length === 1, '毎日の自動移動を設定できる');
+  }
+
   // ---------- サーバー単体：レイドボス ----------
   console.log('レイドボス（Code.gs）');
   {

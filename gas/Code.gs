@@ -71,6 +71,7 @@ const SHEET = {
   CONTACT:  '問い合わせ',
   RAID:     'レイド',
 };
+const LOG_KEEP_DAYS = 90;   // 学習ログのシートに残す日数。これより古い行は別ファイル「英単語図鑑_学習ログ保管」へ移す（効果検証レポートは保管分も読む）
 const BACKUP_KEEP = 4;   // バックアップを何回分残すか（毎週なら約1か月）
 
 const HEADERS = {
@@ -444,11 +445,10 @@ function log_(req) {
   ]);
 
   return withLock_(() => {
+    // 新しいものが上：見出しのすぐ下に行を差し込む（2026-11-07 Takaの指示）
     const log = sheet_(SHEET.LOG);
-    const start = log.getLastRow() + 1;
-    log.getRange(start, 2, rows.length, 1).setNumberFormat('@');
-    log.getRange(start, 4, rows.length, 1).setNumberFormat('@');
-    log.getRange(start, 1, rows.length, rows[0].length).setValues(rows);
+    rows.sort((a, b) => b[0] - a[0]);
+    insertTopRows_(log, rows, [2, 4], 'yyyy/mm/dd hh:mm:ss');
 
     if (!loginId) return { ok: true, count: rows.length };   // ゲストは集計対象外
 
@@ -708,6 +708,9 @@ function onOpen() {
     .addSeparator()
     .addItem('効果検証レポートを作成（学習ログの集計）', 'buildEffectReportFromMenu')
     .addItem('効果検証レポートを毎朝自動で更新', 'installEffectReportTrigger')
+    .addSeparator()
+    .addItem('古い学習ログを保管ファイルへ移す（' + LOG_KEEP_DAYS + '日より前）', 'archiveOldLogsFromMenu')
+    .addItem('古い学習ログの移動を毎日自動で行う', 'installLogArchiveTrigger')
     .addToUi();
 }
 
@@ -762,6 +765,9 @@ function setup() {
   sheet_(SHEET.DAILY).getRange('A:A').setNumberFormat('yyyy/mm/dd');
   sheet_(SHEET.HOF).getRange('A:A').setNumberFormat('yyyy/mm/dd hh:mm');
   sheet_(SHEET.LOG).getRange('A:A').setNumberFormat('yyyy/mm/dd hh:mm:ss');
+  // 学習ログ：これまでの行を新しい順に並べ替える（何度実行しても安全）
+  const lg = sheet_(SHEET.LOG);
+  if (lg.getLastRow() > 2) lg.getRange(2, 1, lg.getLastRow() - 1, HEADERS.LOG.length).sort({ column: 1, ascending: false });
 
   // 不要なデフォルトシートを削除
   const def = ss.getSheetByName('シート1') || ss.getSheetByName('Sheet1');
@@ -928,6 +934,7 @@ function deleteUserData_(loginId) {
         if (keep.length) sh.getRange(2, 1, keep.length, width).setValues(keep);
       }
     });
+    total += deleteArchivedLogs_(loginId);   // 保管ファイルに移した古い学習ログからも削除
     CacheService.getScriptCache().remove('hofRanking');
     return total;
   });
@@ -1009,6 +1016,20 @@ function findRow_(sheet, col, value) {
 function hash_(s) {
   return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, s, Utilities.Charset.UTF_8)
     .map(b => ('0' + (b & 0xff).toString(16)).slice(-2)).join('');
+}
+
+/** 見出し（1行目）のすぐ下に行を差し込む。新しいものが上に来るログ用。
+ *  差し込んだ行は見出しの書式を引き継ぐので、通常の書式に戻してから値を書く */
+function insertTopRows_(sheet, rows, textCols, dateFormat) {
+  if (!rows.length) return;
+  if (sheet.getLastRow() < 1) sheet.getRange(1, 1).setValue('');
+  sheet.insertRowsAfter(1, rows.length);
+  const width = rows[0].length;
+  const rng = sheet.getRange(2, 1, rows.length, width);
+  rng.setFontWeight('normal').setBackground(null).setFontColor(null).setNumberFormat('General');
+  (textCols || []).forEach(c => sheet.getRange(2, c, rows.length, 1).setNumberFormat('@'));
+  if (dateFormat) sheet.getRange(2, 1, rows.length, 1).setNumberFormat(dateFormat);
+  rng.setValues(rows);
 }
 
 /** 指定列を文字列書式にしてから1行追加（"0123" や "1e5" が数値化されるのを防ぐ） */
@@ -1173,7 +1194,7 @@ function effectReport_(rows) {
 function buildEffectReport() {
   const log = sheet_(SHEET.LOG);
   const nRows = log.getLastRow() - 1;
-  const rows = nRows > 0 ? log.getRange(2, 1, nRows, 15).getValues() : [];
+  const rows = (nRows > 0 ? log.getRange(2, 1, nRows, 15).getValues() : []).concat(archivedLogRows_());   // 保管ファイルへ移した古いログも含める
   const R = effectReport_(rows), A = R.all, tz = 'Asia/Tokyo';
   const fmt = t => t ? Utilities.formatDate(new Date(t), tz, 'yyyy/MM/dd') : '-';
   const out = [];
@@ -1253,4 +1274,99 @@ function installEffectReportTrigger() {
   ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'dailyEffectReport').forEach(t => ScriptApp.deleteTrigger(t));
   ScriptApp.newTrigger('dailyEffectReport').timeBased().everyDays(1).atHour(5).create();
   SpreadsheetApp.getUi().alert('毎朝5時ごろに「効果検証」シートを自動で更新します。');
+}
+
+
+/* ================= 古い学習ログの保管（2026-11-07 Takaの指示：古いログは学習ログのシートから消してよい） =================
+ * LOG_KEEP_DAYS 日より古い行を、別のスプレッドシート「英単語図鑑_学習ログ保管」の月ごとのシート（例：2026-11）へ移す。
+ * 学習ログのシートは軽くなり（スプレッドシートの上限 1,000万セル対策）、効果検証レポートと生徒データの削除は保管分も対象にする。 */
+function logArchive_(create) {
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty('LOG_ARCHIVE_ID');
+  if (id) { try { return SpreadsheetApp.openById(id); } catch (e) {} }
+  if (!create) return null;
+  const a = SpreadsheetApp.create('英単語図鑑_学習ログ保管');
+  props.setProperty('LOG_ARCHIVE_ID', a.getId());
+  return a;
+}
+
+function archiveOldLogs() {
+  return withLock_(() => {
+    const log = sheet_(SHEET.LOG);
+    const last = log.getLastRow();
+    if (last < 2) return 0;
+    const width = HEADERS.LOG.length;
+    const vals = log.getRange(2, 1, last - 1, width).getValues();
+    const cutoff = Date.now() - LOG_KEEP_DAYS * 86400000;
+    const time = r => r[0] instanceof Date ? r[0].getTime() : new Date(r[0]).getTime();
+    const old = [], keep = [];
+    vals.forEach(r => { const t = time(r); (isFinite(t) && t < cutoff ? old : keep).push(r); });
+    if (!old.length) return 0;
+    // 保管ファイルへ（月ごとのシート・新しいものが上）
+    const a = logArchive_(true);
+    const byMonth = {};
+    old.forEach(r => { const m = Utilities.formatDate(new Date(time(r)), 'Asia/Tokyo', 'yyyy-MM'); (byMonth[m] = byMonth[m] || []).push(r); });
+    Object.keys(byMonth).sort().forEach(m => {
+      let sh = a.getSheetByName(m);
+      if (!sh) {
+        sh = a.insertSheet(m);
+        sh.getRange(1, 1, 1, width).setValues([HEADERS.LOG]).setFontWeight('bold').setBackground('#3b2f12').setFontColor('#f3e2a9');
+        sh.setFrozenRows(1);
+      }
+      insertTopRows_(sh, byMonth[m].sort((x, y) => time(y) - time(x)), [2, 4], 'yyyy/mm/dd hh:mm:ss');
+    });
+    const def = a.getSheetByName('シート1') || a.getSheetByName('Sheet1');
+    if (def && a.getSheets().length > 1) a.deleteSheet(def);
+    // 学習ログのシートから消す（残す行を詰め直してから、余った行を削除）
+    log.getRange(2, 1, vals.length, width).clearContent();
+    if (keep.length) log.getRange(2, 1, keep.length, width).setValues(keep);
+    log.deleteRows(keep.length + 2, old.length);
+    return old.length;
+  });
+}
+
+/** 保管ファイルの全行（効果検証レポート用） */
+function archivedLogRows_() {
+  const a = logArchive_(false);
+  if (!a) return [];
+  let out = [];
+  a.getSheets().forEach(sh => {
+    if (!/^\d{4}-\d{2}$/.test(sh.getName())) return;
+    const last = sh.getLastRow();
+    if (last > 1) out = out.concat(sh.getRange(2, 1, last - 1, 15).getValues());
+  });
+  return out;
+}
+
+/** 保管ファイルから1人分の行を削除（生徒データの削除用）。削除した行数を返す */
+function deleteArchivedLogs_(loginId) {
+  const a = logArchive_(false);
+  if (!a) return 0;
+  let total = 0;
+  const width = HEADERS.LOG.length;
+  a.getSheets().forEach(sh => {
+    if (!/^\d{4}-\d{2}$/.test(sh.getName())) return;
+    const last = sh.getLastRow();
+    if (last < 2) return;
+    const vals = sh.getRange(2, 1, last - 1, width).getValues();
+    const keep = vals.filter(r => String(r[1]) !== loginId);
+    const removed = vals.length - keep.length;
+    if (!removed) return;
+    total += removed;
+    sh.getRange(2, 1, vals.length, width).clearContent();
+    if (keep.length) sh.getRange(2, 1, keep.length, width).setValues(keep);
+    sh.deleteRows(keep.length + 2, removed);
+  });
+  return total;
+}
+
+function archiveOldLogsFromMenu() {
+  const n = archiveOldLogs();
+  SpreadsheetApp.getUi().alert(n ? `${LOG_KEEP_DAYS}日より前の学習ログ ${n}行を「英単語図鑑_学習ログ保管」へ移しました。` : `${LOG_KEEP_DAYS}日より前の学習ログはありません。`);
+}
+function dailyLogArchive() { archiveOldLogs(); }   // トリガーから呼ぶ
+function installLogArchiveTrigger() {
+  ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'dailyLogArchive').forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('dailyLogArchive').timeBased().everyDays(1).atHour(4).create();
+  SpreadsheetApp.getUi().alert(`毎朝4時ごろに、${LOG_KEEP_DAYS}日より前の学習ログを「英単語図鑑_学習ログ保管」へ移します。`);
 }

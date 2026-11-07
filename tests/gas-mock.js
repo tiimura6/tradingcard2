@@ -16,6 +16,8 @@ function makeEnv() {
     createTextFinder(t) { const self = this; let ent = false; return { matchEntireCell(b) { ent = b; return this; }, matchCase() { return this; },
       findNext() { for (let i = 0; i < self.nr; i++) for (let j = 0; j < self.nc; j++) { const v = String(self._cell(i, j)); if (ent ? v === t : v.includes(t)) return new Range(self.sh, self.r + i, self.c + j); } return null; } }; }
     createFilter() { this.sh.filter = true; return this; }
+    sort(o) { const rows = this.getValues(); const c = o.column - this.c; const k = v => v instanceof Date ? v.getTime() : v;
+      rows.sort((a, b) => (k(a[c]) > k(b[c]) ? 1 : k(a[c]) < k(b[c]) ? -1 : 0) * (o.ascending === false ? -1 : 1)); return this.setValues(rows); }
   }
   const noop = function () { return this; };
   ['setNumberFormat','setBackground','setFontColor','setFontWeight','setWrap','setVerticalAlignment'].forEach(m => Range.prototype[m] = noop);
@@ -27,6 +29,8 @@ function makeEnv() {
     getLastRow() { let n = this.data.length; while (n > 0 && !(this.data[n - 1] || []).some(x => x !== '' && x !== undefined)) n--; return n; }
     getMaxRows() { return Math.max(1000, this.data.length); }
     deleteRow(r) { this.data.splice(r - 1, 1); }
+    deleteRows(r, n) { this.data.splice(r - 1, n); }
+    insertRowsAfter(r, n) { while (this.data.length < r) this.data.push([]); this.data.splice(r, 0, ...Array.from({ length: n }, () => [])); }
     getFilter() { return this.filter ? {} : null; }
     setFrozenRows() {} setFrozenColumns() {} setColumnWidths() {} setColumnWidth() {} setConditionalFormatRules() {} hideSheet() {}
   }
