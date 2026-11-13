@@ -24,7 +24,7 @@ W, H = 600, 992          # 拡大表示用（アプリの文字カード 400×66
 TW = 240                 # 一覧用の幅
 S = W / 400              # 400×661 の座標から拡大する倍率
 ART = (26, 26, 374, 300) # イラストの窓（400×661 の座標）※今は内側いっぱいに敷く
-PANEL_ALPHA = 0.62      # 文字の下の暗い膜の濃さ（0=透明〜1=真っ黒）。上げるほど文字は読みやすく、絵は見えにくい
+PANEL_ALPHA = 0.0       # 文字の下の暗い膜の濃さ（0=透明〜1=真っ黒）。2026-11-13 Takaの指示で暗さをなくした（文字は縁取りで読ませる）
 RARITY_COL = {'UR': '#ff80ff', 'SR': '#f0c840', 'R': '#6aa8ff'}
 PREFIX = {'a1': 'A1', 'a2': 'A2', 'b1': 'B1', 'b2': 'B2', 'card': 'PT', 'pt': 'PT'}
 
@@ -109,13 +109,13 @@ def compose(meta, art_path):
     word = meta['word']
     base = 72 if len(word) <= 5 else 64 if len(word) <= 7 else 54 if len(word) <= 9 else 44 if len(word) <= 12 else 36 if len(word) <= 16 else 28
     fw = fit_text(d, word, FONT_EN, base, 330)
-    d.text((200 * S, 338 * S), word, font=fw, fill='#ffffff', anchor='mm', stroke_width=int(2 * S), stroke_fill=(10, 6, 24))
-    d.text((200 * S, 380 * S), meta['pos'], font=fit_text(d, meta['pos'], FONT_IT, 22, 320), fill='#d8ceef', anchor='mm', stroke_width=int(1.5 * S), stroke_fill=(10, 6, 24))
+    d.text((200 * S, 338 * S), word, font=fw, fill='#ffffff', anchor='mm', stroke_width=int(3 * S), stroke_fill=(10, 6, 24))
+    d.text((200 * S, 380 * S), meta['pos'], font=fit_text(d, meta['pos'], FONT_IT, 22, 320), fill='#e6deff', anchor='mm', stroke_width=int(2.5 * S), stroke_fill=(10, 6, 24))
     d.line(sc(90, 400, 310, 400), fill=hexrgb(c1) + (150,), width=max(1, int(1.5 * S)))
     for i, t in enumerate(meta['ja'][:3]):
         sz = 38 if len(t) <= 6 else 32 if len(t) <= 9 else 27 if len(t) <= 12 else 22
-        d.text((200 * S, (446 + i * 52) * S), t, font=fit_text(d, t, FONT_JA[0], sz, 330, FONT_JA[1]), fill='#f3ead6', anchor='mm', stroke_width=int(2 * S), stroke_fill=(10, 6, 24))
-    d.text((200 * S, 608 * S), meta['nbName'], font=font(FONT_JA[0], 17, FONT_JA[1]), fill=hexrgb(c1) + (240,), anchor='mm', stroke_width=int(1.2 * S), stroke_fill=(10, 6, 24))
+        d.text((200 * S, (446 + i * 52) * S), t, font=fit_text(d, t, FONT_JA[0], sz, 330, FONT_JA[1]), fill='#fff6e4', anchor='mm', stroke_width=int(3 * S), stroke_fill=(10, 6, 24))
+    d.text((200 * S, 608 * S), meta['nbName'], font=font(FONT_JA[0], 17, FONT_JA[1]), fill=hexrgb(c1) + (255,), anchor='mm', stroke_width=int(2 * S), stroke_fill=(10, 6, 24))
     return card
 
 def card_id(fname):
