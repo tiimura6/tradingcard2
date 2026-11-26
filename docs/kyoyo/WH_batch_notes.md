@@ -67,3 +67,33 @@
 
 - No.23：「中国が試験で官僚を選び始めた」は漢代の試験を無視することになるので、"Under the Sui, China set up a system of written examinations for choosing government officials, …" にした（No.34 の dynasty を避けて "Under the Sui"）。「筆記」は McKay ほか『A History of World Societies』（605年に競争的な筆記試験を導入）で確認できたので入れた。出典は Britannica（試験制度）・McKay（Macmillan）・World History Encyclopedia の3つの別の出版元にし、Britannica の Chinese civil service の項は外した。和訳は「官僚を選ぶための筆記試験の制度である科挙が始まり」。
 - No.27：「知恵の館が学問の中心となった」は、出典の Britannica がよく想像される姿だが証拠は乏しいとしているので削った。例文は "In Abbasid Baghdad, scholars backed by the caliphs translated Greek works of science and philosophy into Arabic; the caliphs' library was called the House of Wisdom."、和訳は「…アラビア語に翻訳した。カリフの図書館は知恵の館と呼ばれた。」。すべての節が出典で裏づけられる（カリフの支援：Britannica のマームーンの翻訳支援、encyclopedia.com のアッバース朝の資金提供／図書館：Britannica・IIS）。
+
+## 近世 No.42, 44–60（バッチ3）
+
+- 語彙レベル・japanese・answers・synonym は、これまでと同じく既存の手帖のデータ（cefrj_notebooks.csv）の値を写した。convert（B2/PT）は B2、absolute（B1/PT）は B1 にした。
+- synonym のうち他のカードのターゲット単語（の語族）を外した：protest の demonstrate（No.83 demonstration）→ oppose|speak out、navy の fleet（No.38）→ sea power、trade の exchange（No.16）→ do business、mausoleum の tomb（No.2）→ memorial、restrict の limit（No.33）→ confine。tolerant は patient を accepting に替えた。
+- 例文でも他のカードのターゲット単語を避けた：emperor（No.26）を避けて No.48・52 は ruler、No.55・59 は「then ruled by Kangxi」「under Qianlong」。defeat（No.11）を避けて No.49 は fought off、treaty（No.53）を避けて No.55 は agreed、abolish（No.71）を避けて No.48 は ended、modernize（No.72）を避けて No.57 は reforms based on Western models、limit（No.33）を避けて No.56 は made it illegal、found・dynasty・declare を避けて No.42 は the first Safavid shah / made … the state religion、conquer（No.12）の語族の conquistador を避けて No.45 は the Spanish leader。避けられなかったもの：No.44 の Reformation（No.57 reform と同じ語幹。教科書用語の英語名なので残した）、No.51 の triangular trade（No.50 trade。用語そのもの）、No.58 の executive（No.65 execute と同じ語幹だが別の語）。No.59 は trade を避けて commerce にした。
+- `image_url` はすべて空。ラウザーバーグ「アルマダの敗北」（作者1812年没）などの候補はあるが、後世の想像画で、場面の細部（No.49 の絵は火船）が出典と一致すると言えないため使わない。
+- 絵は出典で確かめていない細部（キジルバシュの赤い帽子、ネルチンスクの天幕、兵士の軍服の色など）を入れない。
+- No.51（奴隷制）の絵は暴力・鎖を描かず、浜辺に寄り添って立つ人々と沖の帆船だけにした。
+
+| No | 単語 | 判断したこと・弱いところ |
+|---|---|---|
+| 42 | convert (v.) | 指示どおり japanese を「改宗させる／変える」（answers も同じ）。1501年の即位と、シーア派を国教としたことは Britannica、即位時にイランの住民の多くがスンナ派で、スンナ派に改宗を命じたことは OpenStax（ライス大学）。Britannica は国教化の地域を「主にスンナ派の土地」とし、改宗の強制は書かないので、英語は "set out to convert"（改宗させようとした）にとどめた。 |
+| 44 | protest (v.) | 九十五カ条は贖宥状の販売を攻撃（EBSCO：attacked the sale of indulgences）、Britannica は「宗教改革の始まりと見なされるようになった」と書くので "often seen as the start of" とした。ルターを monk とするのは EBSCO（Augustinian monk）。城教会の扉に貼ったかは Britannica が「possibly」とするので、例文にも絵にも扉は出さない（絵は書斎で書く場面）。Britannica の URL は内容を確かめた印刷用ページ（print/article/415676）。 |
+| 45 | ally (n.)【差し替え】 | 候補 conquest は No.12 conquer と近いので、コルテスの勝利を支えたトラスカラなど先住民の味方（Britannica：先住民の同盟に支えられた、トラスカラで同盟を結んだ／National Geographic：Tlaxcaltec allies、5万の先住民の戦士）に合う ally に替えた（選定表も修正）。1521年8月13日の降伏、アステカ帝国の征服は両資料。和訳は「アステカ王国」（教科書表記）。 |
+| 46 | expedition (n.) | 1519年9月出発、1522年9月に1隻（ビクトリア号）が帰着、最初の世界周航、マゼランはフィリピンで戦死（EBSCO・オハイオ州立大学 Origins）。"Led at first by" でマゼランが途中で死んだことを含ませ、死は別の節にしない。voyage（No.41）を避けて sail around the world。 |
+| 47 | magnificent (adj.) | 在位1520–1566年（Britannica）。「ヨーロッパ人が the Magnificent と呼んだ」は Gale（encyclopedia.com 所収の Europe, 1450 to 1789 と Encyclopaedia Judaica）。トルコ語の呼び名（カーヌーニー＝立法者）は1枚1事実のため入れない。和訳は「壮麗なるスレイマン（Suleiman the Magnificent）」とし、gloss の「壮大な／見事な」と結びつくようにした。弱いところ：magnificent を称号として使う文で、典型的な「壮大な建物」の用法ではないが、意味（壮麗な）と呼び名が直結するので採用。 |
+| 48 | tolerant (adj.) | 宗教的寛容の政策とジズヤの廃止は EBSCO（1564年）と McKay ほか『A History of World Societies』（Macmillan、1579年）で年が食い違うので、年は書かない。emperor・abolish を避けて ruler / ended。 |
+| 49 | navy (n.) | 1588年、フェリペ2世がイングランド侵攻のために送った（Britannica）、英国側が退けた／スペインの敗北（Britannica：repel、ロイヤル・ミュージアムズ・グリニッジ：Spain's defeat）。嵐やスコットランド回りの帰還は書かない。絵の火船（7月27日以降のカレー沖）はグリニッジの説明による。 |
+| 50 | trade (v.) | 1600年12月31日の勅許（Britannica）、エリザベス1世が与えた（History.com）。品目は Britannica（綿・絹織物、藍、硝石、のちに中国茶）と History.com（綿織物、茶、香辛料）が共通に挙げる綿・茶と、Britannica の藍。 |
+| 51 | slavery (n.) | 三角貿易の3辺のうち2辺（ヨーロッパの商品を西アフリカへ、捕らわれた人々をアメリカ大陸へ）は Britannica とアメリカン・バトルフィールド・トラスト。人数は資料で差がある（ABT は900万〜1200万人）ので "millions"。和訳は「捕らえられた何百万人ものアフリカの人々」の意で書いた。 |
+| 52 | mausoleum (n.) | 霊廟、シャー＝ジャハーン、妃ムムターズ＝マハルの記念、アグラ（UNESCO・Britannica）。建設年は UNESCO 内でも1631/1632–1648年、Britannica は1632年ごろから22年と差があるので「17世紀」。 |
+| 53 | treaty (n.) | 1648年、オスナブリュックとミュンスターの条約、三十年戦争の終結（Britannica・米国議会図書館 In Custodia Legis）。主権国家体制などの意義は1枚1事実のため入れない。絵は出典で確かめていない宣誓などの細部を入れず、ミュンスターの市庁舎の机と封蠟つきの文書だけにした。 |
+| 54 | absolute (adj.) | 在位1643–1715年（World History Encyclopedia）、絶対的な権力と神から授かった統治権（WHE：divine right to rule with absolute power／EBSCO：神が権力を託したという信念）。「朕は国家なり」は真偽が疑わしいので入れない。 |
+| 55 | border (n.) | 1689年、国境をスタノヴォイ山脈とアルグン川に沿って定めた（Britannica）、交渉地ネルチンスクと当時の皇帝が康熙帝（EBSCO）。Britannica はヨーロッパの国との最初の条約とは書かないので「最初」は書かない。和訳は外興安嶺（スタノヴォイ山脈）。 |
+| 56 | parliament (n.) | 議会の承認なしの課税を違法とした（Britannica：levying of taxes … without parliamentary authorization／英国国立公文書館：without grant of Parliament）。limit（No.33）を避けて made it illegal。 |
+| 57 | reform (n.) | 大使節団（1697–98年、スミソニアン誌）で西欧を回り、西欧にならった改革（WHE：服装、参議会制）、男性にひげを剃らせた（スミソニアン：all the men in Russia、WHE：forced men to shave）。「貴族に」とは両資料とも限定しないので men。ひげ税の年（両資料とも1698年）は書かない。 |
+| 58 | separation (n.) | 1748年の『法の精神』、立法・行政・司法の権力の分立（Britannica・スタンフォード哲学百科事典）。 |
+| 59 | restrict (v.) | 1757年に広州だけを外国貿易の港とした（Britannica・香港海事博物館）。乾隆帝の名で布告したと書くのは香港海事博物館（Google Arts & Culture）。Britannica・EBSCO は「清」とだけ書くので、英語は "Qing China under Qianlong"。trade（No.50）を避けて European commerce。 |
+| 60 | victory (n.) | 1757年6月23日、クライヴ、東インド会社の決定的勝利、ベンガル太守シラージュ＝ウッダウラ（Britannica・英国国立陸軍博物館）。絵の大雨と防水布で大砲を覆う場面は国立陸軍博物館の説明による。マンゴー林は確認できなかったので描かない。 |
