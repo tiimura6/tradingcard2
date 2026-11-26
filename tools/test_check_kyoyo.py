@@ -1,5 +1,7 @@
+import csv
 import os
 import sys
+import tempfile
 import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -18,6 +20,47 @@ def has(errors, *words):
     return any(all(w in e for w in words) for e in errors)
 
 
+def build_rows(nos):
+    """ok_sample の行を雛形に、指定した No の行を作る（単語・例文は重複しない）。"""
+    template = check_kyoyo._read_csv(os.path.join(FX, "ok_sample.csv"))[0]
+    pool, seen = [], set()
+    for r in check_kyoyo._read_csv(check_kyoyo.CEFRJ_CSV):
+        if r["notebook"] not in ("B1", "B2") or r["word"] in seen:
+            continue
+        if not check_kyoyo.find_form(r["word"], r["example"]):
+            continue
+        if check_kyoyo.FANTASY_RE.search(r["example"] + " " + r["image"]):
+            continue
+        seen.add(r["word"])
+        pool.append(r)
+        if len(pool) >= 100:
+            break
+    rows = []
+    for i, no in enumerate(nos):
+        src = pool[i]
+        row = dict(template)
+        row.update(
+            No=str(no), word=src["word"], pos=src["pos"], japanese=src["japanese"],
+            example="In the old port town, " + src["example"][0].lower() + src["example"][1:],
+            example_ja="港町では、" + src["example_ja"].rstrip("。") + "（宗教改革）。",
+            image=f"a stone monument at a quiet harbor, scene {i}",
+            era=check_kyoyo.ERAS[(no - 1) // 20] if isinstance(no, int) else "古代",
+            term="宗教改革",
+        )
+        rows.append(row)
+    return rows
+
+
+def run_rows(rows, final):
+    with tempfile.TemporaryDirectory() as d:
+        path = os.path.join(d, "t.csv")
+        with open(path, "w", encoding="utf-8-sig", newline="") as f:
+            w = csv.DictWriter(f, check_kyoyo.COLUMNS)
+            w.writeheader()
+            w.writerows(rows)
+        return check_kyoyo.check(path, final)
+
+
 class CheckKyoyoTest(unittest.TestCase):
     def test_ok_sample(self):
         self.assertEqual(run("ok_sample", final=False), [])
@@ -25,9 +68,22 @@ class CheckKyoyoTest(unittest.TestCase):
     def test_count(self):
         self.assertTrue(has(run("ok_sample", final=True), "枚数"))
 
+    def test_final_ok_100_rows(self):
+        self.assertEqual(run_rows(build_rows(list(range(1, 101))), final=True), [])
+
     def test_no_sequence(self):
-        e = run("bad_no_sequence", final=True)
-        self.assertTrue(has(e, "No"), e)
+        # No 3 が欠番、No 4 が2回
+        nos = [n for n in range(1, 101) if n != 3] + [4]
+        e = run_rows(build_rows(nos), final=True)
+        self.assertIn("No 3 が欠番です（連番エラー）", e)
+        self.assertIn("No 4 が重複しています（連番エラー）", e)
+        self.assertFalse(has(e, "枚数"), e)
+
+    def test_no_not_digit(self):
+        rows = build_rows(list(range(1, 11)))
+        rows[2]["No"] = "x3"
+        e = run_rows(rows, final=False)
+        self.assertIn("No x3: No が数字ではありません", e)
 
     def test_era_order(self):
         e = run("bad_era")
