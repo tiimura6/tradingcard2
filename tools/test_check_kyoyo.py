@@ -46,6 +46,7 @@ def build_rows(nos):
             image=f"a stone monument at a quiet harbor, scene {i}",
             era=check_kyoyo.ERAS[(no - 1) // 20] if isinstance(no, int) else "古代",
             term="宗教改革",
+            level=src["notebook"],
         )
         rows.append(row)
     return rows
@@ -104,6 +105,31 @@ class CheckKyoyoTest(unittest.TestCase):
     def test_level(self):
         e = run("bad_level")
         self.assertTrue(has(e, "語彙", "61"), e)
+
+    def _with_word(self, word, level):
+        rows = build_rows(list(range(1, 11)))
+        rows[6].update(word=word, pos="n.", level=level,
+                       example=f"The {word} of the old harbor was recorded by a careful local scribe.")
+        return run_rows(rows, final=False)
+
+    def test_level_non_vocab_wh_ok(self):
+        self.assertEqual(self._with_word("zzqxword", "WH"), [])
+
+    def test_level_non_vocab_b2_fails(self):
+        e = self._with_word("zzqxword", "B2")
+        self.assertTrue(has(e, "語彙", "zzqxword", "WH"), e)
+
+    def test_level_vocab_wh_fails(self):
+        e = self._with_word("voyage", "WH")  # B1 の単語
+        self.assertTrue(has(e, "語彙", "voyage", "B1"), e)
+
+    def test_level_vocab_wrong_notebook_fails(self):
+        e = self._with_word("voyage", "B2")
+        self.assertTrue(has(e, "語彙", "voyage", "B1"), e)
+
+    def test_level_vocab_two_notebooks_ok(self):
+        # collapse は B1（名詞）と B2（動詞）の両方にある
+        self.assertEqual(self._with_word("collapse", "B2"), [])
 
     def test_vocab_loaded(self):
         v = check_kyoyo.load_vocab()

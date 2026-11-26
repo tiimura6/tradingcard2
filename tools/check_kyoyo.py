@@ -46,12 +46,22 @@ def _quiz_strings(key):
     return re.findall(key + r": '((?:[^'\\]|\\.)*)'", _quizlist_block())
 
 
+def load_vocab_levels():
+    """単語（小文字）→ その単語がある手帖の集合（B1/B2 は cefrj_notebooks.csv、PT は quizList）。"""
+    levels = {}
+    for r in _read_csv(CEFRJ_CSV):
+        w = r["word"].strip().lower()
+        if r["notebook"] in ("B1", "B2") and w:
+            levels.setdefault(w, set()).add(r["notebook"])
+    for a in _quiz_strings("answer"):
+        if a.strip():
+            levels.setdefault(a.strip().lower(), set()).add("PT")
+    return levels
+
+
 def load_vocab():
     """B1/B2 の単語（cefrj_notebooks.csv）と PT の answer（index.html の quizList）。小文字。"""
-    vocab = {r["word"].strip().lower() for r in _read_csv(CEFRJ_CSV)
-             if r["notebook"] in ("B1", "B2") and r["word"].strip()}
-    vocab.update(a.strip().lower() for a in _quiz_strings("answer") if a.strip())
-    return vocab
+    return set(load_vocab_levels())
 
 
 def _load_existing_texts():
@@ -67,7 +77,7 @@ def _load_existing_texts():
 def check(csv_path, final):
     errors = []
     rows = _read_csv(csv_path)
-    vocab = load_vocab()
+    vocab_levels = load_vocab_levels()
     existing = _load_existing_texts()
 
     if final:
@@ -126,9 +136,16 @@ def check(csv_path, final):
         if len(urls) < 2 or not all(re.match(r"https?://", u) for u in urls):
             errors.append(f"{label}: 出典のURLが2つ以上ありません（{len(urls)}件）")
 
-        # 語彙レベル
-        if word.lower() not in vocab:
-            errors.append(f"{label}: 語彙 {word} が B1/B2/PT にありません")
+        # 語彙レベル：B1/B2/PT の単語なら level はその手帖、手帖専用の単語なら WH
+        level = r["level"].strip()
+        have = vocab_levels.get(word.lower())
+        if have:
+            if level not in have:
+                errors.append(f"{label}: 語彙 {word} は {'/'.join(sorted(have))} の単語です"
+                              f"（level が {level or '(空)'}）")
+        elif level != "WH":
+            errors.append(f"{label}: 語彙 {word} は B1/B2/PT にない手帖専用の単語なので level は WH にしてください"
+                          f"（level が {level or '(空)'}）")
 
         # 重複（WH内の単語＋品詞）
         key = (word.lower(), pos)

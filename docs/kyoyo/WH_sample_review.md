@@ -104,20 +104,20 @@
 | 英単語（品詞） | declare（v.）宣言する・B1 |
 | 例文 | On July 4, 1776, the Continental Congress adopted the Declaration of Independence, declaring the thirteen colonies free from British rule. |
 | 和訳 | 1776年7月4日、大陸会議は**独立宣言**を採択し、13植民地がイギリスの支配から自由であることを宣言した。 |
-| 知識項目 | 独立宣言：1776年7月4日、大陸会議が独立宣言を採択し、13植民地のイギリスからの独立を宣言 |
-| 絵 | 名画：ジョン・トランブル「独立宣言」（1817–18年、米国議会議事堂ロタンダ）。作者没年1843年。※描かれているのは7月4日の採択ではなく6月28日の草案提出の場面。予備の文言＝1776年フィラデルフィアの議場で長い手書き文書が提出される場面 |
-| 出典 | https://www.archives.gov/milestone-documents/declaration-of-Independence<br>https://constitutioncenter.org/declaration/about-the-declaration-of-independence<br>https://www.aoc.gov/explore-capitol-campus/art/declaration-independence |
+| 知識項目 | 独立宣言：1776年7月4日、フィラデルフィアの州議会議事堂で大陸会議が独立宣言を採択し、13植民地のイギリスからの独立を宣言 |
+| 絵 | 絵本調：1776年7月4日、フィラデルフィアのペンシルヴェニア州議会議事堂（現在の独立記念館）の会議室で、植民地ごとの机に座った代表たちが手を挙げて手書きの宣言の採択に賛成する場面（署名は8月2日なので描かない） |
+| 出典 | https://www.archives.gov/milestone-documents/declaration-of-Independence<br>https://constitutioncenter.org/declaration/about-the-declaration-of-independence<br>https://www.nps.gov/inde/learn/historyculture/places-independencehall-assemblyroom.htm |
 
-## No.81 trigger
+## No.81 assassinate
 
 | 項目 | 内容 |
 |---|---|
 | No | 81 |
 | 時代 | 現代 |
-| 英単語（品詞） | trigger（n.）引き金／きっかけ・B1 |
-| 例文 | The shooting of Archduke Franz Ferdinand of Austria in Sarajevo in June 1914 became the trigger for World War I. |
-| 和訳 | 1914年6月、オーストリアの帝位継承者フランツ＝フェルディナントが撃たれた**サライェヴォ事件**は、第一次世界大戦の引き金となった。 |
-| 知識項目 | サライェヴォ事件：1914年6月28日、サライェヴォでフランツ＝フェルディナント夫妻が撃たれ、第一次世界大戦の引き金に |
+| 英単語（品詞） | assassinate（v.）暗殺する・WH |
+| 例文 | On June 28, 1914, a young Bosnian Serb assassinated Archduke Franz Ferdinand of Austria in Sarajevo, an event that triggered World War I. |
+| 和訳 | 1914年6月28日、セルビア系の青年がオーストリアの帝位継承者フランツ＝フェルディナントをサライェヴォで暗殺し、この**サライェヴォ事件**が第一次世界大戦の引き金となった。 |
+| 知識項目 | サライェヴォ事件：1914年6月28日、サライェヴォでセルビア系の青年プリンツィプがフランツ＝フェルディナント夫妻を暗殺し、第一次世界大戦の引き金に |
 | 絵 | 絵本調：1914年サライェヴォの川沿いの通りを古い石橋の近くでゆっくり進むオープンカー、沿道の群衆（銃撃の場面は描かない） |
 | 出典 | https://britannica.com/biography/Franz-Ferdinand-Archduke-of-Austria<br>https://nzhistory.govt.nz/page/assassination-archduke-ferdinand |
 
@@ -136,16 +136,13 @@
 
 ## 確認してほしい点
 
-1. **語彙リストの制約で代えた単語**：record（動詞）・portrait・improve・criticize・publish・crown・assassinate は A1/A2 か語彙外のため使えなかった。代わりに 楔形文字＝inscribe（刻む）、モナ＝リザ＝masterpiece（傑作）、ワット＝revolutionize（革命を起こす）、サライェヴォ事件＝trigger（引き金・名詞）を選んだ。
-2. **No.24 migration**：既存カードの訳は「移住／渡り」。ヒジュラの英語での標準的な説明（Britannica: "migration"）に合わせた。ムハンマドの姿は絵に描かない方針（顔の見えない遠景の隊商のみ）。
-3. **No.2 の年代**：着工・完成年は資料により前2560年ごろ／前25世紀初めと幅があるため、例文は「約4500年前」とぼかした。
-4. **No.41 の到達地**：最初の上陸地（グアナハニ島）の特定には諸説あるため、「バハマ諸島」までにとどめた。和訳の教科書用語は「コロンブス」。
-5. **No.43 の年代**：「モナ＝リザ」の制作は1503〜1519年ごろとされる。「1503年ごろ描き始めた」とし、完成年は書いていない。教科書用語は人物名ではなく「ルネサンス」にした（和訳にはレオナルド＝ダ＝ヴィンチの名も入れた）。
-6. **No.62 の名画**：トランブル「独立宣言」は6月28日の草案提出の場面で、例文の7月4日の採択とは厳密には違う。独立宣言の絵として広く使われているので採用したが、気になるなら絵本調の絵に切り替える。`image_url` は Wikimedia Commons のファイルページ（検索結果で存在は確認、ページ本体は取得できず）。
-7. **No.81**：assassinate が使えないため例文は The shooting of …。暴力の場面は絵に描かず、事件直前の街の様子にした。
-8. **No.82**：overthrow の対象は「ニコライ2世の政府」。厳密には二月革命で帝政が倒れ、皇帝は退位した。十月革命（レーニン）とは区別していない。
-9. **見送った組み合わせ**：ナポレオン×crown（A2）、マルコ＝ポーロ（合う単語がない）、グラナダ陥落×surrender（ヨーロッパが多すぎるため外した）。
-10. **選定表の偏り**：選定表の地域の数は WH_topics.md の冒頭を参照。共通テスト頻出の項目（明治維新・日清戦争・日露戦争・ユスティニアヌス・宋・オスマン帝国の成立・サファヴィー朝・グプタ朝・マーシャル＝プラン・フランス革命）を入れ、ヨーロッパの項目を減らした。
-11. **level_color** は仮の #8C6A3F。
-12. **番号の変更（2026-11-26 修正）**：年代順を保つため、ヒジュラを No.22→No.24、モナ＝リザを No.42→No.43 に移した（No.22 ユスティニアヌス、No.23 隋の科挙、No.42 サファヴィー朝を間に入れた）。No.61 は「1769年に最初の特許→後に工場の動力に大変革」と、特許と工場への影響の時期を分けて書き直した。
-13. **No.42 サファヴィー朝×convert**：既存カードの訳は「変える／改造する」。Task 3 で書くときに「改宗させる」の意味を訳に足す必要がある。
+1. **見本の番号**：年代順を保つため、ヒジュラは No.24、モナ＝リザは No.43（No.22 ユスティニアヌス、No.23 隋の科挙、No.42 サファヴィー朝を間に入れた）。
+2. **手帖専用の単語（2026-11-27 の決定を反映）**：No.81 を assassinate（暗殺する・v.、level=WH）に変えた。選定表では No.66 ナポレオン＝crown、No.69 アヘン戦争＝smuggle も手帖専用の単語にした（No.34 オスマン帝国は emerge から B1 の dynasty に変えた）。
+3. **語彙の制限が外れても変えなかった単語**：No.1 inscribe（record は A2 で、高校上位層には易しすぎる。inscribe は粘土板に刻む楔形文字と意味が直結する）。No.43 masterpiece（portrait は A2。「傑作」は世界で最も有名な絵という事実と結びつく）。No.61 revolutionize（improve は A2。revolutionize は産業革命と語の形で結びつく）。
+4. **No.62 の絵**：トランブルの名画（6月28日の草案提出の場面）はやめ、7月4日の採択を絵本調で描く文言にした。`image_url` は空。署名は8月2日なので署名の場面は描かない。
+5. **No.24 migration**：既存カードの訳は「移住／渡り」。Britannica の説明（"migration"）に合わせた。ムハンマドの姿は描かない（顔の見えない遠景の隊商のみ）。
+6. **年代のぼかし**：No.2 は「約4500年前」（着工・完成年に諸説）。No.41 の上陸地は「バハマ諸島」まで（グアナハニ島の特定に諸説）。No.43 は「1503年ごろ描き始めた」とし、完成年は書かない。
+7. **No.81**：暗殺の場面は絵に描かず、事件直前の街の様子にした。和訳は「セルビア系の青年」（Britannica は Serb、NZ政府の資料は Bosnian Serb の民族主義団体の一員）。
+8. **No.82**：overthrow の対象は「ニコライ2世の政府」。厳密には二月革命で帝政が倒れ、皇帝は退位した。十月革命とは区別していない。
+9. **選定表**：共通テスト頻出の項目を入れ、ヨーロッパを32項目に減らした（地域の数は WH_topics.md の冒頭）。No.42 サファヴィー朝×convert は既存カードの訳が「変える／改造する」なので、Task 3 で「改宗させる」の意味を足す必要がある。
+10. **level_color** は仮の #8C6A3F。
