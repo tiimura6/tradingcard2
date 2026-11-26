@@ -201,4 +201,4 @@
 
 - [ ] **Step 1: 最終確認** — `npm test`・`node tests/gas-e2e.js`・`python3 -m unittest discover tools` がすべて PASS
 - [ ] **Step 2: 飯村さんへの作業依頼をまとめる** — GAS の貼り替えと「デプロイを管理 → 鉛筆 → 新バージョン」、Canva での絵の作成、絵ができたら `tools/cardimg/README.md` の手順で画像化
-- [ ] **Step 3: 反映** — このセッションは tradingcard2 に push できない。push の許可をもらうか、変更一式（パッチ）を渡す
+- [ ] **Step 3: 反映** — 作業はブランチ `kyoyo-techo` に push する。公開中の main への取り込み（マージ）は、飯村さんの確認後に行う
