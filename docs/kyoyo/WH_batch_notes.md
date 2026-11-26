@@ -62,3 +62,8 @@
 | 38 | fleet (n.) | 1405–1433年の7回の航海（National Geographic・コロンビア大学）。船の大きさは資料で差がある（コロンビア大学は400フィート超、National Geographic は250〜300フィートが妥当とする）ので書かない。絵の帆の色も書かない。 |
 | 39 | network (n.) | 長さは UNESCO が3万km、スミソニアン（American Indian 誌）が2万5000マイルと違うので書かない。クスコ中心はスミソニアンの「すべての道はクスコに通じた」と UNESCO（日本語版の説明：クスコの中央広場から4本の幹線）。絵はリャマの隊商など出典で確かめていない細部を入れず、石畳の道と段々畑、荷を背負った旅人にした。 |
 | 40 | seize (v.) | 1453年、ビザンツ帝国の終わり（Britannica・EBSCO）。帝国が続いた年数（Britannica は「10世紀」）は数え方で変わるので書かない。絵の大砲は両資料にある。 |
+
+### レビュー後の修正（バッチ2）
+
+- No.23：「中国が試験で官僚を選び始めた」は漢代の試験を無視することになるので、"Under the Sui, China set up a system of written examinations for choosing government officials, …" にした（No.34 の dynasty を避けて "Under the Sui"）。「筆記」は McKay ほか『A History of World Societies』（605年に競争的な筆記試験を導入）で確認できたので入れた。出典は Britannica（試験制度）・McKay（Macmillan）・World History Encyclopedia の3つの別の出版元にし、Britannica の Chinese civil service の項は外した。和訳は「官僚を選ぶための筆記試験の制度である科挙が始まり」。
+- No.27：「知恵の館が学問の中心となった」は、出典の Britannica がよく想像される姿だが証拠は乏しいとしているので削った。例文は "In Abbasid Baghdad, scholars backed by the caliphs translated Greek works of science and philosophy into Arabic; the caliphs' library was called the House of Wisdom."、和訳は「…アラビア語に翻訳した。カリフの図書館は知恵の館と呼ばれた。」。すべての節が出典で裏づけられる（カリフの支援：Britannica のマームーンの翻訳支援、encyclopedia.com のアッバース朝の資金提供／図書館：Britannica・IIS）。
