@@ -102,8 +102,8 @@
 | No | 62 |
 | 時代 | 近代 |
 | 英単語（品詞） | declare（v.）宣言する・B1 |
-| 例文 | On July 4, 1776, the Continental Congress adopted the Declaration of Independence, declaring the thirteen colonies free from British rule. |
-| 和訳 | 1776年7月4日、大陸会議は**独立宣言**を採択し、13植民地がイギリスの支配から自由であることを宣言した。 |
+| 例文 | On July 4, 1776, the Continental Congress, meeting in Philadelphia, approved a document declaring the thirteen colonies free from British rule. |
+| 和訳 | 1776年7月4日、フィラデルフィアに集まった大陸会議は**独立宣言**を採択し、13植民地がイギリスの支配から自由であることを宣言した。 |
 | 知識項目 | 独立宣言：1776年7月4日、フィラデルフィアの州議会議事堂で大陸会議が独立宣言を採択し、13植民地のイギリスからの独立を宣言 |
 | 絵 | 絵本調：1776年7月4日、フィラデルフィアのペンシルヴェニア州議会議事堂（現在の独立記念館）の会議室で、植民地ごとの机に座った代表たちと、前の机に置かれた手書きの宣言（署名は8月2日なので描かない） |
 | 出典 | https://www.archives.gov/milestone-documents/declaration-of-Independence<br>https://constitutioncenter.org/declaration/about-the-declaration-of-independence<br>https://www.nps.gov/inde/learn/historyculture/places-independencehall-assemblyroom.htm |

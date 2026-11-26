@@ -26,3 +26,11 @@
 | 18 | astronomy (n.) | 金星の周期で暦を補正したこと（UCSB の研究紹介、National Geographic）。ドレスデン絵文書は後古典期の写本なので、時期は書かない。弱いところ：「正確に保つため」の部分は、金星表が暦の補正に使われたという説明に基づく。National Geographic の記事は異説（儀礼の暦を優先した）も紹介している。 |
 | 19 | permit (v.) | 教科書は「コンスタンティヌス帝が公認」と書くことが多いが、Britannica・ジョージタウン大学ともにコンスタンティヌスとリキニウスの2人が出したとしているので、2人の名前を書いた。 |
 | 20 | classical (adj.) | カーリダーサは5世紀ごろでグプタ朝の宮廷と結びつけられる（Britannica は多くの学者がチャンドラグプタ2世と結びつけるとする）。例文は「グプタ朝の時代に」までにとどめ、王の名前は書かない。classical の訳は既存カードの「古典の／伝統的な」。 |
+
+### レビュー後の修正（バッチ1）
+
+- No.4：例文を「Issued by King Hammurabi of Babylon in the 18th century BCE, …」に直した。法典の石碑はスサで見つかっていて、建てられたのはシッパルとみられるので、「バビロンで書かれた」とは書かない。絵の場所も「古代メソポタミアの神殿の中庭」にした。和訳は「前18世紀にバビロンの王ハンムラビが定めたハンムラビ法典は…」。
+- No.8：英語の名前の順を Siddhartha Gautama にした（例文と絵）。和訳はガウタマ＝シッダールタのまま。
+- No.10：例文に vote が2回出ていて、クイズの穴埋めで答えが見えてしまうため、後半を "women and slaves were excluded" にした。和訳は「参加できなかった」。
+- No.62（見本）：新しい検査で Declaration と declaring が同じ語幹として引っかかったので、例文を "…, meeting in Philadelphia, approved a document declaring the thirteen colonies free from British rule." にした。和訳は「フィラデルフィアに集まった大陸会議は独立宣言を採択し、…」（WH_sample_review.md も同じく直した）。
+- tools/check_kyoyo.py：例文の中でターゲット単語（活用形と、同じ語幹で始まる派生語を含む）が2回以上出たらエラーにする検査を足した（R10）。

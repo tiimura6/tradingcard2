@@ -14,7 +14,7 @@ ROOT = os.path.dirname(HERE)
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
-from build_notebooks import find_form  # noqa: E402
+from build_notebooks import candidates, find_form  # noqa: E402
 
 CEFRJ_CSV = os.path.join(ROOT, "data", "cefrj_notebooks.csv")
 INDEX_HTML = os.path.join(ROOT, "index.html")
@@ -74,6 +74,26 @@ def _load_existing_texts():
     return texts
 
 
+def count_word_family(word, example):
+    """例文に出てくるターゲット単語の語族（活用形・同じ語幹の派生語）の数。"""
+    w = word.lower().strip()
+    if not w:
+        return 0
+    if " " in w:
+        n = 0
+        for f in candidates(w):
+            pat = r"(?<![A-Za-z])" + re.escape(f) + r"(?![A-Za-z])"
+            n = max(n, len(re.findall(pat, example, re.I)))
+        return n
+    forms = set(candidates(w))
+    stem = w[:-1] if len(w) >= 5 and w[-1] in "ey" else w
+    n = 0
+    for tok in re.findall(r"[A-Za-z]+(?:'[A-Za-z]+)?", example):
+        t = tok.lower()
+        if t in forms or t.startswith(stem):
+            n += 1
+    return n
+
 def check(csv_path, final):
     errors = []
     rows = _read_csv(csv_path)
@@ -125,6 +145,9 @@ def check(csv_path, final):
         # 例文にターゲット単語（活用形含む）
         if not find_form(word, example):
             errors.append(f"{label}: 例文に単語 {word} が見つかりません")
+        elif count_word_family(word, example) > 1:
+            errors.append(f"{label}: 例文に単語 {word}（活用形・派生語を含む）が"
+                          f"{count_word_family(word, example)}回あります。1回だけにしてください")
 
         # 教科書用語が日本語訳に入っている
         term = r["term"].strip()

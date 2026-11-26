@@ -29,6 +29,8 @@ def build_rows(nos):
             continue
         if not check_kyoyo.find_form(r["word"], r["example"]):
             continue
+        if check_kyoyo.count_word_family(r["word"], r["example"]) > 1:
+            continue
         if check_kyoyo.FANTASY_RE.search(r["example"] + " " + r["image"]):
             continue
         seen.add(r["word"])
@@ -151,6 +153,25 @@ class CheckKyoyoTest(unittest.TestCase):
             e = run(name)
             self.assertTrue(has(e, "重複", "62"), (name, e))
 
+
+    def test_target_word_once(self):
+        # 活用形（absorbs / absorbed）が2回出ると、クイズで答えが漏れる
+        e = run("bad_dup_target")
+        self.assertTrue(has(e, "例文", "82", "1回"), e)
+
+    def test_target_word_once_derivative(self):
+        # 同じ語幹の派生語（vote / voters）も数える
+        rows = build_rows(list(range(1, 11)))
+        rows[6].update(word="vote", pos="v.", level="B1",
+                       example="In the old port town, the voters gathered to vote on the new harbor law.")
+        e = run_rows(rows, final=False)
+        self.assertTrue(has(e, "例文", "vote", "1回"), e)
+
+    def test_target_word_once_ok(self):
+        rows = build_rows(list(range(1, 11)))
+        rows[6].update(word="vote", pos="v.", level="B1",
+                       example="In the old port town, the citizens gathered to vote on the new harbor law.")
+        self.assertEqual(run_rows(rows, final=False), [])
 
 if __name__ == "__main__":
     unittest.main()
