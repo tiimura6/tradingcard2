@@ -43,11 +43,11 @@
 | 絵 | 絵本調：古代ローマ末期の宮殿の広間、紫のマントと月桂冠を外す少年皇帝、戸口で待つゲルマン人の兵士 |
 | 出典 | https://www.britannica.com/biography/Odoacer<br>https://ebsco.com/research-starters/history/last-roman-emperor-deposed |
 
-## No.22 migration
+## No.24 migration
 
 | 項目 | 内容 |
 |---|---|
-| No | 22 |
+| No | 24 |
 | 時代 | 中世 |
 | 英単語（品詞） | migration（n.）移住／渡り・B2 |
 | 例文 | The migration of Muhammad and his followers from Mecca to Medina in 622 is known as the Hijra. |
@@ -69,11 +69,11 @@
 | 絵 | 絵本調：1492年の3隻の帆船（サンタ＝マリア号・ピンタ号・ニーニャ号）が大西洋を進み、夜明けの水平線に島影 |
 | 出典 | https://www.britannica.com/biography/Christopher-Columbus/The-first-voyage<br>https://education.nationalgeographic.org/resource/columbus-makes-landfall-caribbean |
 
-## No.42 masterpiece
+## No.43 masterpiece
 
 | 項目 | 内容 |
 |---|---|
-| No | 42 |
+| No | 43 |
 | 時代 | 近世 |
 | 英単語（品詞） | masterpiece（n.）傑作・B2 |
 | 例文 | In Florence around 1503, the Renaissance artist Leonardo da Vinci began the Mona Lisa, now seen as one of the world's greatest masterpieces. |
@@ -89,9 +89,9 @@
 | No | 61 |
 | 時代 | 近代 |
 | 英単語（品詞） | revolutionize（v.）革命を起こす・B2 |
-| 例文 | James Watt's improved steam engine, patented in 1769, revolutionized how factories were powered during Britain's Industrial Revolution. |
-| 和訳 | 1769年に特許が取られたジェームズ＝ワットの改良型蒸気機関は、イギリスの**産業革命**期に工場の動力に大変革をもたらした。 |
-| 知識項目 | 産業革命：ワットは1769年に分離凝縮器つき蒸気機関の特許を取得。蒸気機関は産業革命の原動力となった |
+| 例文 | James Watt's improved steam engine, first patented in 1769, later revolutionized how factories were powered during Britain's Industrial Revolution. |
+| 和訳 | 1769年に最初の特許が取られたジェームズ＝ワットの改良型蒸気機関は、後にイギリスの**産業革命**期の工場の動力に大変革をもたらした。 |
+| 知識項目 | 産業革命：ワットは1769年に分離凝縮器つき蒸気機関の特許を取得。工場の動力として広まるのは回転運動を得た1784〜85年ごろ以降で、蒸気機関は産業革命の原動力となった |
 | 絵 | 絵本調：18世紀後半イギリスの綿工場、鉄と真ちゅうのビーム式蒸気機関とはずみ車、点検する技師、高い煙突 |
 | 出典 | https://britannica.com/technology/Watt-steam-engine<br>https://blog.sciencemuseum.org.uk/james-watt-and-the-separate-condenser |
 
@@ -137,13 +137,15 @@
 ## 確認してほしい点
 
 1. **語彙リストの制約で代えた単語**：record（動詞）・portrait・improve・criticize・publish・crown・assassinate は A1/A2 か語彙外のため使えなかった。代わりに 楔形文字＝inscribe（刻む）、モナ＝リザ＝masterpiece（傑作）、ワット＝revolutionize（革命を起こす）、サライェヴォ事件＝trigger（引き金・名詞）を選んだ。
-2. **No.22 migration**：既存カードの訳は「移住／渡り」。ヒジュラの英語での標準的な説明（Britannica: "migration"）に合わせた。ムハンマドの姿は絵に描かない方針（顔の見えない遠景の隊商のみ）。
+2. **No.24 migration**：既存カードの訳は「移住／渡り」。ヒジュラの英語での標準的な説明（Britannica: "migration"）に合わせた。ムハンマドの姿は絵に描かない方針（顔の見えない遠景の隊商のみ）。
 3. **No.2 の年代**：着工・完成年は資料により前2560年ごろ／前25世紀初めと幅があるため、例文は「約4500年前」とぼかした。
 4. **No.41 の到達地**：最初の上陸地（グアナハニ島）の特定には諸説あるため、「バハマ諸島」までにとどめた。和訳の教科書用語は「コロンブス」。
-5. **No.42 の年代**：「モナ＝リザ」の制作は1503〜1519年ごろとされる。「1503年ごろ描き始めた」とし、完成年は書いていない。教科書用語は人物名ではなく「ルネサンス」にした（和訳にはレオナルド＝ダ＝ヴィンチの名も入れた）。
+5. **No.43 の年代**：「モナ＝リザ」の制作は1503〜1519年ごろとされる。「1503年ごろ描き始めた」とし、完成年は書いていない。教科書用語は人物名ではなく「ルネサンス」にした（和訳にはレオナルド＝ダ＝ヴィンチの名も入れた）。
 6. **No.62 の名画**：トランブル「独立宣言」は6月28日の草案提出の場面で、例文の7月4日の採択とは厳密には違う。独立宣言の絵として広く使われているので採用したが、気になるなら絵本調の絵に切り替える。`image_url` は Wikimedia Commons のファイルページ（検索結果で存在は確認、ページ本体は取得できず）。
 7. **No.81**：assassinate が使えないため例文は The shooting of …。暴力の場面は絵に描かず、事件直前の街の様子にした。
 8. **No.82**：overthrow の対象は「ニコライ2世の政府」。厳密には二月革命で帝政が倒れ、皇帝は退位した。十月革命（レーニン）とは区別していない。
-9. **見送った組み合わせ**：ナポレオン×crown（A2）、マルコ＝ポーロ（合う単語がない）、ユスティニアヌス（年代順で見本No.21・22の間に入るため外した）、グラナダ陥落×surrender（ヨーロッパが多すぎるため外した）。
-10. **選定表の偏り**：ヨーロッパ37・東アジア17・アメリカ14・西アジア11・南アジア10・アフリカ9・東南アジア2。各地域5以上の条件は満たすが、ヨーロッパがやや多い。No.69 マルクス×philosopher は単語と史実の結びつきが弱いので、Task 3 で見直す。
+9. **見送った組み合わせ**：ナポレオン×crown（A2）、マルコ＝ポーロ（合う単語がない）、グラナダ陥落×surrender（ヨーロッパが多すぎるため外した）。
+10. **選定表の偏り**：選定表の地域の数は WH_topics.md の冒頭を参照。共通テスト頻出の項目（明治維新・日清戦争・日露戦争・ユスティニアヌス・宋・オスマン帝国の成立・サファヴィー朝・グプタ朝・マーシャル＝プラン・フランス革命）を入れ、ヨーロッパの項目を減らした。
 11. **level_color** は仮の #8C6A3F。
+12. **番号の変更（2026-11-26 修正）**：年代順を保つため、ヒジュラを No.22→No.24、モナ＝リザを No.42→No.43 に移した（No.22 ユスティニアヌス、No.23 隋の科挙、No.42 サファヴィー朝を間に入れた）。No.61 は「1769年に最初の特許→後に工場の動力に大変革」と、特許と工場への影響の時期を分けて書き直した。
+13. **No.42 サファヴィー朝×convert**：既存カードの訳は「変える／改造する」。Task 3 で書くときに「改宗させる」の意味を訳に足す必要がある。
