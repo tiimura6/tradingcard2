@@ -34,3 +34,31 @@
 - No.10：例文に vote が2回出ていて、クイズの穴埋めで答えが見えてしまうため、後半を "women and slaves were excluded" にした。和訳は「参加できなかった」。
 - No.62（見本）：新しい検査で Declaration と declaring が同じ語幹として引っかかったので、例文を "…, meeting in Philadelphia, approved a document declaring the thirteen colonies free from British rule." にした。和訳は「フィラデルフィアに集まった大陸会議は独立宣言を採択し、…」（WH_sample_review.md も同じく直した）。
 - tools/check_kyoyo.py：例文の中でターゲット単語（活用形と、同じ語幹で始まる派生語を含む）が2回以上出たらエラーにする検査を足した（R10）。
+
+## 中世 No.22–40（バッチ2）
+
+- 語彙レベル・japanese・answers・synonym は、バッチ1と同じく既存の手帖のデータ（cefrj_notebooks.csv）の値を写した。found（B2/PT）と seize（B1/PT）は手帖の重なりがあるので、vote と同じく低い方（found=B2、seize=B1）にした。
+- `image_url` はすべて空。例文の事実と場面がぴったり一致し、作者の没後70年を過ぎた名画は見つからなかった（カールの戴冠などの名画は後世の想像画で、場面の細部が出典と合わない）。
+- 他のカードのターゲット単語の語族を避けた：No.22 は emperor（No.26）を避けて ruler、No.34 は found（No.36）を避けて began、No.38 は voyage（No.41）・expedition（No.46）を避けて sailed、No.26 は crown（No.66）を避けて made … emperor にした。
+- 見本の残りの修正：No.62 の英語を "…approved a formal statement of independence declaring the thirteen colonies free from British rule." にした（和訳はそのまま。WH_sample_review.md も直した）。
+
+| No | 単語 | 判断したこと・弱いところ |
+|---|---|---|
+| 22 | rebuild (v.) | 532年のニカの乱で前の聖堂が焼け、ユスティニアヌスがすぐ再建を命じた（メトロポリタン美術館・EBSCO）。過去形 rebuilt はクイズの検索（find_form）で見つからないので、"began to rebuild" とした。完成（537年）は1枚1事実のため書かない。教科書用語はビザンツ帝国、和訳にハギア＝ソフィア聖堂も入れた。 |
+| 23 | examination (n.) | Britannica は隋の皇帝が経典を基にした試験制度を整え始め、貴族の家柄が支配した朝廷に学のある人材を入れたとする（漢代にも前身がある）。World History Encyclopedia は九品中正の廃止と試験による登用。「筆記」かどうかは隋について確認できなかったので書かない。 |
+| 25 | prosperous (adj.) | 人口「約100万人」はワシントン大学シルクロード・プロジェクト（城内約100万人）とスミソニアン（城内100万人、城外にさらに100万人）。外国商人はソグド商人（ワシントン大学）とイスラームの商人（スミソニアン）があり、例文は foreign merchants にまとめた。 |
+| 26 | emperor (n.)【差し替え】 | 候補の unite は既存カードの訳が「団結する」で、領土の統一という史実と意味が噛み合わず、No.15 の unify とも近いので、カールの戴冠（800年）に合う emperor に替えた（選定表も修正）。crown（No.66）を避け "made … emperor" とした。和訳も英語に合わせ「ローマ皇帝とした」（教科書の「帝冠を授けた」とは書かない）。絵は Britannica（教皇が冠を載せた）による。 |
+| 27 | translate (v.) | 弱いところ：Britannica は、知恵の館でギリシア語文献を翻訳したという通説に慎重で、翻訳者の多くは館の外で働いたとする。IIS と encyclopedia.com は館での翻訳を書いている。そこで例文は「バグダードの学者が翻訳した」と「知恵の館が学問の中心となった」を分け、館で翻訳したとは言い切らない形にした。 |
+| 28 | settle (v.) | 申し送りどおり911年の定住（サン＝クレール＝シュル＝エプト条約）。Britannica：セーヌ河口とルーアン周辺の土地を与え、のちにノルマンディーと呼ばれた。条約の名は例文に入れない。英語は the West Frankish king Charles the Simple、和訳は西フランク王シャルル3世。教科書用語ノルマン人は「ヴァイキング（ノルマン人）」として和訳に入れた。 |
+| 29 | currency (n.) | 四川の商人が最初に発行した（ギネス、シテコ＝フランスの経済博物館）。政府が1023年ごろ引き継いだこと（World History Encyclopedia）は書かない。最初の発行年は資料で差がある（ギネスは真宗の治世 997–1022）ので書かない。「最も早い紙幣の一つ」は one of と控えめにした。 |
+| 30 | capture (v.) | 1099年（Britannica は7月15日、History.com）。教科書の「イェルサレム」表記。虐殺は書かず、絵も攻城塔と陣営だけにした。knight は使わない（History.com の表現は knights だが例文・絵では armies / army in chain mail）。 |
+| 31 | construct (v.) | スールヤヴァルマン2世（在位1113–1150ごろ）、12世紀、ヴィシュヌ神（Britannica）。National Geographic はヴィシュヌ・シヴァ・ブラフマーの3神とし、名前が「ヴィシュヌの聖なる住まい」なので、"dedicated to" でなく "honoring" とした。絵は出典で確かめていない細部（象による運搬など）を入れず、石を運ぶ人と浮き彫りを彫る職人だけにした。 |
+| 32 | nomad (n.) | 1206年のクリルタイ（コロンビア大学 Asia for Educators：モンゴル貴族の集会が称号を与えた）、Britannica（オノン川のほとりの大集会、草原の民すべての皇帝として認められた）。"ruler of all the steppe nomads" は Britannica の emperor of all the steppe people に基づく。 |
+| 33 | limit (v.) | 1215年6月、反乱貴族がジョン王に認めさせた（英国議会・オハイオ州立大学 Origins）。ジョン王は「署名」でなく封蠟で認証したので、絵は「封蠟を付ける」にした。 |
+| 34 | dynasty (n.) | 「1300年ごろ」は Britannica（about 1300）と EBSCO（即位1281年か1288年）で差があるので年代は書かない。1922年の終わりは Britannica。Britannica は Turkmen と書くが、例文は高校生向けに Turkish、和訳は「トルコ系」。教科書用語は「オスマン帝国」。 |
+| 35 | wealthy (adj.) | 1324年の巡礼（Britannica）、カイロで金の価値が下がった（Britannica は10〜25％、ボストン大学アフリカ研究センターはウマリーの記録）。下がった割合は書かない。 |
+| 36 | found (v.) | 「1325年ごろ」は Britannica（c. 1325）と National Geographic Education（around 1325）に合わせた。伝承の鷲とサボテンの話は入れない。 |
+| 37 | plague (n.) | 死者の割合は資料で大きく違う（EBSCO だけでも25％と60％）ので、割合でなく "millions of people" とした。1347年は Britannica（1347–51年）と EBSCO。絵は鳥の仮面の医者（17世紀の姿で時代違い）や病人を描かず、静まり返った町にした。 |
+| 38 | fleet (n.) | 1405–1433年の7回の航海（National Geographic・コロンビア大学）。船の大きさは資料で差がある（コロンビア大学は400フィート超、National Geographic は250〜300フィートが妥当とする）ので書かない。絵の帆の色も書かない。 |
+| 39 | network (n.) | 長さは UNESCO が3万km、スミソニアン（American Indian 誌）が2万5000マイルと違うので書かない。クスコ中心はスミソニアンの「すべての道はクスコに通じた」と UNESCO（日本語版の説明：クスコの中央広場から4本の幹線）。絵はリャマの隊商など出典で確かめていない細部を入れず、石畳の道と段々畑、荷を背負った旅人にした。 |
+| 40 | seize (v.) | 1453年、ビザンツ帝国の終わり（Britannica・EBSCO）。帝国が続いた年数（Britannica は「10世紀」）は数え方で変わるので書かない。絵の大砲は両資料にある。 |
