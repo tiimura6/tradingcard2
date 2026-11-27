@@ -1,9 +1,25 @@
 // GAS連携の通しテスト（Code.gs をモックのスプレッドシートで動かす）
-// 先に python3 -m http.server 8765 を起動してから: NODE_PATH=$(npm root -g) node tests/gas-e2e.js
+// 実行: NODE_PATH=$(npm root -g) node tests/gas-e2e.js（手元の Chrome を使うときは CHROME_PATH=/usr/bin/google-chrome）
+// 8765 番でファイルを配る小さなサーバーをテスト自身が立てる（すでに python3 -m http.server 8765 が動いていればそれを使う）
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
 const { makeEnv } = require('./gas-mock.js');
+
+function startServer() {
+  const ROOT = path.resolve(__dirname, '..');
+  const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.json': 'application/json', '.css': 'text/css',
+    '.jpg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.mp3': 'audio/mpeg', '.svg': 'image/svg+xml' };
+  const srv = http.createServer((req, res) => {
+    const p = decodeURIComponent(req.url.split('?')[0]);
+    const f = path.join(ROOT, p === '/' ? 'index.html' : p);
+    if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); res.end(); return; }
+    res.writeHead(200, { 'Content-Type': MIME[path.extname(f)] || 'application/octet-stream' });
+    fs.createReadStream(f).pipe(res);
+  });
+  return new Promise(r => { srv.once('error', () => r(null)); srv.listen(8765, () => r(srv)); });   // 使用中なら既存のサーバーを使う
+}
 
 const FAKE = 'https://script.google.com/macros/s/FAKE/exec';
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8')
@@ -60,6 +76,62 @@ async function newDevice(b, gas, name) {
     check(out.some(x => String(x[0]).includes('7日以上あとの再挑戦で正解できた割合は 100%')) && find('2026-11-02')[1] === 2, '要約の文・週ごとの推移');
     gas.installEffectReportTrigger();
     check(env.triggers.filter(t => t.fn === 'dailyEffectReport').length === 1, '毎朝の自動更新を設定できる');
+  }
+
+  // ---------- サーバー単体：教養の手帖（時の回廊・世界史） ----------
+  console.log('教養の手帖（Code.gs）');
+  {
+    const env = makeEnv(); const { ctx: gas, sheets } = env; gas.setup();
+    const call = o => JSON.parse(gas.doPost({ postData: { contents: JSON.stringify(o) } }).getContent());
+    const H = sheets['取り組み状況'].data[0];
+    check(H.length === 30 && H[28] === '要確認' && H[29] === '時の回廊（枚）', '取り組み状況：既存の列はそのまま、末尾に「時の回廊（枚）」' + JSON.stringify(H.slice(23)));
+    const HL = sheets['学習ログ'].data[0];
+    check(HL.length === 17 && HL[13] === '手帖' && HL[14] === '苦手度' && HL[15] === '確認問題の段階' && HL[16] === '確認問題の点数', '学習ログ：既存の15列はそのまま、末尾に確認問題の段階・点数' + JSON.stringify(HL.slice(13)));
+    // wh-N は存在するカード。wh-101 は存在しない
+    const sm = gas.summarize_({ unlockedCards: JSON.stringify(['a1-1', 'wh-1', 'wh-100', 'wh-101']) });
+    check(sm.badIds === 1 && sm.nbCounts.length === 6 && sm.nbCounts[5] === 3 && sm.nbCounts[0] === 1, `wh-1〜wh-100 は正しいカード（badIds ${sm.badIds}・nbCounts ${JSON.stringify(sm.nbCounts)}）`);
+    // wh-1 を持った生徒の保存 → 不正の見える化で問題なし、時の回廊の列に1枚
+    call({ action: 'register', loginId: 'whu', nickname: 'せかい', password: 'secret123' });
+    const tk = call({ action: 'login', loginId: 'whu', password: 'secret123' }).token;
+    call({ action: 'saveProgress', token: tk, rev: 0, data: { unlockedCards: JSON.stringify(['a1-1', 'a1-2', 'wh-1']), notebookState: JSON.stringify({ current: 'WH' }) } });
+    let st = sheets['取り組み状況'].data.find(r => r[0] === 'whu') || [];
+    check(!String(st[28] || '').includes('存在しないカード'), '不正の見える化：wh-1 を存在しないカードと数えない（要確認「' + (st[28] || '') + '」）');
+    check(JSON.stringify(st.slice(23, 28)) === '[2,0,0,0,0]' && st[29] === 1 && st[22] === '時の回廊（世界史）', '手帖ごとの枚数：鉄〜白金の列は今まで通り・時の回廊の1枚は末尾の列 ' + JSON.stringify([st[22], st.slice(23, 30)]));
+    check(st[12] === 2, '獲得カード（収集率の分子）は全手帖コンプリートの8,324枚に入る手帖だけを数える（' + st[12] + '）');
+    // 全カード＋時の回廊100枚でも「上限超え」にならない
+    call({ action: 'register', loginId: 'whall', nickname: 'ぜんぶ', password: 'secret123' });
+    const ta = call({ action: 'login', loginId: 'whall', password: 'secret123' }).token;
+    const all = [['a1-', 1067], ['a2-', 1352], ['b1-', 2353], ['b2-', 2689], ['card-', 863], ['wh-', 100]].reduce((a, [p, n]) => a.concat(Array.from({ length: n }, (_, i) => p + (i + 1))), []);
+    call({ action: 'saveProgress', token: ta, rev: 0, data: { unlockedCards: JSON.stringify(all) } });
+    st = sheets['取り組み状況'].data.find(r => r[0] === 'whall') || [];
+    check(!String(st[28] || '').includes('上限超え') && !String(st[28] || '').includes('存在しない') && st[12] === 8324 && st[29] === 100, '全8,324枚＋時の回廊100枚：上限超えにならない（要確認「' + (st[28] || '') + '」）');
+    // 確認問題のログ：nb（確認した手帖）・段階・点数を残す（ev.notebook は開いていた手帖なので使わない）
+    call({ action: 'register', loginId: 'whv', nickname: 'れきし', password: 'secret123' });
+    const tv = call({ action: 'login', loginId: 'whv', password: 'secret123' }).token;
+    const now = Date.now(), DAY = 86400000;
+    const kc = (ago, phase, score, extra = {}) => Object.assign({ timestamp: now - ago * DAY, eventType: 'kyoyo_check', notebook: 'B1', isCorrect: null, nb: 'WH', phase, score }, extra);
+    call({ action: 'log', token: tk, sessionId: 's', events: [kc(20, 'pre', 4), kc(2, 'post', 9)] });
+    call({ action: 'log', token: tv, sessionId: 's', events: [kc(15, 'pre', 6), kc(1, 'post', 7), { timestamp: now, eventType: 'training', cardNo: 1, word: 'w1', isCorrect: true, notebook: 'A1' }]});
+    call({ action: 'log', token: ta, sessionId: 's', events: [kc(3, 'pre', 5)] });                 // 学習前だけ
+    call({ action: 'log', guestId: 'g9', sessionId: 's', events: [kc(3, 'pre', 1)] });            // ゲストはレポートに入れない
+    call({ action: 'log', token: ta, sessionId: 's', events: [kc(3, 'later', 'abc', { nb: 'ZZ' })] });   // おかしな値は空欄
+    const LG = sheets['学習ログ'].data.slice(1).filter(r => r[4] === 'kyoyo_check');
+    const r1 = LG.find(r => r[1] === 'whu' && r[16] === 4) || [];
+    check(r1[13] === '時の回廊（世界史）' && r1[15] === '学習前' && r1[16] === 4, '学習ログに確認問題の手帖・段階・点数を記録 ' + JSON.stringify(r1.slice(13)));
+    const bad = LG.find(r => r[1] === 'whall' && r[15] !== '学習前') || [];
+    check(bad[15] === '' && bad[16] === '' && bad[13] === '銀', 'おかしな段階・点数・手帖は記録しない ' + JSON.stringify(bad.slice(13)));
+    const rep = gas.buildEffectReport();
+    const out = sheets['効果検証'].data.map(x => x.map(v => v === undefined ? '' : v));
+    const find = t => out.find(x => String(x[0]).startsWith(t)) || [];
+    check(rep.answers === 1, '確認問題は回答数（4択の単語の回答）に入れない（' + rep.answers + '件）');
+    check(!!find('■ 6. 教養の手帖の確認問題')[0], 'レポートに確認問題の節がある');
+    check(find('時の回廊（世界史）・学習前')[1] === 3 && find('時の回廊（世界史）・学習前')[2] === 5, '学習前：人数3（ゲストは除く）・平均5点 ' + JSON.stringify(find('時の回廊（世界史）・学習前')));
+    check(find('時の回廊（世界史）・学習後')[1] === 2 && find('時の回廊（世界史）・学習後')[2] === 8, '学習後：人数2・平均8点 ' + JSON.stringify(find('時の回廊（世界史）・学習後')));
+    const pr = find('時の回廊（世界史）・両方を受けた生徒');
+    check(pr[1] === 2 && pr[2] === 5 && pr[3] === 8 && pr[4] === 3, '学習前と後の両方を受けた生徒：2人・5点→8点・伸び3点 ' + JSON.stringify(pr));
+    const pu = out.find(x => x[0] === 'whu' && x[1] === '時の回廊（世界史）') || [];
+    check(pu[2] === 4 && pu[3] === 9 && pu[4] === 5, '生徒ごとの学習前・学習後 ' + JSON.stringify(pu));
+    check(out.some(x => String(x[0]).includes('学習前と学習後の両方を受けた 2人の平均点は 5点 → 8点')), '要約に確認問題の文');
   }
 
   // ---------- サーバー単体：学習ログは新しいものが上・古いログは保管ファイルへ ----------
@@ -247,7 +319,8 @@ async function newDevice(b, gas, name) {
   // ---------- アプリと通し ----------
   console.log('アプリと通し');
   const { ctx: gas, sheets, props } = makeEnv(); gas.setup();
-  const b = await chromium.launch();
+  const srv = await startServer();
+  const b = await chromium.launch(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {});
   const sheetRows = n => sheets[n].data.filter((r, i) => i > 0 && r.some(x => x !== ''));
   const A = await newDevice(b, gas, 'A');
   check(await A.p.evaluate(() => getComputedStyle(document.getElementById('auth-overlay')).display) === 'flex', '起動時にログイン画面が出る');
@@ -287,8 +360,10 @@ async function newDevice(b, gas, name) {
   sheets['ユーザー'].data[1][10] = '○';
   await A.p.evaluate(() => { window.__alerts = []; openCouponModal(); document.getElementById('couponInput').value = 'TEACHERKEY01'; submitCoupon(); });
   await A.p.waitForTimeout(1200);
-  check(await A.p.evaluate(() => unlockedCards.length) === 8324, '管理者の印＋正しい鍵で全カード解禁');
+  check(await A.p.evaluate(() => unlockedCards.length) === 8424, '管理者の印＋正しい鍵で全カード解禁（8,324枚＋時の回廊100枚）');
   check(String((sheetRows('取り組み状況')[0] || [])[28] || '').includes('管理者キー使用'), '管理者キーの使用を要確認に記録');
+  await A.p.evaluate(() => Cloud.saveNow({ force: true })); await A.p.waitForTimeout(1500);
+  check(!/上限超え|存在しない/.test(String((sheetRows('取り組み状況')[0] || [])[28] || '')), '全カード解禁（時の回廊を含む）を保存しても上限超え・存在しないカードにならない（' + ((sheetRows('取り組み状況')[0] || [])[28] || '') + '）');
   await A.p.evaluate(() => Cloud.saveNow()); await A.p.waitForTimeout(1500);
   // レイドボス：画面を開く → 挑む（5ターンで終了）→ 点数がサーバーに合算される
   await A.p.evaluate(() => openRaid()); await A.p.waitForTimeout(1200);
@@ -307,7 +382,7 @@ async function newDevice(b, gas, name) {
   await B.p.evaluate(() => Cloud.openModal('login')); await B.p.waitForTimeout(300);
   await B.p.fill('#authId', 'taro01'); await B.p.fill('#authPin', 'kotoba2026');
   await B.p.click('#authBody button[type=submit]'); await B.p.waitForTimeout(4000);
-  check(await B.p.evaluate(() => unlockedCards.length) === 8324, '別の端末でログインすると続きから遊べる');
+  check(await B.p.evaluate(() => unlockedCards.length) === 8424, '別の端末でログインすると続きから遊べる');
   await B.p.evaluate(() => Cloud.openModal('account')); await B.p.waitForTimeout(300);
   await B.p.click('#prefHideRanking'); await B.p.waitForTimeout(800);
   check(String(sheets['ユーザー'].data.find(r => r[0] === 'taro01')[11]) === '○', 'アカウント画面で「ランキングに載せない」を選べる');
@@ -335,6 +410,7 @@ async function newDevice(b, gas, name) {
   check(!cs.sess && cs.owned === 0 && saved.data && saved.data.gold === '777', '20分使わないと自動でログアウトし、直前の記録はサーバーに保存済み');
   check(A.p.__errs.length + B.p.__errs.length + C.p.__errs.length === 0, 'エラーなし ' + [...A.p.__errs, ...B.p.__errs, ...C.p.__errs].join(' / '));
   await b.close();
+  if (srv) srv.close();
   console.log(failed ? `\n${failed}件 失敗` : '\nすべて成功');
   process.exit(failed ? 1 : 0);
 })();

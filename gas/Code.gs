@@ -1,5 +1,5 @@
 /**
- * ハイレベル英単語図鑑（鉄・銅・銀・金・白金の手帖） — バックエンド
+ * ハイレベル英単語図鑑（鉄・銅・銀・金・白金の手帖＋教養の手帖「時の回廊（世界史）」） — バックエンド
  * Google Apps Script（スプレッドシートにバインド）
  *
  * 機能
@@ -17,15 +17,20 @@
  */
 
 /* ================= 設定 ================= */
-const TOTAL_CARDS     = 8324;  // 全手帖の総カード数（収集率の計算用）
+const TOTAL_CARDS     = 8324;  // 全手帖（鉄〜白金）の総カード数（収集率の計算用）。教養の手帖（side）は入れない
 // 手帖ごとのカード数と、カードIDの接頭辞（a1-12 / card-5 など）
+// side: true ＝ 教養の手帖。5手帖とは別の独立した手帖で、全手帖コンプリート（TOTAL_CARDS）と収集率には数えない
 const NOTEBOOKS = [
   { key: 'A1', name: '鉄',   prefix: 'a1-',   count: 1067 },
   { key: 'A2', name: '銅',   prefix: 'a2-',   count: 1352 },
   { key: 'B1', name: '銀',   prefix: 'b1-',   count: 2353 },
   { key: 'B2', name: '金',   prefix: 'b2-',   count: 2689 },
   { key: 'PT', name: '白金', prefix: 'card-', count: 863 },
+  { key: 'WH', name: '時の回廊（世界史）', prefix: 'wh-', count: 100, side: true },
 ];
+const isSideId_ = id => NOTEBOOKS.some(n => n.side && String(id).indexOf(n.prefix) === 0);
+// 教養の手帖の確認問題（日本語4択・学習前と100枚収集後の2回・任意）。ログの段階の表記
+const KC_PHASE = { pre: '学習前', post: '学習後' };
 const TOKEN_DAYS      = 180;   // ログイン状態の有効日数
 const MAX_FAIL        = 5;     // パスワードをこの回数続けて間違えるとロック
 const LOCK_STEPS      = [10, 60, 1440];  // ロック時間（分）。ロックされるたびに長くなる（10分→1時間→24時間）
@@ -81,12 +86,14 @@ const HEADERS = {
   PROGRESS: ['ログインID', '更新日時', 'リビジョン', '分割数'].concat(
               Array.from({ length: MAX_CHUNKS }, (_, i) => 'データ' + (i + 1))),
   LOG:      ['タイムスタンプ', 'ユーザー', '区分', 'セッションID', 'イベント', 'カードNo', '英単語', '意味',
-             'レベル', '正誤', '回答時間(秒)', '取得カード数', '連続正解', '手帖', '苦手度'],
+             'レベル', '正誤', '回答時間(秒)', '取得カード数', '連続正解', '手帖', '苦手度',
+             '確認問題の段階', '確認問題の点数'],   // 16・17列目は後から追加（既存の列の順番は変えない）
   DAILY:    ['日付', 'ログインID', '回答数', '正解数', 'キー'],
   STATUS:   ['ログインID', 'ニックネーム', 'メモ（先生用）', 'クラス（先生用）', '登録日', '最終利用', '未利用日数', '利用日数',
              '直近7日の回答数', '累計回答数', '正解数', '正答率', '獲得カード', '収集率', 'レベル', '累計XP',
              '連続ログイン', '撃破ボス数', '習得語数', '殿堂入り', '殿堂入り日', '進捗更新',
-             '開いている手帖', '鉄（枚）', '銅（枚）', '銀（枚）', '金（枚）', '白金（枚）', '要確認'],
+             '開いている手帖', '鉄（枚）', '銅（枚）', '銀（枚）', '金（枚）', '白金（枚）', '要確認',
+             '時の回廊（枚）'],   // 教養の手帖は後から追加したので「要確認」の右（既存の列の位置を変えない）
   HOF:      ['達成日時', 'ログインID', 'ニックネーム', '区分'],
   CONTACT:  ['受付日時', '種類', '内容', '返信先', 'ログインID', '端末ID', '対応状況'],
   RAID:     ['キー', '週（月曜日）', 'ログインID', 'ニックネーム', '与えたダメージ', '今日の挑戦回数', '最終挑戦日', '累計挑戦回数', '報酬受取'],
@@ -100,6 +107,7 @@ const ST = {
   STREAK: 17, BOSSES: 18, MASTERED: 19, HOF: 20, HOF_DATE: 21, PROG_UPDATED: 22,
   NB_CUR: 23, NB_FIRST: 24,   // 24〜28 = 鉄・銅・銀・金・白金の所持枚数
   FLAG: 29,                   // 要確認（不正の疑い・管理者キーの使用）
+  NB_SIDE: 30,                // 30〜 = 教養の手帖（NOTEBOOKS の side: true の順）の所持枚数
 };
 
 // 回答として数えるイベント
@@ -393,7 +401,8 @@ function summarize_(data) {
   Object.keys(srs || {}).forEach(k => { if ((srs[k] && srs[k].level || 0) >= MASTERED_LEVEL) mastered++; });
 
   return {
-    cards:       Array.isArray(unlocked) ? unlocked.length : 0,
+    // 獲得カード：収集率（÷ TOTAL_CARDS）に使うので、教養の手帖のカードは数えない（手帖ごとの枚数の列には出す）
+    cards:       Array.isArray(unlocked) ? unlocked.filter(id => !isSideId_(id)).length : 0,
     level:       Number(xp.level) || 1,
     totalXP:     Number(xp.totalXP) || 0,
     streak:      Number(streak.streak) || 0,
@@ -433,16 +442,24 @@ function log_(req) {
   if (!okRate) return { ok: false, error: 'rate_limited' };
   const tz = Session.getScriptTimeZone();
 
-  const rows = events.map(ev => [
+  const rows = events.map(ev => {
+    // 教養の手帖の確認問題：ev.notebook はそのとき開いていた手帖なので、確認した手帖は ev.nb を使う
+    const kc = ev.eventType === 'kyoyo_check';
+    const nbKey = kc && NOTEBOOKS.some(n => n.key === ev.nb) ? ev.nb : ev.notebook;
+    const sc = Number(ev.score);
+    return [
     new Date(Number(ev.timestamp) || Date.now()),
     user, kind, cleanText_(req.sessionId, 40),
     cleanText_(ev.eventType, 20),
     ev.cardNo || '', cleanText_(ev.word, 60), cleanText_(ev.meaning, 80), cleanText_(ev.level, 20),
     typeof ev.isCorrect === 'boolean' ? (ev.isCorrect ? '正解' : '不正解') : '-',
     ev.responseTime || '', ev.totalUnlocked || '', ev.combo || '',
-    ((NOTEBOOKS.find(n => n.key === ev.notebook) || {}).name || ''),
+    ((NOTEBOOKS.find(n => n.key === nbKey) || {}).name || ''),
     (ev.diff === 0 || ev.diff) ? Math.max(0, Math.min(3, Number(ev.diff) || 0)) : '',   // バトルで配られた単語の苦手度（0〜3）
-  ]);
+    kc ? (KC_PHASE[ev.phase] || '') : '',                                               // 確認問題の段階（学習前／学習後）
+    kc && ev.score !== null && ev.score !== undefined && ev.score !== '' && isFinite(sc) ? Math.max(0, Math.min(100, Math.round(sc))) : '',   // 確認問題の点数
+    ];
+  });
 
   return withLock_(() => {
     // 新しいものが上：見出しのすぐ下に行を差し込む（2026-11-07 Takaの指示）
@@ -521,7 +538,13 @@ function upsertStatus_(loginId, f) {
       s.getRange(row, ST.FLAG).setValue((prev ? prev + ' / ' : '') + day + ' ' + add.join('・'));
     }
   }
-  if (Array.isArray(f.nbCounts)) s.getRange(row, ST.NB_FIRST, 1, f.nbCounts.length).setValues([f.nbCounts]);
+  if (Array.isArray(f.nbCounts)) {
+    // 鉄〜白金は24〜28列目（今まで通り）、教養の手帖は「要確認」の右の30列目から
+    const main = [], side = [];
+    NOTEBOOKS.forEach((n, i) => (n.side ? side : main).push(Number(f.nbCounts[i]) || 0));
+    s.getRange(row, ST.NB_FIRST, 1, main.length).setValues([main]);
+    if (side.length) s.getRange(row, ST.NB_SIDE, 1, side.length).setValues([side]);
+  }
 
   if (f.addTotal || f.addCorrect) {
     const cur = s.getRange(row, ST.TOTAL, 1, 2).getValues()[0];
@@ -850,7 +873,8 @@ function checkAnomaly_(loginId, sm, now) {
   if (sm.dupIds) flags.push('重複したカード' + sm.dupIds + '枚');
   if (sm.cards > TOTAL_CARDS) flags.push('カード数が上限超え');
   if (sm.gold > 1000000) flags.push('ゴールドが異常に多い');
-  if (sm.hofAchieved && (sm.nbCounts[4] || 0) < Math.floor(NOTEBOOKS[4].count * 0.8)) flags.push('殿堂入りなのに白金のカードが少ない');
+  const pt = NOTEBOOKS.findIndex(n => n.key === 'PT');
+  if (sm.hofAchieved && (sm.nbCounts[pt] || 0) < Math.floor(NOTEBOOKS[pt].count * 0.8)) flags.push('殿堂入りなのに白金のカードが少ない');
   if (!isAdmin) {
     // 前回の保存からの新しいカードの増え方（1日100枚まで）
     const s = sheet_(SHEET.STATUS);
@@ -1190,12 +1214,41 @@ function effectReport_(rows) {
   return { S, users, all, gram, perUser, weeks, groups, diff };
 }
 
+/** 教養の手帖の確認問題（kyoyo_check）の集計。列：A時刻 B生徒 C区分 E種類 N手帖 P段階 Q点数（会員のみ）
+ *  1人・1手帖・1段階につき最初の記録だけを使う（アプリは同じ段階を上書きしないが、端末をまたいだ重複に備える） */
+function kyoyoStats_(rows) {
+  const recs = {};   // 手帖名 → 生徒 → { pre: {t, s}, post: {t, s} }
+  const phaseKey = {}; Object.keys(KC_PHASE).forEach(k => { phaseKey[KC_PHASE[k]] = k; });
+  rows.forEach(r => {
+    if (r[2] !== '会員' || String(r[4]) !== 'kyoyo_check') return;
+    const nb = String(r[13] || ''), ph = phaseKey[String(r[15])], sc = r[16];
+    if (!nb || !ph || sc === '' || sc === null || !isFinite(Number(sc))) return;
+    const t = r[0] instanceof Date ? r[0].getTime() : new Date(r[0]).getTime();
+    const u = ((recs[nb] = recs[nb] || {})[String(r[1])] = recs[nb][String(r[1])] || {});
+    if (!u[ph] || t < u[ph].t) u[ph] = { t: isFinite(t) ? t : 0, s: Number(sc) };
+  });
+  const mean = a => a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length * 10) / 10 : '';
+  const nbOrder = NOTEBOOKS.map(n => n.name);
+  return Object.keys(recs).sort((a, b) => nbOrder.indexOf(a) - nbOrder.indexOf(b)).map(nb => {
+    const users = recs[nb];
+    const phase = ph => { const a = Object.keys(users).filter(id => users[id][ph]).map(id => users[id][ph].s);
+      return { n: a.length, mean: mean(a), min: a.length ? Math.min.apply(null, a) : '', max: a.length ? Math.max.apply(null, a) : '' }; };
+    const both = Object.keys(users).filter(id => users[id].pre && users[id].post);
+    const pm = mean(both.map(id => users[id].pre.s)), qm = mean(both.map(id => users[id].post.s));
+    return { nb, pre: phase('pre'), post: phase('post'),
+      pairs: { n: both.length, pre: pm, post: qm, gain: both.length ? Math.round((qm - pm) * 10) / 10 : '' },
+      perUser: Object.keys(users).sort().map(id => ({ id, pre: users[id].pre ? users[id].pre.s : '', post: users[id].post ? users[id].post.s : '',
+        gain: users[id].pre && users[id].post ? users[id].post.s - users[id].pre.s : '' })) };
+  });
+}
+
 /** レポートを「効果検証」シートに書き出す */
 function buildEffectReport() {
   const log = sheet_(SHEET.LOG);
   const nRows = log.getLastRow() - 1;
-  const rows = (nRows > 0 ? log.getRange(2, 1, nRows, 15).getValues() : []).concat(archivedLogRows_());   // 保管ファイルへ移した古いログも含める
+  const rows = (nRows > 0 ? log.getRange(2, 1, nRows, HEADERS.LOG.length).getValues() : []).concat(archivedLogRows_());   // 保管ファイルへ移した古いログも含める
   const R = effectReport_(rows), A = R.all, tz = 'Asia/Tokyo';
+  const KC = kyoyoStats_(rows);
   const fmt = t => t ? Utilities.formatDate(new Date(t), tz, 'yyyy/MM/dd') : '-';
   const out = [];
   const W = 8;
@@ -1216,6 +1269,7 @@ function buildEffectReport() {
   if (A.rt0.length) lines.push(`初回も再挑戦も正解した単語では、回答時間の中央値が ${effectMedian_(A.rt0)}秒 → ${effectMedian_(A.rt1)}秒。`);
   if (R.groups.length === 3) lines.push(`利用日数の多いグループほど克服率が高いか：少ない ${R.groups[0][3]}% ／ ふつう ${R.groups[1][3]}% ／ 多い ${R.groups[2][3]}%。`);
   if (!lines.length) lines.push('まだ再挑戦のデータが足りません（同じ単語に1日以上あけて答えた記録が必要）。');
+  KC.forEach(k => { if (k.pairs.n) lines.push(`${k.nb}の確認問題（日本語4択10問）：学習前と学習後の両方を受けた ${k.pairs.n}人の平均点は ${k.pairs.pre}点 → ${k.pairs.post}点。`); });
   lines.forEach(l => row(l));
   row('');
 
@@ -1249,11 +1303,28 @@ function buildEffectReport() {
   R.perUser.forEach(u => row(u.id, u.days, u.n, u.rate, u.first, u.later, u.gain, u.recover));
   row('');
 
+  head('■ 6. 教養の手帖の確認問題（日本語4択10問・学習前と100枚収集後・任意参加）', '人数', '平均点', '最低点', '最高点');
+  if (!KC.length) row('（まだ記録がありません）');
+  KC.forEach(k => {
+    row(k.nb + '・学習前', k.pre.n, k.pre.mean, k.pre.min, k.pre.max);
+    row(k.nb + '・学習後', k.post.n, k.post.mean, k.post.min, k.post.max);
+  });
+  row('');
+  if (KC.length) {
+    head('■ 6-1. 確認問題：学習前と学習後の両方を受けた生徒', '人数', '学習前の平均点', '学習後の平均点', '伸び(点)');
+    KC.forEach(k => row(k.nb + '・両方を受けた生徒', k.pairs.n, k.pairs.pre, k.pairs.post, k.pairs.gain));
+    row('');
+    head('■ 6-2. 確認問題：生徒ごと', '手帖', '学習前', '学習後', '伸び(点)');
+    KC.forEach(k => k.perUser.forEach(u => row(u.id, k.nb, u.pre, u.post, u.gain)));
+    row('');
+  }
+
   head('■ 読み方と限界');
   row('・「再挑戦」は、同じ単語（同じ手帖の同じカード）・同じ文法問題に、初回から1日（7日）以上あけて最初に答えたときの結果です。');
   row('・すべて4択などアプリ内の回答で、外部の学力テストではありません。対照群（使わなかった生徒）との比較もありません。');
   row('・苦手な単語・忘れかけの単語ほど再び出やすい仕組みのため、再挑戦の単語は難しめに偏ります（伸びは控えめに出ます）。');
-  row('・生徒の名前は出していません（ログインIDのみ）。外部に出すときは要約と表1〜4だけを使ってください。');
+  row('・教養の手帖の確認問題（表6）は任意参加です。受けた生徒に偏りがあり、対照群もありません。点数は10点満点です。');
+  row('・生徒の名前は出していません（ログインIDのみ）。外部に出すときは要約と表1〜4・表6だけを使ってください。');
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sh = ss.getSheetByName(EFFECT_SHEET) || ss.insertSheet(EFFECT_SHEET);
@@ -1312,6 +1383,8 @@ function archiveOldLogs() {
         sh = a.insertSheet(m);
         sh.getRange(1, 1, 1, width).setValues([HEADERS.LOG]).setFontWeight('bold').setBackground('#3b2f12').setFontColor('#f3e2a9');
         sh.setFrozenRows(1);
+      } else {
+        sh.getRange(1, 1, 1, width).setValues([HEADERS.LOG]);   // 列を足したときに見出しを追いつかせる
       }
       insertTopRows_(sh, byMonth[m].sort((x, y) => time(y) - time(x)), [2, 4], 'yyyy/mm/dd hh:mm:ss');
     });
@@ -1333,7 +1406,7 @@ function archivedLogRows_() {
   a.getSheets().forEach(sh => {
     if (!/^\d{4}-\d{2}$/.test(sh.getName())) return;
     const last = sh.getLastRow();
-    if (last > 1) out = out.concat(sh.getRange(2, 1, last - 1, 15).getValues());
+    if (last > 1) out = out.concat(sh.getRange(2, 1, last - 1, HEADERS.LOG.length).getValues());
   });
   return out;
 }
