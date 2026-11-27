@@ -4588,8 +4588,10 @@ const Cloud = (function () {
      * 白金の手帖 = 従来の863語（データはこのファイル内、カードIDは card-N のまま）
      * 鉄〜金 = CEFR-J A1〜B2（データは data/nb_*.json、カードIDは a1-N など）
      * 前の手帖のカードを全部集めると次の手帖が開く。既存ユーザーは白金も最初から開いている。
+     * 教養の手帖（side: true）＝鉄〜白金の順番とは別の手帖。opensWith の手帖が開いていれば開く。
+     *   asset の手帖の背景・スライム・強さを借りる。全手帖コンプリート・殿堂入り・通しタブ番号などには数えない（MAIN_NOTEBOOKS）
      */
-    const NB_DATA_VERSION = '20261102e';
+    const NB_DATA_VERSION = '20261127a';
     const NOTEBOOKS = [
         { key: 'A1', name: '鉄の手帖',   level: 'CEFR-J A1', sub: 'はじまりの扉　基礎の英単語', count: 1067, prefix: 'a1',
           c: ['#eef0f3', '#8c939d', '#5d636b'], gem: '⚙️' },
@@ -4601,9 +4603,29 @@ const Cloud = (function () {
           c: ['#f5e285', '#d4980c', '#8a5a00'], gem: '👑' },
         { key: 'PT', name: '白金の手帖', level: '英検準1級〜1級', sub: '世界をひもとく　難関の英単語', count: TOTAL_CARDS, prefix: 'card',
           c: ['#ffffff', '#c4cde0', '#8a93ab'], gem: '💎' },
+        // 教養の手帖（色 c は仮。変えるときはここだけ直す）
+        { key: 'WH', name: '時の回廊の手帖（世界史）', level: '世界史 × CEFR-J B1〜', sub: '時の回廊　歴史をめぐる英単語', count: 100, prefix: 'wh',
+          c: ['#f3e3c3', '#b07a3c', '#6b4219'], gem: '🏺', side: true, opensWith: 'B1', asset: 'B1',
+          stageNames: ['古代', '中世', '近世', '近代', '現代'] },   // 冒険の面の見出し（時代）
     ];
     const NB_BY_KEY = {};
     NOTEBOOKS.forEach((n, i) => { n.idx = i; NB_BY_KEY[n.key] = n; });
+    // 鉄〜白金の本編の手帖（連鎖解禁・全手帖コンプリート・通しタブ番号・殿堂入り・ボスラッシュ・レイド・実力診断はこちら）
+    const MAIN_NOTEBOOKS = NOTEBOOKS.filter(n => !n.side);
+    // 背景・スライムの絵・ボスの大きさ・演出・強さなど、手帖ごとの素材や数値を引くときのキー（教養の手帖は借りる手帖のキー）
+    function nbAssetKey(key) {
+        if (key === undefined) key = (typeof currentNB !== 'undefined' && currentNB) ? currentNB.key : 'A1';
+        const nb = NB_BY_KEY[key];
+        return (nb && nb.asset) || key;
+    }
+    // 教養の手帖：opensWith の手帖が開いていれば開く（新しく開いた手帖を返す）
+    function unlockSideNotebooks(st) {
+        const added = [];
+        NOTEBOOKS.forEach(nb => {
+            if (nb.side && nb.opensWith && st.unlocked.includes(nb.opensWith) && !st.unlocked.includes(nb.key)) { st.unlocked.push(nb.key); added.push(nb); }
+        });
+        return added;
+    }
 
     // 手帖ごとの所持枚数（IDの接頭辞で数える。手帖データを読み込まなくても数えられる）
     function nbOwnedCount(nb, list) {
@@ -4674,6 +4696,7 @@ const Cloud = (function () {
                 if (Array.isArray(owned) && owned.some(id => /^card-\d+$/.test(id))) st.unlocked.push('PT');
             } catch (e) {}
         }
+        if (unlockSideNotebooks(st).length) { try { localStorage.setItem('notebookState', JSON.stringify(st)); } catch (e) {} }
         if (!NB_BY_KEY[st.current] || !st.unlocked.includes(st.current)) st.current = st.unlocked[0];
         return st;
     })();
@@ -4699,9 +4722,8 @@ const Cloud = (function () {
     let _imgMan = null, _imgHave = null;
     function setImgManifest(m) {
         if (!m || !m.have) return false;
-        const pre = { A1: 'a1-', A2: 'a2-', B1: 'b1-', B2: 'b2-', PT: 'card-' };
         const have = new Set();
-        Object.keys(m.have).forEach(k => (m.have[k] || []).forEach(no => have.add(pre[k] + no)));
+        Object.keys(m.have).forEach(k => { const nb = NB_BY_KEY[k]; if (nb) (m.have[k] || []).forEach(no => have.add(nb.prefix + '-' + no)); });
         const changed = !_imgMan || _imgMan.ver !== m.ver;
         _imgMan = m; _imgHave = have;
         return changed;
@@ -4774,9 +4796,17 @@ const Cloud = (function () {
         if (currentNB.key !== 'PT') {
             const rows = loadNotebookRows(currentNB);
             if (rows && rows.length) { cardsData = buildCardsFor(currentNB, rows); return; }
-            // 読み込み失敗：白金が開いていればそちらで起動、だめなら空のまま（メッセージ表示）
+            // 読み込み失敗：白金が開いていればそちらで起動。だめなら開いているほかの手帖（新しい順）で起動。どれもだめなら空のまま
             alert(`${currentNB.name}のデータを読み込めませんでした。通信状態を確認して再読み込みしてください。`);
-            if (!notebookState.unlocked.includes('PT')) return;
+            if (!notebookState.unlocked.includes('PT')) {
+                const failed = currentNB.key;
+                const others = notebookState.unlocked.filter(k => k !== failed && k !== 'PT' && NB_BY_KEY[k]).reverse();
+                for (const k of others) {
+                    const r2 = loadNotebookRows(NB_BY_KEY[k]);
+                    if (r2 && r2.length) { currentNB = NB_BY_KEY[k]; cardsData = buildCardsFor(currentNB, r2); return; }
+                }
+                return;
+            }
             currentNB = NB_BY_KEY.PT;
         }
         cardsData = buildCardsFor(currentNB);
@@ -5357,7 +5387,7 @@ const Cloud = (function () {
         if (!_grammarLoading) _grammarLoading = fetch(`data/grammar.json?v=${NB_DATA_VERSION}`).then(r => r.json()).then(r => (grammarData = r.items)).catch(e => { _grammarLoading = null; throw e; });
         return _grammarLoading;
     }
-    function grammarNbKey() { return NB_BY_KEY[currentNB.key] ? currentNB.key : 'A1'; }
+    function grammarNbKey() { const k = nbAssetKey(currentNB.key); return NB_BY_KEY[k] ? k : 'A1'; }
     function grammarStat(key) { const pool = (grammarData || []).filter(g => g.nb === key); return { done: pool.filter(g => grammarDone[g.id]).length, total: pool.length }; }
     function pickGrammar() {
         if (!grammarData) return null;
@@ -5651,7 +5681,7 @@ const Cloud = (function () {
     function allCompletion() {
         const owned = new Set(unlockedCards);
         let have = 0, total = 0;
-        const per = NOTEBOOKS.map(nb => {
+        const per = MAIN_NOTEBOOKS.map(nb => {
             let n = 0;
             const pre = nb.prefix + '-';
             owned.forEach(id => { if (String(id).startsWith(pre)) n++; });
@@ -5889,8 +5919,8 @@ const Cloud = (function () {
     ];
     function slimeBaseHue() {
         let h = null;
-        try { h = JSON.parse(localStorage.getItem('slimeHue3') || '{}')[currentNB.key]; } catch (e) {}
-        return (typeof h === 'number') ? h : (SLIME_BY_NB[currentNB.key] || SLIME_BY_NB.A1).baseHue;
+        try { h = JSON.parse(localStorage.getItem('slimeHue3') || '{}')[nbAssetKey()]; } catch (e) {}
+        return (typeof h === 'number') ? h : (SLIME_BY_NB[nbAssetKey()] || SLIME_BY_NB.A1).baseHue;
     }
     // 画像のスライムの色相を測る（色名と実際の色を一致させるため）
     function measureSlimeHue(img) {
@@ -5910,7 +5940,7 @@ const Cloud = (function () {
             const best = bins.indexOf(Math.max(...bins));
             if (bins[best] < 20) return;
             const st = JSON.parse(localStorage.getItem('slimeHue3') || '{}');
-            st[currentNB.key] = best * 10 + 5;
+            st[nbAssetKey()] = best * 10 + 5;
             localStorage.setItem('slimeHue3', JSON.stringify(st));
         } catch (e) {}
     }
@@ -5976,8 +6006,8 @@ const Cloud = (function () {
             const bs = bossStatsFor(globalTab(currentNB.key, tabIdx));
             const isLastTab = tabIdx === totalTabs - 1;
             const look = slimeLook(tabIdx);
-            const slimeName = (look.color ? look.color + 'の' : '') + (SLIME_BY_NB[currentNB.key] || SLIME_BY_NB.A1).name;
-            const slimeImg = `./boss/slime_${currentNB.key}.webp`;
+            const slimeName = (look.color ? look.color + 'の' : '') + (SLIME_BY_NB[nbAssetKey()] || SLIME_BY_NB.A1).name;
+            const slimeImg = `./boss/slime_${nbAssetKey()}.webp`;
             stages.push({
                 id: `${STAGE_PREFIX}tab${tabIdx}_mid`,
                 tabIdx,
@@ -6044,11 +6074,12 @@ const Cloud = (function () {
      */
     const NB_TAB_OFFSET = (() => {
         const o = {}; let acc = 0;
-        NOTEBOOKS.forEach(nb => { o[nb.key] = acc; acc += Math.ceil(nb.count / COLLECTION_PAGE_SIZE); });
-        o._total = acc;   // 鉄12＋銅15＋銀25＋金28＋白金9 = 89タブ
+        MAIN_NOTEBOOKS.forEach(nb => { o[nb.key] = acc; acc += Math.ceil(nb.count / COLLECTION_PAGE_SIZE); });
+        o._total = acc;   // 鉄12＋銅15＋銀25＋金28＋白金9 = 89タブ（教養の手帖は数えない）
         return o;
     })();
-    function globalTab(nbKey, tabIdx) { return (NB_TAB_OFFSET[nbKey] || 0) + tabIdx; }
+    // 教養の手帖は asset の手帖のタブと同じ強さ（時の回廊＝銀のタブ1から）
+    function globalTab(nbKey, tabIdx) { return (NB_TAB_OFFSET[nbAssetKey(nbKey)] || 0) + tabIdx; }
     function statBase(g) { return 40 + 5.5 * g; }          // 通しタブ0 → 40、通しタブ88 → 524
     const RARITY_MULT = { N: 1.0, R: 1.15, SR: 1.35, UR: 1.6 };
     const STAR_BONUS = 0.30;   // ★1つにつき+30%（★5で2.5倍）。よく覚えた単語のカードほど強い
@@ -6569,7 +6600,7 @@ const Cloud = (function () {
         updateDailyGoalDisplay();
         updateAdventureBattleBtn();
         const total = NOTEBOOKS.reduce((a, n) => a + n.count, 0);
-        alert(`🔓 マスターキー解錠！\n5冊の手帖すべて（全${total}枚のカード・全タブ）を解禁しました。\n（今回新たに解禁: ${added}枚）`);
+        alert(`🔓 マスターキー解錠！\n${NOTEBOOKS.length}冊の手帖すべて（全${total}枚のカード・全タブ）を解禁しました。\n（今回新たに解禁: ${added}枚）`);
     }
     function submitCoupon() {
         const inputCode = document.getElementById('couponInput').value.trim().toUpperCase();
@@ -7955,7 +7986,7 @@ const Cloud = (function () {
             + (stage.type === 'final' ? ' drop-shadow(0 0 18px rgba(255,210,90,0.65))' : '');
         // ボスの大きさ：下位の手帖ほど小さく、白金に近づくほど大きい（討伐戦はさらに一回り大きく）
         const BOSS_SIZE = { A1: 118, A2: 142, B1: 168, B2: 196, PT: 226 };
-        const bh = Math.round((BOSS_SIZE[stage.nb || currentNB.key] || 190) * (stage.type === 'final' || stage.type === 'hof' ? 1.12 : stage.type === 'raid' ? 1.15 : 1));
+        const bh = Math.round((BOSS_SIZE[nbAssetKey(stage.nb || currentNB.key)] || 190) * (stage.type === 'final' || stage.type === 'hof' ? 1.12 : stage.type === 'raid' ? 1.15 : 1));
         bossImg.style.transform = '';
         bossImg.style.maxHeight = bh + 'px';
         bossImg.style.maxWidth = `min(${Math.round(bh * 1.47)}px, 78vw)`;
@@ -9722,7 +9753,7 @@ const Cloud = (function () {
        最終面に着いたらそれ以降はその地域にとどまる。進み具合は手帖ごとに advProg に保存。報酬は変えない */
     const ADV_LAST = { A1: 2, A2: 3, B1: 4, B2: 5, PT: 6 };
     function advNbKey() { return (typeof currentNB !== 'undefined' && currentNB && currentNB.key) || 'A1'; }
-    function advLast() { const v = ADV_LAST[advNbKey()]; return v == null ? 6 : v; }
+    function advLast() { const v = ADV_LAST[nbAssetKey(advNbKey())]; return v == null ? 6 : v; }
     const ADV_BASE = 10;
     function advNeed(i) { return ADV_BASE * (i + 1); }
     const ADV_AREAS = [
@@ -10289,8 +10320,8 @@ const Cloud = (function () {
     // ボスラッシュは、今戦っているボスの手帖の色合い・演出
     function battleFxKey() {
         if (typeof hofBossRush !== 'undefined' && hofBossRush.active) { const b = hofBossRush.bosses[hofBossRush.bossIndex]; return (b && b.nb) || 'PT'; }
-        if (battleSession && battleSession.active && battleSession.stage && battleSession.stage.type === 'raid') return battleSession.stage.nb || 'PT';
-        return advNbKey();
+        if (battleSession && battleSession.active && battleSession.stage && battleSession.stage.type === 'raid') return nbAssetKey(battleSession.stage.nb || 'PT');
+        return nbAssetKey(advNbKey());
     }
     function battleBgUrl() { return BATTLE_BG_FILE ? `url('./bgm/battle/${BATTLE_BG_FILE}')` : `url('./bgm/boss-bg.jpg')`; }
     function battleFxStart() {
@@ -10360,7 +10391,7 @@ const Cloud = (function () {
     }
 
     function applyNotebookTheme(fromKeyArg) {
-        renderParticles(currentNB.key);
+        renderParticles(nbAssetKey(currentNB.key));
         const nb = currentNB;
         NOTEBOOKS.forEach(n => document.body.classList.remove('nb-' + n.key));
         document.body.classList.add('nb-' + nb.key);
@@ -10405,7 +10436,7 @@ const Cloud = (function () {
     /* ========== レベル判定テスト（はじめての人に。スキップ可）==========
        6問ずつ出題し、4問以上正解なら上の手帖へ、3問以下なら下の手帖へ。銀（B1）から始め、最大18問で決まる。1問12秒（時間切れは不正解）。
        結果の手帖までを開き、その手帖から始める（下の手帖はいつでも遊べる）。結果は placementDone に記録 */
-    const PL_ORDER = ['A1', 'A2', 'B1', 'B2', 'PT'];
+    const PL_ORDER = MAIN_NOTEBOOKS.map(n => n.key);   // 鉄〜白金（教養の手帖は診断しない）
     const PL_PER_LEVEL = 6, PL_PASS = 4, PL_TIME = 12, PL_MAX = 18;   // 1つの手帖6問・4問正解で合格・1問12秒・最大18問
     const _plRows = {};
     function plShuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
@@ -10560,7 +10591,8 @@ const Cloud = (function () {
         // 結果の手帖までを開く（すでに開いている手帖は閉じない）
         const upto = PL_ORDER.indexOf(key);
         PL_ORDER.slice(0, upto + 1).forEach(k => { if (!notebookState.unlocked.includes(k)) notebookState.unlocked.push(k); });
-        notebookState.unlocked.sort((a, b) => PL_ORDER.indexOf(a) - PL_ORDER.indexOf(b));
+        unlockSideNotebooks(notebookState);
+        notebookState.unlocked.sort((a, b) => (NB_BY_KEY[a] ? NB_BY_KEY[a].idx : 99) - (NB_BY_KEY[b] ? NB_BY_KEY[b].idx : 99));
         saveNotebookState();
         if (key !== currentNB.key) switchNotebook(key);
     }
@@ -10633,14 +10665,18 @@ const Cloud = (function () {
             const unlocked = notebookState.unlocked.includes(nb.key);
             const owned = nbOwnedCount(nb);
             const pct = Math.min(100, Math.round(owned / nb.count * 100));
-            const prev = NOTEBOOKS[i - 1];
+            // 鍵つきのときの説明：本編は「前の手帖を○枚集めると開く」、教養の手帖は「○○を開くと開く」
+            const prev = nb.side ? null : MAIN_NOTEBOOKS[MAIN_NOTEBOOKS.indexOf(nb) - 1];
+            const opener = nb.side && NB_BY_KEY[nb.opensWith];
+            const lockTxt = opener ? `${opener.name}を開くと開く`
+                : prev ? `${prev.name}を${nbUnlockNeed(prev)}枚集めると開く（あと${Math.max(0, nbUnlockNeed(prev) - nbOwnedCount(prev))}枚）` : '';
             const row = document.createElement('div');
             row.className = 'nb-row' + (nb.key === currentNB.key ? ' current' : '') + (unlocked ? '' : ' locked');
             row.innerHTML = `
                 <div class="nb-gem" style="background:linear-gradient(135deg,${nb.c[0]},${nb.c[1]} 55%,${nb.c[2]})">${unlocked ? nb.gem : '🔒'}</div>
                 <div class="nb-row-main">
                     <div class="nb-row-name">${nb.name}${nb.key === currentNB.key ? '　<span style="font-size:11px;color:#9a7a3a;">ひらいている手帖</span>' : ''}</div>
-                    <div class="nb-row-sub">${nb.level}・${unlocked ? `${owned} / ${nb.count}枚` : (prev ? `${prev.name}を${nbUnlockNeed(prev)}枚集めると開く（あと${Math.max(0, nbUnlockNeed(prev) - nbOwnedCount(prev))}枚）` : '')}</div>
+                    <div class="nb-row-sub">${nb.level}・${unlocked ? `${owned} / ${nb.count}枚` : lockTxt}</div>
                     ${unlocked ? `<div class="nb-bar"><div style="width:${pct}%;background:linear-gradient(90deg,${nb.c[1]},${nb.c[0]})"></div></div>` : ''}
                 </div>`;
             if (unlocked) row.onclick = () => switchNotebook(nb.key);
@@ -10663,21 +10699,24 @@ const Cloud = (function () {
     // 前の手帖を8割集めたら次の手帖を開く
     function checkNotebookUnlocks() {
         let newly = null;
-        for (let i = 0; i < NOTEBOOKS.length - 1; i++) {
-            const nb = NOTEBOOKS[i], next = NOTEBOOKS[i + 1];
+        for (let i = 0; i < MAIN_NOTEBOOKS.length - 1; i++) {
+            const nb = MAIN_NOTEBOOKS[i], next = MAIN_NOTEBOOKS[i + 1];
             if (!notebookState.unlocked.includes(nb.key) || notebookState.unlocked.includes(next.key)) continue;
             if (nbOwnedCount(nb) >= nbUnlockNeed(nb)) {
                 notebookState.unlocked.push(next.key);
                 newly = next;
             }
         }
+        const sides = unlockSideNotebooks(notebookState);   // 銀が開いたら教養の手帖も開く
+        if (!newly && sides.length) saveNotebookState();
         if (!newly) return;
         saveNotebookState();
         logEvent('notebook_unlock', null, null);
         // ガチャ演出の邪魔をしないよう少し待ってから知らせる
         setTimeout(() => {
             document.getElementById('nbUnlockMsg').textContent = `${newly.name}が開いた！`;
-            document.getElementById('nbUnlockSub').textContent = `${newly.level}・${newly.count}枚の新しいカードが待っています`;
+            document.getElementById('nbUnlockSub').textContent = `${newly.level}・${newly.count}枚の新しいカードが待っています` +
+                (sides.length ? `（${sides.map(n => n.name).join('・')}も開きました）` : '');
             document.getElementById('nbUnlockGo').onclick = () => {
                 document.getElementById('nb-unlock-toast').style.display = 'none';
                 switchNotebook(newly.key);
@@ -10749,7 +10788,8 @@ const Cloud = (function () {
     // 試行する候補ファイル（優先度順）
     // 手帖ごとの背景（鉄はオリジナルの bg.jpg、銅〜白金は bg_A2.jpg / bg_B1.jpg / bg_B2.jpg / bg_PT.jpg）
     function candidatesForNotebook() {
-        const nbKey = (typeof currentNB !== 'undefined' && currentNB) ? currentNB.key : '';
+        // 教養の手帖は借りる手帖（asset）の背景を使う
+        const nbKey = (typeof currentNB !== 'undefined' && currentNB) ? (typeof nbAssetKey === 'function' ? nbAssetKey(currentNB.key) : currentNB.key) : '';
         return [
             ...(nbKey && nbKey !== 'A1' ? ['./background/bg_' + nbKey + '.jpg?v=20261102b'] : []),
             ...BASE_CANDIDATES,

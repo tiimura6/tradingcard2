@@ -37,7 +37,7 @@ const test = (name, fn) => tests.push({ name, fn });
 function assert(cond, msg) { if (!cond) throw new Error(msg); }
 
 // 共通：新しいブラウザ環境でアプリを開く
-async function openApp(browser, { seed, viewport, ignoreMute } = {}) {
+async function openApp(browser, { seed, viewport, ignoreMute, beforeGoto } = {}) {
   const ctx = await browser.newContext({ viewport: viewport || { width: 390, height: 844 } });
   await ctx.addInitScript(({ seed, ignoreMute }) => {
     window.confetti = () => {};
@@ -64,6 +64,7 @@ async function openApp(browser, { seed, viewport, ignoreMute } = {}) {
     const body = (await res.text()).replace(/const GAS_URL = '[^']*';/, "const GAS_URL = '';");
     await r.fulfill({ response: res, body });
   });
+  if (beforeGoto) await beforeGoto(ctx);   // 起動前に通信を差し替えるとき（データが読めない場合のテストなど）
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
@@ -478,7 +479,8 @@ test('管理者の全解禁で全手帖・全カード・全タブが開く／�
   await p.evaluate(() => { openCouponModal(); adminUnlockAll(); });
   await p.waitForTimeout(500);
   const r = await p.evaluate(() => ({ st: notebookState.unlocked.length, owned: unlockedCards.length, tabs: getUnlockedTabCount() }));
-  assert(r.st === 5 && r.owned === 8324 && r.tabs === 11, JSON.stringify(r));
+  // 鉄〜白金の5冊＋教養の手帖（時の回廊・100枚）
+  assert(r.st === 6 && r.owned === 8424 && r.tabs === 11, JSON.stringify(r));
   const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'index.html'), 'utf8');
   assert(!src.includes('SHION3215T'), '管理者キーがアプリ内に残っている');
 });
@@ -698,7 +700,8 @@ test('レベル判定テスト：はじめての人に自動で出る／全問�
   assert(r.nb === '白金の手帖' && r.asked === 18, JSON.stringify(r));
   await p.click('#placementBox .pl-start'); await p.waitForTimeout(2600);
   const st = await p.evaluate(() => ({ cur: currentNB.key, un: notebookState.unlocked.join(','), done: localStorage.getItem('placementDone') }));
-  assert(st.cur === 'PT' && st.un === 'A1,A2,B1,B2,PT' && st.done === '1', JSON.stringify(st));
+  // 銀が開いたので教養の手帖（WH）も開く
+  assert(st.cur === 'PT' && st.un === 'A1,A2,B1,B2,PT,WH' && st.done === '1', JSON.stringify(st));
   // スキップ
   const p2 = await openApp(b, { seed: { __placement: true, cardMergeV1: '1' } });
   await p2.waitForTimeout(1500);
@@ -864,6 +867,99 @@ test('小さい画面（幅360px）で主な画面が横にはみ出さない', 
     const w = await p.evaluate(() => document.documentElement.scrollWidth);
     assert(w <= 360, `${s} で横幅 ${w}px`);
   }
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+// ---- 教養の手帖（時の回廊の手帖・世界史）----
+const WH_NAME = '時の回廊の手帖';
+test('教養の手帖：銀が開いていれば開く（保存済みの状態に WH がなくても）', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1', notebookState: { unlocked: ['A1', 'A2', 'B1'], current: 'B1' } } });
+  const r = await p.evaluate(() => { openNotebookPicker(); return { un: notebookState.unlocked, list: document.getElementById('nbList').innerText,
+    saved: JSON.parse(localStorage.getItem('notebookState') || '{}').unlocked || [] }; });
+  assert(r.un.includes('WH') && r.list.includes(WH_NAME), JSON.stringify(r));
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('教養の手帖：銀が未開なら鍵つきで「銀の手帖を開くと開く」', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1', notebookState: { unlocked: ['A1'], current: 'A1' } } });
+  const r = await p.evaluate(name => { openNotebookPicker();
+    const row = [...document.querySelectorAll('#nbList .nb-row')].find(x => x.innerText.includes(name));
+    return { un: notebookState.unlocked, cls: row ? row.className : null, txt: row ? row.innerText : null }; }, WH_NAME);
+  assert(!r.un.includes('WH') && r.cls && r.cls.includes('locked') && r.txt.includes('銀の手帖を開くと開く'), JSON.stringify(r));
+  // 鍵つきの行は押しても開かない
+  await p.click(`.nb-row:has-text("${WH_NAME}")`); await p.waitForTimeout(600);
+  assert((await p.evaluate(() => currentNB.key)) === 'A1', '鍵つきの手帖に切り替わった');
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('教養の手帖：切り替え・再読み込みで100枚が出る', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1', notebookState: { unlocked: ['A1', 'A2', 'B1'], current: 'B1' } } });
+  await p.click('#nbChip'); await p.waitForTimeout(300);
+  await p.click(`.nb-row:has-text("${WH_NAME}")`); await p.waitForTimeout(2300);
+  const pick = () => p.evaluate(() => ({ nb: currentNB.key, n: cardsData.length, id0: cardsData[0] && cardsData[0].id, h1: document.getElementById('nbTitle').textContent,
+    cur: notebookState.current, tab: globalTab('WH', 0) === globalTab('B1', 0), asset: nbAssetKey('WH') }));
+  const r = await pick();
+  assert(r.nb === 'WH' && r.n === 100 && r.id0 === 'wh-1' && r.h1.includes(WH_NAME) && r.cur === 'WH' && r.tab && r.asset === 'B1', JSON.stringify(r));
+  await p.reload(); await p.waitForTimeout(1800);
+  const r2 = await pick();
+  assert(r2.nb === 'WH' && r2.n === 100 && r2.id0 === 'wh-1', '再読み込み後: ' + JSON.stringify(r2));
+  // カードの強さは銀のタブ1と同じ（同じ番号・同じ品詞なら同じ値）
+  const st = await p.evaluate(() => { const c = cardsData[0]; return { wh: getCardStats(c), b1: getCardStats({ ...c, id: 'b1-x', nb: 'B1', quiz: c.quiz }) }; });
+  assert(st.wh.atk === st.b1.atk, JSON.stringify(st));
+  // 単語ガイド：手帖専用の単語（詳しい情報が null）でもエラーにならない
+  await p.evaluate(() => { const c = cardsData.find(c => c.quiz.answer === 'crown'); showZoomInfoPanel(c.no); });
+  await p.waitForTimeout(1500);
+  const txt = await p.evaluate(() => document.getElementById('zoomInfoContent').innerText);
+  assert(txt.includes('crown'), '単語ガイド: ' + txt.slice(0, 120));
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('教養の手帖：全手帖コンプリート・殿堂入りの条件は変わらない', async b => {
+  const main = ids('a1', 1, 1067).concat(ids('a2', 1, 1352), ids('b1', 1, 2353), ids('b2', 1, 2689), ids('card', 1, 863));
+  const p = await openApp(b, { seed: { cardMergeV1: '1', unlockedCards: main, notebookState: { unlocked: ['A1', 'A2', 'B1', 'B2', 'PT'], current: 'PT' } } });
+  await p.waitForTimeout(1500);
+  const r = await p.evaluate(() => { updateCollectionProgress(); const a = allCompletion();
+    return { un: notebookState.unlocked.includes('WH'), have: a.have, total: a.total, segs: document.querySelectorAll('.all-cp-seg').length,
+      head: document.getElementById('allCp').innerText, hof: document.getElementById('hofBtn').innerText,
+      main: MAIN_NOTEBOOKS.map(n => n.key).join(), tabs: NB_TAB_OFFSET._total, pl: PL_ORDER.join(),
+      rush: hofRushBosses().map(x => x.nb).join() }; });
+  assert(r.un && r.have === 8324 && r.total === 8324 && r.segs === 5 && r.head.includes('全手帖（鉄〜白金）') && r.hof.includes('殿堂入りへの道') && !r.hof.includes('残り'), JSON.stringify(r));
+  assert(r.main === 'A1,A2,B1,B2,PT' && r.tabs === 85 && r.pl === 'A1,A2,B1,B2,PT' && r.rush === 'A1,A2,B1,B2,PT', JSON.stringify(r));
+  // 教養の手帖のカードを持っていても、全手帖の合計には入らない
+  const r2 = await p.evaluate(() => { unlockedCards.push('wh-1'); const a = allCompletion(); return { have: a.have, total: a.total }; });
+  assert(r2.have === 8324 && r2.total === 8324, JSON.stringify(r2));
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('教養の手帖：同じ単語でも金のカードと記録が混ざらない', async b => {
+  // 実行時に、教養の手帖と金の手帖の両方にある単語を1つ選ぶ
+  const rd = f => JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '..', 'data', f), 'utf8'));
+  const wh = rd('nb_WH.json'), b2 = rd('nb_B2.json');
+  const b2Words = new Set(b2.map(r => r[0]));
+  const iw = wh.findIndex(r => b2Words.has(r[0]));
+  assert(iw >= 0, '金の手帖と共通の単語がない');
+  const word = wh[iw][0], whId = `wh-${iw + 1}`;
+  const p = await openApp(b, { seed: { cardMergeV1: '1', unlockedCards: [whId], srsData: { [whId]: { level: 2, nextReview: 0, correct: 3, incorrect: 0 } },
+    notebookState: { unlocked: ['A1', 'A2', 'B1', 'B2'], current: 'WH' } } });
+  const r = await p.evaluate(w => { const c = cardsData.find(c => c.quiz.answer === w); return { nb: currentNB.key, id: c && c.id, own: c && isOwned(c.id), st: c && getStars(c.id) }; }, word);
+  assert(r.nb === 'WH' && r.id === whId && r.own && r.st === 2, JSON.stringify(r));
+  await p.evaluate(() => switchNotebook('B2')); await p.waitForTimeout(2600);
+  const r2 = await p.evaluate(w => { const c = cardsData.find(c => c.quiz.answer === w); return { nb: currentNB.key, id: c && c.id, own: c && isOwned(c.id), st: c && getStars(c.id) }; }, word);
+  assert(r2.nb === 'B2' && /^b2-\d+$/.test(r2.id) && r2.own === false && r2.st === 0, word + ' ' + JSON.stringify(r2));
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('教養の手帖：データが読めないときは警告して他の手帖で起動', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1', notebookState: { unlocked: ['A1', 'A2', 'B1'], current: 'WH' } },
+    // 同期の XHR は Playwright の route で止まるため、ページ内で読み先を存在しないファイル（サーバーが 404 を返す）に差し替える
+    beforeGoto: ctx => ctx.addInitScript(() => {
+      const op = XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open = function (m, u, ...rest) { return op.call(this, m, String(u).replace('data/nb_WH.json', 'data/__missing_nb_WH.json'), ...rest); };
+      const of = window.fetch;
+      window.fetch = (u, ...rest) => of(String(u).replace('data/nb_WH.json', 'data/__missing_nb_WH.json'), ...rest);
+    }) });
+  const r = await p.evaluate(() => ({ nb: currentNB.key, n: cardsData.length, alerts: (window.__alerts || []).join('|') }));
+  assert(r.alerts.includes(WH_NAME) && r.nb !== 'WH' && r.n > 0, JSON.stringify(r));
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
