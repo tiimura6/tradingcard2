@@ -2168,6 +2168,7 @@
         #advTrail { --adv-tint: #8fd060; margin: -4px 0 10px; padding: 8px 10px 6px; border-radius: 12px;
             background: linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.12)); border: 1px solid rgba(255,255,255,.14);
             box-shadow: inset 0 0 0 1px rgba(0,0,0,.2); position: relative; }
+        .kyo-term { font-weight: bold; color: inherit; background: linear-gradient(transparent 60%, rgba(232, 184, 80, .38) 60%); }
         #advTrail .adv-head { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: bold; color: var(--adv-tint); }
         #advTrail .adv-streak { font-size: 11px; color: #ffb040; opacity: 0; transition: opacity .3s; }
         #advTrail .adv-streak.on { opacity: 1; animation: adv-pop .4s ease-out; }
@@ -4753,10 +4754,12 @@ const Cloud = (function () {
             (rows || []).forEach((r, i) => {
                 const no = i + 1;
                 // 意味（品詞）ごとの出題データ。同じつづりの語（about 副詞／前置詞など）は1枚に複数の意味を持つ
+                // term・era：教養の手帖の行にある教科書用語（r[9]）と時代（r[10]）。本編の手帖では空
+                const term = r[9] || '', era = r[10] || '';
                 const senses = [{ answer: r[0], pos: r[1], meaning: r[2], example: r[3], form: r[4], category: r[5], level: nb.key,
-                                  exMeaning: r[7] || '' }];   // 例文の日本語訳
+                                  exMeaning: r[7] || '', term, era }];   // 例文の日本語訳
                 (r[8] || []).forEach(x => senses.push({ answer: r[0], pos: x[0], meaning: x[1], example: x[2], form: x[3],
-                                                      category: r[5], level: nb.key, exMeaning: x[4] || '' }));
+                                                      category: r[5], level: nb.key, exMeaning: x[4] || '', term, era }));
                 list.push({
                     id: `${nb.prefix}-${no}`, no, nb: nb.key,
                     _senses: senses, _si: 0,
@@ -6787,9 +6790,9 @@ const Cloud = (function () {
     function advDepartAnim(onHidden, onDone) {
         const el = document.getElementById('adv-trans');
         if (!el || !motionOK()) return false;
-        let area = null; try { area = ADV_AREAS[advStoredArea()] || ADV_AREAS[0]; } catch (e) {}
+        let area = null, areaName = ''; try { const i = advStoredArea(); area = ADV_AREAS[i] || ADV_AREAS[0]; areaName = advAreaName(i); } catch (e) {}
         el.querySelector('.at-t1').textContent = '冒険へ出発！';
-        el.querySelector('.at-t2').textContent = `${area ? area.icon + ' ' + area.name : ''}　—　${currentNB.name}`;
+        el.querySelector('.at-t2').textContent = `${area ? area.icon + ' ' + areaName : ''}　—　${currentNB.name}`;
         el.className = ''; void el.offsetWidth; el.classList.add('on');
         let hidden = false, revealed = false;
         const hide = () => { if (hidden) return; hidden = true; try { onHidden(); } catch (e) { console.error(e); } };
@@ -7339,6 +7342,15 @@ const Cloud = (function () {
         loadDetails(card.nb || currentNB.key).then(list => renderWordGuide(card, (list && list[card.no - 1]) || {}));
     }
 
+    // 例文訳の中の教科書用語（最初の1か所）を太字で強調する。HTMLの特殊文字はエスケープしてから囲む。用語がなければエスケープだけ
+    function highlightTerm(ja, term) {
+        const e = x => String(x == null ? '' : x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const t = e(ja);
+        if (!term) return t;
+        const k = e(term), i = t.indexOf(k);
+        return i < 0 ? t : t.slice(0, i) + `<b class="kyo-term">${k}</b>` + t.slice(i + k.length);
+    }
+
     function renderWordGuide(card, d) {
         const E = t => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
         const ss = cardSenses(card);
@@ -7360,7 +7372,7 @@ const Cloud = (function () {
             `<div${k ? ' style="margin-top:10px;padding-top:10px;border-top:1px dashed rgba(160,130,220,.25);"' : ''}>`
             + (multi ? `<div style="font-size:11px;color:#b8a0e8;margin-bottom:2px;"><span class="zip-pos-badge">${E(x.pos)}</span> ${E(x.meaning)}</div>` : '')
             + `<div style="font-family:Georgia,'Noto Serif JP',serif;line-height:1.6;">${E(x.example)}${spkBtn(x.example)}</div>`
-            + (x.exMeaning ? `<div style="font-size:12px;color:#8a7a9a;margin-top:3px;line-height:1.6;">${E(x.exMeaning)}</div>` : '')
+            + (x.exMeaning ? `<div style="font-size:12px;color:#8a7a9a;margin-top:3px;line-height:1.6;">${highlightTerm(x.exMeaning, x.term)}</div>` : '')
             + `</div>`).join('');
         if (exHtml) html += sec(multi ? '📖 例文（意味ごと）' : '📖 例文', exHtml);
         html += sec('🧩 成り立ち（接頭辞・語根・接尾辞）', E(d.a || old.affixes));
@@ -9305,7 +9317,7 @@ const Cloud = (function () {
                         <div style="font-size:14px;font-weight:bold;color:${textMain};margin-bottom:6px;">💡 ${card.quiz.answer}${(() => { const dd = getDetailSync(card); return dd && dd.i ? ` <span style="font-weight:normal;font-size:12px;opacity:.85;">${dd.i}</span>` : ''; })()}${spkBtn(card.quiz.answer)}</div>
                         <div style="font-size:12px;color:${textSub};margin-bottom:${exMeaning ? '8px' : '0'};">${cardSenses(card).length > 1 ? card.quiz.pos + ' ' : ''}${card.quiz.meaning}${(() => { const o = cardSenses(card).filter(x => x !== card.quiz); return o.length ? `<div style="font-size:11px;opacity:.85;margin-top:3px;">ほかの意味：${o.map(x => x.pos + ' ' + x.meaning).join('　')}</div>` : ''; })()}</div>
                         ${card.quiz.example && card.quiz.exMeaning ? `<div style="font-size:12.5px;color:${textMain};line-height:1.6;border-top:1px solid ${borderEx};padding-top:8px;font-family:Georgia,'Noto Serif JP',serif;">📖 ${String(card.quiz.example).replace(/</g, '&lt;')}${spkBtn(card.quiz.example, '例文')}</div>` : ''}
-                        ${exMeaning ? `<div style="font-size:12px;color:${textEx};line-height:1.7;${card.quiz.example && card.quiz.exMeaning ? 'margin-top:3px;' : `border-top:1px solid ${borderEx};padding-top:8px;`}">${card.quiz.example && card.quiz.exMeaning ? '' : '📖 '}${exMeaning}</div>` : ''}
+                        ${exMeaning ? `<div style="font-size:12px;color:${textEx};line-height:1.7;${card.quiz.example && card.quiz.exMeaning ? 'margin-top:3px;' : `border-top:1px solid ${borderEx};padding-top:8px;`}">${card.quiz.example && card.quiz.exMeaning ? '' : '📖 '}${card.quiz.exMeaning ? highlightTerm(exMeaning, card.quiz.term) : exMeaning}</div>` : ''}
                     </div>
                 `;
                 choicesEl.appendChild(meaningEl);
@@ -9754,6 +9766,12 @@ const Cloud = (function () {
     const ADV_LAST = { A1: 2, A2: 3, B1: 4, B2: 5, PT: 6 };
     function advNbKey() { return (typeof currentNB !== 'undefined' && currentNB && currentNB.key) || 'A1'; }
     function advLast() { const v = ADV_LAST[nbAssetKey(advNbKey())]; return v == null ? 6 : v; }
+    // 地域の見出し。手帖に stageNames（時代など）があれば「古代・はじまりの草原」の形にする
+    function advAreaName(i, key) {
+        const A = ADV_AREAS[i] || ADV_AREAS[0], nb = NB_BY_KEY[key || advNbKey()];
+        const sn = nb && nb.stageNames && nb.stageNames[i];
+        return sn ? `${sn}・${A.name}` : A.name;
+    }
     const ADV_BASE = 10;
     function advNeed(i) { return ADV_BASE * (i + 1); }
     const ADV_AREAS = [
@@ -9958,7 +9976,7 @@ const Cloud = (function () {
         if (need <= 10) for (let k = 0; k < need; k++) nodes += `<div class="adv-node ${k < a.step ? 'ok' : ''}" style="left:${pos(k)}"></div>`;
         else nodes = `<div class="adv-fill" style="width:${pos(a.step)}"></div>` + [1, 2, 3].map(q => `<div class="adv-mark ${a.step >= need * q / 4 ? 'ok' : ''}" style="left:${q * 25}%"></div>`).join('');
         el.innerHTML = `
-            <div class="adv-head"><span>${A.icon} ${A.name}<span class="adv-tod">${TOD[timeOfDay()].label}</span>　<span class="adv-count" style="opacity:.75;font-weight:normal;">${a.step} / ${need}</span></span>
+            <div class="adv-head"><span>${A.icon} ${advAreaName(a.area)}<span class="adv-tod">${TOD[timeOfDay()].label}</span>　<span class="adv-count" style="opacity:.75;font-weight:normal;">${a.step} / ${need}</span></span>
                 <span class="adv-streak ${a.streak >= 3 ? 'on' : ''}">🔥 ${a.streak}連続</span></div>
             <div class="adv-track"><div class="adv-line"></div>${nodes}
                 <div class="adv-goal ${a.step >= need - 1 ? 'near' : ''}">${A.goal}</div>
@@ -9969,7 +9987,7 @@ const Cloud = (function () {
     function advBeforeQuestion() {
         const a = advState();
         if (a.step >= advNeed(a.area)) {
-            const A = ADV_AREAS[a.area], ok = advNeed(a.area), miss = a.miss;
+            const A = ADV_AREAS[a.area], ok = advNeed(a.area), miss = a.miss, prevArea = a.area;
             const atLast = a.area >= advLast();   // 最終面：その地にとどまって、もう一周
             statInc('advClears'); if (!a.miss) statInc('advNoMiss');
             if (!atLast) a.area = a.area + 1;
@@ -9982,9 +10000,9 @@ const Cloud = (function () {
             ov.style.setProperty('--adv-tint', A.tint);
             ov.style.setProperty('--next-tint', N.tint);
             ov.style.animationDuration = '3s';
-            ov.innerHTML = `<div class="rays"></div><div class="chest">🎁</div><div class="t1">🏁 ${A.name} 踏破！</div>
+            ov.innerHTML = `<div class="rays"></div><div class="chest">🎁</div><div class="t1">🏁 ${advAreaName(prevArea)} 踏破！</div>
                 <div class="t2">${ok}問正解で到達${miss === 0 ? '　✨ ノーミス！' : `（ミス ${miss}）`}</div>
-                <div class="t3">${atLast ? `👑 この手帖の最終地点！ ${N.icon} ${N.name}で修行を続けよう` : `次の地へ … ${N.icon} ${N.name}（${advNeed(a.area)}問）`}</div>`;
+                <div class="t3">${atLast ? `👑 この手帖の最終地点！ ${N.icon} ${advAreaName(a.area)}で修行を続けよう` : `次の地へ … ${N.icon} ${advAreaName(a.area)}（${advNeed(a.area)}問）`}</div>`;
             const old = document.getElementById('advClear'); if (old) old.remove();
             document.body.appendChild(ov);
             // 宝箱が開いて地域の宝が現れる → 背景が次の地域に変わる

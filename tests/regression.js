@@ -963,6 +963,58 @@ test('教養の手帖：データが読めないときは警告して他の手�
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
+const WH_SEED = { cardMergeV1: '1', unlockedCards: ['wh-1', 'wh-2'], notebookState: { unlocked: ['A1', 'A2', 'B1'], current: 'WH' } };
+test('教養の手帖：例文訳の教科書用語が強調される', async b => {
+  const wh = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '..', 'data', 'nb_WH.json'), 'utf8'));
+  const p = await openApp(b, { seed: WH_SEED });
+  await p.evaluate(() => { tapCard(cardsData[0], true); showZoomInfoPanel(1); });
+  await p.waitForTimeout(1200);
+  const r = await p.evaluate(() => { const t = document.querySelectorAll('#zoomInfoContent .kyo-term');
+    return { nb: currentNB.key, n: t.length, txt: t[0] && t[0].textContent,
+      fn: highlightTerm('a<b>西ローマ帝国と西ローマ帝国', '西ローマ帝国'), none: highlightTerm('a<b>', ''),
+      fantasy: cardsData.flatMap(c => c._senses.map(s => s.example)).filter(s => /\b(dragon|wizard|knight|giant|elf|fairy|magic|spell)s?\b/i.test(s)) }; });
+  assert(r.nb === 'WH' && r.n === 1 && r.txt === wh[0][9], JSON.stringify(r));
+  assert(r.fn === 'a&lt;b&gt;<b class="kyo-term">西ローマ帝国</b>と西ローマ帝国' && r.none === 'a&lt;b&gt;', JSON.stringify(r));
+  assert(r.fantasy.length === 0, '架空の存在: ' + r.fantasy.join(' / '));
+  // 本編の手帖（用語なし）の例文訳には印がつかない
+  await p.evaluate(() => switchNotebook('B1')); await p.waitForTimeout(2600);
+  await p.evaluate(() => { showZoomInfoPanel(1); }); await p.waitForTimeout(1200);
+  const r2 = await p.evaluate(() => ({ nb: currentNB.key, n: document.querySelectorAll('#zoomInfoContent .kyo-term').length, txt: document.getElementById('zoomInfoContent').innerText.length }));
+  assert(r2.nb === 'B1' && r2.n === 0 && r2.txt > 0, JSON.stringify(r2));
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('教養の手帖：冒険の各面に時代名が出る', async b => {
+  const p = await openApp(b, { seed: WH_SEED });
+  await p.evaluate(() => enterAdventureMode()); await p.waitForTimeout(2000);
+  await p.evaluate(() => { closeTrainingModal(false); openTrainingMode(); }); await p.waitForTimeout(500);
+  const r = await p.evaluate(() => ({ nb: currentNB.key, head: document.querySelector('#advTrail .adv-head').innerText, last: advLast() }));
+  assert(r.nb === 'WH' && r.head.includes('古代・はじまりの草原') && r.last === 4, JSON.stringify(r));
+  await p.evaluate(() => { closeTrainingModal(true); localStorage.setItem('advProg', JSON.stringify({ WH: { area: 3, step: 0, miss: 0 } })); trainingSession.adv = null; });
+  await p.waitForTimeout(500);
+  await p.evaluate(() => enterAdventureMode()); await p.waitForTimeout(2000);
+  await p.evaluate(() => { closeTrainingModal(false); openTrainingMode(); }); await p.waitForTimeout(500);
+  const r2 = await p.evaluate(() => document.querySelector('#advTrail .adv-head').innerText);
+  assert(r2.includes('近代・星降る丘'), r2);
+  // 本編の手帖には時代名がつかない
+  const r3 = await p.evaluate(() => [advAreaName(0, 'B1'), advAreaName(4, 'WH')]);
+  assert(r3[0] === 'はじまりの草原' && r3[1] === '現代・古代の遺跡', JSON.stringify(r3));
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('教養の手帖：幅360pxで強調・時代名がはみ出さない', async b => {
+  const p = await openApp(b, { viewport: { width: 360, height: 740 }, seed: { ...WH_SEED, advProg: { WH: { area: 4, step: 0, miss: 0 } } } });
+  const steps = ['tapCard(cardsData[0],true)', 'showZoomInfoPanel(1)', 'closeZoom()', 'enterAdventureMode()', 'closeTrainingModal(false);openTrainingMode()', 'closeTrainingModal(true)'];
+  for (const s of steps) {
+    await p.evaluate(s); await p.waitForTimeout(s.startsWith('enter') ? 2000 : 800);
+    const w = await p.evaluate(() => document.documentElement.scrollWidth);
+    assert(w <= 360, `${s} で横幅 ${w}px`);
+    if (s.startsWith('show')) assert(await p.evaluate(() => document.querySelectorAll('#zoomInfoContent .kyo-term').length) === 1, '強調がない');
+    if (s.includes('openTrainingMode')) assert((await p.evaluate(() => document.querySelector('#advTrail .adv-head').innerText)).includes('現代'), '時代名がない');
+  }
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
 // =====================================================================
 (async () => {
   const srv = await startServer();
