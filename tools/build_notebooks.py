@@ -2,6 +2,7 @@
 """
 data/cefrj_notebooks.csv（鉄・銅・銀・金の4手帖を1つにまとめたCSV）から
 アプリ用の軽量JSON data/nb_A1.json 〜 nb_B2.json を作る。
+教養の手帖 data/kyoyo_WH.csv からは data/nb_WH.json・detail_WH.json も作る（build_side）。
 
 使い方: python3 tools/build_notebooks.py
 CSVの例文や訳を直したら、このコマンドを実行してJSONを作り直す。
@@ -246,6 +247,75 @@ def merge_detail(word, poses, ds):
     return out
 
 
+def pt_words():
+    """白金の手帖（index.html 内の quizList）の [(番号, 日本語, 英単語), ...]"""
+    html = (ROOT / "index.html").read_text(encoding="utf-8")
+    pt = []
+    for mm in re.finditer(r"^\s*(\d+): \{ meaning: '((?:[^'\\]|\\.)*)', answer: '((?:[^'\\]|\\.)*)'", html, re.M):
+        pt.append((int(mm.group(1)), mm.group(2).replace("\\'", "'"), mm.group(3).replace("\\'", "'")))
+    return pt
+
+
+def detail_lookup():
+    """既存手帖の単語ガイドを引く関数 look(英単語, 品詞) を返す。B1→B2→PT の順に探す。
+    同じ品詞を持つカードを先に探し（collapse は B1 の名詞より B2 の動詞）、無ければ品詞を問わず最初に見つかったもの。
+    白金（PT）は品詞を持たないので品詞を問わない扱い。どこにも無ければ None"""
+    entries = []   # (英単語の小文字, 品詞の集合, ガイド)
+    for lv in ("B1", "B2"):
+        nb_path, det_path = ROOT / "data" / f"nb_{lv}.json", ROOT / "data" / f"detail_{lv}.json"
+        if not (nb_path.exists() and det_path.exists()):
+            continue
+        nb = json.loads(nb_path.read_text(encoding="utf-8"))
+        det = json.loads(det_path.read_text(encoding="utf-8"))
+        for row, d in zip(nb, det):
+            poses = {row[1]} | {s[0] for s in (row[8] if len(row) > 8 else [])}
+            entries.append((row[0].lower(), poses, d))
+    det_path = ROOT / "data" / "detail_PT.json"
+    if det_path.exists():
+        det = json.loads(det_path.read_text(encoding="utf-8"))
+        for no, _, ans in pt_words():
+            if 0 < no <= len(det):
+                entries.append((ans.lower(), set(), det[no - 1]))
+
+    def look(word, pos):
+        w = word.lower()
+        for ew, poses, d in entries:
+            if ew == w and pos in poses:
+                return d
+        for ew, _, d in entries:
+            if ew == w:
+                return d
+        return None
+    return look
+
+
+def build_side(key: str, csv_path: Path) -> None:
+    """教養の手帖（WH など）の nb_{key}.json と detail_{key}.json を作る。
+    既存の手帖と違い、品詞ごとにまとめない（CSV の1行＝1枚、No 順）。
+    1行 = 既存の9要素（ほかの品詞の意味 r[8] は常に []）＋ r[9]=教科書用語(term)、r[10]=時代(era)
+    単語ガイドは既存手帖（B1→B2→PT、同じ品詞のカードを優先）の同じ単語のものをコピーし、無ければ null"""
+    rows = list(csv.DictReader(open(csv_path, encoding="utf-8-sig")))
+    rows.sort(key=lambda r: int(r["No"]))
+    ex = exclusions(rows, lambda r: r["word"].strip(), lambda r: r["japanese"].strip(), lambda r: r.get("synonym", ""))
+    out_items, miss = [], []
+    for k, r in enumerate(rows):
+        word, exm = r["word"].strip(), r["example"].strip()
+        form = find_form(word, exm)
+        if not form:
+            miss.append(word)
+        out_items.append([word, r["pos"].strip(), r["japanese"].strip(), exm, form, r["category"].strip(),
+                          ex[k], r.get("example_ja", "").strip(), [], r["term"].strip(), r["era"].strip()])
+    out = ROOT / "data" / f"nb_{key}.json"
+    out.write_text(json.dumps(out_items, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    look = detail_lookup()
+    det = [look(r["word"].strip(), r["pos"].strip()) for r in rows]
+    (ROOT / "data" / f"detail_{key}.json").write_text(json.dumps(det, ensure_ascii=False, separators=(",", ":")),
+                                                      encoding="utf-8")
+    nulls = [r["word"].strip() for r, d in zip(rows, det) if d is None]
+    print(f"{key}: {len(out_items)}枚 {out.name} ({out.stat().st_size // 1024}KB) 穴埋め不可 {len(miss)} {miss[:8]} "
+          f"単語ガイドなし {len(nulls)} {nulls}")
+
+
 def main():
     rows = list(csv.DictReader(open(SRC, encoding="utf-8-sig")))
     by_nb = {}
@@ -301,14 +371,14 @@ def main():
     (ROOT / "data" / "idmap.json").write_text(json.dumps(idmap, separators=(",", ":")), encoding="utf-8")
 
     # 白金の手帖（index.html 内の quizList）の除外リスト → data/excl_PT.json
-    html = (ROOT / "index.html").read_text(encoding="utf-8")
-    pt = []
-    for mm in re.finditer(r"^\s*(\d+): \{ meaning: '((?:[^'\\]|\\.)*)', answer: '((?:[^'\\]|\\.)*)'", html, re.M):
-        pt.append((int(mm.group(1)), mm.group(2).replace("\\'", "'"), mm.group(3).replace("\\'", "'")))
+    pt = pt_words()
     ex = exclusions(pt, lambda t: t[2], lambda t: t[1])
     excl = {str(pt[i][0]): [pt[j][0] for j in e] for i, e in enumerate(ex) if e}
     (ROOT / "data" / "excl_PT.json").write_text(json.dumps(excl, separators=(",", ":")), encoding="utf-8")
     print(f"PT: {len(pt)}語 → excl_PT.json ({(ROOT / 'data' / 'excl_PT.json').stat().st_size // 1024}KB)")
+
+    # 教養の手帖（時の回廊・世界史）：既存の手帖のデータには触れない
+    build_side("WH", ROOT / "data" / "kyoyo_WH.csv")
 
 
 if __name__ == "__main__":

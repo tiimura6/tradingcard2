@@ -1,9 +1,9 @@
 """穴埋め問題の固定ダミー（AIが「文脈に入らない」と確認した語）を手帖ごとのJSONにまとめる
 入力: tools/fb_src/chunk_*.jsonl（{"k": "カードID#意味番号", "d": [ダミー...], "bad": 例文の弱さ}）
-出力: data/fb_A1.json … data/fb_PT.json（{"カードID#意味番号": [ダミー...], "_skip": [穴埋めに出さないキー]}）"""
+出力: data/fb_A1.json … data/fb_PT.json、data/fb_WH.json（教養の手帖・時の回廊：chunk_wh.jsonl。候補は chunk_wh.tsv）（{"カードID#意味番号": [ダミー...], "_skip": [穴埋めに出さないキー]}）"""
 import json, glob, os
 here = os.path.dirname(os.path.abspath(__file__))
-pre = {'a1': 'A1', 'a2': 'A2', 'b1': 'B1', 'b2': 'B2', 'card': 'PT'}
+pre = {'a1': 'A1', 'a2': 'A2', 'b1': 'B1', 'b2': 'B2', 'card': 'PT', 'wh': 'WH'}
 out = {v: {} for v in pre.values()}
 for f in sorted(glob.glob(os.path.join(here, 'fb_src', 'chunk_*.jsonl'))):
     for line in open(f, encoding='utf-8'):
