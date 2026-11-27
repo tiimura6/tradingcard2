@@ -779,6 +779,9 @@ function setup() {
       .setBackground('#f4c7c3').setFontColor('#a50e0e').setRanges([st.getRange('AC2:AC')]).build(),
   ]);
   st.setColumnWidth(ST.FLAG, 220);
+  // 列を足す前に作ったフィルタは狭いまま残る（並べ替えで足した列だけずれる）ので、全列にかけ直す
+  const oldFilter = st.getFilter();
+  if (oldFilter && oldFilter.getRange().getLastColumn() < HEADERS.STATUS.length) oldFilter.remove();
   if (!st.getFilter()) st.getRange(1, 1, Math.max(st.getMaxRows(), 2), HEADERS.STATUS.length).createFilter();
 
   setupClassSheet_();

@@ -965,6 +965,42 @@ test('教養の手帖：データが読めないときは警告して他の手�
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 
+test('教養の手帖：手帖が読めないときは本編の手帖を先に試す（教養の手帖は最後）', async b => {
+  // 銀が読めない・白金は未開 → 開いている手帖は A1, A2, B1, WH（WH は起動時に追加）。以前は新しい順で WH が先だった
+  const p = await openApp(b, { seed: { cardMergeV1: '1', notebookState: { unlocked: ['A1', 'A2', 'B1'], current: 'B1' } },
+    beforeGoto: ctx => ctx.addInitScript(() => {
+      const op = XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open = function (m, u, ...rest) { return op.call(this, m, String(u).replace('data/nb_B1.json', 'data/__missing_nb_B1.json'), ...rest); };
+    }) });
+  const r = await p.evaluate(() => ({ nb: currentNB.key, n: cardsData.length, un: notebookState.unlocked.join(), alerts: (window.__alerts || []).join('|') }));
+  assert(r.alerts.includes('銀の手帖') && r.nb === 'A2' && r.n > 0 && r.un.includes('WH'), JSON.stringify(r));
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('教養の手帖：起動時に黙って開いたら1回だけ知らせる', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1', notebookState: { unlocked: ['A1', 'A2', 'B1'], current: 'B1' } } });
+  await p.waitForTimeout(2200);
+  const r = await p.evaluate(() => ({ t: document.getElementById('authToast').textContent, show: document.getElementById('authToast').classList.contains('show'),
+    seen: localStorage.getItem('sideNbAnnounced') }));
+  assert(r.show && r.t.includes('新しい手帖『時の回廊の手帖（世界史）』が開きました') && JSON.parse(r.seen).includes('WH'), JSON.stringify(r));
+  // 2回目の起動では出さない
+  await p.reload(); await p.waitForTimeout(4000);
+  const r2 = await p.evaluate(() => document.getElementById('authToast').textContent);
+  assert(!r2.includes('新しい手帖'), '2回目にも出た: ' + r2);
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('教養の手帖：銀が開いた知らせに教養の手帖を一緒に書く（入れ子のかっこにしない・起動時の知らせと重ねない）', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1', unlockedCards: ids('a2', 1, 1352), notebookState: { unlocked: ['A1', 'A2'], current: 'A2' } } });
+  await p.evaluate(() => checkNotebookUnlocks());
+  await p.waitForTimeout(2600);
+  const r = await p.evaluate(() => ({ msg: document.getElementById('nbUnlockMsg').textContent, sub: document.getElementById('nbUnlockSub').textContent,
+    un: notebookState.unlocked.join(), seen: localStorage.getItem('sideNbAnnounced'), t: document.getElementById('authToast').textContent }));
+  assert(r.msg.includes('銀の手帖') && r.sub.includes('「時の回廊の手帖（世界史）」も開きました') && !r.sub.includes('（時の回廊') && r.un.includes('WH'), JSON.stringify(r));
+  assert(JSON.parse(r.seen || '[]').includes('WH') && !r.t.includes('新しい手帖'), '起動時の知らせと重なった: ' + JSON.stringify(r));
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
 const WH_SEED = { cardMergeV1: '1', unlockedCards: ['wh-1', 'wh-2'], notebookState: { unlocked: ['A1', 'A2', 'B1'], current: 'WH' } };
 test('教養の手帖：例文訳の教科書用語が強調される', async b => {
   const wh = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '..', 'data', 'nb_WH.json'), 'utf8'));

@@ -15,7 +15,9 @@ function makeEnv() {
     getRow() { return this.r; }
     createTextFinder(t) { const self = this; let ent = false; return { matchEntireCell(b) { ent = b; return this; }, matchCase() { return this; },
       findNext() { for (let i = 0; i < self.nr; i++) for (let j = 0; j < self.nc; j++) { const v = String(self._cell(i, j)); if (ent ? v === t : v.includes(t)) return new Range(self.sh, self.r + i, self.c + j); } return null; } }; }
-    createFilter() { this.sh.filter = true; return this; }
+    createFilter() { if (this.sh.filter) throw new Error('filter exists'); this.sh.filter = this; return this; }
+    getNumColumns() { return this.nc; }
+    getLastColumn() { return this.c + this.nc - 1; }
     sort(o) { const rows = this.getValues(); const c = o.column - this.c; const k = v => v instanceof Date ? v.getTime() : v;
       rows.sort((a, b) => (k(a[c]) > k(b[c]) ? 1 : k(a[c]) < k(b[c]) ? -1 : 0) * (o.ascending === false ? -1 : 1)); return this.setValues(rows); }
   }
@@ -31,7 +33,7 @@ function makeEnv() {
     deleteRow(r) { this.data.splice(r - 1, 1); }
     deleteRows(r, n) { this.data.splice(r - 1, n); }
     insertRowsAfter(r, n) { while (this.data.length < r) this.data.push([]); this.data.splice(r, 0, ...Array.from({ length: n }, () => [])); }
-    getFilter() { return this.filter ? {} : null; }
+    getFilter() { const sh = this; return this.filter ? { getRange: () => sh.filter, remove: () => { sh.filter = null; } } : null; }
     setFrozenRows() {} setFrozenColumns() {} setColumnWidths() {} setColumnWidth() {} setConditionalFormatRules() {} hideSheet() {}
   }
   const files = {};

@@ -2769,7 +2769,7 @@
     <div class="custom-box" style="width:86%;max-width:340px;">
         <div style="font-size:44px;line-height:1;margin-bottom:6px;">🔓</div>
         <div id="nbUnlockMsg" style="font-size:17px;font-weight:bold;color:#3a2410;font-family:'Noto Serif JP',serif;margin-bottom:6px;"></div>
-        <div id="nbUnlockSub" style="font-size:12px;color:#6a5a40;margin-bottom:14px;"></div>
+        <div id="nbUnlockSub" style="font-size:12px;color:#6a5a40;margin-bottom:14px;white-space:pre-line;"></div>
         <button class="action-btn" id="nbUnlockGo" style="width:100%;padding:12px;font-size:15px;font-weight:bold;">ひらく</button>
         <button class="modal-cancel-btn" onclick="document.getElementById('nb-unlock-toast').style.display='none'" style="margin-top:10px;">あとで</button>
     </div>
@@ -3258,11 +3258,11 @@ const Cloud = (function () {
     function esc(s) {
         return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
-    function toast(msg) {
+    function toast(msg, ms) {
         const el = document.getElementById('authToast');
         if (!el) return;
         el.textContent = msg; el.classList.add('show');
-        clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('show'), 2600);
+        clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('show'), ms || 2600);
     }
     function setSync(s) { syncState = s; renderChip(); }
     function renderChip() {
@@ -3629,7 +3629,7 @@ const Cloud = (function () {
         nickname: () => session ? session.nickname : null,
         // サーバーの機能を呼ぶ（ログイン中ならトークンを付ける）
         call: (action, payload) => GAS_URL ? api(action, Object.assign(session ? { token: session.token } : {}, payload || {})) : Promise.resolve({ ok: false, error: 'no_server' }),
-        esc,
+        esc, toast,
     };
 })();
 </script>
@@ -4613,7 +4613,7 @@ const Cloud = (function () {
      * 教養の手帖（side: true）＝鉄〜白金の順番とは別の手帖。opensWith の手帖が開いていれば開く。
      *   asset の手帖の背景・スライム・強さを借りる。全手帖コンプリート・殿堂入り・通しタブ番号などには数えない（MAIN_NOTEBOOKS）
      */
-    const NB_DATA_VERSION = '20261127a';
+    const NB_DATA_VERSION = '20261127b';
     const NOTEBOOKS = [
         { key: 'A1', name: '鉄の手帖',   level: 'CEFR-J A1', sub: 'はじまりの扉　基礎の英単語', count: 1067, prefix: 'a1',
           c: ['#eef0f3', '#8c939d', '#5d636b'], gem: '⚙️' },
@@ -4630,6 +4630,7 @@ const Cloud = (function () {
           c: ['#f3e3c3', '#b07a3c', '#6b4219'], gem: '🏺', side: true, opensWith: 'B1', asset: 'B1',
           stageNames: ['古代', '中世', '近世', '近代', '現代'],   // 冒険の面の見出し（時代）
           check: 'data/kyoyo_check_WH.json' },   // 日本語の確認問題（学習前・100枚収集後の2回、任意）。普段のクイズ・冒険・バトルには出さない
+          // ↑ 確認問題を直したら NB_DATA_VERSION を上げる（古い問題が端末に残るため）。生徒が学習前のチェックを受けはじめたら問題は変えない（前後の点数が比べられなくなる）
     ];
     const NB_BY_KEY = {};
     NOTEBOOKS.forEach((n, i) => { n.idx = i; NB_BY_KEY[n.key] = n; });
@@ -4648,6 +4649,22 @@ const Cloud = (function () {
             if (nb.side && nb.opensWith && st.unlocked.includes(nb.opensWith) && !st.unlocked.includes(nb.key)) { st.unlocked.push(nb.key); added.push(nb); }
         });
         return added;
+    }
+    // 教養の手帖が開いたことを1回だけ知らせる（起動時に黙って開いた場合など。知らせた手帖は sideNbAnnounced に残す）
+    function sideNbAnnounced() {
+        try { const a = JSON.parse(localStorage.getItem('sideNbAnnounced') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+    }
+    function markSideNbAnnounced(list) {
+        const seen = sideNbAnnounced();
+        list.forEach(nb => { if (!seen.includes(nb.key)) seen.push(nb.key); });
+        try { localStorage.setItem('sideNbAnnounced', JSON.stringify(seen)); } catch (e) {}
+    }
+    function announceSideNotebooks() {
+        const seen = sideNbAnnounced();
+        const fresh = NOTEBOOKS.filter(nb => nb.side && notebookState.unlocked.includes(nb.key) && !seen.includes(nb.key));
+        if (!fresh.length) return;
+        markSideNbAnnounced(fresh);
+        Cloud.toast(fresh.map(nb => `新しい手帖『${nb.name}』が開きました`).join('／'), 6000);
     }
 
     // 手帖ごとの所持枚数（IDの接頭辞で数える。手帖データを読み込まなくても数えられる）
@@ -4821,11 +4838,12 @@ const Cloud = (function () {
         if (currentNB.key !== 'PT') {
             const rows = loadNotebookRows(currentNB);
             if (rows && rows.length) { cardsData = buildCardsFor(currentNB, rows); return; }
-            // 読み込み失敗：白金が開いていればそちらで起動。だめなら開いているほかの手帖（新しい順）で起動。どれもだめなら空のまま
+            // 読み込み失敗：白金が開いていればそちらで起動。だめなら開いているほかの本編の手帖（新しい順）、次に教養の手帖で起動。どれもだめなら空のまま
             alert(`${currentNB.name}のデータを読み込めませんでした。通信状態を確認して再読み込みしてください。`);
             if (!notebookState.unlocked.includes('PT')) {
                 const failed = currentNB.key;
-                const others = notebookState.unlocked.filter(k => k !== failed && k !== 'PT' && NB_BY_KEY[k]).reverse();
+                const order = MAIN_NOTEBOOKS.slice().reverse().concat(NOTEBOOKS.filter(n => n.side)).map(n => n.key);
+                const others = order.filter(k => k !== failed && k !== 'PT' && notebookState.unlocked.includes(k));
                 for (const k of others) {
                     const r2 = loadNotebookRows(NB_BY_KEY[k]);
                     if (r2 && r2.length) { currentNB = NB_BY_KEY[k]; cardsData = buildCardsFor(currentNB, r2); return; }
@@ -10785,7 +10803,7 @@ const Cloud = (function () {
         // 結果の手帖までを開く（すでに開いている手帖は閉じない）
         const upto = PL_ORDER.indexOf(key);
         PL_ORDER.slice(0, upto + 1).forEach(k => { if (!notebookState.unlocked.includes(k)) notebookState.unlocked.push(k); });
-        unlockSideNotebooks(notebookState);
+        if (unlockSideNotebooks(notebookState).length) setTimeout(announceSideNotebooks, 2800);
         notebookState.unlocked.sort((a, b) => (NB_BY_KEY[a] ? NB_BY_KEY[a].idx : 99) - (NB_BY_KEY[b] ? NB_BY_KEY[b].idx : 99));
         saveNotebookState();
         if (key !== currentNB.key) switchNotebook(key);
@@ -10903,15 +10921,16 @@ const Cloud = (function () {
             }
         }
         const sides = unlockSideNotebooks(notebookState);   // 銀が開いたら教養の手帖も開く
-        if (!newly && sides.length) saveNotebookState();
+        if (!newly && sides.length) { saveNotebookState(); announceSideNotebooks(); }
         if (!newly) return;
+        if (sides.length) markSideNbAnnounced(sides);   // 下の「開いた！」の知らせで一緒に伝える
         saveNotebookState();
         logEvent('notebook_unlock', null, null);
         // ガチャ演出の邪魔をしないよう少し待ってから知らせる
         setTimeout(() => {
             document.getElementById('nbUnlockMsg').textContent = `${newly.name}が開いた！`;
             document.getElementById('nbUnlockSub').textContent = `${newly.level}・${newly.count}枚の新しいカードが待っています` +
-                (sides.length ? `（${sides.map(n => n.name).join('・')}も開きました）` : '');
+                (sides.length ? `\n${sides.map(n => `「${n.name}」`).join('・')}も開きました` : '');
             document.getElementById('nbUnlockGo').onclick = () => {
                 document.getElementById('nb-unlock-toast').style.display = 'none';
                 switchNotebook(newly.key);
@@ -10932,6 +10951,7 @@ const Cloud = (function () {
     renderCollection();
     checkLoginStreak();
     setTimeout(checkAchievements, 3500);   // 起動後に実績を確認（これまでの記録で解除できるものはまとめて）
+    setTimeout(announceSideNotebooks, 3000);   // 起動時に開いた教養の手帖（すでに銀を持っている人など）を1回だけ知らせる
 
     // タップ音
     document.addEventListener('pointerdown', (e) => {

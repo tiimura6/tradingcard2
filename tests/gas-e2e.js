@@ -134,6 +134,27 @@ async function newDevice(b, gas, name) {
     check(out.some(x => String(x[0]).includes('学習前と学習後の両方を受けた 2人の平均点は 5点 → 8点')), '要約に確認問題の文');
   }
 
+  // ---------- サーバー単体：列を足す前のシートで setup をやり直す ----------
+  console.log('既存シートの setup（列を足したあと）');
+  {
+    const ref = makeEnv(); ref.ctx.setup();
+    const HS = ref.sheets['取り組み状況'].data[0], HLfull = ref.sheets['学習ログ'].data[0];
+    const env = makeEnv(); const { ctx: gas, sheets } = env; const ss = gas.SpreadsheetApp.getActiveSpreadsheet();
+    const ST = ss.insertSheet('取り組み状況');
+    ST.data = [HS.slice(0, 29), ['old1', 'ふるい'].concat(Array(27).fill(''))];
+    ST.getRange(1, 1, 1000, 29).createFilter();   // 29列のときに作ったフィルタ
+    ss.insertSheet('学習ログ').data = [HLfull.slice(0, 15)];
+    gas.setup();
+    const H = ST.data[0];
+    check(H.length === 30 && H[29] === '時の回廊（枚）' && ST.data[1][0] === 'old1', '取り組み状況：30列目の見出しが入る・既存の行はそのまま ' + JSON.stringify(H.slice(27)));
+    const HL = sheets['学習ログ'].data[0];
+    check(HL.length === 17 && HL[15] === '確認問題の段階' && HL[16] === '確認問題の点数', '学習ログ：16・17列目の見出しが入る ' + JSON.stringify(HL.slice(14)));
+    const f = ST.getFilter();
+    check(!!f && f.getRange().getNumColumns() === HS.length && f.getRange().c === 1, 'フィルタが全列（' + HS.length + '列）にかかり直す（' + (f ? f.getRange().getNumColumns() : 'なし') + '列）');
+    gas.setup();
+    check(ST.getFilter().getRange().getNumColumns() === HS.length, 'もう一度 setup しても安全');
+  }
+
   // ---------- サーバー単体：学習ログは新しいものが上・古いログは保管ファイルへ ----------
   console.log('学習ログの並び順と保管（Code.gs）');
   {
