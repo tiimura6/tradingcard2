@@ -172,3 +172,12 @@
 | 98 | merge (v.)【差し替え】 | 1990年10月3日、東西ドイツの「1つの国への合併」（EBSCO：the official merging of East Germany and West Germany into a single nation）。法的には新しい5州が基本法の適用範囲に加入した（deutschland.de：accession of the five new federal states）ので、"when East Germany's five states joined West Germany" を添えて、対等な合併でなく東の州が西に加わった形だとわかるようにした。 |
 | 99 | dissolve (v.) | ゴルバチョフが12月25日に辞任し、6日後にソ連が消滅（Britannica）、12月25日の辞任演説でソ連の解体を表明、15の独立国になった、クレムリンの赤旗が降ろされた（History.com）。消滅の日付は資料で差がある（12月26日とも31日とも）ので「辞任の後」とだけ書いた。絵の旗の降下と「わずかな見物人」は History.com による。 |
 | 100 | election (n.) | 1994年4月27日、全人種が投票できる初めての選挙（南アフリカ歴史オンライン SAHO：first election in which people of every race could vote／History.com：first multiracial elections）、マンデラが5月に大統領に就任（History.com）。マンデラは2013年没で、例文に名前を出した。絵は特定の人物を描かない投票の列。弱いところ：長い投票の列は広く知られた光景だが、確認した2つの資料には書かれていない。 |
+
+### レビュー後の修正（バッチ5）
+
+- No.75（近代、この項目だけ変更を許可された）：例文の結びの partition が No.90 のターゲット単語と重なるので、"…these rules helped speed up Europe's takeover of the continent." にした（takeover はどのカードのターゲット単語でもない。division は No.93 divided と語幹が同じなので避けた）。和訳（ベルリン＝コンゴ会議、アフリカ分割）はそのまま。25語。
+- No.90：例文が India を繰り返し、インドを「新しい国」と呼んでいたので、"In July 1947, Britain passed the Indian Independence Act, which provided for the partition of British India into two independent dominions, India and Pakistan." にした。和訳は「1947年7月、イギリスはインド独立法を制定し、イギリス領インドをインドとパキスタンの2つの自治領に分割することを定めた。」。英国議会の Living Heritage のページ（「2つの新しい独立した自治領、インドとパキスタンをつくった」）を出典に足した。内容は parliament.uk の同じパスのページ（検索結果の webtest.parliament.uk ホスト）で確認した。
+- No.99：各共和国の独立はゴルバチョフの辞任の後ではない（ウクライナは1991年8月24日に独立を宣言）ので、出来事の順を言わない形にした。"In December 1991, Mikhail Gorbachev resigned and the Soviet Union was dissolved, leaving Russia, Ukraine and the other former Soviet states as separate countries."、和訳は「1991年12月、ゴルバチョフが辞任してソ連解体となり、ロシアやウクライナなど旧ソ連の国々はそれぞれ別の国として残った。」。dissolve は1回だけ。
+- No.94：Ohio State University の Origins（1960年が「アフリカの年」と呼ばれ、17か国が独立を祝った）を出典に足した。「アフリカの年」という呼び名は、これで議会図書館のブログの題だけに頼らなくなった。
+- No.100：NPR（初めての全人種の選挙、長い行列で何時間も待つ有権者、マンデラが初の黒人大統領になった）を出典に足した。これで絵の投票の列も出典で裏づけられる。
+- 避けられない重なりとして記録：No.62 の例文の colonies と No.94 の colonial は同じ語幹（独立宣言の「13植民地」は史実の核で言い換えにくい）。検査の語族判定（語幹 colonial）には引っかからない。
