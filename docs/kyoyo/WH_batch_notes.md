@@ -130,6 +130,11 @@
 | 79 | inspire (v.) | 日本の勝利がアジアの民族主義を燃え上がらせた（Gale『Encyclopedia of Russian History』〈encyclopedia.com〉）、インドの政治家を急進化させ、トルコの民族主義者を熱狂させた（Hunt ほか『The Making of the West』〈Macmillan〉）、ネルーと孫文の言葉（記念艦三笠）。絵の日本海海戦（1905年5月27日、対馬沖）は三笠のページによる。 |
 | 80 | republic (n.) | 1911年10月の武昌の蜂起から革命が広がり、孫文が新しく宣言された中華民国の臨時大総統に選ばれた（米国国務省 Office of the Historian・EBSCO：12月29日に選出）。中華民国の成立日（1912年1月1日）は確認した2つの資料に日付がないので書かない。英語名は Xinhai でなく "the 1911 Revolution"（国務省の表記）。 |
 
+### レビュー後の修正（バッチ4）
+
+- No.75：和訳の「ベルリン会議」は1878年のベルリン会議（バルカン問題）と同じ教科書用語になってしまうので、「1884〜85年のベルリン＝コンゴ会議で、…」にした（教科書用語 アフリカ分割 はそのまま）。英語は Berlin Conference of 1884–1885 のまま。"which" が何を指すかあいまいだったので "…; these rules helped speed up the partition of the continent." にした。絵の「窓の外の雪」は出典で確かめていないので削った。
+
+
 ### レビュー後の修正（バッチ3）
 
 - No.47：magnificent が称号「Suleiman the Magnificent」の中にしかなく典型的な用法でないこと、和訳の「（Suleiman the Magnificent）」が答えを見せてしまうことから、同じスレイマン1世の題材で「壮大な建物」という典型的な用法に書き直した。例文は "In Istanbul, the architect Sinan built the magnificent Süleymaniye Mosque for the Ottoman sultan Suleiman I, finishing it in 1557."、和訳は「イスタンブルでは、建築家シナンがオスマン帝国のスルタン、スレイマン1世のために壮大なスレイマン＝モスク（スレイマニエ＝モスク）を建て、1557年に完成させた。」。設計者シナンと1550–57年は Britannica（Mosque of Süleyman I the Magnificent の図版説明：by Mimar Sinan, 1550–57）、スレイマン1世の創建・1550年起工・1557年落成の銘板・金角湾を見下ろす丘の立地は Archnet（Süleymaniye Külliyesi）。出典をこの2つに替えた。絵は金角湾を見下ろす丘に建つ、大ドームと4本の細いミナレットのモスク。教科書用語（スレイマン1世）は変わらないので選定表はそのまま。
