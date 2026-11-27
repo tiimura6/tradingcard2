@@ -129,3 +129,8 @@
 | 78 | surround (v.)【差し替え】 | 1900年6月20日〜8月14日の約55日間、義和団と中国の兵士が公使館を包囲し、8か国の救援軍が到着した（Britannica・英国国立陸軍博物館）。英語の名前 Boxer Rebellion は No.70 rebel と同じ語幹なので出さない。和訳は教科書の「義和団戦争」「8か国連合軍」。 |
 | 79 | inspire (v.) | 日本の勝利がアジアの民族主義を燃え上がらせた（Gale『Encyclopedia of Russian History』〈encyclopedia.com〉）、インドの政治家を急進化させ、トルコの民族主義者を熱狂させた（Hunt ほか『The Making of the West』〈Macmillan〉）、ネルーと孫文の言葉（記念艦三笠）。絵の日本海海戦（1905年5月27日、対馬沖）は三笠のページによる。 |
 | 80 | republic (n.) | 1911年10月の武昌の蜂起から革命が広がり、孫文が新しく宣言された中華民国の臨時大総統に選ばれた（米国国務省 Office of the Historian・EBSCO：12月29日に選出）。中華民国の成立日（1912年1月1日）は確認した2つの資料に日付がないので書かない。英語名は Xinhai でなく "the 1911 Revolution"（国務省の表記）。 |
+
+### レビュー後の修正（バッチ3）
+
+- No.47：magnificent が称号「Suleiman the Magnificent」の中にしかなく典型的な用法でないこと、和訳の「（Suleiman the Magnificent）」が答えを見せてしまうことから、同じスレイマン1世の題材で「壮大な建物」という典型的な用法に書き直した。例文は "In Istanbul, the architect Sinan built the magnificent Süleymaniye Mosque for the Ottoman sultan Suleiman I, finishing it in 1557."、和訳は「イスタンブルでは、建築家シナンがオスマン帝国のスルタン、スレイマン1世のために壮大なスレイマン＝モスク（スレイマニエ＝モスク）を建て、1557年に完成させた。」。設計者シナンと1550–57年は Britannica（Mosque of Süleyman I the Magnificent の図版説明：by Mimar Sinan, 1550–57）、スレイマン1世の創建・1550年起工・1557年落成の銘板・金角湾を見下ろす丘の立地は Archnet（Süleymaniye Külliyesi）。出典をこの2つに替えた。絵は金角湾を見下ろす丘に建つ、大ドームと4本の細いミナレットのモスク。教科書用語（スレイマン1世）は変わらないので選定表はそのまま。
+- No.51：和訳で船がアメリカ大陸で人々を奴隷にした主体のように読めたことと、英語が26語だったことを直した。例文は "In the Atlantic triangular trade, European ships took goods to West Africa and carried millions of captive Africans into slavery in the Americas."（23語）、和訳は「大西洋三角貿易では、ヨーロッパの船が西アフリカへ商品を運び、捕らわれた何百万人ものアフリカの人々を、奴隷としてアメリカ大陸へ運んだ。」。"millions" はアメリカン・バトルフィールド・トラスト（900万〜1200万人）で裏づけられる。
