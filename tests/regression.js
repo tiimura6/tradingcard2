@@ -51,10 +51,12 @@ async function openApp(browser, { seed, viewport, ignoreMute, beforeGoto } = {})
     // レベル判定テストは、そのテストでだけ出す（ほかのテストでは画面をふさぐため受験済みにしておく）
     if (!sessionStorage.getItem('__seeded') && !(seed && seed.__placement)) localStorage.setItem('placementDone', 'test');
     if (!sessionStorage.getItem('__seeded') && !(seed && seed.__tutorial)) localStorage.setItem('tutorialDone', 'test');   // 遊び方の案内は案内のテストでだけ出す
+    // 教養の手帖の学習前チェックの案内は、確認問題のテストでだけ出す
+    if (!sessionStorage.getItem('__seeded') && !(seed && seed.__kyoyoCheck)) localStorage.setItem('kyoyoCheckAsked', JSON.stringify(['WH']));
     // 物語の場面は、物語のテストでだけ出す（ほかのテストでは画面をふさぐので読んだことにしておく）
     if (!sessionStorage.getItem('__seeded') && !(seed && seed.__story)) localStorage.setItem('storySeen', JSON.stringify(Object.fromEntries(['prologue','end_A1','start_A2','end_A2','start_B1','end_B1','start_B2','end_B2','start_PT','end_PT','hof'].map(k => [k, 1]))));
     if (seed && !sessionStorage.getItem('__seeded')) {
-      Object.entries(seed).forEach(([k, v]) => { if (k !== '__placement' && k !== '__story' && k !== '__tutorial') localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)); });
+      Object.entries(seed).forEach(([k, v]) => { if (k !== '__placement' && k !== '__story' && k !== '__tutorial' && k !== '__kyoyoCheck') localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)); });
       sessionStorage.setItem('__seeded', '1');
     }
   }, { seed: seed || null, ignoreMute: !!ignoreMute });
@@ -1012,6 +1014,122 @@ test('教養の手帖：幅360pxで強調・時代名がはみ出さない', asy
     if (s.startsWith('show')) assert(await p.evaluate(() => document.querySelectorAll('#zoomInfoContent .kyo-term').length) === 1, '強調がない');
     if (s.includes('openTrainingMode')) assert((await p.evaluate(() => document.querySelector('#advTrail .adv-head').innerText)).includes('現代'), '時代名がない');
   }
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+// ---- 教養の手帖：日本語の確認問題（学習前・後）----
+const WH_CHECK = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '..', 'data', 'kyoyo_check_WH.json'), 'utf8')).items;
+const kcVisible = p => p.evaluate(() => { const el = document.getElementById('kyoyo-check-overlay'); return !!el && getComputedStyle(el).display !== 'none'; });
+// 確認問題の画面を最後まで解く（right=true で全問正解、false で全問不正解）
+async function kcAnswerAll(p, right) {
+  for (let i = 0; i < 10; i++) {
+    const q = await p.evaluate(() => document.querySelector('#kyoyoCheckBox .kc-q').textContent);
+    const it = WH_CHECK.find(x => x.q === q);
+    assert(it, '問題文が見つからない: ' + q);
+    const pick = right ? it.choices[it.answer] : it.choices[(it.answer + 1) % 4];
+    const r = await p.evaluate(t => { const bs = [...document.querySelectorAll('#kyoyoCheckBox .pl-choices button')];
+      const b = bs.find(x => x.textContent === t); b.click();
+      return { n: bs.length, ok: document.querySelectorAll('#kyoyoCheckBox .pl-choices button.ok').length }; }, pick);
+    assert(r.n === 4 && r.ok === 0, '4択でない／正解を表示した: ' + JSON.stringify(r));
+    await p.waitForTimeout(600);
+  }
+}
+test('確認問題：WH を初めて開いたとき「学習前のチェック（任意）」を1回だけ案内し、スキップできる', async b => {
+  const p = await openApp(b, { seed: { __kyoyoCheck: true, cardMergeV1: '1', notebookState: { unlocked: ['A1', 'A2', 'B1'], current: 'B1' } } });
+  await p.waitForTimeout(1500);
+  assert(!(await kcVisible(p)), '銀の手帖で案内が出た');
+  await p.evaluate(() => switchNotebook('WH')); await p.waitForTimeout(3500);
+  const r = await p.evaluate(() => ({ nb: currentNB.key, txt: document.getElementById('kyoyoCheckBox').innerText }));
+  assert(await kcVisible(p), '案内が出ない ' + JSON.stringify(r));
+  assert(r.nb === 'WH' && r.txt.includes('学習前のチェック（任意）') && r.txt.includes('カードやゴールドには影響しません') && !r.txt.includes('先生'), JSON.stringify(r));
+  await p.click('#kyoyoCheckBox .pl-skip'); await p.waitForTimeout(400);
+  const s = await p.evaluate(() => ({ asked: JSON.parse(localStorage.getItem('kyoyoCheckAsked') || '[]'), chk: JSON.parse(localStorage.getItem('kyoyoCheck') || '{}') }));
+  assert(!(await kcVisible(p)) && s.asked.includes('WH') && !(s.chk.WH && s.chk.WH.pre), JSON.stringify(s));
+  // 2回目からは出ない（切り替え直し・再読み込み）
+  await p.evaluate(() => switchNotebook('B1')); await p.waitForTimeout(2800);
+  await p.evaluate(() => switchNotebook('WH')); await p.waitForTimeout(3500);
+  assert(!(await kcVisible(p)), '2回目にも案内が出た');
+  await p.reload(); await p.waitForTimeout(4000);
+  assert((await p.evaluate(() => currentNB.key)) === 'WH' && !(await kcVisible(p)), '再読み込みで案内が出た');
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('確認問題：学習後のチェックは WH を100枚集めるまで押せない／集めると押せる', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1', unlockedCards: ids('wh', 1, 99), notebookState: { unlocked: ['A1', 'A2', 'B1'], current: 'WH' } } });
+  await p.evaluate(() => openSettings());
+  const entry = await p.evaluate(() => { const b = [...document.querySelectorAll('#settingsBox .set-link')].find(x => x.innerText.includes('知識チェック')); if (b) b.click(); return !!b; });
+  assert(entry, '設定に入口がない');
+  await p.waitForTimeout(300);
+  const r = await p.evaluate(() => { const b = document.querySelector('#kyoyoCheckBox [data-kc="WH:post"]'); return { vis: !!b, dis: b && b.disabled, txt: document.getElementById('kyoyoCheckBox').innerText }; });
+  assert(r.vis && r.dis && r.txt.includes('あと1枚'), JSON.stringify(r));
+  // 押せないボタンを直接呼んでも始まらない
+  await p.evaluate(() => startKyoyoCheck('WH', 'post')); await p.waitForTimeout(300);
+  assert(!(await p.evaluate(() => !!document.querySelector('#kyoyoCheckBox .kc-q'))), '99枚で学習後のチェックが始まった');
+  await p.evaluate(() => { unlockedCards.push('wh-100'); openKyoyoCheckPanel(); });
+  const r2 = await p.evaluate(() => { const b = document.querySelector('#kyoyoCheckBox [data-kc="WH:post"]'); return { dis: b && b.disabled }; });
+  assert(r2.dis === false, JSON.stringify(r2));
+  await p.click('#kyoyoCheckBox [data-kc="WH:post"]'); await p.waitForTimeout(300);
+  assert(await p.evaluate(() => !!document.querySelector('#kyoyoCheckBox .kc-q')), '100枚で始まらない');
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('確認問題：結果が kyoyoCheck と logEvent に記録され、同じ段階は2回受けられない', async b => {
+  const p = await openApp(b, { seed: { cardMergeV1: '1', notebookState: { unlocked: ['A1', 'A2', 'B1'], current: 'WH' } } });
+  await p.evaluate(() => { window.__logs = []; const o = window.logEvent; window.logEvent = function (...a) { window.__logs.push(a); return o.apply(this, a); }; });
+  await p.evaluate(() => openKyoyoCheckPanel());
+  await p.click('#kyoyoCheckBox [data-kc="WH:pre"]'); await p.waitForTimeout(300);
+  await kcAnswerAll(p, true);
+  const r = await p.evaluate(() => ({ chk: JSON.parse(localStorage.getItem('kyoyoCheck') || '{}'), logs: window.__logs.filter(l => l[0] === 'kyoyo_check'),
+    txt: document.getElementById('kyoyoCheckBox').innerText }));
+  assert(r.chk.WH && r.chk.WH.pre && r.chk.WH.pre.score === 10 && typeof r.chk.WH.pre.at === 'number' && r.chk.WH.post === null, JSON.stringify(r.chk));
+  assert(r.logs.length === 1 && r.logs[0][1] === null && r.logs[0][2] === null && JSON.stringify(r.logs[0][3]) === JSON.stringify({ nb: 'WH', phase: 'pre', score: 10 }), JSON.stringify(r.logs));
+  // 結果画面は点数だけ（正解・解説を出さない）
+  assert(r.txt.includes('10') && r.txt.includes('学習前') && r.txt.includes('学習後'), r.txt);
+  const leaked = WH_CHECK.filter(it => r.txt.includes(it.choices[it.answer]) || r.txt.includes(it.q));
+  assert(leaked.length === 0, '結果画面に正解・問題文: ' + leaked.map(x => x.q).join(' / '));
+  // 同じ段階は2回受けられない
+  await p.evaluate(() => openKyoyoCheckPanel());
+  const d = await p.evaluate(() => { const b = document.querySelector('#kyoyoCheckBox [data-kc="WH:pre"]'); return { dis: b ? b.disabled : true, txt: document.getElementById('kyoyoCheckBox').innerText }; });
+  assert(d.dis && d.txt.includes('10'), JSON.stringify(d));
+  await p.evaluate(() => startKyoyoCheck('WH', 'pre')); await p.waitForTimeout(300);
+  assert(!(await p.evaluate(() => !!document.querySelector('#kyoyoCheckBox .kc-q'))), '学習前のチェックをもう一度受けられた');
+  // 100枚そろえて学習後（全問不正解でも正解は表示しない）
+  await p.evaluate(() => { for (let i = 1; i <= 100; i++) if (!unlockedCards.includes('wh-' + i)) unlockedCards.push('wh-' + i); openKyoyoCheckPanel(); });
+  await p.click('#kyoyoCheckBox [data-kc="WH:post"]'); await p.waitForTimeout(300);
+  await kcAnswerAll(p, false);
+  const r2 = await p.evaluate(() => ({ chk: JSON.parse(localStorage.getItem('kyoyoCheck') || '{}'), logs: window.__logs.filter(l => l[0] === 'kyoyo_check').map(l => l[3]) }));
+  assert(r2.chk.WH.pre.score === 10 && r2.chk.WH.post.score === 0 && r2.logs.length === 2 && r2.logs[1].phase === 'post' && r2.logs[1].score === 0, JSON.stringify(r2));
+  await p.evaluate(() => startKyoyoCheck('WH', 'post')); await p.waitForTimeout(300);
+  assert(!(await p.evaluate(() => !!document.querySelector('#kyoyoCheckBox .kc-q'))), '学習後のチェックをもう一度受けられた');
+  assert(p.__errors.length === 0, p.__errors.join(' / '));
+});
+
+test('確認問題：普段のクイズ・冒険・バトルには日本語の確認問題が出ない', async b => {
+  assert(WH_CHECK.length === 10 && WH_CHECK.every(it => it.choices.length === 4 && it.answer >= 0 && it.answer < 4 && it.no >= 1 && it.no <= 100), 'データの形');
+  const p = await openApp(b, { seed: { cardMergeV1: '1', unlockedCards: ids('wh', 1, 40), notebookState: { unlocked: ['A1', 'A2', 'B1'], current: 'WH' } } });
+  const seen = [];
+  const grab = async () => seen.push(await p.evaluate(() => document.body.innerText));
+  await p.evaluate(() => enterAdventureMode()); await p.waitForTimeout(2000);
+  await p.evaluate(() => { closeTrainingModal(false); openTrainingMode(); }); await p.waitForTimeout(500);
+  for (let i = 0; i < 20; i++) {
+    await grab();
+    await p.evaluate(() => { trainingSession.qCount = 0; const b = document.querySelector('.quiz-choice-btn[data-correct]') || document.querySelector('.quiz-choice-btn'); if (b) b.click(); });
+    await p.waitForTimeout(1400);
+    await grab();
+    await p.evaluate(() => { const bs = [...document.querySelectorAll('#quizChoices .action-btn')]; if (bs.length) bs[bs.length - 1].click(); });
+    await p.waitForTimeout(350);
+  }
+  await p.evaluate(() => { closeTrainingModal(true); }); await p.waitForTimeout(800);
+  await formParty(p, 0); await p.evaluate(() => confirmFormationAndStart()); await p.waitForTimeout(2000);
+  await p.evaluate(() => { battleSession.enemyHP = 1; battleChoose('attack'); }); await p.waitForTimeout(600);
+  assert(await p.evaluate(() => getComputedStyle(document.getElementById('quiz-overlay')).display !== 'none'), 'バトルの問題が出ない');
+  await grab();
+  await p.evaluate(() => { battleSession.enemyHP = 1; HIT_RATE.attack.ok = 1; const b = document.querySelector('.quiz-choice-btn[data-correct]'); if (b) b.click(); });
+  await p.waitForTimeout(5500);
+  await grab();
+  const hits = WH_CHECK.filter(it => seen.some(t => t.includes(it.q)));
+  assert(seen.length >= 42 && hits.length === 0, '確認問題が出た: ' + hits.map(x => x.q).join(' / '));
+  assert(!(await kcVisible(p)), '確認問題の画面が開いた');
   assert(p.__errors.length === 0, p.__errors.join(' / '));
 });
 

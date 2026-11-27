@@ -2465,6 +2465,25 @@
         }
         /* ===== レベル判定テスト ===== */
         #placement-overlay { z-index: 4500; }
+        /* 教養の手帖：日本語の確認問題（見た目はレベル判定テストと同じ pl-* を使う） */
+        #kyoyo-check-overlay { z-index: 4500; }
+        #kyoyoCheckBox { width: 92%; max-width: 400px; }
+        .kc-q { font-family: 'Noto Serif JP', serif; font-size: 16px; font-weight: bold; line-height: 1.65; color: #2a1a08; text-align: left; margin: 6px 0 14px; overflow-wrap: anywhere; }
+        .kc-era { font-size: 11px; color: #9a7a3a; margin-bottom: 2px; }
+        .pl-choices button.kc-picked { background: #f0dcaa; border-color: #8a5a10; }
+        .kc-nb { text-align: left; background: #fffdf5; border: 1px solid #e0cc98; border-radius: 12px; padding: 10px 12px; margin: 0 0 10px; }
+        .kc-nb-name { font-weight: bold; color: #5a3a10; font-size: 14px; margin-bottom: 6px; }
+        .kc-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; border-top: 1px dashed #e8d8b0; }
+        .kc-row:first-of-type { border-top: 0; }
+        .kc-row .lb { font-size: 13px; color: #3a2a10; }
+        .kc-row .lb small { display: block; font-size: 11px; color: #9a8a70; }
+        .kc-row button { flex: none; padding: 8px 14px; font-size: 13px; font-weight: bold; color: #fff; background: linear-gradient(150deg, #a8701a, #6a4008); border: 0; border-radius: 10px; cursor: pointer; }
+        .kc-row button:disabled { background: #cfc4ad; color: #fff; cursor: default; }
+        .kc-score { font-size: 15px; font-weight: bold; color: #5a3a10; }
+        .kc-result { display: flex; justify-content: center; gap: 14px; margin: 8px 0 14px; }
+        .kc-result > div { flex: 1; max-width: 150px; background: #fffdf5; border: 2px solid #e0cc98; border-radius: 12px; padding: 10px 6px; }
+        .kc-result .lb { font-size: 12px; color: #7a6a50; }
+        .kc-result .pt { font-family: Georgia, 'Noto Serif JP', serif; font-size: 28px; font-weight: bold; color: #5a3a10; }
         #placementBox { width: 92%; max-width: 420px; text-align: center; position: relative; }
         .pl-title { font-family: 'Noto Serif JP', serif; font-size: 19px; color: #5a3a10; margin: 0 0 4px; }
         .pl-sub { font-size: 12.5px; color: #7a6a50; margin: 0 0 14px; line-height: 1.6; }
@@ -2733,6 +2752,8 @@
 
 <!-- 手帖えらび -->
 <div id="placement-overlay" class="modal-overlay" style="display:none;"><div class="custom-box" id="placementBox"></div></div>
+<!-- 教養の手帖：日本語の確認問題 -->
+<div id="kyoyo-check-overlay" class="modal-overlay" style="display:none;"><div class="custom-box" id="kyoyoCheckBox"></div></div>
 <div id="nb-picker" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeNotebookPicker()">
     <div class="custom-box" style="width:90%;max-width:380px;">
         <h3 style="margin:0 0 4px;color:#5a3a10;font-family:'Noto Serif JP',serif;">📚 手帖をえらぶ</h3>
@@ -3041,7 +3062,7 @@ const Cloud = (function () {
         'unlockedCards', 'srsData', 'dailyGachaStorage', 'loginStreak', 'xpData',
         'specialTickets', 'spEnhanceData', 'dailyStudyData', 'dailyChallenges',
         'weeklyChallenges', 'hallOfFame', 'battleProgress', 'notebookState', 'gold', 'awakened',
-        'cardMergeV1', 'advArea', 'advAreaV2', 'advStep', 'advMiss', 'advProg', 'placementDone', 'placementResult', 'achv', 'playStats', 'studyLog', 'reportHist', 'grammarDone',   // カード番号移行済みの印（別端末で取り込んだときに二重移行しないため）／冒険の道の地域
+        'cardMergeV1', 'advArea', 'advAreaV2', 'advStep', 'advMiss', 'advProg', 'placementDone', 'placementResult', 'achv', 'playStats', 'studyLog', 'reportHist', 'grammarDone', 'kyoyoCheck', 'kyoyoCheckAsked',   // カード番号移行済みの印（別端末で取り込んだときに二重移行しないため）／冒険の道の地域
     ];
     const K = { SESSION: 'authSession', GUEST: 'authGuest', DIRTY: 'authDirty', QUEUE: 'logQueue', LAST: 'authLastSync', ACTIVE: 'authLastActive' };
     // 共用の端末：最後の操作からこの時間がたったら、次に開いたとき自動でログアウトする（記録は保存してから）
@@ -4607,7 +4628,8 @@ const Cloud = (function () {
         // 教養の手帖（色 c は仮。変えるときはここだけ直す）
         { key: 'WH', name: '時の回廊の手帖（世界史）', level: '世界史 × CEFR-J B1〜', sub: '時の回廊　歴史をめぐる英単語', count: 100, prefix: 'wh',
           c: ['#f3e3c3', '#b07a3c', '#6b4219'], gem: '🏺', side: true, opensWith: 'B1', asset: 'B1',
-          stageNames: ['古代', '中世', '近世', '近代', '現代'] },   // 冒険の面の見出し（時代）
+          stageNames: ['古代', '中世', '近世', '近代', '現代'],   // 冒険の面の見出し（時代）
+          check: 'data/kyoyo_check_WH.json' },   // 日本語の確認問題（学習前・100枚収集後の2回、任意）。普段のクイズ・冒険・バトルには出さない
     ];
     const NB_BY_KEY = {};
     NOTEBOOKS.forEach((n, i) => { n.idx = i; NB_BY_KEY[n.key] = n; });
@@ -5203,6 +5225,7 @@ const Cloud = (function () {
             ${GAS_URL ? `<button class="set-link" onclick="closeSettings();Cloud.chipClick()"><span>👤 ${Cloud.isLoggedIn() ? 'アカウント' : 'ログイン・新規登録'}<small style="display:block;font-size:11px;color:#c8b090;">${Cloud.accountLabel()}</small></span><span>›</span></button>` : ''}
             <button class="set-link" onclick="closeSettings();openCouponModal()"><span>🗝️ 秘密の鍵</span><span>›</span></button>
             <button class="set-link" onclick="closeSettings();openPlacement(true)"><span>🎯 レベル判定テストを受ける</span><span>›</span></button>
+            ${kcNotebooks().length ? `<button class="set-link" onclick="closeSettings();openKyoyoCheckPanel()"><span>📜 教養の手帖の知識チェック<small style="display:block;font-size:11px;color:#c8b090;">日本語の10問・受けるかは自由</small></span><span>›</span></button>` : ''}
             <button class="set-link" onclick="closeSettings();openReport()"><span>📈 学習レポート</span><span>›</span></button>
             <button class="set-link" onclick="closeSettings();openTutorial()"><span>📘 遊び方</span><span>›</span></button>
             <button class="set-link" onclick="installApp()"><span>📲 ホーム画面に追加</span><span>›</span></button>
@@ -5211,6 +5234,159 @@ const Cloud = (function () {
         updateAchvBtn();
     }
     function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
+
+    /* ========== 教養の手帖：日本語の確認問題（学習前・100枚収集後） ==========
+       カードの知識（世界史など）が身についたかを、日本語の4択10問で確かめる。任意参加で、カード・ゴールドには影響しない。
+       手帖の check（問題ファイル）で決まるので、科目を足すときは NOTEBOOKS に check を書くだけでよい。
+       kyoyoCheck = { 手帖のキー: { pre: { score, at } | null, post: { score, at } | null } }
+       kyoyoCheckAsked = [学習前のチェックを案内した手帖のキー]（案内は1回だけ）
+       ・学習前：その手帖のカードを集めはじめる前だけ（案内から、または設定から）
+       ・学習後：その手帖のカードを全部集めたら
+       どちらも1回だけ。結果画面は点数だけで、正解や解説は出さない（普段のクイズ・冒険・バトルにも出さない） */
+    const KC_PHASE = { pre: '学習前', post: '学習後' };
+    const _kcItems = {};
+    let kcSession = null;
+    function kcAll() { const v = safeParse('kyoyoCheck', null); return (v && typeof v === 'object') ? v : {}; }
+    function kcRec(key) { const r = kcAll()[key] || {}; return { pre: r.pre || null, post: r.post || null }; }
+    function kcAskedList() { const v = safeParse('kyoyoCheckAsked', null); return Array.isArray(v) ? v : []; }
+    // 確認問題のある、開いている手帖
+    function kcNotebooks() { return NOTEBOOKS.filter(nb => nb.check && notebookState.unlocked.includes(nb.key)); }
+    // 受けられないときは理由を返す（受けられるときは ''）
+    function kcBlockReason(key, phase) {
+        const nb = NB_BY_KEY[key];
+        if (!nb || !nb.check || !notebookState.unlocked.includes(key)) return 'この手帖にはチェックがありません';
+        const rec = kcRec(key), owned = nbOwnedCount(nb);
+        if (rec[phase]) return '受けました';
+        if (phase === 'pre') {
+            if (rec.post) return '学習後のチェックを受けたあとは受けられません';
+            if (owned > 0) return 'カードを集めはじめる前だけ受けられます';
+            return '';
+        }
+        if (owned < nb.count) return `${nb.count}枚集めると受けられます（あと${nb.count - owned}枚）`;
+        return '';
+    }
+    function kcLoadItems(nb) {
+        if (_kcItems[nb.key]) return Promise.resolve(_kcItems[nb.key]);
+        return fetch(`${nb.check}?v=${NB_DATA_VERSION}`).then(r => r.ok ? r.json() : null).then(j => {
+            const items = j && Array.isArray(j.items) ? j.items.filter(it => it && it.q && Array.isArray(it.choices) && it.choices.length === 4 && it.answer >= 0 && it.answer < 4) : [];
+            if (!items.length) throw new Error('no items');
+            return (_kcItems[nb.key] = items);
+        });
+    }
+    function kcEsc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function kcOpen(html) {
+        document.getElementById('kyoyoCheckBox').innerHTML = html;
+        document.getElementById('kyoyo-check-overlay').style.display = 'flex';
+    }
+    function closeKyoyoCheck() { kcSession = null; document.getElementById('kyoyo-check-overlay').style.display = 'none'; }
+    // 一覧：手帖ごとに学習前・学習後の点数と、受けるボタン
+    function openKyoyoCheckPanel() {
+        kcSession = null;
+        const rows = kcNotebooks().map(nb => {
+            const rec = kcRec(nb.key);
+            const line = phase => {
+                const r = rec[phase], why = kcBlockReason(nb.key, phase);
+                const right = r ? `<span class="kc-score">${r.score} / 10点</span>`
+                    : `<button data-kc="${nb.key}:${phase}" ${why ? 'disabled' : ''} onclick="startKyoyoCheck('${nb.key}','${phase}')">受ける</button>`;
+                return `<div class="kc-row"><div class="lb">${KC_PHASE[phase]}のチェック<small>${r ? '受けました' : (why || (phase === 'pre' ? 'カードを集めはじめる前に' : `${nb.count}枚集めたあとに`))}</small></div>${right}</div>`;
+            };
+            return `<div class="kc-nb"><div class="kc-nb-name">${nb.gem} ${kcEsc(nb.name)}</div>${line('pre')}${line('post')}</div>`;
+        }).join('');
+        kcOpen(`<h3 class="pl-title">📜 教養の手帖の知識チェック</h3>
+            <p class="pl-sub">手帖の知識がどれくらい身についたかを、日本語の4択10問で確かめます。<br>受けるかどうかは自由です。カードやゴールドには影響しません。<br>学習前と、カードを全部集めたあとの2回、それぞれ1回だけ受けられます。</p>
+            ${rows || '<p class="pl-sub">チェックのある手帖がまだ開いていません。</p>'}
+            <button class="pl-skip" onclick="closeKyoyoCheck()">閉じる</button>`);
+    }
+    // はじめて開いたときの案内（学習前のチェック）
+    function kcOffer(key) {
+        const nb = NB_BY_KEY[key];
+        kcOpen(`<h3 class="pl-title">📜 学習前のチェック（任意）</h3>
+            <p class="pl-sub">${kcEsc(nb.name)}をはじめる前に、知識を確かめる日本語の4択10問（約3分）に答えてみませんか？<br>受けるかどうかは自由です。点数はカードやゴールドには影響しません。<br>カードを全部集めたら「学習後のチェック」を受けて、どれだけ伸びたかを比べられます。<br><span style="font-size:11px;color:#9a8a70;">点数は、手帖の効果を確かめるために管理者が見ることがあります。</span></p>
+            <button class="pl-start" onclick="startKyoyoCheck('${key}','pre')">受ける</button>
+            <button class="pl-skip" onclick="closeKyoyoCheck()">今は受けない（カードを集めはじめる前なら、設定からも受けられます）</button>`);
+    }
+    function kcBusy() {
+        if (document.getElementById('appLoading')) return true;
+        if (typeof battleSession !== 'undefined' && battleSession && battleSession.active) return true;
+        return ['auth-overlay', 'placement-overlay', 'tutorial', 'settings-modal', 'nb-picker', 'quiz-overlay', 'kyoyo-check-overlay', 'gacha-overlay', 'nb-unlock-toast'].some(id => {
+            const el = document.getElementById(id); return el && getComputedStyle(el).display !== 'none'; });
+    }
+    // いまの手帖に確認問題があり、まだ案内していなければ、ほかの画面が閉じてから1回だけ案内する
+    let _kcOfferTimer = null;
+    function maybeOfferKyoyoCheck() {
+        if (_kcOfferTimer) clearInterval(_kcOfferTimer);
+        let tries = 0;
+        _kcOfferTimer = setInterval(() => {
+            if (++tries > 240) { clearInterval(_kcOfferTimer); _kcOfferTimer = null; return; }
+            const nb = (typeof currentNB !== 'undefined') ? currentNB : null;
+            if (!nb || !nb.check || kcAskedList().includes(nb.key) || kcBlockReason(nb.key, 'pre')) { clearInterval(_kcOfferTimer); _kcOfferTimer = null; return; }
+            if (kcBusy() || (typeof adventureActive !== 'undefined' && adventureActive)) return;
+            clearInterval(_kcOfferTimer); _kcOfferTimer = null;
+            try { localStorage.setItem('kyoyoCheckAsked', JSON.stringify(kcAskedList().concat([nb.key]))); } catch (e) {}
+            kcOffer(nb.key);
+        }, 700);
+    }
+    setTimeout(maybeOfferKyoyoCheck, 1200);   // 起動したときにすでにその手帖を開いている場合
+    function kcShuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+    function startKyoyoCheck(key, phase) {
+        if (!KC_PHASE[phase] || kcBlockReason(key, phase)) return;
+        const nb = NB_BY_KEY[key];
+        kcOpen('<div style="padding:40px 0;color:#8a7a5a;"><span class="al-inline"></span>問題を準備しています…</div>');
+        kcLoadItems(nb).then(items => {
+            if (kcBlockReason(key, phase)) return closeKyoyoCheck();
+            // 選択肢の順番は毎回入れかえる（answer は問題ファイルに書いた順番での位置）
+            kcSession = { key, phase, qi: 0, score: 0, items: items.map(it => ({ q: it.q, order: kcShuffle([0, 1, 2, 3]), choices: it.choices, answer: it.answer })) };
+            kcShow();
+        }).catch(() => kcOpen(`<p class="pl-sub">問題を読み込めませんでした。通信状態を確認してください。</p><button class="pl-skip" onclick="closeKyoyoCheck()">閉じる</button>`));
+    }
+    function kcShow() {
+        const s = kcSession, it = s.items[s.qi], n = s.items.length;
+        s._answered = false;
+        kcOpen(`<div class="kc-era">${KC_PHASE[s.phase]}のチェック</div>
+            <div class="pl-count">${s.qi + 1} / ${n} 問目</div>
+            <div class="pl-progress"><div style="width:${s.qi / n * 100}%"></div></div>
+            <div class="kc-q">${kcEsc(it.q)}</div>
+            <div class="pl-choices">${it.order.map(k => `<button data-k="${k}">${kcEsc(it.choices[k])}</button>`).join('')}</div>
+            <button class="pl-idk">わからない</button>
+            <button class="pl-skip">やめる（記録されません）</button>`);
+        const box = document.getElementById('kyoyoCheckBox');
+        box.querySelectorAll('.pl-choices button').forEach(b => b.onclick = () => kcAnswer(+b.dataset.k, b));
+        box.querySelector('.pl-idk').onclick = () => kcAnswer(-1, null);
+        box.querySelector('.pl-skip').onclick = closeKyoyoCheck;
+    }
+    // 正解・不正解は表示しない（選んだボタンに印をつけて次へ）
+    function kcAnswer(k, btn) {
+        const s = kcSession;
+        if (!s || s._answered) return;
+        s._answered = true;
+        const box = document.getElementById('kyoyoCheckBox');
+        box.querySelectorAll('button').forEach(b => b.disabled = true);
+        if (btn) btn.classList.add('kc-picked');
+        if (k === s.items[s.qi].answer) s.score++;
+        setTimeout(() => {
+            if (kcSession !== s) return;   // 途中でやめた
+            s.qi++;
+            if (s.qi < s.items.length) return kcShow();
+            kcFinish();
+        }, 380);
+    }
+    function kcFinish() {
+        const s = kcSession, all = kcAll();
+        const rec = kcRec(s.key);
+        if (rec[s.phase]) return openKyoyoCheckPanel();   // 念のため：同じ段階は上書きしない
+        rec[s.phase] = { score: s.score, at: Date.now() };
+        all[s.key] = rec;
+        try { localStorage.setItem('kyoyoCheck', JSON.stringify(all)); } catch (e) {}
+        logEvent('kyoyo_check', null, null, { nb: s.key, phase: s.phase, score: s.score });
+        kcSession = null;
+        const nb = NB_BY_KEY[s.key];
+        const cell = phase => `<div><div class="lb">${KC_PHASE[phase]}</div><div class="pt">${rec[phase] ? rec[phase].score : '—'}</div><div class="lb">${rec[phase] ? '/ 10点' : 'まだ'}</div></div>`;
+        kcOpen(`<h3 class="pl-title">📜 ${KC_PHASE[s.phase]}のチェック　結果</h3>
+            <p class="pl-sub">${kcEsc(nb.name)}</p>
+            <div class="kc-result">${cell('pre')}${cell('post')}</div>
+            <p class="pl-sub">${s.phase === 'pre' ? `カードを${nb.count}枚集めたら、学習後のチェックで伸びを比べてみよう。` : 'おつかれさまでした！'}</p>
+            <button class="pl-start" onclick="closeKyoyoCheck()">閉じる</button>`);
+    }
     // ホーム画面に追加：使える端末ではその場で追加の画面を出し、iPhoneなどでは手順を案内する
     let _installEvt = null;
     window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); _installEvt = e; });
@@ -10667,6 +10843,7 @@ const Cloud = (function () {
                 updateDailyGoalDisplay();
                 updateAdventureBattleBtn();
                 window.scrollTo(0, 0);
+                maybeOfferKyoyoCheck();
             });
         };
         if (nb.key === 'PT') { proceed(null); return; }
