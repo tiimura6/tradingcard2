@@ -97,3 +97,35 @@
 | 58 | separation (n.) | 1748年の『法の精神』、立法・行政・司法の権力の分立（Britannica・スタンフォード哲学百科事典）。 |
 | 59 | restrict (v.) | 1757年に広州だけを外国貿易の港とした（Britannica・香港海事博物館）。乾隆帝の名で布告したと書くのは香港海事博物館（Google Arts & Culture）。Britannica・EBSCO は「清」とだけ書くので、英語は "Qing China under Qianlong"。trade（No.50）を避けて European commerce。 |
 | 60 | victory (n.) | 1757年6月23日、クライヴ、東インド会社の決定的勝利、ベンガル太守シラージュ＝ウッダウラ（Britannica・英国国立陸軍博物館）。絵の大雨と防水布で大砲を覆う場面は国立陸軍博物館の説明による。マンゴー林は確認できなかったので描かない。 |
+
+## 近代 No.63–80（バッチ4）
+
+- 語彙レベル・japanese・answers・synonym は、これまでと同じく既存の手帖のデータ（cefrj_notebooks.csv）の値を写した。equal（B1 adj.／B2 n.・v.）は B1、abolish（B2/PT）は B2、resist（B1/PT）は B1 にした。手帖専用の語（level=WH）は crown・smuggle・cede の3語。
+- 選定表の差し替え：No.76 compensation → **cede (v.)（手帖専用）**（補償は勝者に払う賠償金に合わないため。下関条約の台湾の割譲に合わせた）、No.78 rebellion → **surround (v.)**（No.70 rebel と語族が近いため。公使館包囲の事実に合わせた）。選定表も修正した。
+- No.64 free と No.68 liberate の区別：No.64 は「奴隷とされた人々を自由の身にする」（人の身分）、No.68 は「地域をスペインの支配から解放する」（国・土地）として例文の意味を分けた。既存データでは free (v.) も liberate も japanese が「解放する」で同じなので、No.64 は convert（No.42）の前例にならい japanese・answers を「自由にする／解放する」にした。synonym は互いの単語を外した（free：release|emancipate、liberate：release|rescue）。
+- synonym のうち他のカードのターゲット単語（の語族）を外した：rebel の revolutionary（No.61 revolutionize に近い）と rebel fighter（自分の語）→ insurgent|mutineer。
+- 例文でも他のカードのターゲット単語を避けた：No.64 は independent（No.90）・found（No.36）を避けて created Haiti、No.67 は dynasty（No.34）を避けて royal families、No.69 は merchant（No.6）・trade（No.50）を避けて dealers / illegal business、No.70 は英語名 Indian Rebellion（rebel と同じ語幹）と seize（No.40）を避けて mutinied / held Delhi、No.72 は Meiji Restoration（restore と同じ語幹）を避けて Meiji government、No.73 は route（No.7）を避けて sea journey、No.76 は treaty（No.53）を避けて peace agreement、No.77 は defeat・victory・invasion・independent・colonial を避けて winning / take control of、No.78 は Boxer Rebellion（rebel と同じ語幹）を避けて the Boxers、No.79 は victory（No.60）を避けて win、No.80 は dynasty を避けた。避けられなかったもの：No.63 の Declaration（No.62 declare と同じ語幹。教科書用語の英語名）、No.66 の Emperor of the French（No.26 emperor。称号そのもので、crowned himself emperor が史実の核）、No.71 の slavery（No.51。abolish slavery が典型的な連語）。
+- `image_url` はすべて空。ダヴィッド「ナポレオンの戴冠式」（1825年没）はナポレオンがジョゼフィーヌに冠を授ける場面で、「自ら冠をかぶった」という例文の事実と一致しない。イザベイのウィーン会議の絵（1855年没）は会議の場面だが、例文の事実（王家の復位）そのものを描いたものではない。
+- No.65（処刑）の絵は処刑の場面を描かず、当日朝に広場に集まった群衆と遠くの処刑台だけにした（群衆が集まっていたことは OSU Origins・スミソニアン誌）。
+- 絵は出典で確かめていない細部（ナポレオンの月桂冠、シパーヒーの赤い軍服、ベルリン会議の壁のアフリカ地図、武昌の旗の図柄など）を入れない。
+
+| No | 単語 | 判断したこと・弱いところ |
+|---|---|---|
+| 63 | equal (adj.) | 1789年8月20〜26日に採択、第1条「人は自由かつ権利において平等なものとして生まれ、存在する」（Britannica・エリゼ宮）。free（No.64）を避けて「権利において平等に生まれる」までにした（第1条の言い換えで、引用ではない）。議会の名は Britannica の National Assembly（エリゼ宮は Constituent Assembly）。和訳は「国民議会」。 |
+| 64 | free (v.) | 1791年8月の奴隷反乱で始まり（Britannica・McKay『Understanding World Societies』〈Macmillan〉）、1804年1月1日に独立してハイチと改名（Britannica・History.com）。弱いところ：「反乱者が自らを解放した」とは書かない。EHNE と McKay は1791年の反乱の目的を全面的な自由とは書いておらず、植民地の奴隷制廃止（1793年）はフランスの委員の決定でもあるため、主語を「ハイチ革命」にして "freed the enslaved people" とした（Britannica：the first country to be founded by former slaves）。 |
+| 65 | execute (v.) | 1793年1月21日、パリの革命広場、ギロチン（OSU Origins・スミソニアン誌）。王政は1792年9月に廃止されているので "the former king"。「処刑する」の意味で使う（No.58 の executive とは別の語）。 |
+| 66 | crown (v.) | 1804年12月2日、ノートルダム大聖堂、自ら冠をかぶった、教皇ピウス7世が臨席（napoleon.org〈ナポレオン財団〉・History.com）。History.com は教皇が冠を手渡したとするが、財団のページは臨席だけを書くので "with Pope Pius VII present" にとどめた。冠を教皇から「奪い取った」という俗説は書かない。 |
+| 67 | restore (v.) | メッテルニヒが会議を主導した、旧王家が正統主義に基づいてほぼ復位した（ドイツ歴史研究所 GHDI：old dynasties were largely restored／Gale『Encyclopedia of Modern Europe』：ブルボン家の復位、ナポリのフェルディナンドの復位）。"largely" は GHDI に合わせた。会議の年（1814年9月〜1815年6月）は例文に入れない。 |
+| 68 | liberate (v.) | Britannica（要約）：ベネズエラ、ヌエバ・グラナダ（1819年）、エクアドル（1822年、スクレと）、ペルー（1824年、サン＝マルティンの事業を完成）、アルト・ペルー（1825年、スクレが解放）。History.com：ベネズエラ、コロンビア、エクアドル、パナマ、ペルー、ボリビアの解放を助けた。ペルーとボリビアは他の指導者との共同なので "helped liberate"、当時の国名とずれるので "what are now"。Liberator の呼び名は liberate と同じ語幹なので入れない。 |
+| 69 | smuggle (v.) | 東インド会社が他のイギリス商人のアヘン密輸を助けた、主にインドから（Britannica）、東インド会社と他のイギリス商人がインド産アヘンを不法に持ち込み、1839年の没収が戦争の火種になった（英国国立陸軍博物館）、MIT Visualizing Cultures（林則徐の取り締まりが戦争に終わった）。戦争の年は資料（1839–42年）と日本の教科書（1840–42年）で違うので書かない。 |
+| 70 | rebel (n.) | 1857年5月10日、メーラトのシパーヒーが蜂起してデリーへ向かい、デリーを押さえた（Britannica・英国国立陸軍博物館）。英国の奪回は1857年9月14〜21日（国立陸軍博物館）なので「約4か月」。ムガル皇帝の擁立は1枚1事実のため入れない。和訳は教科書の「シパーヒー」。 |
+| 71 | abolish (v.) | 申し送りどおり奴隷解放宣言と区別した：奴隷制を廃止したのは憲法修正第13条（連邦議会の可決は1865年1月31日〈下院〉で南北戦争中、批准は1865年12月6日。米国国立公文書館・スミソニアン国立アフリカ系アメリカ人歴史文化博物館）。1863年の奴隷解放宣言は南部連合の州だけが対象で、国全体の奴隷制を終わらせていない（国立公文書館）。修正条項には「犯罪の刑罰としての場合を除く」という例外があるが、例文には入れない。 |
+| 72 | modernize (v.) | 鉄道（最初の鉄道は1872年：Britannica／新橋〜横浜間：nippon.com）、官営工場（富岡製糸場など：nippon.com／政府が戦略産業の発展を主導：Britannica）。徴兵制は確認した2つの資料にないので入れない。 |
+| 73 | canal (n.) | 1869年11月17日開通、地中海と紅海を結ぶ（History.com・スミソニアン誌）、ヨーロッパとアジアの距離を4000マイル以上縮めた（スミソニアン誌）。絵の船の行列・砂漠の岸の群衆・祝砲の煙はスミソニアン誌の開通式の説明による。 |
+| 74 | chancellor (n.) | プロイセンの3つの戦争で統一、帝国成立後に宰相となり19年務めた（Britannica 要約）、1871–1890年（EBSCO）。どちらも「初代」とは明記しないので first は書かない。 |
+| 75 | territory (n.) | 新しい領有は他の署名国に通告し、実効支配が条件（World History Encyclopedia）、沿岸の新しい領有の通告（EBSCO）。WHE は会議が領土獲得を「加速させた」とし、EBSCO は「すでに始まっていた分割に大きく影響した」「会議でアフリカが分割されたわけではない」とするので、"helped speed up" とし、会議で分割したとは書かない。アフリカの代表がいなかったことは絵の参考（WHE）。 |
+| 76 | cede (v.)【差し替え】 | 1895年4月17日、日清戦争の講和、台湾・澎湖諸島・遼東半島の割譲、賠償金2億両（Britannica）、条約の第2条の英訳（UCLA 近東研究センター掲載）。遼東半島は三国干渉で返還されたので台湾だけを書いた。教科書用語は日清戦争、和訳に下関条約も入れた。 |
+| 77 | resist (v.) | 1896年3月1日、メネリク2世の率いるエチオピア軍の勝利、エチオピアは独立を保った（Britannica・History.com）。Britannica は Menilek、History.com は Menelik と綴る。英語は高校の教材で一般的な Menelik にした。イタリアの保護国化の主張（Britannica）を "attempt to take control of their country" とした。 |
+| 78 | surround (v.)【差し替え】 | 1900年6月20日〜8月14日の約55日間、義和団と中国の兵士が公使館を包囲し、8か国の救援軍が到着した（Britannica・英国国立陸軍博物館）。英語の名前 Boxer Rebellion は No.70 rebel と同じ語幹なので出さない。和訳は教科書の「義和団戦争」「8か国連合軍」。 |
+| 79 | inspire (v.) | 日本の勝利がアジアの民族主義を燃え上がらせた（Gale『Encyclopedia of Russian History』〈encyclopedia.com〉）、インドの政治家を急進化させ、トルコの民族主義者を熱狂させた（Hunt ほか『The Making of the West』〈Macmillan〉）、ネルーと孫文の言葉（記念艦三笠）。絵の日本海海戦（1905年5月27日、対馬沖）は三笠のページによる。 |
+| 80 | republic (n.) | 1911年10月の武昌の蜂起から革命が広がり、孫文が新しく宣言された中華民国の臨時大総統に選ばれた（米国国務省 Office of the Historian・EBSCO：12月29日に選出）。中華民国の成立日（1912年1月1日）は確認した2つの資料に日付がないので書かない。英語名は Xinhai でなく "the 1911 Revolution"（国務省の表記）。 |
