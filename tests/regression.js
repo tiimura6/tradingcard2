@@ -870,11 +870,14 @@ test('小さい画面（幅360px）で主な画面が横にはみ出さない', 
 // =====================================================================
 (async () => {
   const srv = await startServer();
-  const browser = await chromium.launch();
+  // CHROME_PATH: 同梱のブラウザを入れられない環境で、手元の Chrome を使う
+  const browser = await chromium.launch(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {});
   const only = process.argv[2];
   let fail = 0;
   for (const t of tests.filter(t => !process.env.ONLY || t.name.includes(process.env.ONLY))) {
     if (only && !t.name.includes(only)) continue;
+    // SKIP_TESTS: 環境の都合で動かないテストを名前の一部で飛ばす（| 区切り）
+    if (process.env.SKIP_TESTS && process.env.SKIP_TESTS.split('|').some(s => s && t.name.includes(s))) { console.log(`  ⏭  ${t.name}（SKIP_TESTS）`); continue; }
     const t0 = Date.now();
     try {
       await t.fn(browser);
